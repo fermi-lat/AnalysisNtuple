@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.55 2005/02/05 02:15:45 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.56 2005/02/07 20:39:22 lsrea Exp $
 */
 
 // To Do:
@@ -563,7 +563,7 @@ StatusCode TkrValsTool::calculate()
             double countThreshold = 15; // counts
             double normFactor  =  1./53.;
 
-            double rawToT = cluster->getRawToT();
+            //double rawToT = cluster->getRawToT();
             double mips = cluster->getMips();
 
             double tot = cluster->ToT();

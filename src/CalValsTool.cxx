@@ -3,7 +3,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.50 2005/01/17 19:19:07 lsrea Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.51 2005/01/25 19:30:04 lsrea Exp $
 */
 
 // Include files
@@ -377,7 +377,7 @@ StatusCode CalValsTool::calculate()
     //Make sure we have valid cluster data
     if (!pCals) return sc;
 
-    double z0 = 0.0; // placeholder for offset
+    //double z0 = 0.0; // placeholder for offset
     
     Event::CalCluster* calCluster = pCals->front();
     
