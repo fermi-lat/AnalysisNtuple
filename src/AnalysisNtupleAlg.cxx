@@ -1,5 +1,5 @@
 
-// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.2 2003/02/26 17:16:21 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.3 2003/02/26 21:31:10 lsrea Exp $
 
 // Gaudi system includes
 #include "GaudiKernel/MsgStream.h"
@@ -25,7 +25,7 @@ public:
     NtupleVisitor(INTupleWriterSvc* ntupleSvc=0, std::string ntupleName="") 
         : m_ntupleSvc(ntupleSvc), m_ntupleName(ntupleName) {}
     virtual ValsVisitor::eVisitorRet analysisValue(std::string varName, double& value) const;
-
+    
 private:
     INTupleWriterSvc* m_ntupleSvc;
     std::string m_ntupleName;
@@ -57,23 +57,21 @@ public:
 private: 
     /// number of times called
     int m_count; 
-        
+    
     /// access the ntupleWriter service to write out to ROOT ntuples
     INTupleWriterSvc *m_ntupleSvc;
     /// parameter to store the logical name of the ROOT file to write to
     std::string m_tupleName;
     
     /// Common interface to analysis tools
-    IValsTool* m_TkrVals;
-    IValsTool* m_VtxVals;
-    IValsTool* m_CalVals;
-    IValsTool* m_AcdVals;
-    IValsTool* m_McVals;
-    IValsTool* m_GltVals;
-    IValsTool* m_TkrHitVals;
-
+    std::vector<IValsTool*> m_toolvec;
+    
     ValsVisitor* m_visitor;    
 };
+
+namespace {
+    const int nTools = 6;
+}
 
 static const AlgFactory<AnalysisNtupleAlg>  Factory;
 const IAlgFactory& AnalysisNtupleAlgFactory = Factory;
@@ -101,50 +99,30 @@ StatusCode AnalysisNtupleAlg::initialize(){
     if( m_tupleName.empty()) {
         log << MSG::INFO << "tupleName property not set!  No ntuple output"<<endreq;
     }
+    // set up tools
+    IToolSvc* pToolSvc = 0;
+    
+    sc = service("ToolSvc", pToolSvc, true);
+    if (!sc.isSuccess ()){
+        log << MSG::ERROR << "Can't find ToolSvc, will quit now" << endreq;
+        return StatusCode::FAILURE;
+    }
+    
     
     // calc tools
     
-    sc = toolSvc()->retrieveTool("AcdValsTool", m_AcdVals);
-    if (sc.isFailure()) {
-        log << MSG::ERROR << "Couldn't retrieve AcdValsTool" << endreq;
-        return fail;
+    const char * toolnames[] = {"McValsTool", "GltValsTool", "TkrValsTool", 
+        "VtxValsTool", "CalValsTool", "AcdValsTool"};
+    
+    for( int i =0; i<nTools; ++i){
+        m_toolvec.push_back(0);
+        sc = pToolSvc->retrieveTool(toolnames[i], m_toolvec.back());
+        if( sc.isFailure() ) {
+            log << MSG::ERROR << "Unable to find a  tool" << toolnames[i] << endreq;
+            return sc;
+        }
     }
     
-    sc = toolSvc()->retrieveTool("TkrValsTool", m_TkrVals);
-    if (sc.isFailure()) {
-        log << MSG::ERROR << "Couldn't retrieve TkrValsTool" << endreq;
-        return fail;
-    }
-    
-    sc = toolSvc()->retrieveTool("VtxValsTool", m_VtxVals);
-    if (sc.isFailure()) {
-        log << MSG::ERROR << "Couldn't retrieve VtxValsTool" << endreq;
-        return fail;
-    }
-    
-    sc = toolSvc()->retrieveTool("CalValsTool", m_CalVals);
-    if (sc.isFailure()) {
-        log << MSG::ERROR << "Couldn't retrieve CalValsTool" << endreq;
-        return fail;
-    }
-    
-    sc = toolSvc()->retrieveTool("McValsTool", m_McVals);
-    if (sc.isFailure()) {
-        log << MSG::ERROR << "Couldn't retrieve McValsTool" << endreq;
-        return fail;
-    }
-    
-    sc = toolSvc()->retrieveTool("GltValsTool", m_GltVals);
-    if (sc.isFailure()) {
-        log << MSG::ERROR << "Couldn't retrieve GltValsTool" << endreq;
-        return fail;
-    }
-    
-    sc = toolSvc()->retrieveTool("TkrHitValsTool", m_TkrHitVals);
-    if (sc.isFailure()) {
-        log << MSG::ERROR << "Couldn't retrieve TkrHitValsTool" << endreq;
-        return fail;
-    }
     
     // get a pointer to our ntupleWriterSvc
     if (!m_tupleName.empty()) {
@@ -155,8 +133,11 @@ StatusCode AnalysisNtupleAlg::initialize(){
             return fail;
         }
     }
-
+    
     m_visitor = new NtupleVisitor(m_ntupleSvc, m_tupleName);
+    
+    log << MSG::DEBUG << "AnalysisNtuple called" << endreq;
+    std::cout << "AnalysisNtuple called" << std::endl;
     
     return sc;
 }
@@ -169,86 +150,48 @@ StatusCode AnalysisNtupleAlg::execute()
     MsgStream   log( msgSvc(), name() );
     
     if (!m_tupleName.empty()) {
-
+        
+        
         if(m_ntupleSvc->addItem(m_tupleName.c_str(), "NumCalls", m_count).isFailure()) {
             log << MSG::ERROR << "AddItem failed" << endreq;
             return fail;
         }
-        
-        // fill the ntuples (triggers the calculations)
-        if(m_McVals->traverse(m_visitor)==ValsVisitor::ERROR) {
-            log << MSG::ERROR << "McVals traversal failed" << endreq;
-            return fail;
-        }
-        if(m_GltVals->traverse(m_visitor)==ValsVisitor::ERROR) {
-            log << MSG::ERROR << "AdcVals traversal failed" << endreq;
-            return fail;
-        }
-        /*
-        // not in Bill's ntuple output 
-        if(m_TkrHitsVals->traverse(m_visitor)==ValsVisitor::ERROR) {
-            log << MSG::ERROR << "TkrHitsVals traversal failed" << endreq;
-            return fail;
-        }
-        */
-        if(m_TkrVals->traverse(m_visitor)==ValsVisitor::ERROR) {
-            log << MSG::ERROR << "TkrVals traversal failed" << endreq;
-            return fail;
-        }
-        if(m_VtxVals->traverse(m_visitor)==ValsVisitor::ERROR) {
-            log << MSG::ERROR << "VtxVals traversal failed" << endreq;
-            return fail;
-        }
-        if(m_CalVals->traverse(m_visitor)==ValsVisitor::ERROR) {
-            log << MSG::ERROR << "CalVals traversal failed" << endreq;
-            return fail;
-        }
-        if(m_AcdVals->traverse(m_visitor)==ValsVisitor::ERROR) {
-            log << MSG::ERROR << "AdcVals traversal failed" << endreq;
-            return fail;
-        }
- 
-        log << MSG::DEBUG;
-        bool debugStuff = log.isActive();
-        log << endreq;
+        ++m_count;
 
-        if (debugStuff) {
-            double answer;
-
-            //do a browse
-            m_GltVals->browse();
-
-            // check browse() against getVal() for each tool
-
-            m_CalVals->browse("CAL_EneSum_Corr");
-            sc = m_CalVals->getVal("CAL_EneSum_Corr", answer);
-            log << MSG::DEBUG << "  compared to: " << answer << endreq;
-            
-            m_TkrVals->browse("TKR_Energy_Corr");
-            sc = m_TkrVals->getVal("TKR_Energy_Corr", answer);
-            log << MSG::DEBUG << "  compared to: " << answer << endreq;
-            
-            m_VtxVals->browse("VTX_zdir");
-            sc = m_VtxVals->getVal("VTX_zdir", answer);
-            log << MSG::DEBUG << "  compared to: " << answer << endreq;
-            
-            m_AcdVals->browse("ACD_TileCount");
-            sc = m_AcdVals->getVal("ACD_TileCount", answer);
-            log << MSG::DEBUG << "  compared to: " << answer << endreq;
-            
-            m_McVals->browse("MC_x_err");
-            sc = m_McVals->getVal("MC_x_err", answer);
-            log << MSG::DEBUG << "  compared to: " << answer << endreq;
-            
-            m_GltVals->browse("TRG_zDir");
-            sc = m_GltVals->getVal("TRG_zDir", answer);
-            log << MSG::DEBUG << "  compared to: " << answer << endreq;
-            
-            m_TkrHitVals->browse("TKR_Hits_In_Lyr_12");
-            sc = m_TkrHitVals->getVal("TKR_Hits_In_Lyr_12", answer);
-            log << MSG::DEBUG << "  compared to: " << answer << endreq;
-        }          
+        for( int i =0; i< m_toolvec.size(); ++i){
+            if(m_toolvec[i]->traverse(m_visitor)==ValsVisitor::ERROR) {
+                log << MSG::ERROR << m_toolvec[i] << " traversal failed" << endreq;
+                return fail;
+            }
+        }
     }
+    
+    bool debugStuff = false;
+    log << MSG::DEBUG;
+    if (log.isActive()) {
+        debugStuff = true;;
+        log << "Debug display: ";
+    }
+    log << endreq;
+    
+    if(debugStuff) {
+        double answer;
+        
+        //do a browse
+        m_toolvec[0]->browse();
+                
+        std::string varnames[nTools] = {"MC_x_err", "TRG_Type", "TKR_Energy_Corr", 
+            "VTX_zdir", "CAL_EneSum_Corr", "ACD_TileCount"};
+               
+        // check browse() against getVal() for each tool
+                
+        for( int i =0; i<nTools ; ++i){
+            //std::cout << "toolname " << varnames[i] << std::endl;  
+            m_toolvec[i]->browse(varnames[i]);
+            sc = m_toolvec[i]->getVal(varnames[i], answer);
+            log << MSG::DEBUG << "  compared to: " << answer << endreq;    
+        }        
+    }     
     return sc;
 }
 

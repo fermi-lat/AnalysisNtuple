@@ -20,7 +20,7 @@ EventSelector.Input = "NONE";
 //
 
 ApplicationMgr.DLLs+= {"RootIo", "GlastSvc", "G4Propagator", "Recon", "TkrUtil"};
-ApplicationMgr.DLLs+= {"AnalysisNtuple"};
+ApplicationMgr.DLLs+= {"AnalysisNtuple", "ntupleWriterSvc", "RootHistCnv"};
 
 
 
@@ -31,7 +31,8 @@ ApplicationMgr.TopAlg = {
     "mcRootReaderAlg",
     "digiRootReaderAlg",
     "reconRootReaderAlg",
-    "test_AnalysisNtuple"
+    //"test_AnalysisNtuple",
+    "AnalysisNtupleAlg"
     };
 
 mcRootReaderAlg.mcRootFile="$(ANALYSISNTUPLEROOT)/src/test/mc.root";
@@ -40,14 +41,24 @@ digiRootReaderAlg.digiRootFile="$(ANALYSISNTUPLEROOT)/src/test/digi.root";
 
 reconRootReaderAlg.ReconRootFile="$(ANALYSISNTUPLEROOT)/src/test/recon.root";
 
+ApplicationMgr.DLLs   += { "RootHistCnv", "ntupleWriterSvc"};
+ApplicationMgr.HistogramPersistency = "ROOT";
+ApplicationMgr.ExtSvc += { "NTupleSvc", "ntupleWriterSvc" };
 
+// NTUPLE Setup and definition
+
+ApplicationMgr.HistogramPersistency = "ROOT";
+ntupleWriterSvc.tuple_name = { "GLEAM" };
+NTupleSvc.Output = {"GLEAM DATAFILE='NTUPLE_Output.root' OPT='NEW'"};
+
+AnalysisNtupleAlg.tupleName="GLEAM";
 
 // Set output level threshold (2=DEBUG, 3=INFO, 4=WARNING, 5=ERROR, 6=FATAL )
 
-MessageSvc.OutputLevel = 2;
-test_AnalysisNtuple.OutputLevel = 2;
+MessageSvc.OutputLevel = 3;
+AnalysisNtupleAlg.OutputLevel = 2;
 ToolSvc.OutputLevel = 4;
-ApplicationMgr.EvtMax = 2;
+ApplicationMgr.EvtMax = 3;
 
 
 //==============================================================

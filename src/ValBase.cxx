@@ -55,18 +55,19 @@ StatusCode ValBase::initialize()
 
 ValBase::~ValBase()
 {
-    for (unsigned int i=0; i<m_ntupleMap.size(); i++) {
-        valPair* ord = m_ntupleMap[i];
-        delete ord;
+    mapIter it = m_ntupleMap.begin();
+    for (it; it!=m_ntupleMap.end(); ++it) {
+        delete *it;
     }
 }
 
-
 void ValBase::zeroVals()
 {
-    for (unsigned int i=0; i<m_ntupleMap.size(); i++) {
-        *(m_ntupleMap[i]->second) = 0.0;
+    mapIter it = m_ntupleMap.begin();
+    for (it; it!=m_ntupleMap.end(); ++it) {
+        *((*it)->second) = 0.0;
     }
+
 }
 
 void ValBase::addItem(std::string varName, double* pValue)
@@ -95,8 +96,9 @@ StatusCode ValBase::browse(std::string varName)
         std::cout   << " Values of the variables:" << std::endl << indent;
     }
     int length = indent.size();
-    for (unsigned int i=0; i<m_ntupleMap.size(); i++) {
-        valPair* pair = m_ntupleMap[i];
+    constMapIter it = m_ntupleMap.begin();
+    for (it; it!=m_ntupleMap.end(); ++it) {
+        valPair* pair = *it;
         if (varName!="" && varName!=pair->first) continue;
         length += (pair->first).size() + 2*delim.size() + separator.size() + 15;
         if(length>78) {
@@ -138,17 +140,17 @@ StatusCode ValBase::getVal(std::string varName, double& value)
 {
     StatusCode sc = StatusCode::SUCCESS;
     
-    unsigned int i=0;
-    for (i=0; i<m_ntupleMap.size(); i++) {
-        if (m_ntupleMap[i]->first == varName) break;
+    constMapIter it = m_ntupleMap.begin();
+    for (it; it!=m_ntupleMap.end(); ++it) {
+        if ((*it)->first == varName) break;
     }
     
-    if (i==m_ntupleMap.size()) { 
+    if (it==m_ntupleMap.end()) { 
         announceBadName(varName); 
         return StatusCode::FAILURE;
     } else {
         if(doCalcIfNotDone().isFailure()) return StatusCode::FAILURE;
-        value = *m_ntupleMap[i]->second;
+        value = *(*it)->second;
     }
     return sc;
 }
@@ -165,9 +167,11 @@ void ValBase::announceBadName(std::string varName)
     std::cout << " Known names are: " ;
 
     int length = indent.size();
+    int count;
 
-    for (int i=0, count=0; i<m_ntupleMap.size(); i++, count++) {
-        valPair* pair = m_ntupleMap[i];
+    constMapIter it = m_ntupleMap.begin();
+    for (it, count=0; it!=m_ntupleMap.end(); ++it, ++count) {
+        valPair* pair = *it;
         length += ((pair->first).size() + 2*delim.size() + separator.size());
         if(length>78) {
             std::cout << std::endl << indent ;
@@ -204,8 +208,9 @@ ValsVisitor::eVisitorRet ValBase::traverse(ValsVisitor* v)
 
     if(doCalcIfNotDone().isFailure()) return ValsVisitor::ERROR;
 
-    for (unsigned int i=0; i<m_ntupleMap.size(); i++) {
-        valPair* pair = m_ntupleMap[i];
+    constMapIter it = m_ntupleMap.begin();
+    for (it; it!=m_ntupleMap.end(); ++it) {
+        valPair* pair = *it;
         double value = *(pair->second);
         ret = v->analysisValue(pair->first, value);
         if (ret!= ValsVisitor::CONT) return ret;

@@ -21,8 +21,8 @@ public:
     
     typedef std::pair<std::string, double*> valPair;
     typedef std::vector<valPair*> valMap;
-    //typedef valMap::iterator mapIter;
-    //typedef valMap::const_iterator constMapIter;
+    typedef valMap::iterator mapIter;
+    typedef valMap::const_iterator constMapIter;
     
     ValBase(const std::string& type, 
         const std::string& name, 
