@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.15 2003/05/08 15:51:30 atwood Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.16 2003/05/16 23:26:03 lsrea Exp $
 */
 
 // Include files
@@ -547,12 +547,12 @@ StatusCode CalValsTool::calculate()
     CAL_Edge_Corr = edge_corr; 
     
     // Set some Calorimeter constants - should come from detModel
-    double cal_top_z = -26.5;      // z co-ord. of top of Cal
+    double cal_top_z = -45.7;      // Meas off 1 Evt Disp.(29-may-03 - was -26.5) z co-ord. of top of Cal
     double x0_CsI    = 18.5;       // Rad. Len. of CsI
     double x0_Crap   = 100.;       // Rad Len. of junk inactive junk in Cal
-    double xtal_dz   = 19.9;       // Xtal height in z
-    double cal_half_width = 725.;  // (4*373.5(Tower Pitch) - 44(Cal Gap))/2
-    double cal_depth = 8*xtal_dz;  // 8 layers of in the calorimeter
+    double xtal_dz   = 21.2;       // Meas off 1 Evt Disp (29-May-03 - was 19.9) Xtal height in z
+    double cal_half_width = 728.3; // measured from 1 Evt Disp - was (4*373.5(Tower Pitch) - 44(Cal Gap))/2
+    double cal_depth = 215.;       // Meas. off 1 Evt disp.. was 8 layers of the calorimeter
     
     // Now do the leakage correction  
     // First: get the rad.lens. in the tracker 
@@ -564,15 +564,17 @@ StatusCode CalValsTool::calculate()
     // Find the distance in Cal to nearest edge along shower axis
     // Need to check sides as well as back
     Vector t_axis = axis.direction();     // This points in +z direction
-    double s_top  = -(-cal_top_z + axis.position().z())/t_axis.z(); 
+    double s_top  = -(-cal_top_z + axis.position().z())/t_axis.z();
+	double s_exit = -(axis.position().z())/t_axis.z(); 
     Point cal_top = axis.position(s_top); // Entry point into calorimeter
+	Point tkr_exit= axis.position(s_exit);// Exit point from tracker
     
-    double s_xp   = (-cal_half_width + cal_top.x())/t_axis.x();
-    double s_xm   = ( cal_half_width + cal_top.x())/t_axis.x();
+    double s_xp   = (-cal_half_width + tkr_exit.x())/t_axis.x();
+    double s_xm   = ( cal_half_width + tkr_exit.x())/t_axis.x();
     double s_minx = (s_xp > s_xm) ? s_xp:s_xm; // Choose soln > 0. 
     
-    double s_yp   = (-cal_half_width + cal_top.y())/t_axis.y();
-    double s_ym   = ( cal_half_width + cal_top.y())/t_axis.y();
+    double s_yp   = (-cal_half_width + tkr_exit.y())/t_axis.y();
+    double s_ym   = ( cal_half_width + tkr_exit.y())/t_axis.y();
     double s_miny = (s_yp > s_ym) ? s_yp:s_ym; // Choose soln > 0. 
     
     double s_minz = cal_depth/t_axis.z();
@@ -581,7 +583,7 @@ StatusCode CalValsTool::calculate()
     s_min         = (s_min  < s_minz) ? s_min :s_minz;
     
     // Set up a propagator to calc. rad. lens. 
-    pKalParticle->setStepStart(cal_top, -t_axis, s_min);
+    pKalParticle->setStepStart(tkr_exit, -t_axis, s_min);
     
     double t_cal_tot  = pKalParticle->radLength();
     double t_cal_tot2 = s_min/(1.063*x0_CsI);
@@ -591,9 +593,9 @@ StatusCode CalValsTool::calculate()
         /x0_Crap;
     
     // Energy centroid in radiation lengths for this event in rad.lens.
-    double s_t_cal   = (cal_top_z-CAL_z0)/costh; 
+    double s_t_cal   = (-CAL_z0)/costh; // was (cal_top_z-CAL_z0)/costh; 29-may-03
     double t_cal_cnt = pKalParticle->radLength(s_t_cal);
-    double t_cal_cnt2= s_t_cal/(1.063*x0_CsI); 
+    double t_cal_cnt2= s_t_cal/(1.063*x0_CsI); //Factor of 1.063 is to account for support material 
     double t         = t_tracker + t_cal_cnt; 
     double t2        = t_tracker + t_cal_cnt2; 
     double t_dead    = (s_t_cal - t_cal_cnt*x0_CsI)/(1.-x0_CsI/x0_Crap)
@@ -613,8 +615,8 @@ StatusCode CalValsTool::calculate()
     else {
         // Iterations solution for alpha
         alpha_t   /= gamma_alpha(alpha_t, beta_t);
-        double alpha_t2   = alpha_t/(gamma_alpha(alpha_t, beta_t));
-        alpha_t  = .8*alpha_t + .2*alpha_t2; 
+       // double alpha_t2   = alpha_t/(gamma_alpha(alpha_t, beta_t));
+       // alpha_t  = .5*alpha_t + .5*alpha_t2; 
     }
     // Don't accept giant leakage corrections
     double in_frac = TMath::Gamma(alpha_t, beta_t); 
@@ -636,7 +638,7 @@ StatusCode CalValsTool::calculate()
     
     // Final Delta t factor (?)
     CAL_t_Pred      = a2/b2*(TMath::Gamma(a2+1.,b2*t_total)/
-        TMath::Gamma(a2,b2*t_total)); 
+                             TMath::Gamma(a2,b2*t_total)); 
     double delta_t = t - CAL_t_Pred; 
     double dt_factor  = 1.04/(1.+.04*delta_t); // 1 GeV -> .0073
     
@@ -658,7 +660,7 @@ StatusCode CalValsTool::calculate()
     CAL_Leak_Corr2  = in_frac_2;   
     CAL_deltaT      = CAL_Cnt_RLn - CAL_t_Pred;
 
-	    // New section to compute arclength of trajectory (caltop - taxis) falling between towers
+	// New section to compute arclength of trajectory (caltop - taxis) falling between towers
 	double x_twr = signC(-t_axis.x())*(fmod(fabs(cal_top.x()),twr_pitch) - twr_pitch/2.);
     double y_twr = signC(-t_axis.y())*(fmod(fabs(cal_top.y()),twr_pitch) - twr_pitch/2.);
     double x_slope   = (fabs(t_axis.x()) > .0001)? -t_axis.x():.00001;
