@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.19 2003/06/07 23:14:55 atwood Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.20 2003/06/09 19:04:16 atwood Exp $
 */
 
 // Include files
@@ -33,6 +33,7 @@
 #include "GlastSvc/Reco/IPropagator.h" 
 
 #include "GlastSvc/GlastDetSvc/IGlastDetSvc.h"
+#include "TkrUtil/ITkrGeometrySvc.h"
 #include "idents/TowerId.h" 
 #include "idents/VolumeIdentifier.h"
 #include "CLHEP/Geometry/Transform3D.h"
@@ -98,7 +99,7 @@ namespace {
         double r_frac_plus = (edge-gap_x/2.)/r; 
         double angle_factor = sin(phi)*(1./costh - 1.);
         double in_frac_x  =  circle_frac_simp(r_frac_plus, angle_factor);
-        if(fabs(x) < 1.5*pitch) { // X edge is not outside limit of LAT
+        if(fabs(x) < 0.5*(_nTowers-1)*pitch) { // X edge is not outside limit of LAT
             double r_frac_minus = (edge + gap_x/2.)/r;
             in_frac_x += circle_frac_simp(-r_frac_minus, angle_factor);
         }
@@ -109,7 +110,7 @@ namespace {
         r_frac_plus = (edge-gap_y/2.)/r; 
         angle_factor = cos(phi)*(1./costh - 1.);
         double in_frac_y  =  circle_frac_simp(r_frac_plus, angle_factor);
-        if(fabs(y) < 1.5*pitch) { // X edge is not outside limit of LAT
+        if(fabs(y) < 0.5*(_nTowers-1)*pitch) { // X edge is not outside limit of LAT
             double r_frac_minus = (edge + gap_y/2.)/r;
             in_frac_y += circle_frac_simp(-r_frac_minus, angle_factor);
         }
@@ -179,14 +180,24 @@ namespace {
   private:
       
       // some pointers to services  
-      /// the GlastDetSvc used for access to detector info
+      /// GlastDetSvc used for access to detector info
       IGlastDetSvc*    m_detSvc; 
-      /// store the towerPitch
+      /// TkrGeometrySvc used for access to tracker geometry info
+      ITkrGeometrySvc* m_geoSvc;
+
+      /// some Geometry
       double m_towerPitch;
-      double m_csiHeight;
-      double m_csiLength;
-      int    m_CALnLayer;
-      /// 
+      int    m_xNum;
+      int    m_yNum;
+      /// gets the CAL info from detModel
+      StatusCode getCalInfo();
+
+      /// CAL vars
+      double m_calWidthX;
+      double m_calWidthY;
+      double m_calZTop;
+      double m_calZBot;
+
       IPropagatorSvc* m_propSvc;
 	  IPropagator * m_G4PropTool; 
 
@@ -262,46 +273,30 @@ namespace {
       
       if( serviceLocator() ) {
           
-          // find the GlastDevSvc service
+          // find GlastDevSvc service
           if (service("GlastDetSvc", m_detSvc).isFailure()){
               log << MSG::ERROR << "Couldn't find the GlastDetSvc!" << endreq;
               return StatusCode::FAILURE;
           }
-          m_detSvc->getNumericConstByName("towerPitch", &m_towerPitch);
-          m_detSvc->getNumericConstByName("CsILength",  &m_csiLength);
-          m_detSvc->getNumericConstByName("CsIHeight",  &m_csiHeight);
-          m_detSvc->getNumericConstByName("CALnLayer",  &m_CALnLayer);
 
-          //get the top and bottom of the CAL crystals
+          if( m_detSvc->getNumericConstByName("towerPitch", &m_towerPitch).isFailure() ||
+              m_detSvc->getNumericConstByName("xNum",  &m_xNum).isFailure() ||
+              m_detSvc->getNumericConstByName("yNum",  &m_yNum).isFailure() )  {
+              log << MSG::ERROR << "Couldn't get detModel consts" << endreq;
+              return StatusCode::FAILURE;
+          }
 
-          int layer = m_CALnLayer-1;
-          idents::VolumeIdentifier calPrefix, calPostfix, botLayerId, topLayerId;
-          calPrefix.init(0,0);
-          calPrefix.append(0); calPrefix.append(0); calPrefix.append(0); calPrefix.append(0);
-          topLayerId = calPrefix;
-          topLayerId.append(0);
-          topLayerId.append(0);
-          botLayerId = calPrefix;
-          botLayerId.append(layer);
-          botLayerId.append(layer%2);
-          calPostfix.init(0,0);
-          calPostfix.append(0); calPostfix.append(0); // calPostfix.append(0);
-          botLayerId.append(calPostfix);
-          topLayerId.append(calPostfix);
-          std::string botName = botLayerId.name();
-          std::string topName = topLayerId.name();
-          std::cout << "botName " << botName << " topName " << topName << std::endl;
-    
-          HepTransform3D transfTop;
-          m_detSvc->getTransform3DByID(topLayerId,&transfTop);
-          Vector vecTop = transfTop.getTranslation();
-          double calZTop = vecTop.z()+ 0.5*m_csiHeight;
+          // find TkrGeometrySvc service
+          if (service("TkrGeometrySvc", m_geoSvc).isFailure()){
+              log << MSG::ERROR << "Couldn't find the TkrGeometrySvc!" << endreq;
+              return StatusCode::FAILURE;
+          }
 
-          HepTransform3D transfBot;
-          m_detSvc->getTransform3DByID(botLayerId,&transfBot);
-          Vector vecBot = transfBot.getTranslation();
-          double calZBot = vecBot.z() - 0.5*m_csiHeight;
-                   
+          if (getCalInfo().isFailure()) {
+               log << MSG::ERROR << "Couldn't initialize the CAL constants" << endreq;
+             return StatusCode::FAILURE;
+          }
+
           // pick up the chosen propagator
           if (service("GlastPropagatorSvc", m_propSvc).isFailure()) {
               log << MSG::ERROR << "Couldn't find the GlastPropagatorSvc!" << endreq;
@@ -504,6 +499,7 @@ StatusCode CalValsTool::calculate()
      
     double hard_frac =.50 +.35*cal_trans((670.- CAL_EnergySum)/300.);   
       
+    // is this related to towerPitch - CalModule width??
     double gap       = 48;
     
     // Reset shower area circle when multiple tracks are present
@@ -577,17 +573,22 @@ StatusCode CalValsTool::calculate()
     CAL_Edge_Corr = edge_corr; 
     
     // Set some Calorimeter constants - should come from detModel
-    double cal_top_z = -45.7;      // Meas off 1 Evt Disp.(29-may-03 - was -26.5) z co-ord. of top of Cal
-    double cal_half_width = 728.3; // measured from 1 Evt Disp - was (4*373.5(Tower Pitch) - 44(Cal Gap))/2
-    double cal_depth = 216.;       // Meas. off 1 Evt disp.. was 8 layers of the calorimeter
+    //double cal_top_z = -45.7;      // Meas off 1 Evt Disp.(29-may-03 - was -26.5) z co-ord. of top of Cal
+    //double cal_half_width = 728.3; // measured from 1 Evt Disp - was (4*373.5(Tower Pitch) - 44(Cal Gap))/2
+    //double cal_depth = 216.;       // Meas. off 1 Evt disp.. was 8 layers of the calorimeter
+
+    // Cal constants, from detModel
+    double cal_top_z = m_calZTop;
+    double cal_depth = -m_calZBot;
+    double cal_half_width = 0.5*std::max(m_calWidthX, m_calWidthY);
     
     // Now do the leakage correction  
     // First: get the rad.lens. in the tracker 
     double t_tracker = track_1->getTkrCalRadlen();
     // Patch for error in KalFitTrack: 1/2 of first radiator left out
-    if(track_1->getLayer() < 12) t_tracker += .015/costh; 
-    else                         t_tracker += .09/costh; 
-    
+    int layer = track_1->getLayer();
+    t_tracker += 0.5*m_geoSvc->getReconRadLenConv(layer)/costh;
+
     // Find the distance in Cal to nearest edge along shower axis
     //       Need to check sides as well as back
     Vector t_axis = axis.direction();     // This points in +z direction
@@ -623,13 +624,13 @@ StatusCode CalValsTool::calculate()
 	idents::VolumeIdentifier volId;
 	idents::VolumeIdentifier prefix = m_detSvc->getIDPrefix();
 	double radLen_CsI  = 0.;
-	double radLen_Crap = 0.;
+	double radLen_Stuff = 0.;
 	double radLen_Gap  = 0.; 
 	double radLen_Cntr = 0.; 
-	double radLen_CntrCrap = 0.; 
+	double radLen_CntrStuff = 0.; 
 	double arcLen_CsI  = 0.; 
 	double arcLen_Gap  = 0.; 
-	double arcLen_Crap = 0.; 
+	double arcLen_Stuff = 0.; 
 	double arcLen_Cntr = 0.; 
 	for(; istep < numSteps; ++istep) {
 		volId = m_G4PropTool->getStepVolumeId(istep);
@@ -642,8 +643,8 @@ StatusCode CalValsTool::calculate()
 			arcLen_CsI  += arcLen_step;
 		}
 		else {
-			radLen_Crap += radLen_step;
-			arcLen_Crap += arcLen_step;
+			radLen_Stuff += radLen_step;
+			arcLen_Stuff += arcLen_step;
 			if(x_step.z() >= cal_top_z) {
 				radLen_Gap += radLen_step;
 				arcLen_Gap += arcLen_step;
@@ -653,10 +654,10 @@ StatusCode CalValsTool::calculate()
 			radLen_Cntr += radLen_step;
 			arcLen_Cntr += arcLen_step;
 			if(volId.size() < 8) 
-				radLen_CntrCrap += radLen_step;
+				radLen_CntrStuff += radLen_step;
 		}
 	}
-    double t_cal_tot = radLen_CsI + radLen_Crap; 
+    double t_cal_tot = radLen_CsI + radLen_Stuff; 
     double t_total   = t_tracker  + t_cal_tot;
     
     // Energy centroid in radiation lengths for this event.
@@ -715,14 +716,54 @@ StatusCode CalValsTool::calculate()
     CAL_Total_Corr  = edge_corr/in_frac_2/cos_factor; 
     CAL_Tot_RLn     = t_total;
     CAL_Cnt_RLn     = t;
-    CAL_DeadTot_Rat = radLen_Crap/t_total;
-    CAL_DeadCnt_Rat = radLen_CntrCrap/t;
+    CAL_DeadTot_Rat = radLen_Stuff/t_total;
+    CAL_DeadCnt_Rat = radLen_CntrStuff/t;
     CAL_a_Parm      = a2;
     CAL_b_Parm      = b2; 
     
     CAL_Leak_Corr   = in_frac_1;
     CAL_Leak_Corr2  = in_frac_2;   
-	CAL_TwrGap      = arcLen_Crap - arcLen_Gap;
+	CAL_TwrGap      = arcLen_Stuff - arcLen_Gap;
 
     return sc;
+}
+
+StatusCode CalValsTool::getCalInfo()
+{
+    double csiLength, csiWidth, csiHeight;
+    double cellHorPitch, cellVertPitch;
+    int nCsiPerLayer, CALnLayer;
+
+    if (m_detSvc->getNumericConstByName("CsILength",  &csiLength).isFailure() ||
+        m_detSvc->getNumericConstByName("CsIHeight",  &csiHeight).isFailure() ||
+        m_detSvc->getNumericConstByName("CsIWidth",   &csiWidth ).isFailure() ||
+        m_detSvc->getNumericConstByName("CALnLayer",  &CALnLayer).isFailure() ||
+        m_detSvc->getNumericConstByName("nCsIPerLayer",  &nCsiPerLayer).isFailure() ||
+        m_detSvc->getNumericConstByName("cellHorPitch",  &cellHorPitch).isFailure() ||
+        m_detSvc->getNumericConstByName("cellVertPitch", &cellVertPitch).isFailure())
+    {return StatusCode::FAILURE;}
+
+    //get the top and bottom of the CAL crystals
+
+    idents::VolumeIdentifier topLayerId;
+    topLayerId.init(0,0);
+    int count;
+    // top layer of the Cal
+    for (count= 0;count<8;++count) {topLayerId.append(0);} 
+
+    HepTransform3D transfTop;
+    if(m_detSvc->getTransform3DByID(topLayerId,&transfTop).isFailure())
+    {return StatusCode::FAILURE;}
+    Vector vecTop = transfTop.getTranslation();
+    m_calZTop = vecTop.z()+ 0.5*csiHeight;
+    
+    m_calZBot = m_calZTop - (CALnLayer-1)*cellVertPitch - csiHeight;
+
+    // get the maximum horizontal dimension of the crystals in a layer
+    double calWidth1 = (nCsiPerLayer-1)*cellHorPitch + csiWidth;
+    double ModWidth  = std::max(calWidth1, csiLength);
+    m_calWidthX = (m_xNum-1)*m_towerPitch + ModWidth;
+    m_calWidthY = (m_yNum-1)*m_towerPitch + ModWidth;
+
+    return StatusCode::SUCCESS;
 }
