@@ -1,6 +1,10 @@
 /** @file release.notes
   @brief Package AnalysisNtule
   @verbatim
+
+         22-Aug-04   HMK  Add one of two new ACD variables for Bill: 
+                          TkrHitsCount - number of clusters w/i some dist. of
+                          center of ACD tiles
  v1r9p2  08-Aug-04   LSR  Bill's new variables and changes to Tkr, Cal and Event
  v1r9p1  21-Jul-04   THB  fix req. file according to Traudl's suggestion
  v1r9    22-Jun-04   THB  convert test to use RootTupleSvc

@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.10 2004/02/13 06:22:38 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.11 2004/03/22 16:46:06 heather Exp $
 */
 
 #include "ValBase.h"
@@ -20,7 +20,15 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.10 
 
 #include "Event/Recon/TkrRecon/TkrVertex.h"
 #include "Event/Recon/TkrRecon/TkrFitTrack.h"
+#include "Event/Recon/TkrRecon/TkrClusterCol.h"
 #include "Event/Recon/AcdRecon/AcdRecon.h"
+#include "Event/Digi/AcdDigi.h"
+
+#include "GlastSvc/GlastDetSvc/IGlastDetSvc.h"
+// Point used by AcdDigi
+#include "CLHEP/Geometry/Point3D.h"
+// Point used by TKR
+#include "geometry/Point.h"
 
 #include <algorithm>
 #include <numeric>
@@ -43,6 +51,8 @@ public:
     
     StatusCode calculate();
     
+    void tkrHitsCount();
+
 private:
     
     //Global ACDTuple Items
@@ -61,7 +71,13 @@ private:
     double ACD_tileCount2;
     double ACD_tileCount3;
     double ACD_ribbon_ActiveDist;
+    double ACD_TkrHitsCountTop;
+    double ACD_TkrHitsCountRows[4];
 
+    IGlastDetSvc *m_detSvc;
+    double m_vetoThresholdMeV;
+    double m_tkrHitsCountCut;
+    
     
 };
 namespace {
@@ -98,6 +114,9 @@ AcdValsTool::AcdValsTool(const std::string& type,
 {    
     // Declare additional interface
     declareInterface<IValsTool>(this); 
+
+    // in mm
+    declareProperty("tkrHitsCountCut", m_tkrHitsCountCut=250.0);
 }
 
 StatusCode AcdValsTool::initialize()
@@ -108,12 +127,26 @@ StatusCode AcdValsTool::initialize()
 
    if( ValBase::initialize().isFailure()) return StatusCode::FAILURE;
    
+   setProperties();
     // get the services
     
    // use the pointer from ValBase
    
    if( serviceLocator() ) {
                 
+        // find GlastDevSvc service
+        if (service("GlastDetSvc", m_detSvc, true).isFailure()){
+            log << MSG::INFO << "Couldn't find the GlastDetSvc!" << endreq;
+            log << MSG::INFO << "Will be unable to calculate ACD_TkrHitsCount" << endreq;
+            m_vetoThresholdMeV = 0.4;
+        } else {
+            StatusCode sc = m_detSvc->getNumericConstByName("acd.vetoThreshold", &m_vetoThresholdMeV);
+            if (sc.isFailure()) {
+                log << MSG::INFO << "Unable to retrieve threshold, setting the value to 0.4 MeV" << endreq;
+                m_vetoThresholdMeV = 0.4;
+   
+             }
+         }
    } else {
        return StatusCode::FAILURE;
    }
@@ -137,6 +170,12 @@ StatusCode AcdValsTool::initialize()
     addItem("AcdNoSideRow3",   &ACD_tileCount3);   
     addItem("AcdRibbonActDist", &ACD_ribbon_ActiveDist);
 
+    addItem("AcdTkrHitsCountTop", &ACD_TkrHitsCountTop);
+    addItem("AcdTkrHitsCountR0", &ACD_TkrHitsCountRows[0]);
+    addItem("AcdTkrHitsCountR1", &ACD_TkrHitsCountRows[1]);
+    addItem("AcdTkrHitsCountR2", &ACD_TkrHitsCountRows[2]);
+    addItem("AcdTkrHitsCountR3", &ACD_TkrHitsCountRows[3]);
+
     zeroVals();
     
     return sc;
@@ -147,6 +186,7 @@ StatusCode AcdValsTool::calculate()
 {
     StatusCode sc = StatusCode::SUCCESS;
     
+    tkrHitsCount();
     
     SmartDataPtr<Event::AcdRecon>           pACD(m_pEventSvc,EventModel::AcdRecon::Event);
 
@@ -203,3 +243,78 @@ StatusCode AcdValsTool::calculate()
     
     return sc;
 }
+
+void AcdValsTool::tkrHitsCount() {
+
+    // Purpose and Method:  Count the number of TkrClusters within some distance
+    //  of hit ACD tiles.
+    // Loops over all AcdDigis (skips those that are not "hit") 
+    // Then for each TkrCluster, determine the distance between the center of 
+    // The ACD tile and the TkrCluster.  If the distance is below m_tkrHitsCountCut
+    // Then count this hit, either as top, R0, R1, R2, R3, depending upon what
+    // type of ACD tile this is.
+
+    MsgStream log(msgSvc(), name());
+    if (!m_detSvc) return;
+
+    SmartDataPtr<Event::AcdDigiCol> acdDigiCol(m_pEventSvc, EventModel::Digi::AcdDigiCol);
+    if (!acdDigiCol) return;
+
+    SmartDataPtr<Event::TkrClusterCol> pClusters(m_pEventSvc,EventModel::TkrRecon::TkrClusterCol);
+    if (!pClusters) return;
+
+
+    Event::AcdDigiCol::const_iterator acdDigiIt;
+    for (acdDigiIt = acdDigiCol->begin(); acdDigiIt != acdDigiCol->end(); acdDigiIt++) 
+    {
+        idents::AcdId acdId = (*acdDigiIt)->getId();
+        if (!acdId.tile()) continue;  // skip ribbons
+
+        // Use MC Energy cut for now - until we move to veto discrim
+        if ((*acdDigiIt)->getEnergy() < m_vetoThresholdMeV) continue; 
+        // Try using the veto discriminator
+        // If neither veto discrim from either PMT is high - we should skip
+        //if ( (!(*acdDigiIt)->getVeto(Event::AcdDigi::A)) && 
+        //     (!(*acdDigiIt)->getVeto(Event::AcdDigi::B)) ) continue;
+        
+        idents::VolumeIdentifier volId = (*acdDigiIt)->getVolId();
+        std::string str;
+        std::vector<double> dim;
+        StatusCode sc = m_detSvc->getShapeByID(volId, &str, &dim);
+        if ( sc.isFailure() ) {
+            log << MSG::WARNING << "Failed to retrieve Shape by Id" << endreq;
+            continue;
+        }
+        HepTransform3D transform;
+        sc = m_detSvc->getTransform3DByID(volId, &transform);
+        if (sc.isFailure() ) {
+            log << MSG::WARNING << "Failed to get transformation" << endreq;
+            continue;
+        }
+		
+        HepPoint3D center(0., 0., 0.);
+        HepPoint3D acdCenter = transform * center;
+
+        // Loop over the clusters and calculate the distance from cluster
+        // to ACD tile center
+        int numClusters = pClusters->nHits();
+        int icluster;
+        for (icluster = 0; icluster < numClusters; icluster++) {
+            Event::TkrCluster *clusterTds = pClusters->getHit(icluster);
+            Point clusterPos = clusterTds->position();
+            HepPoint3D clusterP(clusterPos.x(), clusterPos.y(), clusterPos.z());
+            double dist = clusterP.distance(acdCenter);
+            if (dist < m_tkrHitsCountCut) {
+                if (acdId.top()) ++ACD_TkrHitsCountTop;
+                if (acdId.side()) {
+                    unsigned int row = acdId.row();
+                    ++ACD_TkrHitsCountRows[row];
+                }
+            }
+        }
+    }
+
+
+    return;
+}
+
