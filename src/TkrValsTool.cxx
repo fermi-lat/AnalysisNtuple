@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.11 2003/03/09 02:02:45 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.12 2003/03/10 19:02:42 lsrea Exp $
 */
 
 // Include files
@@ -512,7 +512,7 @@ StatusCode TkrValsTool::calculate()
                 Event::TkrFitMatrix Q = pKalParticle->mScat_Covr(Tkr_Sum_ConEne/2., arc_len);
                 xms = Q.getcovX0X0();
                 yms = Q.getcovY0Y0();
-                radlen += pKalParticle->radLength(arc_len); 
+                radlen = pKalParticle->radLength(arc_len); 
             }
             double xSprd = sqrt(4.+xms*16.); // 4.0 sigma and not smaller then 2mm (was 2.5 sigma)
             double ySprd = sqrt(4.+yms*16.); // Limit to a tower... 
