@@ -2,7 +2,7 @@
 @brief Calculates the Mc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header$
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.6 2003/03/05 02:03:29 lsrea Exp $
 */
 // Include files
 
@@ -52,6 +52,7 @@ private:
     
     //Pure MC Tuple Items
     double MC_Energy;
+    double MC_LogEnergy;
     
     double MC_x0;
     double MC_y0;
@@ -107,7 +108,8 @@ StatusCode McValsTool::initialize()
     
     // load up the map
 
-    addItem("McEnergy",       &MC_Energy);       
+    addItem("McEnergy",       &MC_Energy);  
+    addItem("McLogEnergy",    &MC_LogEnergy);
     addItem("McX0",           &MC_x0);           
     addItem("McY0",           &MC_y0);           
     addItem("McZ0",           &MC_z0);           
@@ -156,6 +158,7 @@ StatusCode McValsTool::calculate()
         
         //Pure MC Tuple Items
         MC_Energy = Mc_p0.t();
+        MC_LogEnergy = log10(MC_Energy);
         
         MC_x0     = Mc_x0.x();
         MC_y0     = Mc_x0.y();

@@ -52,7 +52,7 @@ NTupleSvc.Output = {"GLEAM DATAFILE='NTUPLE_Output.root' OPT='NEW'"};
 AnalysisNtupleAlg.tupleName="GLEAM";
 
 //Test of tool list, just the default
-AnalysisNtupleAlg.toolList = {"Mc", "Glt", "TkrHit", "Tkr", "Vtx",  "Cal", "Acd"};
+AnalysisNtupleAlg.toolList = {"Mc", "Glt", "TkrHit", "Tkr", "Vtx",  "Cal", "Acd", "Evt"};
 
 
 // Set output level threshold (2=DEBUG, 3=INFO, 4=WARNING, 5=ERROR, 6=FATAL )

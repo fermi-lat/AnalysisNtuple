@@ -2,7 +2,7 @@
 @brief implements all the methods of the XxxValsTools
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.cxx,v 1.15 2003/03/05 02:03:29 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.cxx,v 1.16 2003/03/10 19:02:42 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -16,6 +16,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.cxx,v 1.15 2003
 #include "Event/TopLevel/Event.h"
 
 #include <algorithm>
+#include <cmath>
 
 ValBase::ValBase(const std::string& type, 
                          const std::string& name, 
@@ -107,12 +108,15 @@ StatusCode ValBase::browse(std::string varName)
     for ( ; it!=m_ntupleMap.end(); ++it) {
         valPair* pair = *it;
         if (varName!="" && varName!=pair->first) continue;
-        length += (pair->first).size() + 2*delim.size() + separator.size() + 15;
+        int valLen = (*(pair->second)==0) ? 1 : 13;
+        if (fmod(*(pair->second),1.)==0) valLen = 5;
+        int deltaL= (pair->first).size() + 2*delim.size() + separator.size() + valLen + 2;
+        length += deltaL;
         if(length>78) {
             std::cout <<std::endl << indent ;
-            length = indent.size();
+            length = indent.size() + deltaL;
         }
-        std::cout  << delim << pair->first << delim << ": " << *(pair->second) << " ";
+        std::cout  << delim << pair->first << delim << ": " << *(pair->second) << separator;
     }
     std::cout << std::endl;
     return StatusCode::SUCCESS;

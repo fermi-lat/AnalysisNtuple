@@ -2,6 +2,7 @@
   @brief Package AnalysisNtule
   @verbatim
 
+ v1r5    07-May-03   LSR  add EvtValsTool; renaming and some cleanup
  v1r4p1  24-Apr-03   LSR  fixed jobOptions for new propagator
  v1r4    18-Apr-03   LSR  add Bill's new variable; requires TkrUtil v1r8
  v1r3p9  17-Apr-03   LSR  add author; fix unix warnings

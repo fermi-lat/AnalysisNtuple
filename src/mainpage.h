@@ -32,7 +32,11 @@
  @section tools Tools
 
   There are currently seven tools: McValsTool, GltValsTool, CalValsTool, 
-  TkrValsTool, TkrHitValsTool, VtxValsTool, CalValsTool and AcdValsTool.
+  TkrValsTool, TkrHitValsTool, VtxValsTool, CalValsTool, AcdValsTool and EvtValsTool.
+
+  EvtValsTool is special, in that it produces ntuple variables from the variables in 
+  the other tools, using the getVal() method of those tools. These are generally needed 
+  for the Gleam implementation of the classification trees.
 
   The common interface is IValsTool, which provides access to the values in each tool,
   and handles the interactions with the visitor through the class ValsVisitor.
@@ -55,7 +59,7 @@
   An alternate spelling, to match the one used by NTupleWriterSvc.
 
  @param AnalysisNtupleAlg.toolList
-  A vector of strings that sets the list of tools requested. (Default is the 7 standard tools.) 
+  A vector of strings that sets the list of tools requested. (Default is the 8 standard tools.) 
   Each string is the name
   of a tool with the "ValsTool" removed, so "TkrHitValsTool" becomes "TkrHit". This means that
   any tool written for the package should be named "BlahBlahValsTool". 

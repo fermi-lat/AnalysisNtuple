@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.14 2003/04/17 21:39:29 atwood Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.15 2003/04/24 21:05:41 lsrea Exp $
 */
 
 // Include files
@@ -43,22 +43,25 @@ namespace {
     
     double sign(double x) { return (x<0.) ? -1.:1.;} 
     
-    double twrEdgeT(double x, double y, double pitch, int &XY, int &outer) {
+    double twrEdgeT(double x, double y, int nXTowers, int nYTowers, 
+        double pitch, int &XY, int &outer) {
         double edge = 0.; 
         double x_twr = sign(x)*(fmod(fabs(x),pitch) - pitch/2.);
         double y_twr = sign(y)*(fmod(fabs(y),pitch) - pitch/2.);
         
         outer = 0; 
+        int outerX = 0;
+        int outerY = 0;
         
         if(fabs(x_twr) > fabs(y_twr)) {
             edge = pitch/2. - fabs(x_twr);
             XY = 1; 
-            if(fabs(x) > 0.5*(_nTowers-1)*pitch) outer = 1;
+            if(fabs(x) > 0.5*(nXTowers-1)*pitch) outer = 1;
         }
         else {
             edge = pitch/2. - fabs(y_twr);
             XY = 2;
-            if(fabs(y) > 0.5*(_nTowers-1)*pitch) outer = 1;
+            if(fabs(y) > 0.5*(nYTowers-1)*pitch) outer = 1;
         }
         return edge;
     }
@@ -121,15 +124,16 @@ private:
     double Tkr_Blank_Hits;  
     double Tkr_RadLength; 
     double Tkr_TwrEdge; 
+    double Tkr_TrackLength;
     
     //First Track Specifics
     double Tkr_1_Chisq;
-    double Tkr_1_1stChisq;
+    double Tkr_1_FirstChisq;
     double Tkr_1_Gaps;
-    double Tkr_1_1stGaps; 
+    double Tkr_1_FirstGaps; 
     double Tkr_1_Hits;
-    double Tkr_1_1stHits;
-    double Tkr_1_1stLayer; 
+    double Tkr_1_FirstHits;
+    double Tkr_1_FirstLayer; 
     
     double Tkr_1_Qual;
     double Tkr_1_Type;
@@ -151,13 +155,13 @@ private:
     
     //Second Track Specifics
     double Tkr_2_Chisq;
-    double Tkr_2_1stChisq;
-    double Tkr_2_1stGaps; 
+    double Tkr_2_FirstChisq;
+    double Tkr_2_FirstGaps; 
     double Tkr_2_Qual;
     double Tkr_2_Type;
     double Tkr_2_Hits;
-    double Tkr_2_1stHits;
-    double Tkr_2_1stLayer; 
+    double Tkr_2_FirstHits;
+    double Tkr_2_FirstLayer; 
     
     
     double Tkr_2_Gaps;
@@ -243,17 +247,17 @@ StatusCode TkrValsTool::initialize()
     
     addItem("TkrRadLength",   &Tkr_RadLength);
     addItem("TkrTwrEdge",     &Tkr_TwrEdge);
+    addItem("TkrTrackLength", &Tkr_TrackLength);
     
     addItem("Tkr1Chisq",      &Tkr_1_Chisq);
-    addItem("Tkr1_1stChisq",  &Tkr_1_1stChisq);
-    
+    addItem("Tkr1FirstChisq",  &Tkr_1_FirstChisq);
     addItem("Tkr1Hits",       &Tkr_1_Hits);
-    addItem("Tkr1_1stHits",   &Tkr_1_1stHits);
-    addItem("Tkr1_1stLayer",  &Tkr_1_1stLayer);
+    addItem("Tkr1FirstHits",   &Tkr_1_FirstHits);
+    addItem("Tkr1FirstLayer",  &Tkr_1_FirstLayer);
     addItem("Tkr1DifHits",    &Tkr_1_DifHits);
     
     addItem("Tkr1Gaps",       &Tkr_1_Gaps);
-    addItem("Tkr1_1stGaps",   &Tkr_1_1stGaps);
+    addItem("Tkr1FirstGaps",   &Tkr_1_FirstGaps);
     
     addItem("Tkr1Qual",       &Tkr_1_Qual);
     addItem("Tkr1Type",       &Tkr_1_Type);
@@ -274,15 +278,15 @@ StatusCode TkrValsTool::initialize()
     addItem("Tkr1Z0",         &Tkr_1_z0);
     
     addItem("Tkr2Chisq",      &Tkr_2_Chisq);
-    addItem("Tkr2_1stChisq",   &Tkr_2_1stChisq);
+    addItem("Tkr2FirstChisq",   &Tkr_2_FirstChisq);
     
     addItem("Tkr2Hits",       &Tkr_2_Hits);
-    addItem("Tkr2_1stHits",   &Tkr_2_1stHits);
-    addItem("Tkr2_1stLayer",  &Tkr_2_1stLayer);
+    addItem("Tkr2FirstHits",   &Tkr_2_FirstHits);
+    addItem("Tkr2FirstLayer",  &Tkr_2_FirstLayer);
     addItem("Tkr2DifHits",    &Tkr_2_DifHits);
     
     addItem("Tkr2Gaps",       &Tkr_2_Gaps);
-    addItem("Tkr2_1stGaps",   &Tkr_2_1stGaps);
+    addItem("Tkr2FirstGaps",   &Tkr_2_FirstGaps);
     
     addItem("Tkr2Qual",       &Tkr_2_Qual);
     addItem("Tkr2Type",       &Tkr_2_Type);
@@ -376,13 +380,13 @@ StatusCode TkrValsTool::calculate()
         const Event::TkrKalFitTrack* track_1 = dynamic_cast<const Event::TkrKalFitTrack*>(trackBase);
         
         Tkr_1_Chisq        = track_1->getChiSquare();
-        Tkr_1_1stChisq     = track_1->chiSquareSegment();
-        Tkr_1_1stGaps      = track_1->getNumXFirstGaps() + track_1->getNumYFirstGaps();
+        Tkr_1_FirstChisq     = track_1->chiSquareSegment();
+        Tkr_1_FirstGaps      = track_1->getNumXFirstGaps() + track_1->getNumYFirstGaps();
         Tkr_1_Qual         = track_1->getQuality();
         Tkr_1_Type         = track_1->getType();
         Tkr_1_Hits         = track_1->getNumHits();
-        Tkr_1_1stHits      = track_1->getNumSegmentPoints();
-        Tkr_1_1stLayer     = track_1->getLayer();
+        Tkr_1_FirstHits      = track_1->getNumSegmentPoints();
+        Tkr_1_FirstLayer     = track_1->getLayer();
         Tkr_1_Gaps         = track_1->getNumGaps();
         Tkr_1_KalEne       = track_1->getKalEnergy(); 
         Tkr_1_ConEne       = track_1->getEnergy(); 
@@ -399,6 +403,8 @@ StatusCode TkrValsTool::calculate()
         Tkr_1_x0          = x1.x();
         Tkr_1_y0          = x1.y();
         Tkr_1_z0          = x1.z();
+
+        Tkr_TrackLength = -Tkr_1_z0/Tkr_1_zdir;
         
         double z_dist    = fabs((pTkrGeoSvc->trayHeight()+3.)/t1.z()); 
         double x_twr = sign(x1.x())*(fmod(fabs(x1.x()),towerPitch) - towerPitch/2.);
@@ -423,13 +429,13 @@ StatusCode TkrValsTool::calculate()
             const Event::TkrKalFitTrack* track_2 = dynamic_cast<const Event::TkrKalFitTrack*>(trackBase);
             
             Tkr_2_Chisq        = track_2->getChiSquare();
-            Tkr_2_1stChisq     = track_2->chiSquareSegment();
-            Tkr_2_1stGaps      = track_2->getNumXFirstGaps() + track_2->getNumYFirstGaps();
+            Tkr_2_FirstChisq     = track_2->chiSquareSegment();
+            Tkr_2_FirstGaps      = track_2->getNumXFirstGaps() + track_2->getNumYFirstGaps();
             Tkr_2_Qual         = track_2->getQuality();
             Tkr_2_Type         = track_2->getType();
             Tkr_2_Hits         = track_2->getNumHits();
-            Tkr_2_1stHits      = track_2->getNumSegmentPoints();
-            Tkr_2_1stLayer     = track_2->getLayer();
+            Tkr_2_FirstHits      = track_2->getNumSegmentPoints();
+            Tkr_2_FirstLayer     = track_2->getLayer();
             Tkr_2_Gaps         = track_2->getNumGaps();
             Tkr_2_KalEne       = track_2->getKalEnergy(); 
             Tkr_2_ConEne       = track_2->getEnergy(); 
@@ -532,7 +538,9 @@ StatusCode TkrValsTool::calculate()
             
             int outside = 0; 
             int iView   = 0;
-            double layer_edge = twrEdgeT(x_hit.x(), x_hit.y(), towerPitch, iView, outside);
+            double layer_edge = twrEdgeT(x_hit.x(), x_hit.y(), 
+                pTkrGeoSvc->numXTowers(), pTkrGeoSvc->numYTowers(), 
+                towerPitch, iView, outside);
             double rm_frac_plus = (layer_edge-gap/2.)/rm_soft; 
             double in_frac_soft = circle_fracT(rm_frac_plus);
             if(!outside) {

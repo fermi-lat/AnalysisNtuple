@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.12 2003/03/10 19:02:42 lsrea Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.13 2003/03/11 06:43:03 lsrea Exp $
 */
 
 // Include files
@@ -207,6 +207,7 @@ namespace {
       double CAL_a_Parm;
       double CAL_b_Parm; 
       double CAL_t_Pred; 
+      double CAL_deltaT;
       
       double CAL_EneSum_Corr;
       double CAL_Energy_Corr;
@@ -295,6 +296,7 @@ namespace {
       addItem("CalAParm",      &CAL_a_Parm);
       addItem("CalBParm",      &CAL_b_Parm);
       addItem("CalTPred",      &CAL_t_Pred);
+      addItem("CalDeltaT",     &CAL_deltaT);
       
       addItem("CalTwrEdge",     &CAL_TwrEdge);
       addItem("CalTE_Nrm",      &CAL_TE_Nrm);
@@ -615,7 +617,7 @@ StatusCode CalValsTool::calculate()
     CAL_Leak_Corr   = in_frac;
     CAL_Leak_Corr2  = in_frac_2; 
     CAL_TwrEdge_corr = twrEdgeC(CAL_x0_corr, CAL_y0_corr, twr_pitch, iView, outside);       
-    
+    CAL_deltaT      = CAL_Cnt_RLn - CAL_t_Pred;
     
     return sc;
 }
