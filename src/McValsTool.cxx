@@ -2,7 +2,7 @@
 @brief Calculates the Mc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.12 2003/09/30 19:01:20 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.13 2003/10/17 21:03:11 lsrea Exp $
 */
 // Include files
 
@@ -56,6 +56,7 @@ private:
     double MC_Id;
     double MC_Charge;
     double MC_Energy;
+	double MC_EFrac; 
     double MC_LogEnergy;
     
     double MC_x0;
@@ -121,6 +122,7 @@ StatusCode McValsTool::initialize()
     addItem("McCharge",       &MC_Charge);
     addItem("McEnergy",       &MC_Energy);  
     addItem("McLogEnergy",    &MC_LogEnergy);
+	addItem("McEFrac",        &MC_EFrac);
     addItem("McX0",           &MC_x0);           
     addItem("McY0",           &MC_y0);           
     addItem("McZ0",           &MC_z0);           
@@ -192,7 +194,21 @@ StatusCode McValsTool::calculate()
         MC_xdir   = Mc_t0.x();
         MC_ydir   = Mc_t0.y();
         MC_zdir   = Mc_t0.z();
-        
+
+		if((*pMCPrimary)->daughterList().size() > 0) {
+		    SmartRefVector<Event::McParticle> daughters = (*pMCPrimary)->daughterList();
+			SmartRef<Event::McParticle> pp1 = daughters[0]; 
+			std::string interaction = pp1->getProcess();
+			if(interaction == "conv") { // Its a photon conversion; For comptons "compt" or brems "brem"  
+				HepLorentzVector Mc_p1 = pp1->initialFourMomentum();
+				SmartRef<Event::McParticle> pp2 = daughters[1];
+				HepLorentzVector Mc_p2 = pp2->initialFourMomentum();
+				double e1 = Mc_p1.t();
+				double e2 = Mc_p2.t();
+				MC_EFrac = e1/MC_Energy; 
+				if(e1 < e2) MC_EFrac = e2/MC_Energy;
+			}  
+		}
         if(!pTracks) return sc; 
         int num_tracks = pTracks->size(); 
         if(num_tracks <= 0 ) return sc;
