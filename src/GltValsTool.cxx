@@ -2,7 +2,7 @@
 @brief Calculates the Trigger analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.19 2005/03/03 00:37:27 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.20 2005/03/07 22:36:06 lsrea Exp $
 */
 
 // Include files
@@ -178,7 +178,7 @@ StatusCode GltValsTool::calculate()
     Trig_word = word & bitMask;
     Trig_GemSummary = (word >> enums::GEM_offset) & bitMask;
 
-    SmartDataPtr<LdfEvent::EventSummaryData> eventSummary(m_pEventSvc, "/Event/Gem"); 
+    SmartDataPtr<LdfEvent::EventSummaryData> eventSummary(m_pEventSvc, "/Event/EventSummary"); 
 
     Trig_evtFlags = eventSummary==0 ? 0 : eventSummary->eventFlags();
 
