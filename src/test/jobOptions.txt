@@ -23,8 +23,6 @@ ApplicationMgr.DLLs+= {"RootIo", "GlastSvc", "G4Propagator","G4Generator",
                        "Recon", "TkrUtil"};
 ApplicationMgr.DLLs+= {"AnalysisNtuple"};
 
-ApplicationMgr.ExtSvc += { "GlastPropagatorSvc", "G4GeometrySvc" };
-
 // ----------------------------
 //  topalg
 //

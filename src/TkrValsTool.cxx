@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.13 2003/04/04 01:34:12 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.14 2003/04/17 21:39:29 atwood Exp $
 */
 
 // Include files
@@ -194,6 +194,7 @@ TkrValsTool::TkrValsTool(const std::string& type,
 StatusCode TkrValsTool::initialize()
 {
     StatusCode sc = StatusCode::SUCCESS;
+    StatusCode fail = StatusCode::FAILURE;
     
     MsgStream log(msgSvc(), name());
     
@@ -203,31 +204,28 @@ StatusCode TkrValsTool::initialize()
     
     if( serviceLocator() ) {
         
-        sc = serviceLocator()->service( "TkrGeometrySvc", pTkrGeoSvc, true );
-        if(sc.isFailure()) {
+        if(service( "TkrGeometrySvc", pTkrGeoSvc, true ).isFailure()) {
             log << MSG::ERROR << "Could not find TkrGeometrySvc" << endreq;
-            return sc;
+            return fail;
         }
-        
-        sc = toolSvc()->retrieveTool("TkrQueryClustersTool", pQueryClusters);
-        if (sc.isFailure()) {
-            log << MSG::ERROR << "Couldn't retrieve TkrQueryClusterTool" << endreq;
-            return StatusCode::FAILURE;
-        }
-        
-        
+               
         // pick up the chosen propagator
-        if (service("GlastPropagatorSvc", m_propSvc).isFailure()) {
-        log << MSG::ERROR << "Couldn't find the GlastPropagatorSvc!" << endreq;
-        return StatusCode::FAILURE;
+        if (service("GlastPropagatorSvc", m_propSvc, true ).isFailure()) {
+            log << MSG::ERROR << "Couldn't find the GlastPropagatorSvc!" << endreq;
+            return fail;
         }
         
-          pKalParticle = m_propSvc->getPropagator();
+        pKalParticle = m_propSvc->getPropagator();
         
     } else {
-        return StatusCode::FAILURE;
+        return fail;
     }
     
+    if (toolSvc()->retrieveTool("TkrQueryClustersTool", pQueryClusters).isFailure()) {
+        log << MSG::ERROR << "Couldn't retrieve TkrQueryClusterTool" << endreq;
+        return fail;
+    }
+
     // load up the map
     
     addItem("TkrNumTracks",   &Tkr_No_Tracks);
