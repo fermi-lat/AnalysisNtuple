@@ -2,8 +2,11 @@
   @brief Package AnalysisNtule
   @verbatim
 
- v1r6p2  21-Jul-03   THB  remove  Recon from test program job options 
- v1r6p1  20-Jul-03   THB  remove use Recon from requirements
+ v1r7p1  03-Sep-03   LSR  Fix calculation of Mc position; add particle type and charge
+                          More useful definition of McZErr; remove hardwired rad. lens. from TkrValsTool 
+ v1r7p0  27-Aug-03   WBA  adjust ad_hoc_factor in CalValsTools
+ v1r7    24-Aug-03   WBA  Lots of new variables
+ v1r6p2  20-Jul-03   THB  remove use Recon from requirements
  v1r6    17-Jul-03   LSR  Accessed new TkrGeometrySvc methods to remove more hard-wired numbers
                           Will change results in TkrValsTool
  v1r5p5  17-Jul-03   WBA  Updates to Cal & EvtVals.  Added Giebels last layer energy

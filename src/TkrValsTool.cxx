@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.22 2003/08/22 22:18:19 atwood Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.23 2003/08/30 13:52:49 lsrea Exp $
 */
 
 // Include files
@@ -381,11 +381,7 @@ StatusCode TkrValsTool::initialize()
 }
 
 namespace {
-    
-    double radThin   = .03; 
-    double radThick  = .18; 
-    double radTray   = .015;
-    
+
     // coefs from Miner
     double cfThin    = 0.722;
     double cfThick   = 1.864;
@@ -410,6 +406,15 @@ StatusCode TkrValsTool::calculate()
 
     //placeholder for offset
     double z0 = 0.0;
+
+    //double radThin   = .03; 
+    //double radThick  = .18; 
+    //double radTray   = .015;
+    double radThin  = pTkrGeoSvc->getAveConv(STANDARD); // was 0.03
+    double radThick = pTkrGeoSvc->getAveConv(SUPER);    // was 0.18
+    double radTray  = pTkrGeoSvc->getAveRest(ALL);      // was 0.015
+
+
     
     //Recover EventHeader Pointer
     //SmartDataPtr<Event::EventHeader> pEvent(m_pEventSvc, EventModel::EventHeader);

@@ -2,7 +2,7 @@
 @brief Calculates the Mc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.8 2003/08/22 16:17:16 atwood Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.9 2003/09/03 19:37:50 lsrea Exp $
 */
 // Include files
 
@@ -53,6 +53,8 @@ public:
 private:
     
     //Pure MC Tuple Items
+    double MC_Id;
+    double MC_Charge;
     double MC_Energy;
     double MC_LogEnergy;
     
@@ -115,6 +117,8 @@ StatusCode McValsTool::initialize()
     
     // load up the map
 
+    addItem("McId",           &MC_Id);  
+    addItem("McCharge",       &MC_Charge);
     addItem("McEnergy",       &MC_Energy);  
     addItem("McLogEnergy",    &MC_LogEnergy);
     addItem("McX0",           &MC_x0);           
@@ -161,13 +165,14 @@ StatusCode McValsTool::calculate()
         pMCPrimary++;
 
         Event::McParticle::StdHepId hepid= (*pMCPrimary)->particleProperty();
+        MC_Id = (double)hepid;
         ParticleProperty* ppty = m_ppsvc->findByStdHepID( hepid );
         std::string name = ppty->particle(); 
-        double charge = ppty->charge();
+        MC_Charge = ppty->charge();
         
         HepPoint3D Mc_x0;
         // launch point for charged particle; conversion point for neutral
-        Mc_x0 = (charge==0 ? (*pMCPrimary)->finalPosition() : (*pMCPrimary)->initialPosition());
+        Mc_x0 = (MC_Charge==0 ? (*pMCPrimary)->finalPosition() : (*pMCPrimary)->initialPosition());
         HepLorentzVector Mc_p0 = (*pMCPrimary)->initialFourMomentum();
         
         Vector Mc_t0 = Vector(Mc_p0.x(),Mc_p0.y(), Mc_p0.z()).unit();
@@ -218,7 +223,8 @@ StatusCode McValsTool::calculate()
             HepPoint3D x_start = Mc_x0 + arc_len*Mc_t0;
             MC_x_err  = x0.x()-x_start.x(); 
             MC_y_err  = x0.y()-x_start.y();
-            MC_z_err  = x0.z()-x_start.z();
+            // except for z, use the difference between MC conversion point and start of vertex track
+            MC_z_err  = x0.z()-Mc_x0.z();
             
             MC_xdir_err = t0.x()-Mc_t0.x(); 
             MC_ydir_err = t0.y()-Mc_t0.y();
