@@ -2,7 +2,7 @@
 @brief Calculates the Mc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.19 2004/09/30 17:12:21 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.20 2005/01/04 23:49:33 atwood Exp $
 */
 // Include files
 
@@ -317,7 +317,7 @@ double McValsTool::getEnergyExitingTkr(Event::McParticle* mcPart)
     double partEnergy = 0.;
     double partLostE  = 0.;
 
-    idents::VolumeIdentifier initial = mcPart->getInitialId();
+    //idents::VolumeIdentifier initial = mcPart->getInitialId();
     idents::VolumeIdentifier final   = mcPart->getFinalId();
 
     //This should check that the initial point of the particle is in the tracker
