@@ -2,6 +2,7 @@
   @brief Package AnalysisNtule
   @verbatim
 
+ v1r3    03-mar-03   LSR  reorganize interface; add functionality for Toby; fix varname spelling
  v1r2p2  01-mar-03   LSR  More cleanup of unix errors
  v1r2p1  28-Feb-03   LSR  Cleanup of unix errors
  v1r2    28-Feb-03   LSR  Make AnalysisNtupleAlg the test; cleanup of unix errors.
