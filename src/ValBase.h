@@ -2,7 +2,7 @@
 @brief header file for ValBase.cxx
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.h,v 1.24 2004/09/10 14:10:56 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.h,v 1.25 2004/09/10 14:32:51 lsrea Exp $
 */
 
 #ifndef ValBase_h
@@ -95,7 +95,7 @@ public:
 
     
 protected:
-    StatusCode getTypedPointer(std::string varName, TypedPointer* ptr, int check);
+    StatusCode getTypedPointer(std::string varName, TypedPointer*& ptr, int check);
 
 
     /// some static methods

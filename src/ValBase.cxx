@@ -2,7 +2,7 @@
 @brief implements all the methods of the XxxValsTools
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.cxx,v 1.23 2004/09/10 14:10:56 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.cxx,v 1.24 2004/09/10 14:32:51 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -67,8 +67,7 @@ ValBase::~ValBase()
 {
     mapIter it = m_ntupleMap.begin();
     for ( ; it!=m_ntupleMap.end(); ++it) {
-        TypedPointer* ptr = (*it)->second;
-        delete ptr;
+        delete (*it)->second;
         delete (*it);
     }
 }
@@ -203,7 +202,7 @@ StatusCode ValBase::getValCheck(std::string varName, int& value)
 }
 
 
-StatusCode ValBase::getTypedPointer(std::string varName, TypedPointer* ptr, int check)
+StatusCode ValBase::getTypedPointer(std::string varName, TypedPointer*& ptr, int check)
 {
     // optional check flag
 
@@ -225,7 +224,7 @@ StatusCode ValBase::getTypedPointer(std::string varName, TypedPointer* ptr, int 
             m_check = CHECK;
             return StatusCode::FAILURE;
         }
-        TypedPointer* ptr = (*it)->second;
+        ptr = (*it)->second;
     }
     m_check = CHECK;
     return sc;
@@ -235,7 +234,7 @@ StatusCode ValBase::getTypedPointer(std::string varName, TypedPointer* ptr, int 
 
 StatusCode ValBase::getVal(std::string varName, int& value, int check)
 {
-    TypedPointer* ptr;
+    TypedPointer* ptr = 0;
     StatusCode sc = getTypedPointer(varName, ptr, check);
     if(sc.isSuccess()) {
         value = *(reinterpret_cast<int*>(ptr->getPointer()));
@@ -245,7 +244,7 @@ StatusCode ValBase::getVal(std::string varName, int& value, int check)
 
 StatusCode ValBase::getVal(std::string varName, double& value, int check)
 {
-    TypedPointer* ptr;
+    TypedPointer* ptr = 0;
     StatusCode sc = getTypedPointer(varName, ptr, check);
     if(sc.isSuccess()) {
         value = *(reinterpret_cast<double*>(ptr->getPointer()));
@@ -255,7 +254,7 @@ StatusCode ValBase::getVal(std::string varName, double& value, int check)
 
 StatusCode ValBase::getVal(std::string varName, float& value, int check)
 {
-    TypedPointer* ptr;
+    TypedPointer* ptr = 0;
     StatusCode sc = getTypedPointer(varName, ptr, check);
     if(sc.isSuccess()) {
         value = *(reinterpret_cast<float*>(ptr->getPointer()));
