@@ -2,6 +2,7 @@
   @brief Package AnalysisNtule
   @verbatim
 
+ v1r3p4  11-mar-03   LSR  fix req. for unix
  v1r3p3  10-mar-03   LSR  fix test job
  v1r3p2  10-mar-03   LSR  force calculation for now, go to GlastPropagatorSvc; move listener init
  v1r3p1  04-mar-03   LSR  fiddle the req. file to get test_CalRecon working on unix
