@@ -1,4 +1,10 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.5 2003/03/03 07:23:08 lsrea Exp $
+
+/** @file VtxValsTool.cxx
+@brief Calculates the Vtx analysis variables
+@author Bill Atwood, Leon Rochester
+
+$Header$
+*/
 
 // Include files
 

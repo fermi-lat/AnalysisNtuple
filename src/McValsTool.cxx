@@ -1,5 +1,9 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.4 2003/03/03 22:49:26 lsrea Exp $
+/** @file McValsTool.cxx
+@brief Calculates the Mc analysis variables
+@author Bill Atwood, Leon Rochester
 
+$Header$
+*/
 // Include files
 
 

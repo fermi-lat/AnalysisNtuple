@@ -1,4 +1,9 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/AnalysisNtuple/IValsTool.h,v 1.8 2003/03/03 18:21:30 burnett Exp $
+/** @file IValsTool.h
+@brief common abstract inteface for all the XxxValsTools
+@author Leon Rochester
+
+$Header$
+*/
 
 #ifndef _H_IValsTool
 #define _H_IValsTool
@@ -12,7 +17,6 @@ static const InterfaceID IID_IValsTool("IValsTool", 2 , 3);
 * @brief Abstract interface for the XxxValsTools, including visitor
 *
 * @author Leon Rochester
-* $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/AnalysisNtuple/IValsTool.h,v 1.8 2003/03/03 18:21:30 burnett Exp $
 *
 */
 

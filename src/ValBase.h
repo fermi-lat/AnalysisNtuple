@@ -1,3 +1,10 @@
+/** @file ValBase.h
+@brief header file for ValBase.cxx
+@author Leon Rochester
+
+$Header$
+*/
+
 #ifndef ValBase_h
 #define ValBase_h
 
@@ -18,8 +25,6 @@ class IDataProviderSvc;
 @author Leon Rochester
 
 */
-
-// $Header
 
 class ValBase : public IValsTool,  public AlgTool,  virtual public IIncidentListener
 {

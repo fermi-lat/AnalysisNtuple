@@ -1,4 +1,9 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.8 2003/03/03 07:23:08 lsrea Exp $
+/** @file TkrValsTool.cxx
+@brief Calculates the Tkr analysis variables
+@author Bill Atwood, Leon Rochester
+
+$Header$
+*/
 
 // Include files
 

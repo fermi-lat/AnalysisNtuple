@@ -1,6 +1,10 @@
-//
-// Code to implement the Doca utility
-//
+/** @file Doca.cxx
+@brief calculates the DOCA between two straight lines, and related quantities
+@author Tracy Usher, Leon Rochester
+
+$Header$
+*/
+
 #include "Doca.h"
 
 //

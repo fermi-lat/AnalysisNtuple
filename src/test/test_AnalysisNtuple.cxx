@@ -1,4 +1,9 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/test/test_AnalysisNtuple.cxx,v 1.6 2003/02/27 21:11:38 lsrea Exp $
+/** @file test_AnalysisNtuple.cxx
+@brief Placeholder: the actual test module is AnalysisNtupleAlg
+@author Leon Rochester
+
+$Header$
+*/
 
 // Include files
 // Gaudi system includes

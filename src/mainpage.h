@@ -11,6 +11,9 @@
   which can be invoked independently from the algorithm, also
   allow access to all of the calculated variables.
 
+  The package name is a bit misleading, since the only the algorithm depends
+  on NTupleWriterSvc, not the tools.
+
  @section AnalysisNtupleAlg AnalysisNtupleAlg
 
   This algorithm writes out a comprehensive ntuple of derived analysis quantities.
@@ -34,14 +37,12 @@
   The common interface is IValsTool, which provides access to the values in each tool,
   and handles the interactions with the visitor through the class ValsVisitor.
 
-  Each tool keeps a list of ntuple names, and fills a list with these names and the 
-  pointers to the values they represent. This is what allows the visitor to return
-  names and values in a loop.
+  Each tool fills a list of variable names and pointers to the values they represent. 
+  This is what allows the visitor to return names and values in a loop.
 
-  Another method of the tool receives a call from the Gaudi IncidentSvc, to signal
-  the beginning of a new event. This signal allows the tool to do its calculations at most
-  once for each event.
-
+  Another method of each tool receives a call from the Gaudi IncidentSvc, to signal
+  the beginning of a new event. This signal allows the tool to do its calculations 
+  at most once for each event.
 
  @section jobOptions jobOptions
   

@@ -1,3 +1,11 @@
+/** @file Doca.h
+@brief header file for Doca.cxx (q.v.)
+@author Tracy Usher, Leon Rochester
+
+$Header$
+*/
+
+
 #ifndef Doca_H
 #define Doca_H
 
@@ -14,10 +22,7 @@
   Closest Point of Approach" found at 
   http://www.geometryalgorithms.com/Archive/algorithm_0106/algorithm_0106.htm
             
- @author Tracy Usher 03/05/02
-
- $Header$
-          
+ @author Tracy Usher 03/05/02          
 */
 class Doca
 {

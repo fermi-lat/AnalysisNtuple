@@ -1,4 +1,9 @@
-// Implements ntuple writing algorithm
+/** @file ValBase.cxx
+@brief implements all the methods of the XxxValsTools
+@author Leon Rochester
+
+$Header$
+*/
 
 #include "ValBase.h"
 

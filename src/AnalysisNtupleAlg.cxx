@@ -1,5 +1,9 @@
+/** @file AnalysisNtupleAlg.cxx
+@brief Uses the XxxValsTools to produce a comprehensive ntuple
+@author Leon Rochester
 
-// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.8 2003/03/03 18:21:30 burnett Exp $
+$Header$
+*/
 
 // Gaudi system includes
 #include "GaudiKernel/MsgStream.h"
@@ -18,7 +22,10 @@
 // for access to geometry perhaps
 #include "GlastSvc/GlastDetSvc/IGlastDetSvc.h"
 
-// visitor to do the ntuple (see IValsTool.h)
+/** @class NtupleVisitor
+@brief fields the callback from the tools; fills ntuple with names and values
+@author Leon Rochester
+*/
 class NtupleVisitor : virtual public IValsTool::Visitor
 {
 public:
@@ -46,12 +53,10 @@ IValsTool::Visitor::eVisitorRet NtupleVisitor::analysisValue(std::string varName
     return IValsTool::Visitor::CONT;
 }
 
-/*! @class AnalysisNtupleAlg
+/** @class AnalysisNtupleAlg
 @brief fills the ntuple from the XxxValsTools
 @author Leon Rochester
 */
-
-// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.8 2003/03/03 18:21:30 burnett Exp $
 
 class AnalysisNtupleAlg : public Algorithm {
 public:

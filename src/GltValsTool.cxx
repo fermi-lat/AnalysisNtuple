@@ -1,4 +1,9 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.6 2003/03/03 22:49:26 lsrea Exp $
+/** @file GltValsTool.cxx
+@brief Calculates the Trigger analysis variables
+@author Bill Atwood, Leon Rochester
+
+$Header$
+*/
 
 // Include files
 

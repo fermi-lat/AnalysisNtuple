@@ -1,11 +1,9 @@
 
-/*! 
-@brief Calculates Acd Values
+/** @file AcdValsTool.cxx
+@brief Calculates the Adc analysis variables
+@author Bill Atwood, Leon Rochester
 
-@authors Bill Atwood, Leon Rochester
-
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.3 2003/03/03 07:23:08 lsrea Exp $
-
+$Header$
 */
 
 #include "ValBase.h"
@@ -24,6 +22,9 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.3 2
 #include "Event/Recon/TkrRecon/TkrFitTrack.h"
 #include "Event/Recon/AcdRecon/AcdRecon.h"
 
+/** @class AcdValsTool.cxx 
+@brief Calculates Acd Values
+*/
 
 class AcdValsTool : public ValBase
 {
