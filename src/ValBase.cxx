@@ -1,12 +1,45 @@
 // Implements ntuple writing algorithm
 
-#include "src/ValBase.h"
+#include "ValBase.h"
 
 #include "GaudiKernel/IDataProviderSvc.h"
 #include "GaudiKernel/SmartDataPtr.h"
+#include "GaudiKernel/IIncidentSvc.h"
+#include "GaudiKernel/MsgStream.h"
 
 #include "Event/TopLevel/EventModel.h"
 #include "Event/TopLevel/Event.h"
+#include "ntupleWriterSvc/INTupleWriterSvc.h"
+
+ValBase::ValBase(const std::string& type, 
+                         const std::string& name, 
+                         const IInterface* parent)
+  : AlgTool( type, name, parent )
+  , m_newEvent(true)
+  , m_handleSet(false)
+{ 
+    m_ntupleMap.clear();
+ 
+}
+
+
+StatusCode ValBase::initialize()
+{
+    // use the incident service to register begin, end events
+    IIncidentSvc* incsvc = 0;
+    MsgStream log(msgSvc(), name());
+
+
+    StatusCode sc = serviceLocator()->service( "IncidentSvc", incsvc, true );
+    if(sc.isFailure()){
+        log << MSG::ERROR << "Could not find IncidentSvc" << endreq;
+        return sc;
+    }
+    incsvc->addListener(this, "BeginEvent", 100);
+    return sc;
+}
+
+
 
 void ValBase::zeroVals()
 {
@@ -74,13 +107,14 @@ StatusCode ValBase::fillNtuple (INTupleWriterSvc* pSvc, std::string tupleName)
 StatusCode ValBase::doCalcIfNotDone()
 {
     StatusCode sc = StatusCode::SUCCESS;    
-   
+#if 0  
     // kludge to get around multiple initializations of tool
     // too many calls to addListener otherwise!
     if(!m_handleSet) {
         m_incSvc->addListener(this, "BeginEvent", 100);
         m_handleSet = true;
     }
+#endif
     if(m_newEvent) {
         zeroVals();
         sc = calculate();
@@ -143,9 +177,3 @@ void ValBase::handle(const Incident & inc)
     }
 }
 
-void ValBase::setIncSvc(IIncidentSvc* incSvc)
-{
-    m_incSvc = incSvc;
-    // for now, do this at the first event
-    //incSvc->addListener(this, "BeginEvent", 100);
-}

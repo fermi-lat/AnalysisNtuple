@@ -1,26 +1,30 @@
 #ifndef ValBase_h
 #define ValBase_h
 
+#include "GaudiKernel/AlgTool.h"
+
 #include "GaudiKernel/IDataProviderSvc.h"
-#include "GaudiKernel/MsgStream.h"
+#include "GaudiKernel/IIncidentListener.h"
 
-
-#include "Event/TopLevel/Event.h"
-
-#include "ntupleWriterSvc/INTupleWriterSvc.h"
 #include "AnalysisNtuple/IValsTool.h"
 #include <string>
 #include <map>
 
-// Some def's and functions to be used later
-class ValBase : public IValsTool, virtual public IIncidentListener
+/** @class ValBase
+  @brief 
+
+  */
+class ValBase : public IValsTool,  public AlgTool,  virtual public IIncidentListener
 {
 public:
 
 typedef std::map<std::string, double*> valMap;
 typedef valMap::iterator mapIter;
 
-    ValBase() : m_newEvent(true), m_handleSet(false) {m_ntupleMap.clear();}
+    ValBase(const std::string& type, 
+            const std::string& name, 
+            const IInterface* parent);
+    
     ~ValBase() {return;}
 
     /// clear map values
@@ -38,15 +42,14 @@ typedef valMap::iterator mapIter;
     virtual void announceBadName(std::string varName);
     /// output the names and values, either all (default) or just one;
     virtual void browseValues(std::string varName = "");
-    /// store the data provider
-    //virtual void setEventSvc(IDataProviderSvc* svc);
-    /// pass in the pointer to the incident service
-    virtual void setIncSvc(IIncidentSvc* incsvc);
     /// this is called by the incident service at the beginning of an event
     virtual void handle(const Incident& inc);
 
     /// calculate all values, over-ridden by XxxValsTool
     virtual StatusCode calculate();
+
+    // common initialization for subclasses
+    virtual StatusCode initialize();
 
 protected:
 
@@ -56,7 +59,5 @@ protected:
     bool m_newEvent;
     /// flag to signal that handle is set
     bool m_handleSet;
-    /// pointer to incident service
-    IIncidentSvc* m_incSvc;
 };
 #endif

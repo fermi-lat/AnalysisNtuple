@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.1.1.1 2003/02/23 21:31:10 burnett Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.2 2003/02/24 17:55:45 lsrea Exp $
 
 // Include files
 
@@ -8,7 +8,6 @@
 #include "GaudiKernel/MsgStream.h"
 #include "GaudiKernel/IDataProviderSvc.h"
 #include "GaudiKernel/SmartDataPtr.h"
-#include "GaudiKernel/AlgTool.h"
 #include "GaudiKernel/ToolFactory.h"
 #include "GaudiKernel/IToolSvc.h"
 
@@ -156,7 +155,7 @@ double cal_trans(double x) {
 }
 
 
-class CalValsTool :  virtual public AlgTool, public ValBase
+class CalValsTool :   public ValBase
 {
 public:
     
@@ -240,7 +239,7 @@ const IToolFactory& CalValsToolFactory = s_factory;
 CalValsTool::CalValsTool(const std::string& type, 
                          const std::string& name, 
                          const IInterface* parent)
-                         : AlgTool( type, name, parent )
+                         : ValBase( type, name, parent )
 {    
     // Declare additional interface
     declareInterface<IValsTool>(this); 
@@ -251,18 +250,12 @@ StatusCode CalValsTool::initialize()
     StatusCode sc = StatusCode::SUCCESS;
     
     MsgStream log(msgSvc(), name());
+    if( ValBase::initialize().isFailure()) return StatusCode::FAILURE;
+
 
     // get the services
     
     if( serviceLocator() ) {
-
-        IIncidentSvc* incSvc;
-        sc = serviceLocator()->service( "IncidentSvc", incSvc, true );
-        if(sc.isFailure()){
-            log << MSG::ERROR << "Could not find IncidentSvc" << endreq;
-            return sc;
-        }
-        setIncSvc(incSvc);
 
         sc = serviceLocator()->service( "EventDataSvc", m_pEventSvc, true );
         if(sc.isFailure()){
@@ -285,18 +278,30 @@ StatusCode CalValsTool::initialize()
         }
 
         // Which propagator to use?
-        int m_PropagatorType = 0; 
+        int m_PropagatorType = 1; 
         IPropagatorTool* propTool = 0;
         if (m_PropagatorType == 0)
         {
             // Look for the G4PropagatorSvc service
             sc = toolSvc()->retrieveTool("G4PropagatorTool", propTool);
+
+            if( sc.isFailure()) {
+                log << MSG::ERROR <<"Couldn't retrieve G4PropagatorTool" << endreq;
+                return sc;
+            }
+
             log << MSG::INFO << "Using Geant4 Particle Propagator" << endreq;
         }
         else
         {
             // Look for GismoGenerator Service
             sc = toolSvc()->retrieveTool("RecoTool", propTool);
+            if( sc.isFailure()) {
+                log << MSG::ERROR <<"Couldn't retrieve RecoTool" << endreq;
+                return sc;
+            }
+
+
             log << MSG::INFO << "Using Gismo Particle Propagator" << endreq;
         }
         pKalParticle = propTool->getPropagator();      
@@ -341,7 +346,7 @@ StatusCode CalValsTool::initialize()
         m_ntupleMap["CAL_x0_corr"] =      &CAL_x0_corr;
         m_ntupleMap["CAL_y0_corr"] =      &CAL_y0_corr;
         m_ntupleMap["CAL_z0_corr"] =      &CAL_z0_corr;
-        m_ntupleMap["CAL_TwrEdge_cor"] =  &CAL_TwrEdge_corr; 
+        m_ntupleMap["CAL_TwrEdge_corr"] =  &CAL_TwrEdge_corr; 
 
     return sc;
 }
