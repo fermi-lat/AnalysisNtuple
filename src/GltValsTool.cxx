@@ -2,7 +2,7 @@
 @brief Calculates the Trigger analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.15 2004/10/09 04:36:25 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.16 2004/10/12 19:00:02 lsrea Exp $
 */
 
 // Include files
@@ -163,16 +163,17 @@ StatusCode GltValsTool::calculate()
     //SmartDataPtr<Event::TkrFitTrackCol>    
     //    pTracks(m_pEventSvc,EventModel::TkrRecon::TkrFitTrackCol);
 
-    int iTrig_tower  = -1;
-    int iTrig_layer  = 18;
-    int xTower = -1;
-    int yTower = -1; 
-    int iTrig_type = 0;
-
     int nLayers  = m_tkrGeom->numLayers();
     int nXTowers = m_tkrGeom->numXTowers();
     int nYTowers = m_tkrGeom->numYTowers();
     int nTowers  = nXTowers*nYTowers;
+
+    int iTrig_tower  = -1;
+    int iTrig_layer  = nLayers;
+    int xTower = -1;
+    int yTower = -1; 
+    int iTrig_type = 0;
+
 
     if(!pEvent || !pClusters) return StatusCode::FAILURE;
 
@@ -193,6 +194,7 @@ StatusCode GltValsTool::calculate()
     bool three_in_a_row = ((word & (1<<TRACK))!=0);
 
     int tower, layer;
+    // needs to be recast into an indexed vector maybe
     short x_hits[_nTowers][_nLayers]; 
     short y_hits[_nTowers][_nLayers]; 
     for(tower=0; tower<_nTowers; ++tower) {
@@ -210,9 +212,9 @@ StatusCode GltValsTool::calculate()
         while(layer--)
         {
             Event::TkrClusterVec xHitList = 
-                m_clusTool->getClustersReverseLayer(idents::TkrId::eMeasureX,layer);
+                m_clusTool->getClusters(idents::TkrId::eMeasureX,layer);
             Event::TkrClusterVec yHitList = 
-                m_clusTool->getClustersReverseLayer(idents::TkrId::eMeasureY,layer);
+                m_clusTool->getClusters(idents::TkrId::eMeasureY,layer);
 
             int x_hitCount = xHitList.size(); 
             int y_hitCount = yHitList.size();
@@ -233,7 +235,7 @@ StatusCode GltValsTool::calculate()
         }
 
         // Now search for the 3-in-a-rows (need to look for x & y hits in each...)
-        // If more than one tower triggers, use the one with the lowest recon layer number
+        // If more than one tower triggers, use the one with the highest layer number
         int nTotTrigs = 0;   // total number of possible triggers
         int nTowerTrigs = 0; // total number of towers that could trigger
         for(tower = 0; tower<nTowers; ++tower) {

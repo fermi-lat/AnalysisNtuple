@@ -2,6 +2,8 @@
   @brief Package AnalysisNtule
   @verbatim
  
+ v2r0p1  02-Jan-05   LSR  cleanup; remove reverseLayer() calls;
+                            change Tkr1FirstGapLayer to Tkr1FirstGapPlane 
  v2r0p0  16-Dec-04   TU   First tag for use with new TkrRecon TDS classes
          12-Oct-04   LSR  add EvtLiveTime, GltEventFlags, switch to m_tkrGeom
  v1r9p11 17-Sep-04   LSR  add GltGemSummary, and associated code
