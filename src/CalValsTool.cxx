@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.35 2003/12/16 21:07:44 atwood Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.36 2003/12/16 23:18:29 lsrea Exp $
 */
 
 // Include files
@@ -232,7 +232,6 @@ namespace {
 
       double CAL_TwrEdge;
       double CAL_LATEdge; 
-      double CAL_CalTkrAngle;
 
       double CAL_TE_Nrm;
       double CAL_Track_Sep;
@@ -360,8 +359,8 @@ namespace {
       addItem("CalTENrm",      &CAL_TE_Nrm);
       addItem("CalTrackSep",   &CAL_Track_Sep);
       addItem("CalTrackDoca",  &CAL_Track_DOCA);
+      addItem("CalTrackAngle", &CAL_Track_Angle);
       addItem("CalTwrGap",     &CAL_TwrGap);
-      addItem("CalTkrAngle",   &CAL_CalTkrAngle);
 
       addItem("CalELayer0",    &CAL_eLayer[0]);
       addItem("CalELayer1",    &CAL_eLayer[1]);
@@ -500,10 +499,7 @@ StatusCode CalValsTool::calculate()
         x0 = gamma->getPosition();
         t0 = gamma->getDirection();
     }
-    if(fabs(cal_dir.x()) < 1.) {
-        CAL_CalTkrAngle = acos(t0*cal_dir);
-    }
-    else CAL_CalTkrAngle = -.1; 
+  
     // this "cos(theta)" doesn't distinguish between up and down
     double costh  = fabs(t0.z()); 
     // This "phi" is restricted to the range 0 to pi/2
@@ -519,9 +515,13 @@ StatusCode CalValsTool::calculate()
     double x_diff_sq = x_diff*x_diff;
     double x_diff_t0 = x_diff*t0;
     CAL_Track_DOCA = sqrt(x_diff_sq - x_diff_t0*x_diff_t0);
+
     // The direction in Cal is opposite to tracking!
-    double cosCalt0 = -t0*cal_dir; 
-    CAL_Track_Angle = acos(cosCalt0);
+    if(fabs(cal_dir.x()) < 1.) {
+        double cosCalt0 = -t0*cal_dir; 
+        CAL_Track_Angle = acos(cosCalt0);
+    }
+    else CAL_Track_Angle = -.1; 
     
     // Section to apply edge and leakage correction to Cal data. 
     // First apply layer by layer edge correction  
