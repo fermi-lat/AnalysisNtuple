@@ -1,5 +1,5 @@
 
-// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.4 2003/02/27 21:11:37 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.5 2003/03/01 04:04:00 lsrea Exp $
 
 // Gaudi system includes
 #include "GaudiKernel/MsgStream.h"
@@ -162,7 +162,8 @@ StatusCode AnalysisNtupleAlg::execute()
         }
         ++m_count;
 
-        for( int i =0; i< m_toolvec.size(); ++i){
+        int size = m_toolvec.size();
+        for( int i =0; i<size; ++i){
             if(m_toolvec[i]->traverse(m_visitor)==ValsVisitor::ERROR) {
                 log << MSG::ERROR << m_toolvec[i] << " traversal failed" << endreq;
                 return fail;

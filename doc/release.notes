@@ -1,8 +1,9 @@
 /** @file release.notes
   @brief Package AnalysisNtule
-  @verbatum
+  @verbatim
 
- v1r2p1  28-Feb03    LSR  Cleanup of unix errors
+ v1r2p2  01-mar-03   LSR  More cleanup of unix errors
+ v1r2p1  28-Feb-03   LSR  Cleanup of unix errors
  v1r2    28-Feb-03   LSR  Make AnalysisNtupleAlg the test; cleanup of unix errors.
  v1r1    26-Feb-03   LSR  Retain order of ntuple variables; general cleanup and (unix) bug fixes
  v1r0    25-Feb-03   LSR  Add AnalysisNtupleAlg, VtxValsTool, visitor; rearrange methods
@@ -11,5 +12,5 @@
  v0r1    24-Feb-03   LSR  Add IncidentSvc to signal new event 
  v0      23-Feb-03   THB  Initial import
   
-  @endverbatum
+  @endverbatim
  */

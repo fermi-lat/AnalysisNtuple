@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.2 2003/02/26 17:16:21 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.3 2003/02/26 17:38:48 lsrea Exp $
 
 // Include files
 
@@ -220,7 +220,7 @@ StatusCode VtxValsTool::calculate()
             
             double dist = VTX_DOCA;
             double s1   = VTX_S1;
-            double s2   = VTX_S2; 
+            //double s2   = VTX_S2; 
             double root2 = sqrt(2.);
             double q2    = track_2->getQuality();   
             VTX_DOCA_Wgt = thrshold((dist-50./gamEne)/root2);  

@@ -202,8 +202,6 @@ void ValBase::handle(const Incident & inc)
 
 ValsVisitor::eVisitorRet ValBase::traverse(ValsVisitor* v)
 {
-    StatusCode sc;
-
     ValsVisitor::eVisitorRet ret = ValsVisitor::DONE;
 
     if(doCalcIfNotDone().isFailure()) return ValsVisitor::ERROR;
