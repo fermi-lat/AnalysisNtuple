@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.27 2003/10/03 17:04:40 atwood Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.28 2003/10/03 23:53:42 lsrea Exp $
 */
 
 // Include files
@@ -25,6 +25,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.27 
 #include "Event/Recon/TkrRecon/TkrFitPlane.h"
 #include "Event/Recon/TkrRecon/TkrFitTrack.h"
 #include "Event/Recon/TkrRecon/TkrKalFitTrack.h"
+#include "Event/Recon/TkrRecon/TkrFitPar.h"
 #include "Event/Recon/TkrRecon/TkrVertex.h"
 #include "Event/Recon/TkrRecon/TkrFitMatrix.h"
 
@@ -582,12 +583,11 @@ StatusCode TkrValsTool::calculate()
 		double chisq_first = 0.;
 		double chisq_last  = 0.; 
 		Event::TkrFitPlaneConPtr pln_pointer = track_1->begin();
-        //for the ToT path correction
-        // start with track direction, can move to hit direction later, if warranted
-        double slopeX = fabs(t1.x()/t1.z());
-        double slopeY = fabs(t1.y()/t1.z());
-        double pathFactorX = 1./sqrt(1. + slopeX*slopeX);
-        double pathFactorY = 1./sqrt(1. + slopeY*slopeY);
+        //for the ToT path correction; use the directions of each hit
+        double slopeX; // = fabs(t1.x()/t1.z());
+        double slopeY; // = fabs(t1.y()/t1.z());
+        double pathFactorX; // = 1./sqrt(1. + slopeX*slopeX);
+        double pathFactorY; // = 1./sqrt(1. + slopeY*slopeY);
 
         while(pln_pointer != track_1->end()) {
 			Event::TkrFitPlane plane = *pln_pointer;
@@ -596,19 +596,32 @@ StatusCode TkrValsTool::calculate()
 			Event::TkrCluster* cluster = pClusters->getHit(hit_Id);
             double tot = cluster->ToT(); 
             tot = std::min(tot, maxToTVal);
+
             // do the path correction
             if (tot<maxToTVal && true) { //set "true" to "false" to kill correction
-                Event::TkrCluster::view v = cluster->v();
                 //look at the non-measuring direction. This is the simplest one to start with,
                 // has the biggest effect.  In the measuring view, path length interacts with
                 // charge sharing, at least for moderately normal particles.
-                double pathFactor = (v==Event::TkrCluster::X) ? pathFactorY : pathFactorX;
-                tot *= pathFactor;
+                Event::TkrCluster::view v = cluster->v();
+                // get the local slopes
+                Event::TkrFitPar par = (plane.getHit(Event::TkrFitHit::SMOOTH )).getPar();
+                slopeX = fabs(par.getXSlope());
+                slopeY = fabs(par.getYSlope());
+                pathFactorX = 1./sqrt(1. + slopeX*slopeX);
+                pathFactorY = 1./sqrt(1. + slopeY*slopeY);
+
+                double pathFactor   = (v==Event::TkrCluster::X) ? pathFactorY : pathFactorX;
+                //simple cos(theta) correction over-corrects; the following fixes that up
+                double slope        = (v==Event::TkrCluster::X) ? slopeY : slopeX;
+                double theta        = atan(slope)*180./M_PI;
+                double thetaFactor  = 1. - theta*(1.21298e-4 + 6.17828e-5*theta);
+
+                tot = tot*pathFactor/thetaFactor;
             }
 
 			if(tot > max_ToT) max_ToT = tot; 
 			if(tot < min_ToT) min_ToT = tot; 
-			hit_counter++; 
+			hit_counter++;  
             if (hit_counter==1) Tkr_1_ToTFirst = tot;
 			Tkr_1_ToTAve += tot;
 			if(hit_counter < 3) {
