@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.51 2005/01/25 19:30:04 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.52 2005/01/25 23:06:25 lsrea Exp $
 */
 
 // To Do:
@@ -764,12 +764,12 @@ StatusCode TkrValsTool::calculate()
             double xSprd = sqrt(4.+xms*16.); // 4.0 sigma and not smaller then 2mm (was 2.5 sigma)
             double ySprd = sqrt(4.+yms*16.); // Limit to a tower... 
             double halfTray = 0.5*m_tkrGeom->trayWidth();
-            if(xSprd > halfTray) xSprd = halfTray;
-            if(ySprd > halfTray) ySprd = halfTray   ;
+            xSprd = std::min(xSprd, halfTray);
+            ySprd = std::min(ySprd, halfTray);
 
             // Assume location of shower center is given by 1st track
             Point x_hit = x1 + arc_len*t1;
-            int numHits = pQueryClusters->numberOfHitsNear(ilayer, xSprd, ySprd, x_hit);
+            int numHits = pQueryClusters->numberOfHitsNear(ilayer, xSprd, ySprd, x_hit, t1);
             if(ilayer == firstLayer) {
                 double xRgn = 30.*sqrt(1+(cos(Tkr_1_Phi)*secth)*(cos(Tkr_1_Phi)*secth));
                 double yRgn = 30.*sqrt(1+(sin(Tkr_1_Phi)*secth)*(sin(Tkr_1_Phi)*secth));
