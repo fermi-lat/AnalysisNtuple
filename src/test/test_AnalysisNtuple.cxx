@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/test/test_AnalysisNtuple.cxx,v 1.1.1.1 2003/02/23 21:31:10 burnett Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/test/test_AnalysisNtuple.cxx,v 1.2 2003/02/24 22:12:37 burnett Exp $
 
 // Include files
 // Gaudi system includes
@@ -13,6 +13,8 @@
 
 
 #include "AnalysisNtuple/IValsTool.h"
+
+#include <vector>
 
 // Define the class here instead of in a header file: not needed anywhere but here!
 //------------------------------------------------------------------------------
@@ -35,8 +37,7 @@ private:
 
     //tool stuff
     IToolSvc * m_pToolSvc;
-    IValsTool* m_caltool;
-    IValsTool* m_tkrtool;
+    std::vector<IValsTool*> m_toolvec;
 };
 
 //------------------------------------------------------------------------
@@ -80,20 +81,18 @@ StatusCode test_AnalysisNtuple::initialize(){
     }
 
 
-    
-    sc = m_pToolSvc->retrieveTool("CalValsTool", m_caltool);
-    if( sc.isFailure() ) {
-        log << MSG::ERROR << "Unable to find a  tool" << endreq;
-        return sc;
-    }
-    
-    
-    sc = m_pToolSvc->retrieveTool("TkrValsTool", m_tkrtool);
-    if( sc.isFailure() ) {
-        log << MSG::ERROR << "Unable to find a  tool" << endreq;
-        return sc;
-    }
+    const char * toolnames[] = {"CalValsTool","TkrValsTool",
+    "MCValsTool","TkrHitValsTool", "GltValsTool", "AcdValsTool"};
 
+    for( int i =0; i< 6; ++i){
+        m_toolvec.push_back(0);
+        sc = m_pToolSvc->retrieveTool(toolnames[i], m_toolvec.back());
+        if( sc.isFailure() ) {
+            log << MSG::ERROR << "Unable to find a  tool" << toolnames[i]<< endreq;
+            return sc;
+        }
+    }
+    
     return sc;
 }
 
