@@ -2,7 +2,7 @@
 @brief Uses the XxxValsTools to produce a comprehensive ntuple
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.14 2003/04/01 19:44:54 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.15 2003/04/17 18:27:12 lsrea Exp $
 */
 
 // Gaudi system includes
@@ -117,7 +117,7 @@ StatusCode AnalysisNtupleAlg::initialize(){
 
     //probably a better way to do this!
     // default set:
-    std::string toolnames [] = {"Mc", "Glt", "TkrHit", "Tkr", "Vtx",  "Cal", "Acd", ""};
+    std::string toolnames [] = {"Mc", "Glt", "TkrHit", "Tkr", "Vtx",  "Cal", "Acd", "Evt", ""};
 
     int i;
     int namesSize;
@@ -187,7 +187,7 @@ StatusCode AnalysisNtupleAlg::initialize(){
             log << MSG::ERROR << "AddItem failed" << endreq;
             return fail;
         }
-
+        
         int size = m_toolvec.size();
         for( int i =0; i<size; ++i){
             if(m_toolvec[i]->traverse(m_visitor, false)==IValsTool::Visitor::ERROR) {
@@ -246,14 +246,20 @@ StatusCode AnalysisNtupleAlg::execute()
     if(debugStuff) {
         double answer;
         
-        //do a browse
-        m_toolvec[0]->browse();
-
+        int namesSize = m_toolnames.size();
         int i;
+
+        //do a browse
+        //m_toolvec[namesSize-1]->browse();
+
+        for (i=0;i<namesSize; ++i) {
+            log << MSG::DEBUG << "Dump of variables in " << m_toolnames[i] << endreq;
+            m_toolvec[i]->browse();
+        }
+
         std::string varname;
         std::vector<std::string> varnames;
         varnames.clear();
-        int namesSize = m_toolnames.size();
         for (i=0; i<namesSize; ++i) {
             std::string toolname = m_toolnames[i];
             if      (toolname=="McValsTool"     ) {varname = "McXErr";}
@@ -263,6 +269,7 @@ StatusCode AnalysisNtupleAlg::execute()
             else if (toolname=="VtxValsTool"    ) {varname = "VtxZDir";}
             else if (toolname=="CalValsTool"    ) {varname = "CalEneSumCorr";}
             else if (toolname=="AcdValsTool"    ) {varname = "AcdTileCount";}
+            else if (toolname=="EvtValsTool"    ) {varname = "EvtLogESum";}
             else                                  {varname = "";}
             varnames.push_back(varname);
         }
