@@ -2,6 +2,7 @@
   @brief Package AnalysisNtule
   @verbatim
 
+ v1r9p8  10-Sep-04   LSR  replace string with ENUM in TypedPointer class
  v1r9p8  10-Sep-04   LSR  now can handle doubles, floats and ints
  v1r9p7  01-Sep-04   LSR  remove "use merit" from req. file
  v1r9p6  31-Aug-04   LSR  Add new variables -- To Mc: McSourceId

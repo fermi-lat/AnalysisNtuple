@@ -2,7 +2,7 @@
 @brief implements all the methods of the XxxValsTools
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.cxx,v 1.24 2004/09/10 14:32:51 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.cxx,v 1.25 2004/09/10 18:26:01 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -77,16 +77,16 @@ void ValBase::zeroVals()
     mapIter it = m_ntupleMap.begin();
     for ( ; it!=m_ntupleMap.end(); ++it) {
         TypedPointer* ptr = ((*it)->second);
-        if (ptr->getType()=="float")       *reinterpret_cast<float*>(ptr->getPointer()) = 0.0;
-        else if (ptr->getType()=="double") *reinterpret_cast<double*>(ptr->getPointer()) = 0.0;
-        else if (ptr->getType()=="int")    *reinterpret_cast<int*>(ptr->getPointer()) = 0;
+        if (ptr->getType()==FLOAT)       *reinterpret_cast<float*>(ptr->getPointer()) = 0.0;
+        else if (ptr->getType()==DOUBLE) *reinterpret_cast<double*>(ptr->getPointer()) = 0.0;
+        else if (ptr->getType()==INT)    *reinterpret_cast<int*>(ptr->getPointer()) = 0;
     }
 
 }
 
 void ValBase::addItem(std::string varName, double* pValue)
 {
-    TypedPointer* ptr = new TypedPointer("double", (void*) pValue);
+    TypedPointer* ptr = new TypedPointer(DOUBLE, (void*) pValue);
     valPair* pair = new valPair(varName, ptr);
 
     m_ntupleMap.push_back(pair);
@@ -94,14 +94,14 @@ void ValBase::addItem(std::string varName, double* pValue)
 
 void ValBase::addItem(std::string varName, float* pValue)
 {
-    TypedPointer* ptr = new TypedPointer("float", (void*) pValue);
+    TypedPointer* ptr = new TypedPointer(FLOAT, (void*) pValue);
     valPair* pair = new valPair(varName, ptr);
 
     m_ntupleMap.push_back(pair);
 }
 void ValBase::addItem(std::string varName, int* pValue)
 {
-    TypedPointer* ptr = new TypedPointer("int", (void*) pValue);
+    TypedPointer* ptr = new TypedPointer(INT, (void*) pValue);
     valPair* pair = new valPair(varName, ptr);
 
     m_ntupleMap.push_back(pair);
@@ -150,11 +150,11 @@ StatusCode ValBase::browse(std::string varName)
         std::cout << delim << pair->first << delim << ": " ;
 
         TypedPointer* ptr = (*it)->second;
-        std::string type = ptr->getType();
+        valType type = ptr->getType();
 
-        if (type=="float")       {std::cout << *reinterpret_cast<float*>(ptr->getPointer());}
-        else if (type=="double") {std::cout << *reinterpret_cast<double*>(ptr->getPointer());}
-        else if (type=="int")    {std::cout << *reinterpret_cast<int*>(ptr->getPointer());}
+        if (type==FLOAT)       {std::cout << *reinterpret_cast<float*>(ptr->getPointer());}
+        else if (type==DOUBLE) {std::cout << *reinterpret_cast<double*>(ptr->getPointer());}
+        else if (type==INT)    {std::cout << *reinterpret_cast<int*>(ptr->getPointer());}
         std::cout << separator;
     }
     std::cout << std::endl;
@@ -321,10 +321,10 @@ IValsTool::Visitor::eVisitorRet ValBase::traverse(IValsTool::Visitor* v,
     for ( ; it!=m_ntupleMap.end(); ++it) {
         valPair* pair = *it;
         TypedPointer* ptr = pair->second;
-        std::string type = ptr->getType();
-        if (type=="float") {
+        valType type = ptr->getType();
+        if (type==FLOAT) {
             ret = v->analysisValue(pair->first, *(reinterpret_cast<float*>(ptr->getPointer())));
-        } else if (type=="double") {
+        } else if (type==DOUBLE) {
             ret = v->analysisValue(pair->first, *(reinterpret_cast<double*>(ptr->getPointer())));
         } else {
             ret = v->analysisValue(pair->first, *(reinterpret_cast<int*>(ptr->getPointer())));

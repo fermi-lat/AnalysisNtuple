@@ -2,7 +2,7 @@
 @brief header file for ValBase.cxx
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.h,v 1.25 2004/09/10 14:32:51 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.h,v 1.26 2004/09/10 18:26:01 lsrea Exp $
 */
 
 #ifndef ValBase_h
@@ -27,22 +27,23 @@ class IDataProviderSvc;
 
 */
 namespace {
+    enum valType {DOUBLE, FLOAT, INT};
     class TypedPointer 
     {
     public:  
-        TypedPointer(std::string type, void* pointer) : m_type(type), m_pointer(pointer)
+        TypedPointer(valType type, void* pointer) : m_type(type), m_pointer(pointer)
         {}
         ~TypedPointer() {}
 
-        std::string getType()   { return    m_type; }
+        valType getType()       { return    m_type; }
         void* getPointer()      { return    m_pointer; }
         void setVal(int val)    { *(reinterpret_cast<int*>(getPointer())) = val; }
         void setVal(float val)  { *(reinterpret_cast<float*>(getPointer())) = val; }
         void setVal(double val) { *(reinterpret_cast<double*>(getPointer())) = val; }
 
     private:
-        std::string m_type;
-        void*       m_pointer;
+        valType m_type;
+        void*   m_pointer;
     };
 }
 
