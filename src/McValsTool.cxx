@@ -2,7 +2,7 @@
 @brief Calculates the Mc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.13 2003/10/17 21:03:11 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.14 2003/11/13 20:07:13 atwood Exp $
 */
 // Include files
 
@@ -56,8 +56,10 @@ private:
     double MC_Id;
     double MC_Charge;
     double MC_Energy;
-	double MC_EFrac; 
-    double MC_LogEnergy;
+	double MC_LogEnergy;
+	double MC_EFrac;
+	double MC_OpenAngle; 
+
     
     double MC_x0;
     double MC_y0;
@@ -123,6 +125,7 @@ StatusCode McValsTool::initialize()
     addItem("McEnergy",       &MC_Energy);  
     addItem("McLogEnergy",    &MC_LogEnergy);
 	addItem("McEFrac",        &MC_EFrac);
+	addItem("McOpenAngle",    &MC_OpenAngle);
     addItem("McX0",           &MC_x0);           
     addItem("McY0",           &MC_y0);           
     addItem("McZ0",           &MC_z0);           
@@ -207,6 +210,11 @@ StatusCode McValsTool::calculate()
 				double e2 = Mc_p2.t();
 				MC_EFrac = e1/MC_Energy; 
 				if(e1 < e2) MC_EFrac = e2/MC_Energy;
+				Vector Mc_t1 = Vector(Mc_p1.x(),Mc_p1.y(), Mc_p1.z()).unit();
+				Vector Mc_t2 = Vector(Mc_p2.x(),Mc_p2.y(), Mc_p2.z()).unit();
+				double dot_prod = Mc_t1*Mc_t2;
+				if(dot_prod > 1.) dot_prod = 1.;
+				MC_OpenAngle = acos(dot_prod);
 			}  
 		}
         if(!pTracks) return sc; 
