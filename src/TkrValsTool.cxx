@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.31 2003/12/16 21:08:23 atwood Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.32 2003/12/16 23:18:29 lsrea Exp $
 */
 
 // Include files
@@ -766,7 +766,11 @@ StatusCode TkrValsTool::calculate()
 
             Tkr_2TkrAngle = acos(t1*t2);  
             Point x2p  = x2 + ((x1.z()-x2.z())/t2.z())*t2;
-            double doca_plane = (x2p-x1).mag();
+            Point x20  = x2 - (x2.z()/t2.z())*t2;
+            Point x10  = x1 - (x1.z()/t1.z())*t1;
+			double doca_plane = (x2p-x1).mag();
+            double doca_0     = (x20-x10).mag();
+            if(doca_plane > doca_0) Tkr_2TkrAngle *= -1.; 
             Tkr_2TkrHDoca = -doca_plane*t1.z();
         }
 
