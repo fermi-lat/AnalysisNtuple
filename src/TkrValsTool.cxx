@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.48 2005/01/02 23:58:45 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.49 2005/01/04 23:49:33 atwood Exp $
 */
 
 // To Do:
@@ -786,10 +786,8 @@ StatusCode TkrValsTool::calculate()
                 break;
             }
             if (ilayer==firstLayer) {
-                // on first layer, add in 1/2 converter if the first plane of the track
-                //     is also the top plane of the layer
-                bool fullTopLayer = (firstLayer==m_tkrGeom->getLayer(firstPlane-1));
-                if(fullTopLayer) {delta_rad = 0.5*thisRad*secth;}
+                // on first layer, add in 1/2 if the 1st plane is the top of a layer
+                if(m_tkrGeom->isTopPlaneInLayer(firstPlane)) {delta_rad = 0.5*thisRad*secth;}
             } else {
                 // on subseqent layers, make sure that there is a minimum radiator
                 if(delta_rad*costh < thisRad) {

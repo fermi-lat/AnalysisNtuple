@@ -3,7 +3,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.48 2005/01/02 23:58:45 lsrea Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.49 2005/01/04 23:49:33 atwood Exp $
 */
 
 // Include files
@@ -565,17 +565,26 @@ StatusCode CalValsTool::calculate()
     // First: get the rad.lens. in the tracker 
     double t_tracker = track_1->getTkrCalRadlen();
     // Patch for error in KalFitTrack: 1/2 of first radiator left out
-    int layer = m_tkrGeom->getLayer(track_1->front()->getTkrId());
-    t_tracker += 0.5*m_tkrGeom->getReconRadLenConv(layer)/costh;
+    int plane = m_tkrGeom->getPlane(track_1->front()->getTkrId());
+    int layer = m_tkrGeom->getLayer(plane);
+    if (m_tkrGeom->isTopPlaneInLayer(plane)) {
+        t_tracker += 0.5*m_tkrGeom->getRadLenConv(layer)/costh;
+    }
 	// Need to fix a problem here.  There can be large fluctuations on single
 	// trajectories.  This should be fixed in TkrValsTool probably by averaging
 	// over a cylinder as we do in CalValsTool.
+
+    // add up the rad lens; this could be a local array if you're bothered by the overhead
+    //   but hey, compared to the propagator...
 	double tkr_radLen_nom = 0.; 
-    if(layer > 5) tkr_radLen_nom = (layer - 5.0)*.045 + 4*.195 + .03;
-	else          tkr_radLen_nom =  (layer - 1.0)*.195 + .03;
+    int layerCount = layer;
+    for(; layerCount>=0; --layerCount) {
+        tkr_radLen_nom += m_tkrGeom->getRadLenConv(layerCount) 
+            + m_tkrGeom->getRadLenRest(layerCount);
+    }
 	tkr_radLen_nom /= costh;
-	if(t_tracker > tkr_radLen_nom * 1.5) t_tracker = tkr_radLen_nom * 1.5;
-    if(t_tracker < tkr_radLen_nom * .5) t_tracker  = tkr_radLen_nom * .5;
+    if(t_tracker > tkr_radLen_nom * 1.5)     {t_tracker = tkr_radLen_nom * 1.5;}
+    else if(t_tracker < tkr_radLen_nom * .5) {t_tracker  = tkr_radLen_nom * .5;}
 
     // Find the distance in Cal to nearest edge along shower axis
     //       Need to check sides as well as the back
