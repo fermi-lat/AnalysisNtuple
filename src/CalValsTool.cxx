@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.26 2003/08/22 22:16:27 atwood Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.27 2003/08/24 22:17:28 atwood Exp $
 */
 
 // Include files
@@ -760,7 +760,7 @@ StatusCode CalValsTool::calculate()
     CAL_TotSum_Corr = CAL_EneSum_Corr/CAL_EnergySum;
     //CAL_Total_Corr  = CAL_Energy_Corr/CAL_EnergySum; 
 	CAL_CsI_RLn     = radLen_CsI;
-	CAL_MIP_Diff    = CAL_EnergySum - 12.52*radLen_CsI;
+	CAL_MIP_Diff    = CAL_EnergySum - 12.07*radLen_CsI;
     CAL_Tot_RLn     = t_total;
     CAL_Cnt_RLn     = t;
     CAL_DeadTot_Rat = radLen_Stuff/t_total;
