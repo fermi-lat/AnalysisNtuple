@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.20 2003/07/18 22:17:59 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.21 2003/08/22 16:17:47 atwood Exp $
 */
 
 // Include files
@@ -207,9 +207,11 @@ private:
 	double Tkr_1_Sxx;
 	double Tkr_1_Sxy;
 	double Tkr_1_Syy;
-	double Tkr_1_DTheta;
-	double Tkr_1_DPhi;
-    
+	double Tkr_1_ThetaErr;
+	double Tkr_1_PhiErr;
+	double Tkr_1_ErrAsym;
+	double Tkr_1_CovDet;
+   
     //Second Track Specifics
     double Tkr_2_Chisq;
     double Tkr_2_FirstChisq;
@@ -336,8 +338,10 @@ StatusCode TkrValsTool::initialize()
     addItem("Tkr1Y0",         &Tkr_1_y0);
     addItem("Tkr1Z0",         &Tkr_1_z0);
 
-	addItem("Tkr1DTheta",     &Tkr_1_DTheta);
-    addItem("Tkr1DPhi",       &Tkr_1_DPhi);
+	addItem("Tkr1ThetaErr",   &Tkr_1_ThetaErr);
+    addItem("Tkr1PhiErr",     &Tkr_1_PhiErr);
+	addItem("Tkr1ErrAsym",    &Tkr_1_ErrAsym);
+    addItem("Tkr1CovDet",     &Tkr_1_CovDet);
 	addItem("Tkr1SXX",        &Tkr_1_Sxx);
     addItem("Tkr1SXY",        &Tkr_1_Sxy);
     addItem("Tkr1SYY",        &Tkr_1_Syy);
@@ -476,10 +480,12 @@ StatusCode TkrValsTool::calculate()
 		Tkr_1_Syy         = Tkr_1_Cov.getcovSySy();
 		double sinPhi     = sin(Tkr_1_Phi);
 		double cosPhi     = cos(Tkr_1_Phi);
-		Tkr_1_DTheta      = t1.z()*t1.z()*sqrt(cosPhi*cosPhi*Tkr_1_Sxx + 
+		Tkr_1_ThetaErr      = t1.z()*t1.z()*sqrt(cosPhi*cosPhi*Tkr_1_Sxx + 
 			                      2.*sinPhi*cosPhi*Tkr_1_Sxy + sinPhi*sinPhi*Tkr_1_Syy); 
-		Tkr_1_DPhi        = (-t1.z())*sqrt(sinPhi*sinPhi*Tkr_1_Sxx + 
-			                      2.*sinPhi*cosPhi*Tkr_1_Sxy + cosPhi*cosPhi*Tkr_1_Syy);  
+		Tkr_1_PhiErr        = (-t1.z())*sqrt(sinPhi*sinPhi*Tkr_1_Sxx + 
+			                      2.*sinPhi*cosPhi*Tkr_1_Sxy + cosPhi*cosPhi*Tkr_1_Syy);
+		Tkr_1_ErrAsym     = fabs(Tkr_1_Sxy/(Tkr_1_Sxx + Tkr_1_Syy));
+		Tkr_1_CovDet      = sqrt(Tkr_1_Sxx*Tkr_1_Syy-Tkr_1_Sxy*Tkr_1_Sxy)*Tkr_1_zdir*Tkr_1_zdir;
 
         Tkr_TrackLength = -Tkr_1_z0/Tkr_1_zdir;
         
@@ -580,7 +586,7 @@ StatusCode TkrValsTool::calculate()
         //double total_radlen = pKalParticle->radLength(); 
         
         // Compute the sum-of radiation_lengths x Hits in each layer
-        double tracker_ene_sum  = 0.;
+        //double tracker_ene_sum  = 0.;
         double tracker_ene_corr = 0.; 
         double rad_len_sum  = 0.; 
         double radlen       = 0.;
@@ -653,7 +659,7 @@ StatusCode TkrValsTool::calculate()
             
             double ene      = delta_rad*numHits*10.;
             double ene_corr = corr_factor*delta_rad; //*ene;
-            tracker_ene_sum  += ene; 
+            //tracker_ene_sum  += ene; 
             tracker_ene_corr += ene_corr;
             total_hits       += numHits; 
             ave_edge         += layer_edge*delta_rad; 
@@ -672,7 +678,7 @@ StatusCode TkrValsTool::calculate()
         // defined in anonymous namespace above
         Tkr_Energy     = (cfThin*thin_hits + cfThick*thick_hits + cfNoConv*blank_hits
             + cfRadLen*rad_len_sum + cfZ*x1.z())/costh;
-        Tkr_Energy_Sum = tracker_ene_sum + cfNoConv1*blank_hits;  
+        //Tkr_Energy_Sum = tracker_ene_sum + cfNoConv1*blank_hits;  
         Tkr_Edge_Corr  = tracker_ene_corr/rad_len_sum;
         Tkr_Energy_Corr= Tkr_Edge_Corr*Tkr_Energy;
         Tkr_Total_Hits = total_hits;
