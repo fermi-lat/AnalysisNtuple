@@ -21,7 +21,7 @@ EventSelector.Input = "NONE";
 
 ApplicationMgr.DLLs+= {"RootIo", "GlastSvc", "G4Propagator","G4Generator", 
                         "TkrUtil"};
-ApplicationMgr.DLLs+= {"AnalysisNtuple", "Trigger"};
+ApplicationMgr.DLLs+= {"AnalysisNtuple"};
 
 ApplicationMgr.DLLs   += { "CalibSvc" };
 
@@ -34,7 +34,6 @@ DetectorPersistencySvc.CnvServices += {"CalibMySQLCnvSvc"};
 ApplicationMgr.TopAlg = {
     "mcRootReaderAlg",
     "digiRootReaderAlg",
-    "TriggerAlg",
     "reconRootReaderAlg",
     "AnalysisNtupleAlg"
     };
