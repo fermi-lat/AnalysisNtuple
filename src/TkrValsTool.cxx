@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.7 2003/03/01 04:04:00 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.8 2003/03/03 07:23:08 lsrea Exp $
 
 // Include files
 
@@ -241,78 +241,78 @@ StatusCode TkrValsTool::initialize()
     
     // load up the map
     
-    addItem("TKR_No_Tracks",    &Tkr_No_Tracks);
-    addItem("TKR_Sum_KalEne",   &Tkr_Sum_KalEne);
-    addItem("TKR_Sum_ConEne",   &Tkr_Sum_ConEne);
-    addItem("TKR_Energy",       &Tkr_Energy);
-    addItem("TKR_Energy_Sum",   &Tkr_Energy_Sum);
-    addItem("TKR_Energy_Corr",  &Tkr_Energy_Corr);
-    addItem("TKR_Edge_Corr",    &Tkr_Edge_Corr);
-    addItem("TKR_Total_Hits",   &Tkr_Total_Hits);
-    addItem("TKR_Thin_Hits",    &Tkr_Thin_Hits);
-    addItem("TKR_Thick_Hits",   &Tkr_Thick_Hits);
-    addItem("TKR_Blank_Hits",   &Tkr_Blank_Hits);
+    addItem("TkrNumTracks",    &Tkr_No_Tracks);
+    addItem("TkrSumKalEne",   &Tkr_Sum_KalEne);
+    addItem("TkrSumConEne",   &Tkr_Sum_ConEne);
+    addItem("TkrEnergy",       &Tkr_Energy);
+    addItem("TkrEnergySum",   &Tkr_Energy_Sum);
+    addItem("TkrEnergyCorr",  &Tkr_Energy_Corr);
+    addItem("TkrEdgeCorr",    &Tkr_Edge_Corr);
+    addItem("TkrTotalHits",   &Tkr_Total_Hits);
+    addItem("TkrThinHits",    &Tkr_Thin_Hits);
+    addItem("TkrThickHits",   &Tkr_Thick_Hits);
+    addItem("TkrBlankHits",   &Tkr_Blank_Hits);
     
-    addItem("TKR_RadLength",    &Tkr_RadLength);
-    addItem("TKR_TwrEdge",      &Tkr_TwrEdge);
+    addItem("TkrRadLength",    &Tkr_RadLength);
+    addItem("TkrTwrEdge",      &Tkr_TwrEdge);
     
-    addItem("TKR_1_Chisq",      &Tkr_1_Chisq);
-    addItem("TKR_1_1stChisq",   &Tkr_1_1stChisq);
+    addItem("Tkr1Chisq",      &Tkr_1_Chisq);
+    addItem("Tkr1_1stChisq",   &Tkr_1_1stChisq);
     
-    addItem("TKR_1_Hits",       &Tkr_1_Hits);
-    addItem("TKR_1_1stHits",    &Tkr_1_1stHits);
-    addItem("TKR_1_1stLayer",   &Tkr_1_1stLayer);
-    addItem("TKR_1_DifHits",    &Tkr_1_DifHits);
+    addItem("Tkr1Hits",       &Tkr_1_Hits);
+    addItem("Tkr1_1stHits",    &Tkr_1_1stHits);
+    addItem("Tkr1_1stLayer",   &Tkr_1_1stLayer);
+    addItem("Tkr1DifHits",    &Tkr_1_DifHits);
     
-    addItem("TKR_1_Gaps",       &Tkr_1_Gaps);
-    addItem("TKR_1_1stGaps",    &Tkr_1_1stGaps);
+    addItem("Tkr1Gaps",       &Tkr_1_Gaps);
+    addItem("Tkr1_1stGaps",    &Tkr_1_1stGaps);
     
-    addItem("TKR_1_Qual",       &Tkr_1_Qual);
-    addItem("TKR_1_Type",       &Tkr_1_Type);
-    addItem("TKR_1_TwrEdge",    &Tkr_1_TwrEdge);
-    addItem("TKR_1_PrjTwrEdge", &Tkr_1_PrjTwrEdge);
-    addItem("TKR_1_DieEdge",    &Tkr_1_DieEdge);
+    addItem("Tkr1Qual",       &Tkr_1_Qual);
+    addItem("Tkr1Type",       &Tkr_1_Type);
+    addItem("Tkr1TwrEdge",    &Tkr_1_TwrEdge);
+    addItem("Tkr1PrjTwrEdge", &Tkr_1_PrjTwrEdge);
+    addItem("Tkr1DieEdge",    &Tkr_1_DieEdge);
     
-    addItem("TKR_1_KalEne",     &Tkr_1_KalEne);
-    addItem("TKR_1_ConEne",     &Tkr_1_ConEne);
-    addItem("TKR_1_KalThetaMS", &Tkr_1_KalThetaMS);
+    addItem("Tkr1KalEne",     &Tkr_1_KalEne);
+    addItem("Tkr1ConEne",     &Tkr_1_ConEne);
+    addItem("Tkr1KalThetaMS", &Tkr_1_KalThetaMS);
     
-    addItem("TKR_1_xdir",       &Tkr_1_xdir);
-    addItem("TKR_1_ydir",       &Tkr_1_ydir);
-    addItem("TKR_1_zdir",       &Tkr_1_zdir);
-    addItem("TKR_1_Phi",        &Tkr_1_Phi);
-    addItem("TKR_1_x0",         &Tkr_1_x0);
-    addItem("TKR_1_y0",         &Tkr_1_y0);
-    addItem("TKR_1_z0",         &Tkr_1_z0);
+    addItem("Tkr1XDir",       &Tkr_1_xdir);
+    addItem("Tkr1YDir",       &Tkr_1_ydir);
+    addItem("Tkr1ZDir",       &Tkr_1_zdir);
+    addItem("Tkr1Phi",        &Tkr_1_Phi);
+    addItem("Tkr1X0",         &Tkr_1_x0);
+    addItem("Tkr1Y0",         &Tkr_1_y0);
+    addItem("Tkr1Z0",         &Tkr_1_z0);
     
-    addItem("TKR_2_Chisq",      &Tkr_2_Chisq);
-    addItem("TKR_2_1stChisq",   &Tkr_2_1stChisq);
+    addItem("Tkr2Chisq",      &Tkr_2_Chisq);
+    addItem("Tkr2_1stChisq",   &Tkr_2_1stChisq);
     
-    addItem("TKR_2_Hits",       &Tkr_2_Hits);
-    addItem("TKR_2_1stHits",    &Tkr_2_1stHits);
-    addItem("TKR_2_1stLayer",   &Tkr_2_1stLayer);
-    addItem("TKR_2_DifHits",    &Tkr_2_DifHits);
+    addItem("Tkr2Hits",       &Tkr_2_Hits);
+    addItem("Tkr2_1stHits",    &Tkr_2_1stHits);
+    addItem("Tkr2_1stLayer",   &Tkr_2_1stLayer);
+    addItem("Tkr2DifHits",    &Tkr_2_DifHits);
     
-    addItem("TKR_2_Gaps",       &Tkr_2_Gaps);
-    addItem("TKR_2_1stGaps",    &Tkr_2_1stGaps);
+    addItem("Tkr2Gaps",       &Tkr_2_Gaps);
+    addItem("Tkr2_1stGaps",    &Tkr_2_1stGaps);
     
-    addItem("TKR_2_Qual",       &Tkr_2_Qual);
-    addItem("TKR_2_Type",       &Tkr_2_Type);
-    addItem("TKR_2_TwrEdge",    &Tkr_2_TwrEdge);
-    addItem("TKR_2_PrjTwrEdge", &Tkr_2_PrjTwrEdge);
-    addItem("TKR_2_DieEdge",    &Tkr_2_DieEdge);
+    addItem("Tkr2Qual",       &Tkr_2_Qual);
+    addItem("Tkr2Type",       &Tkr_2_Type);
+    addItem("Tkr2TwrEdge",    &Tkr_2_TwrEdge);
+    addItem("Tkr2PrjTwrEdge", &Tkr_2_PrjTwrEdge);
+    addItem("Tkr2DieEdge",    &Tkr_2_DieEdge);
+   
+    addItem("Tkr2KalEne",     &Tkr_2_KalEne);
+    addItem("Tkr2ConEne",     &Tkr_2_ConEne);
+    addItem("Tkr2KalThetaMS", &Tkr_2_KalThetaMS);
     
-    addItem("TKR_2_KalEne",     &Tkr_2_KalEne);
-    addItem("TKR_2_ConEne",     &Tkr_2_ConEne);
-    addItem("TKR_2_KalThetaMS", &Tkr_2_KalThetaMS);
-    
-    addItem("TKR_2_xdir",       &Tkr_2_xdir);
-    addItem("TKR_2_ydir",       &Tkr_2_ydir);
-    addItem("TKR_2_zdir",       &Tkr_2_zdir);
-    addItem("TKR_2_Phi",        &Tkr_2_Phi);
-    addItem("TKR_2_x0",         &Tkr_2_x0);
-    addItem("TKR_2_y0",         &Tkr_2_y0);
-    addItem("TKR_2_z0",         &Tkr_2_z0);    
+    addItem("Tkr2XDir",       &Tkr_2_xdir);
+    addItem("Tkr2YDir",       &Tkr_2_ydir);
+    addItem("Tkr2ZDir",       &Tkr_2_zdir);
+    addItem("Tkr2Phi",        &Tkr_2_Phi);
+    addItem("Tkr2X0",         &Tkr_2_x0);
+    addItem("Tkr2Y0",         &Tkr_2_y0);
+    addItem("Tkr2Z0",         &Tkr_2_z0);    
     
     zeroVals();
     
@@ -354,9 +354,11 @@ StatusCode TkrValsTool::calculate()
     
     // Recover Track associated info. 
     SmartDataPtr<Event::TkrFitTrackCol>  pTracks(m_pEventSvc,EventModel::TkrRecon::TkrFitTrackCol);
-    SmartDataPtr<Event::TkrVertexCol>     pVerts(m_pEventSvc,EventModel::TkrRecon::TkrVertexCol);
-    SmartDataPtr<Event::TkrClusterCol> pClusters(m_pEventSvc,EventModel::TkrRecon::TkrClusterCol);
-    
+    //SmartDataPtr<Event::TkrVertexCol>     pVerts(m_pEventSvc,EventModel::TkrRecon::TkrVertexCol);
+    //SmartDataPtr<Event::TkrClusterCol> pClusters(m_pEventSvc,EventModel::TkrRecon::TkrClusterCol);
+
+    if(!pTracks) return StatusCode::FAILURE;
+
     // all variable values are preset to zero. Be sure to re-initialize the ones you care about  
     
     //Make sure we have valid reconstructed data

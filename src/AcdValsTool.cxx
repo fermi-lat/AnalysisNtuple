@@ -4,7 +4,7 @@
 
 @authors Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.2 2003/02/26 17:38:48 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.3 2003/03/03 07:23:08 lsrea Exp $
 
 */
 
@@ -83,11 +83,11 @@ StatusCode AcdValsTool::initialize()
    }
       
     // load up the map
-    addItem("ACD_Total_Energy", &ACD_Total_Energy);
-    addItem("ACD_TileCount",    &ACD_Tile_Count);
-    addItem("ACD_DOCA",         &ACD_DOCA);
-    addItem("ACD_ActiveDist",   &ACD_ActiveDist);
-    addItem("ACD_GammaDOCA",    &ACD_GammaDOCA);
+    addItem("AcdTotalEnergy", &ACD_Total_Energy);
+    addItem("AcdTileCount",    &ACD_Tile_Count);
+    addItem("AcdDoca",         &ACD_DOCA);
+    addItem("AcdActiveDist",   &ACD_ActiveDist);
+    addItem("AcdGammaDoca",    &ACD_GammaDOCA);
     
     zeroVals();
     
@@ -99,12 +99,14 @@ StatusCode AcdValsTool::calculate()
 {
     StatusCode sc = StatusCode::SUCCESS;
     
-    // Recover Track associated info. 
-    SmartDataPtr<Event::TkrFitTrackCol>  pTracks(m_pEventSvc,EventModel::TkrRecon::TkrFitTrackCol);
-    SmartDataPtr<Event::TkrVertexCol>     pVerts(m_pEventSvc,EventModel::TkrRecon::TkrVertexCol);
-    // Recover pointer to ACD info  
-    SmartDataPtr<Event::AcdRecon>           pACD(m_pEventSvc,EventModel::AcdRecon::Event);
     
+    SmartDataPtr<Event::AcdRecon>           pACD(m_pEventSvc,EventModel::AcdRecon::Event);
+
+    // Recover Track associated info. (not currently used 
+    //SmartDataPtr<Event::TkrFitTrackCol>  pTracks(m_pEventSvc,EventModel::TkrRecon::TkrFitTrackCol);
+    //SmartDataPtr<Event::TkrVertexCol>     pVerts(m_pEventSvc,EventModel::TkrRecon::TkrVertexCol);
+    // Recover pointer to ACD info  
+
     //Make sure we have valid ACD data
     if (pACD)
     {
@@ -113,6 +115,8 @@ StatusCode AcdValsTool::calculate()
         ACD_DOCA          = pACD->getDoca();
         ACD_ActiveDist    = pACD->getActiveDist();
         ACD_GammaDOCA     = pACD->getGammaDoca();
+    } else {
+        return StatusCode::FAILURE;
     }
     
     return sc;

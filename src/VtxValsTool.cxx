@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.4 2003/03/01 16:05:01 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.5 2003/03/03 07:23:08 lsrea Exp $
 
 // Include files
 
@@ -112,27 +112,27 @@ StatusCode VtxValsTool::initialize()
     // load up the map
     
     // Pair reconstruction
-    addItem("VTX_xdir",      &VTX_xdir);     
-    addItem("VTX_ydir",      &VTX_ydir);     
-    addItem("VTX_zdir",      &VTX_zdir);     
-    addItem("VTX_Phi",       &VTX_Phi);      
-    addItem("VTX_x0",        &VTX_x0);       
-    addItem("VTX_y0",        &VTX_y0);       
-    addItem("VTX_z0",        &VTX_z0);       
-    addItem("VTX_Angle",     &VTX_Angle);    
-    addItem("VTX_DOCA",      &VTX_DOCA);     
-    addItem("VTX_Head_Sep",  &VTX_Head_Sep); 
+    addItem("VtxXDir",      &VTX_xdir);     
+    addItem("VtxYDir",      &VTX_ydir);     
+    addItem("VtxZDir",      &VTX_zdir);     
+    addItem("VtxPhi",       &VTX_Phi);      
+    addItem("VtxX0",        &VTX_x0);       
+    addItem("VtxY0",        &VTX_y0);       
+    addItem("VtxZ0",        &VTX_z0);       
+    addItem("VtxAngle",     &VTX_Angle);    
+    addItem("VtxDOCA",      &VTX_DOCA);     
+    addItem("VtxHeadSep",  &VTX_Head_Sep); 
     
-    addItem("VTX_S1",        &VTX_S1);       
-    addItem("VTX_S2",        &VTX_S2);       
+    addItem("VtxS1",        &VTX_S1);       
+    addItem("VtxS2",        &VTX_S2);       
     
-    addItem("VTX_DOCA_Wgt",  &VTX_DOCA_Wgt); 
-    addItem("VTX_HS_Wgt",    &VTX_HS_Wgt);   
+    addItem("VtxDocaWgt",  &VTX_DOCA_Wgt); 
+    addItem("VtxHSWgt",    &VTX_HS_Wgt);   
     
-    addItem("VTX_S1_Wgt",    &VTX_S1_Wgt);   
-    addItem("VTX_T12_Wgt",   &VTX_T12_Wgt);  
-    addItem("VTX_T2Q_Wgt",   &VTX_T2Q_Wgt);
-    addItem("VTX_Total_Wgt", &VTX_Total_Wgt);
+    addItem("VtxS1Wgt",    &VTX_S1_Wgt);   
+    addItem("VtxT12Wgt",   &VTX_T12_Wgt);  
+    addItem("VtxT2QWgt",   &VTX_T2Q_Wgt);
+    addItem("VtxTotalWgt", &VTX_Total_Wgt);
     
     
     zeroVals();

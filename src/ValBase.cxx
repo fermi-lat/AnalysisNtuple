@@ -127,6 +127,7 @@ StatusCode ValBase::doCalcIfNotDone()
 #endif
 
     if(m_newEvent) {
+        if (!m_pEventSvc)  return StatusCode::FAILURE;
         zeroVals();
         sc = calculate();
         //std::cout << "calculation done for this event" << std::endl;
@@ -200,17 +201,19 @@ void ValBase::handle(const Incident & inc)
     }
 }
 
-IValsTool::Visitor::eVisitorRet ValBase::traverse(IValsTool::Visitor* v)
+IValsTool::Visitor::eVisitorRet ValBase::traverse(IValsTool::Visitor* v,
+                                                  const bool checkCalc)
 {
     IValsTool::Visitor::eVisitorRet ret = IValsTool::Visitor::DONE;
 
- //THB for now   if(doCalcIfNotDone().isFailure()) return IValsTool::Visitor::ERROR;
+    if (checkCalc) {
+        if(doCalcIfNotDone().isFailure()) return IValsTool::Visitor::ERROR;
+    }
 
     constMapIter it = m_ntupleMap.begin();
     for ( ; it!=m_ntupleMap.end(); ++it) {
         valPair* pair = *it;
-        double value = *(pair->second);
-        ret = v->analysisValue(pair->first, value);
+        ret = v->analysisValue(pair->first, *(pair->second));
         if (ret!= IValsTool::Visitor::CONT) return ret;
     }
     return IValsTool::Visitor::DONE;

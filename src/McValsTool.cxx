@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.2 2003/02/26 17:38:48 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.3 2003/03/03 07:23:08 lsrea Exp $
 
 // Include files
 
@@ -103,26 +103,26 @@ StatusCode McValsTool::initialize()
     
     // load up the map
 
-    addItem("MC_Energy",        &MC_Energy);       
-    addItem("MC_x0",            &MC_x0);           
-    addItem("MC_y0",            &MC_y0);           
-    addItem("MC_z0",            &MC_z0);           
+    addItem("McEnergy",       &MC_Energy);       
+    addItem("McX0",           &MC_x0);           
+    addItem("McY0",           &MC_y0);           
+    addItem("McZ0",           &MC_z0);           
     
-    addItem("MC_xdir",          &MC_xdir);         
-    addItem("MC_ydir",          &MC_ydir);         
-    addItem("MC_zdir",          &MC_zdir);         
+    addItem("McXDir",         &MC_xdir);         
+    addItem("McYDir",         &MC_ydir);         
+    addItem("McZDir",         &MC_zdir);         
     
-    addItem("MC_x_err",         &MC_x_err);        
-    addItem("MC_y_err",         &MC_y_err);        
-    addItem("MC_z_err",         &MC_z_err);        
+    addItem("McXErr",         &MC_x_err);        
+    addItem("McYErr",         &MC_y_err);        
+    addItem("McZErr",         &MC_z_err);        
     
-    addItem("MC_xdir_err",      &MC_xdir_err);     
-    addItem("MC_ydir_err",      &MC_ydir_err);     
-    addItem("MC_zdir_err",      &MC_zdir_err);     
+    addItem("McXDirErr",      &MC_xdir_err);     
+    addItem("McYDirErr",      &MC_ydir_err);     
+    addItem("McZDirErr",      &MC_zdir_err);     
     
-    addItem("MC_dir_err",       &MC_dir_err);      
-    addItem("MC_TKR1_dir_err",  &MC_TKR1_dir_err); 
-    addItem("MC_TKR2_dir_err",  &MC_TKR2_dir_err);   
+    addItem("McDirErr",       &MC_dir_err);      
+    addItem("McTKR1DirErr",   &MC_TKR1_dir_err); 
+    addItem("McTKR2DirErr",   &MC_TKR2_dir_err);   
     
     zeroVals();
     
@@ -140,8 +140,6 @@ StatusCode McValsTool::calculate()
     // Recover MC Pointer
     SmartDataPtr<Event::McParticleCol> pMcParticle(m_pEventSvc, EventModel::MC::McParticleCol);
     
-    //Make sure we have valid ACD data
-    //Make sure we have valid cluster data
     if (pMcParticle) {
         
         // Get the first Track - it should be the "Best Track"

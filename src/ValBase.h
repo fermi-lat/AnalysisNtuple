@@ -50,7 +50,8 @@ public:
     /// this is called by the incident service at the beginning of an event
     virtual void handle(const Incident& inc);
     /// callback for visitor
-    virtual IValsTool::Visitor::eVisitorRet traverse(IValsTool::Visitor * v);
+    virtual IValsTool::Visitor::eVisitorRet traverse(IValsTool::Visitor * v,
+        const bool checkCalc);
     
     /// calculate all values; implemented by each XxxValsTool
     virtual StatusCode calculate();

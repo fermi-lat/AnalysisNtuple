@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrHitValsTool.cxx,v 1.2 2003/02/26 17:38:48 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrHitValsTool.cxx,v 1.3 2003/03/03 07:23:08 lsrea Exp $
 
 // Include files
 
@@ -85,29 +85,29 @@ StatusCode TkrHitValsTool::initialize()
     
     // load up the map
 
-    addItem("TKR_Cnv_Lyr_Hits",        &Tkr_Cnv_Lyr_Hits);       
-    addItem("TKR_Max_controller_hits", &Tkr_Max_controller_hits);
-    addItem("TKR_Fst_Cnv_Lyr",         &Tkr_Fst_Cnv_Lyr);        
-    addItem("TKR_NCnv_Lyrs_Hit",       &Tkr_NCnv_Lyrs_Hit);      
+    addItem("TkrNumHits",        &Tkr_Cnv_Lyr_Hits);       
+    addItem("TkrMaxControllerHits", &Tkr_Max_controller_hits);
+    addItem("Tkr1stLayer",         &Tkr_Fst_Cnv_Lyr);        
+    addItem("TkrNumLayersHit",       &Tkr_NCnv_Lyrs_Hit);      
     
-    addItem("TKR_Hits_In_Lyr_0",      &Tkr_HitsPerLyr[0]);      
-    addItem("TKR_Hits_In_Lyr_1",      &Tkr_HitsPerLyr[1]);      
-    addItem("TKR_Hits_In_Lyr_2",      &Tkr_HitsPerLyr[2]);    
-    addItem("TKR_Hits_In_Lyr_3",      &Tkr_HitsPerLyr[3]);      
-    addItem("TKR_Hits_In_Lyr_4",      &Tkr_HitsPerLyr[4]);      
-    addItem("TKR_Hits_In_Lyr_5",      &Tkr_HitsPerLyr[5]);      
-    addItem("TKR_Hits_In_Lyr_6",      &Tkr_HitsPerLyr[6]);      
-    addItem("TKR_Hits_In_Lyr_7",      &Tkr_HitsPerLyr[7]);      
-    addItem("TKR_Hits_In_Lyr_8",      &Tkr_HitsPerLyr[8]);      
-    addItem("TKR_Hits_In_Lyr_9",      &Tkr_HitsPerLyr[9]);      
-    addItem("TKR_Hits_In_Lyr_10",     &Tkr_HitsPerLyr[10]);     
-    addItem("TKR_Hits_In_Lyr_11",     &Tkr_HitsPerLyr[11]);     
-    addItem("TKR_Hits_In_Lyr_12",     &Tkr_HitsPerLyr[12]);     
-    addItem("TKR_Hits_In_Lyr_13",     &Tkr_HitsPerLyr[13]);     
-    addItem("TKR_Hits_In_Lyr_14",     &Tkr_HitsPerLyr[14]);     
-    addItem("TKR_Hits_In_Lyr_15",     &Tkr_HitsPerLyr[15]);     
-    addItem("TKR_Hits_In_Lyr_16",     &Tkr_HitsPerLyr[16]);     
-    addItem("TKR_Hits_In_Lyr_17",     &Tkr_HitsPerLyr[17]); 
+    addItem("TkrHitsInLyr00",      &Tkr_HitsPerLyr[0]);      
+    addItem("TkrHitsInLyr01",      &Tkr_HitsPerLyr[1]);      
+    addItem("TkrHitsInLyr02",      &Tkr_HitsPerLyr[2]);    
+    addItem("TkrHitsInLyr03",      &Tkr_HitsPerLyr[3]);      
+    addItem("TkrHitsInLyr04",      &Tkr_HitsPerLyr[4]);      
+    addItem("TkrHitsInLyr05",      &Tkr_HitsPerLyr[5]);      
+    addItem("TkrHitsInLyr06",      &Tkr_HitsPerLyr[6]);      
+    addItem("TkrHitsInLyr07",      &Tkr_HitsPerLyr[7]);      
+    addItem("TkrHitsInLyr08",      &Tkr_HitsPerLyr[8]);      
+    addItem("TkrHitsInLyr09",      &Tkr_HitsPerLyr[9]);      
+    addItem("TkrHitsInLyr10",     &Tkr_HitsPerLyr[10]);     
+    addItem("TkrHitsInLyr11",     &Tkr_HitsPerLyr[11]);     
+    addItem("TkrHitsInLyr12",     &Tkr_HitsPerLyr[12]);     
+    addItem("TkrHitsInLyr13",     &Tkr_HitsPerLyr[13]);     
+    addItem("TkrHitsInLyr14",     &Tkr_HitsPerLyr[14]);     
+    addItem("TkrHitsInLyr15",     &Tkr_HitsPerLyr[15]);     
+    addItem("TkrHitsInLyr16",     &Tkr_HitsPerLyr[16]);     
+    addItem("TkrHitsInLyr17",     &Tkr_HitsPerLyr[17]); 
     
     zeroVals();
     
@@ -120,11 +120,13 @@ StatusCode TkrHitValsTool::calculate()
     StatusCode sc = StatusCode::SUCCESS;
     
     // Recover Track associated info. 
-    SmartDataPtr<Event::TkrFitTrackCol>    
-        pTracks(m_pEventSvc,EventModel::TkrRecon::TkrFitTrackCol);
     SmartDataPtr<Event::TkrClusterCol>   
         pClusters(m_pEventSvc,EventModel::TkrRecon::TkrClusterCol);
-    
+    //SmartDataPtr<Event::TkrFitTrackCol>    
+    //    pTracks(m_pEventSvc,EventModel::TkrRecon::TkrFitTrackCol);
+
+    if (!pClusters) return StatusCode::FAILURE;
+
     //Make sure we have valid cluster data
     if (pClusters)
     {

@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.4 2003/03/01 04:04:00 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.5 2003/03/03 07:23:08 lsrea Exp $
 
 // Include files
 
@@ -91,15 +91,15 @@ StatusCode GltValsTool::initialize()
 
     // load up the map
 
-    addItem("TRG_Word",      &Trig_word);  
-    addItem("TRG_Tower",     &Trig_tower); 
-    addItem("TRG_XTower",    &Trig_xTower);
-    addItem("TRG_YTower",    &Trig_yTower);
-    addItem("TRG_Layer",     &Trig_layer); 
-    addItem("TRG_Total",     &Trig_total); 
-    addItem("TRG_Type",      &Trig_type);  
-    addItem("TRG_Moment",    &Trig_moment);
-    addItem("TRG_zDir",      &Trig_zDir);  
+    addItem("GltWord",      &Trig_word);  
+    addItem("GltTower",     &Trig_tower); 
+    addItem("GltXTower",    &Trig_xTower);
+    addItem("GltYTower",    &Trig_yTower);
+    addItem("GltLayer",     &Trig_layer); 
+    addItem("GltTotal",     &Trig_total); 
+    addItem("GltType",      &Trig_type);  
+    addItem("GltMoment",    &Trig_moment);
+    addItem("GltZDir",      &Trig_zDir);  
     
     zeroVals();
     
@@ -111,13 +111,21 @@ StatusCode GltValsTool::calculate()
 {
     StatusCode sc = StatusCode::SUCCESS;
     
+    // m_pEventSvc alreay checked by doCalcIfNotDone, no need to repeat
+
     // Recover EventHeader Pointer
-    SmartDataPtr<Event::EventHeader> pEvent(m_pEventSvc, EventModel::EventHeader);
-    // Recover Track associated info. 
-    SmartDataPtr<Event::TkrFitTrackCol>    
-        pTracks(m_pEventSvc,EventModel::TkrRecon::TkrFitTrackCol);
+    SmartDataPtr<Event::EventHeader> 
+        pEvent(m_pEventSvc, EventModel::EventHeader);
+    // Recover Track associated info.
+    
     SmartDataPtr<Event::TkrClusterCol>   
         pClusters(m_pEventSvc,EventModel::TkrRecon::TkrClusterCol);
+
+    //not currently used:
+    //SmartDataPtr<Event::TkrFitTrackCol>    
+    //    pTracks(m_pEventSvc,EventModel::TkrRecon::TkrFitTrackCol);
+
+    if(!pEvent || !pClusters) return StatusCode::FAILURE;
     
     unsigned int word = pEvent->trigger();
     if(word > 1024) return sc; 

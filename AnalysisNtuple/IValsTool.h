@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/AnalysisNtuple/IValsTool.h,v 1.7 2003/03/03 07:23:08 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/AnalysisNtuple/IValsTool.h,v 1.8 2003/03/03 18:21:30 burnett Exp $
 
 #ifndef _H_IValsTool
 #define _H_IValsTool
@@ -9,14 +9,12 @@
 static const InterfaceID IID_IValsTool("IValsTool", 2 , 3); 
 
 /** @class IValsTool
-* @brief Abstract interface for the XxxValsTools
+* @brief Abstract interface for the XxxValsTools, including visitor
 *
 * @author Leon Rochester
-* $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/AnalysisNtuple/IValsTool.h,v 1.6 2003/03/01 16:05:00 lsrea Exp $
+* $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/AnalysisNtuple/IValsTool.h,v 1.8 2003/03/03 18:21:30 burnett Exp $
 *
 */
-
-
 
 class   IValsTool : virtual public IAlgTool
 {
@@ -29,32 +27,38 @@ public:
     virtual StatusCode getVal(std::string varName, double& value) =0;
     /// output the names and values, either all (default) or just one;
     virtual StatusCode browse(std::string varName = "") =0;
+    /// let the user trigger her own calculation
+    virtual StatusCode doCalcIfNotDone() = 0;
     
     /** @class Visitor 
-    @brief callbacks can indicate whether traversal should continue
-    or not.
- 
-      - CONT        normal return: continue processing
-      - USER_DONE   client has all information desired; no more traversal
-      - ERROR       client has serious error; abort
-      - DONE        not used by client.  Will be returned by
-      BadStrips::traverse   in case processing was normal.
+    @brief calls the client successively with the names and (ref to) values
 
-  See NtupleVisitor for an example.
+    See NtupleVisitor for an example.
     */
     class Visitor 
     {
     public:
-        enum eVisitorRet {CONT, USER_DONE, ERROR, DONE};
+    /// visitor callback controls further actions of server
+    enum eVisitorRet {
+        /// normal return: continue processing 
+        CONT,        
+        /// client has all information desired; no more traversal 
+        USER_DONE, 
+        /// client has serious error; abort 
+        ERROR,
+        /// not used by client. Returned by traverse at end of normal processing
+        DONE  
+    };
         
         /// callback to send varnames and values to the client
-        virtual Visitor::eVisitorRet analysisValue(std::string VarName,
-            double& value) const =0;
+        virtual Visitor::eVisitorRet analysisValue(std::string varName,
+            const double& value) const =0;
     }; 
     
     
     /// sets up callback method for user to access the data
-    virtual Visitor::eVisitorRet traverse(IValsTool::Visitor* v) = 0;   
+    virtual Visitor::eVisitorRet traverse(IValsTool::Visitor* v, 
+        const bool checkCalc=true) = 0;   
 };
 
 #endif  // _H_IValsTool

@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.7 2003/03/01 04:04:00 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.8 2003/03/03 07:23:08 lsrea Exp $
 
 // Include files
 
@@ -299,43 +299,43 @@ StatusCode CalValsTool::initialize()
     
     // load up the map
     
-    addItem("CAL_EnergySum",   &CAL_EnergySum);
-    addItem("CAL_Energy_Corr", &CAL_Energy_Corr);
-    addItem("CAL_EneSum_Corr", &CAL_EneSum_Corr);
+    addItem("CalEnergySum",   &CAL_EnergySum);
+    addItem("CalEnergyCorr", &CAL_Energy_Corr);
+    addItem("CalEneSumCorr", &CAL_EneSum_Corr);
     
-    addItem("CAL_Leak_Corr",   &CAL_Leak_Corr);
-    addItem("CAL_Leak_Corr2",  &CAL_Leak_Corr2);
+    addItem("CalLeakCorr",   &CAL_Leak_Corr);
+    addItem("CalLeakCorr2",  &CAL_Leak_Corr2);
     
-    addItem("CAL_Edge_Corr",   &CAL_Edge_Corr);
-    addItem("CAL_EdgeSum_Corr", &CAL_EdgeSum_Corr);
-    addItem("CAL_Total_Corr",  &CAL_Total_Corr);
-    addItem("CAL_TotSum_Corr", &CAL_TotSum_Corr);
+    addItem("CalEdgeCorr",   &CAL_Edge_Corr);
+    addItem("CalEdgeSumCorr", &CAL_EdgeSum_Corr);
+    addItem("CalTotalCorr",  &CAL_Total_Corr);
+    addItem("CalTotSumCorr", &CAL_TotSum_Corr);
     
-    addItem("CAL_Tot_RLn",     &CAL_Tot_RLn);
-    addItem("CAL_Cnt_RLn",     &CAL_Cnt_RLn);
-    addItem("CAL_DeadTot_Rat", &CAL_DeadTot_Rat);
-    addItem("CAL_DeadCnt_Rat", &CAL_DeadCnt_Rat);
-    addItem("CAL_a_Parm",      &CAL_a_Parm);
-    addItem("CAL_b_Parm",      &CAL_b_Parm);
-    addItem("CAL_t_Pred",      &CAL_t_Pred);
+    addItem("CalTotRLn",     &CAL_Tot_RLn);
+    addItem("CalCntRLn",     &CAL_Cnt_RLn);
+    addItem("CalDeadTotRat", &CAL_DeadTot_Rat);
+    addItem("CalDeadCntRat", &CAL_DeadCnt_Rat);
+    addItem("CalAParm",      &CAL_a_Parm);
+    addItem("CalBParm",      &CAL_b_Parm);
+    addItem("CalTPred",      &CAL_t_Pred);
     
-    addItem("CAL_TwrEdge",     &CAL_TwrEdge);
-    addItem("CAL_TE_Nrm",      &CAL_TE_Nrm);
-    addItem("CAL_Track_Sep",   &CAL_Track_Sep);
-    addItem("CAL_Track_DOCA",  &CAL_Track_DOCA);
-    addItem("CAL_Track_Angle", &CAL_Track_Angle);
+    addItem("CalTwrEdge",     &CAL_TwrEdge);
+    addItem("CalTE_Nrm",      &CAL_TE_Nrm);
+    addItem("CalTrackSep",   &CAL_Track_Sep);
+    addItem("CalTrackDoca",  &CAL_Track_DOCA);
+    addItem("CalTrackAngle", &CAL_Track_Angle);
     
-    addItem("CAL_x0",          &CAL_x0);
-    addItem("CAL_y0",          &CAL_y0);
-    addItem("CAL_z0",          &CAL_z0);
-    addItem("CAL_xdir",        &CAL_xdir);
-    addItem("CAL_ydir",        &CAL_ydir);
-    addItem("CAL_zdir",        &CAL_zdir);
+    addItem("CalX0",          &CAL_x0);
+    addItem("CalY0",          &CAL_y0);
+    addItem("CalZ0",          &CAL_z0);
+    addItem("CalXDir",        &CAL_xdir);
+    addItem("CalYDir",        &CAL_ydir);
+    addItem("CalZDir",        &CAL_zdir);
     
-    addItem("CAL_x0_corr",      &CAL_x0_corr);
-    addItem("CAL_y0_corr",      &CAL_y0_corr);
-    addItem("CAL_z0_corr",      &CAL_z0_corr);
-    addItem("CAL_TwrEdge_corr",  &CAL_TwrEdge_corr); 
+    addItem("CalX0Corr",      &CAL_x0_corr);
+    addItem("CalY0Corr",      &CAL_y0_corr);
+    addItem("CalZ0Corr",      &CAL_z0_corr);
+    addItem("CalTwrEdgeCorr",  &CAL_TwrEdge_corr); 
     
     zeroVals();
     
@@ -352,12 +352,12 @@ StatusCode CalValsTool::calculate()
         pTracks(m_pEventSvc,EventModel::TkrRecon::TkrFitTrackCol);
     SmartDataPtr<Event::TkrVertexCol>     
         pVerts(m_pEventSvc,EventModel::TkrRecon::TkrVertexCol);
-    SmartDataPtr<Event::TkrClusterCol> 
-        pClusters(m_pEventSvc,EventModel::TkrRecon::TkrClusterCol);
+    //SmartDataPtr<Event::TkrClusterCol> 
+    //    pClusters(m_pEventSvc,EventModel::TkrRecon::TkrClusterCol);
     SmartDataPtr<Event::CalClusterCol>     
         pCals(m_pEventSvc,EventModel::CalRecon::CalClusterCol);
     
-    
+    if(!pCals || !pTracks || !pVerts) return StatusCode::FAILURE;
     
     //Make sure we have valid cluster data
     if (pCals)
