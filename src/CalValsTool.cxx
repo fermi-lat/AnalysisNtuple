@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.20 2003/06/09 19:04:16 atwood Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.21 2003/06/12 04:56:36 lsrea Exp $
 */
 
 // Include files
@@ -274,7 +274,7 @@ namespace {
       if( serviceLocator() ) {
           
           // find GlastDevSvc service
-          if (service("GlastDetSvc", m_detSvc).isFailure()){
+          if (service("GlastDetSvc", m_detSvc, true).isFailure()){
               log << MSG::ERROR << "Couldn't find the GlastDetSvc!" << endreq;
               return StatusCode::FAILURE;
           }
@@ -287,7 +287,7 @@ namespace {
           }
 
           // find TkrGeometrySvc service
-          if (service("TkrGeometrySvc", m_geoSvc).isFailure()){
+          if (service("TkrGeometrySvc", m_geoSvc, true).isFailure()){
               log << MSG::ERROR << "Couldn't find the TkrGeometrySvc!" << endreq;
               return StatusCode::FAILURE;
           }
@@ -298,7 +298,7 @@ namespace {
           }
 
           // pick up the chosen propagator
-          if (service("GlastPropagatorSvc", m_propSvc).isFailure()) {
+          if (service("GlastPropagatorSvc", m_propSvc, true).isFailure()) {
               log << MSG::ERROR << "Couldn't find the GlastPropagatorSvc!" << endreq;
               return StatusCode::FAILURE;
           }
