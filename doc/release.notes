@@ -2,6 +2,7 @@
   @brief Package AnalysisNtule
   @verbatim
  
+ v2r1p0  05-Jan-05   TU   Incorporate Bill's changes to the ntuple 
  v2r0p1  02-Jan-05   LSR  cleanup; remove reverseLayer() calls;
                             change Tkr1FirstGapLayer to Tkr1FirstGapPlane 
  v2r0p0  16-Dec-04   TU   First tag for use with new TkrRecon TDS classes
