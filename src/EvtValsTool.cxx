@@ -3,7 +3,7 @@
 @brief Calculates the "Event" analysis variables from the other ntuple variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.17 2004/09/30 17:12:21 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.18 2004/10/12 19:00:02 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -423,12 +423,12 @@ StatusCode EvtValsTool::calculate()
         EvtVtxEDoca = vtxDoca/(1.55 - .685*logE+ .0851*logE2) 
                                 / (2.21 + 3.01*tkr1ZDir + 1.59*tkr1ZDir2);
     }
-
+/*
     double vtxHeadSep;
     if (m_pVtxTool->getVal("VtxHeadSep", vtxHeadSep, firstCheck).isSuccess()) {
         EvtVtxEHeadSep = vtxHeadSep/ (2.83 - .94*logE + .108*logE2) 
                                 / (2.45 + 3.34*tkr1ZDir + 1.58*tkr1ZDir2);
     }
-
+*/
     return sc;
 }

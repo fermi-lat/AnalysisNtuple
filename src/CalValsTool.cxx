@@ -3,7 +3,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.47 2004/12/16 05:06:53 usher Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.48 2005/01/02 23:58:45 lsrea Exp $
 */
 
 // Include files
@@ -25,6 +25,7 @@
 #include "Event/Recon/TkrRecon/TkrVertex.h"
 #include "Event/Recon/CalRecon/CalCluster.h"
 #include "Event/Recon/CalRecon/CalXtalRecData.h"
+#include "geometry/Ray.h"
 
 #include "GlastSvc/Reco/IPropagatorTool.h"
 #include "GlastSvc/Reco/IPropagatorSvc.h"
@@ -447,10 +448,10 @@ StatusCode CalValsTool::calculate()
     
     // If vertexed - use first vertex
     if(pVerts) {
-        Event::TkrVertexColPtr gammaPtr =  pVerts->begin(); 
-        Event::TkrVertex *gamma = *gammaPtr; 
-        x0 = gamma->getPosition();
-        t0 = gamma->getDirection();
+//        Event::TkrVertexColPtr gammaPtr =  pVerts->begin(); 
+//        Event::TkrVertex *gamma = *gammaPtr; 
+//        x0 = gamma->getPosition();
+//        t0 = gamma->getDirection();
     }
   
     // this "cos(theta)" doesn't distinguish between up and down
@@ -570,8 +571,8 @@ StatusCode CalValsTool::calculate()
 	// trajectories.  This should be fixed in TkrValsTool probably by averaging
 	// over a cylinder as we do in CalValsTool.
 	double tkr_radLen_nom = 0.; 
-    if(layer < 12) tkr_radLen_nom = (11.5 - layer)*.045 + 4*.195 + .03;
-	else           tkr_radLen_nom =  (15.5 - layer)*.195 + .03;
+    if(layer > 5) tkr_radLen_nom = (layer - 5.0)*.045 + 4*.195 + .03;
+	else          tkr_radLen_nom =  (layer - 1.0)*.195 + .03;
 	tkr_radLen_nom /= costh;
 	if(t_tracker > tkr_radLen_nom * 1.5) t_tracker = tkr_radLen_nom * 1.5;
     if(t_tracker < tkr_radLen_nom * .5) t_tracker  = tkr_radLen_nom * .5;

@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.47 2004/12/16 05:06:54 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.48 2005/01/02 23:58:45 lsrea Exp $
 */
 
 // To Do:
@@ -28,11 +28,11 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.47 
 #include "Event/Recon/TkrRecon/TkrCluster.h"
 #include "Event/Recon/TkrRecon/TkrTrack.h"
 #include "Event/Recon/TkrRecon/TkrVertex.h"
+#include "geometry/Ray.h" 
 
 #include "GlastSvc/GlastDetSvc/IGlastDetSvc.h"
 #include "TkrUtil/ITkrGeometrySvc.h"
 #include "TkrUtil/ITkrQueryClustersTool.h"
-#include "GlastSvc/Reco/IKalmanParticle.h"
 
 #include "GlastSvc/Reco/IPropagatorSvc.h"
 #include "GaudiKernel/IToolSvc.h"
@@ -82,8 +82,6 @@ private:
     /// 
     IPropagatorSvc* m_propSvc;
 
-    IKalmanParticle*       pKalParticle;
-
     IPropagator*           m_G4PropTool;    
 
     //Global Track Tuple Items
@@ -107,9 +105,9 @@ private:
     double Tkr_1_Chisq;
     double Tkr_1_FirstChisq;
     double Tkr_1_Gaps;
-    double Tkr_1_FirstGapPlane; 
-    double Tkr_1_GapX;
-    double Tkr_1_GapY;
+	double Tkr_1_FirstGapPlane; 
+	double Tkr_1_GapX;
+	double Tkr_1_GapY;
     double Tkr_1_FirstGaps; 
     double Tkr_1_Hits;
     double Tkr_1_FirstHits;
@@ -223,13 +221,6 @@ StatusCode TkrValsTool::initialize()
             return StatusCode::FAILURE;
         }
 
-        // pick up the chosen propagator
-        if (service("GlastPropagatorSvc", m_propSvc, true ).isFailure()) {
-            log << MSG::ERROR << "Couldn't find the GlastPropagatorSvc!" << endreq;
-            return fail;
-        }  
-        pKalParticle = m_propSvc->getPropagator();
-
         IToolSvc* toolSvc = 0;
         if(service("ToolSvc", toolSvc, true).isFailure()) {
             log << MSG::ERROR << "Couldn't find the ToolSvc!" << endreq;
@@ -278,7 +269,7 @@ StatusCode TkrValsTool::initialize()
 
     addItem("Tkr1Gaps",       &Tkr_1_Gaps);
     addItem("Tkr1FirstGapPlane",&Tkr_1_FirstGapPlane);
-    addItem("Tkr1XGap",       &Tkr_1_GapX);
+	addItem("Tkr1XGap",       &Tkr_1_GapX);
     addItem("Tkr1YGap",       &Tkr_1_GapY);
     addItem("Tkr1FirstGaps",  &Tkr_1_FirstGaps);
 
@@ -621,8 +612,8 @@ StatusCode TkrValsTool::calculate()
         Tkr_1_ToTTrAve = (Tkr_1_ToTAve - max_ToT - min_ToT)/(Tkr_1_Hits-2.);
         Tkr_1_ToTAve /= Tkr_1_Hits;
         Tkr_1_ToTAsym = (last_ToT - first_ToT)/(first_ToT + last_ToT);
-
         Tkr_1_FirstGapPlane = gapId; 
+
 
         // Chisq Asymmetry - Front vs Back ends of tracks
         Tkr_1_ChisqAsym = (chisq_last - chisq_first)/(chisq_last + chisq_first);
@@ -722,8 +713,9 @@ StatusCode TkrValsTool::calculate()
         double costh = fabs(t1.z());
         double secth = 1./costh;
         arc_min = (x1.z() - m_tkrGeom->calZTop())*secth; 
-        pKalParticle->setStepStart(x1, t1, arc_min);
-        //double total_radlen = pKalParticle->radLength(); 
+        m_G4PropTool->setStepStart(x1, t1);
+		m_G4PropTool->step(arc_min);
+		double z_present = x1.z();
 
         // Compute the sum-of radiation_lengths x Hits in each layer
         double tracker_ene_corr = 0.; 
@@ -740,16 +732,17 @@ StatusCode TkrValsTool::calculate()
         int firstPlane = m_tkrGeom->getPlane(track_1->front()->getTkrId()); 
         int firstLayer = m_tkrGeom->getLayer(firstPlane); 
 
+
         // doesn't work for reverse-found tracks
         for(int ilayer = firstLayer; ilayer>=0; --ilayer) {
             double xms = 0.;
             double yms = 0.;
 
-            if(ilayer < firstLayer) {
-                HepMatrix Q = pKalParticle->mScat_Covr(Tkr_Sum_ConEne/2., arc_len);
+            if(ilayer <firstLayer) {
+                HepMatrix Q = m_G4PropTool->getMscatCov(arc_len, Tkr_Sum_ConEne/2.);
                 xms = Q(1,1);
                 yms = Q(3,3);
-                radlen = pKalParticle->radLength(arc_len); 
+                radlen = m_G4PropTool->getRadLength(arc_len); 
             }
             double xSprd = sqrt(4.+xms*16.); // 4.0 sigma and not smaller then 2mm (was 2.5 sigma)
             double ySprd = sqrt(4.+yms*16.); // Limit to a tower... 
@@ -811,12 +804,14 @@ StatusCode TkrValsTool::calculate()
             rad_len_sum      += delta_rad;
 
             // Increment arc-length
-            if(ilayer>0) {
-                double deltaZ = m_tkrGeom->getLayerZ(ilayer) -
-                    m_tkrGeom->getLayerZ(ilayer-1);
-                arc_len += fabs( deltaZ/t1.z()); 
-                radlen_old = radlen; 
-            }
+            if(ilayer==0) break;
+
+			double z_next = m_tkrGeom->getLayerZ(ilayer-1);
+            double deltaZ = z_present - z_next;
+			z_present = z_next;
+
+            arc_len += fabs( deltaZ/t1.z()); 
+            radlen_old = radlen; 
         }
         // Coef's from Linear Regression analysis in Miner
         // defined in anonymous namespace above
