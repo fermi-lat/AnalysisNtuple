@@ -18,7 +18,8 @@
 
   This algorithm instantiates a set of tools, each dealing with a category of variables, 
   and sets up and calls the traverse() method of each tool with a pointer to a 
-  visitor. Then it fills the ntuple with information from the visitor callback.
+  visitor. Then it fills the ntuple with information from the visitor callback. As of v1r9p8, 
+  the code can handle floats and ints as well as doubles.
 
   It can also write out an ntuple using ntupleWriterSvc, but this capability is de-activated by 
   default, and is turned on only in the test program. The standard ntuple is produced by merit, using
