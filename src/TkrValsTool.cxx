@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.17 2003/05/08 15:51:30 atwood Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.18 2003/05/19 15:39:50 atwood Exp $
 */
 
 // Include files
@@ -25,6 +25,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.17 
 #include "Event/Recon/TkrRecon/TkrFitTrack.h"
 #include "Event/Recon/TkrRecon/TkrKalFitTrack.h"
 #include "Event/Recon/TkrRecon/TkrVertex.h"
+#include "Event/Recon/TkrRecon/TkrFitMatrix.h"
 
 #include "TkrUtil/ITkrGeometrySvc.h"
 #include "TkrUtil/ITkrQueryClustersTool.h"
@@ -85,9 +86,9 @@ namespace {
         double r, double costh, double phi) {
         // Get the projected angles for the gap
         double tanth = sqrt(1.-costh*costh)/costh;
-        double gap_x = gap - 20.*sin(phi)*tanth; 
+        double gap_x = gap - 35.*sin(phi)*tanth; 
         if(gap_x < 5.) gap_x = 5.;
-        double gap_y = gap - 20.*cos(phi)*tanth;
+        double gap_y = gap - 35.*cos(phi)*tanth;
         if(gap_y < 5.) gap_y = 5.; 
         
         // X Edges
@@ -199,9 +200,15 @@ private:
     double Tkr_1_ydir;
     double Tkr_1_zdir;
     double Tkr_1_Phi;
+	double Tkr_1_Theta;
     double Tkr_1_x0;
     double Tkr_1_y0;
     double Tkr_1_z0;
+	double Tkr_1_Sxx;
+	double Tkr_1_Sxy;
+	double Tkr_1_Syy;
+	double Tkr_1_DTheta;
+	double Tkr_1_DPhi;
     
     //Second Track Specifics
     double Tkr_2_Chisq;
@@ -247,7 +254,7 @@ TkrValsTool::TkrValsTool(const std::string& type,
 
 StatusCode TkrValsTool::initialize()
 {
-    StatusCode sc = StatusCode::SUCCESS;
+    StatusCode sc   = StatusCode::SUCCESS;
     StatusCode fail = StatusCode::FAILURE;
     
     MsgStream log(msgSvc(), name());
@@ -300,21 +307,21 @@ StatusCode TkrValsTool::initialize()
     addItem("TkrTrackLength", &Tkr_TrackLength);
     
     addItem("Tkr1Chisq",      &Tkr_1_Chisq);
-    addItem("Tkr1FirstChisq",  &Tkr_1_FirstChisq);
+    addItem("Tkr1FirstChisq", &Tkr_1_FirstChisq);
     addItem("Tkr1Hits",       &Tkr_1_Hits);
-    addItem("Tkr1FirstHits",   &Tkr_1_FirstHits);
-    addItem("Tkr1FirstLayer",  &Tkr_1_FirstLayer);
+    addItem("Tkr1FirstHits",  &Tkr_1_FirstHits);
+    addItem("Tkr1FirstLayer", &Tkr_1_FirstLayer);
     addItem("Tkr1DifHits",    &Tkr_1_DifHits);
     
     addItem("Tkr1Gaps",       &Tkr_1_Gaps);
-    addItem("Tkr1FirstGaps",   &Tkr_1_FirstGaps);
+    addItem("Tkr1FirstGaps",  &Tkr_1_FirstGaps);
     
     addItem("Tkr1Qual",       &Tkr_1_Qual);
     addItem("Tkr1Type",       &Tkr_1_Type);
     addItem("Tkr1TwrEdge",    &Tkr_1_TwrEdge);
     addItem("Tkr1PrjTwrEdge", &Tkr_1_PrjTwrEdge);
     addItem("Tkr1DieEdge",    &Tkr_1_DieEdge);
-    addItem("Tkr1TwrGap",    &Tkr_1_TwrGap);
+    addItem("Tkr1TwrGap",     &Tkr_1_TwrGap);
     
     addItem("Tkr1KalEne",     &Tkr_1_KalEne);
     addItem("Tkr1ConEne",     &Tkr_1_ConEne);
@@ -324,20 +331,27 @@ StatusCode TkrValsTool::initialize()
     addItem("Tkr1YDir",       &Tkr_1_ydir);
     addItem("Tkr1ZDir",       &Tkr_1_zdir);
     addItem("Tkr1Phi",        &Tkr_1_Phi);
+	addItem("Tkr1Theta",      &Tkr_1_Theta);
     addItem("Tkr1X0",         &Tkr_1_x0);
     addItem("Tkr1Y0",         &Tkr_1_y0);
     addItem("Tkr1Z0",         &Tkr_1_z0);
-    
+
+	addItem("Tkr1DTheta",     &Tkr_1_DTheta);
+    addItem("Tkr1DPhi",       &Tkr_1_DPhi);
+	addItem("Tkr1SXX",        &Tkr_1_Sxx);
+    addItem("Tkr1SXY",        &Tkr_1_Sxy);
+    addItem("Tkr1SYY",        &Tkr_1_Syy);
+
     addItem("Tkr2Chisq",      &Tkr_2_Chisq);
-    addItem("Tkr2FirstChisq",   &Tkr_2_FirstChisq);
+    addItem("Tkr2FirstChisq", &Tkr_2_FirstChisq);
     
     addItem("Tkr2Hits",       &Tkr_2_Hits);
-    addItem("Tkr2FirstHits",   &Tkr_2_FirstHits);
-    addItem("Tkr2FirstLayer",  &Tkr_2_FirstLayer);
+    addItem("Tkr2FirstHits",  &Tkr_2_FirstHits);
+    addItem("Tkr2FirstLayer", &Tkr_2_FirstLayer);
     addItem("Tkr2DifHits",    &Tkr_2_DifHits);
     
     addItem("Tkr2Gaps",       &Tkr_2_Gaps);
-    addItem("Tkr2FirstGaps",   &Tkr_2_FirstGaps);
+    addItem("Tkr2FirstGaps",  &Tkr_2_FirstGaps);
     
     addItem("Tkr2Qual",       &Tkr_2_Qual);
     addItem("Tkr2Type",       &Tkr_2_Type);
@@ -431,13 +445,13 @@ StatusCode TkrValsTool::calculate()
         const Event::TkrKalFitTrack* track_1 = dynamic_cast<const Event::TkrKalFitTrack*>(trackBase);
         
         Tkr_1_Chisq        = track_1->getChiSquare();
-        Tkr_1_FirstChisq     = track_1->chiSquareSegment();
-        Tkr_1_FirstGaps      = track_1->getNumXFirstGaps() + track_1->getNumYFirstGaps();
+        Tkr_1_FirstChisq   = track_1->chiSquareSegment();
+        Tkr_1_FirstGaps    = track_1->getNumXFirstGaps() + track_1->getNumYFirstGaps();
         Tkr_1_Qual         = track_1->getQuality();
         Tkr_1_Type         = track_1->getType();
         Tkr_1_Hits         = track_1->getNumHits();
-        Tkr_1_FirstHits      = track_1->getNumSegmentPoints();
-        Tkr_1_FirstLayer     = track_1->getLayer();
+        Tkr_1_FirstHits    = track_1->getNumSegmentPoints();
+        Tkr_1_FirstLayer   = track_1->getLayer();
         Tkr_1_Gaps         = track_1->getNumGaps();
         Tkr_1_KalEne       = track_1->getKalEnergy(); 
         Tkr_1_ConEne       = track_1->getEnergy(); 
@@ -450,10 +464,26 @@ StatusCode TkrValsTool::calculate()
         Tkr_1_xdir        = t1.x();
         Tkr_1_ydir        = t1.y();
         Tkr_1_zdir        = t1.z();
-        Tkr_1_Phi         = atan(-t1.y()/t1.x()); 
+
         Tkr_1_x0          = x1.x();
         Tkr_1_y0          = x1.y();
         Tkr_1_z0          = x1.z();
+
+		Tkr_1_Phi         = atan(-t1.y()/t1.x()); 
+		Tkr_1_Theta       = acos(t1.z());
+
+		Event::TkrFitMatrix  Tkr_1_Cov = track_1->getTrackCov();
+		Tkr_1_Sxx         = Tkr_1_Cov.getcovSxSx();
+		Tkr_1_Sxy         = Tkr_1_Cov.getcovSxSy();
+		Tkr_1_Syy         = Tkr_1_Cov.getcovSySy();
+		double tzmax      = (fabs(t1.z()) > .999999)? fabs(t1.z()) : .999999;
+		double tzTerm     = tzmax/(1.-tzmax*tzmax);
+		Tkr_1_DTheta      = sqrt((t1.x()*t1.z()*t1.z())*(t1.x()*t1.z()*t1.z())*Tkr_1_Sxx +
+                                 (t1.y()*t1.z()*t1.z())*(t1.y()*t1.z()*t1.z())*Tkr_1_Syy);
+                               //  + (t1.x()*t1.z()*t1.z())*(t1.y()*t1.z()*t1.z())*Tkr1_1_Sxy);
+		Tkr_1_DPhi        = sqrt((t1.x()*tzTerm)*(t1.x()*tzTerm)*Tkr_1_Sxx +
+                                 (t1.y()*tzTerm)*(t1.y()*tzTerm)*Tkr_1_Syy);
+		                      //  + (t1.x()*sxsyTerm)*(t1.y()*sxsyTerm)*Tkr1_1_Sxx); 
 
         Tkr_TrackLength = -Tkr_1_z0/Tkr_1_zdir;
         
