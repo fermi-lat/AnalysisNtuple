@@ -1,5 +1,5 @@
 
-// $Header$
+// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.1 2003/02/26 01:29:06 lsrea Exp $
 
 // Gaudi system includes
 #include "GaudiKernel/MsgStream.h"
@@ -226,8 +226,8 @@ StatusCode AnalysisNtupleAlg::execute()
             sc = m_TkrVals->getVal("TKR_Energy_Corr", answer);
             log << MSG::DEBUG << "  compared to: " << answer << endreq;
             
-            m_VtxVals->browse("VTX_DOCA");
-            sc = m_VtxVals->getVal("VTX_DOCA", answer);
+            m_VtxVals->browse("VTX_zdir");
+            sc = m_VtxVals->getVal("VTX_zdir", answer);
             log << MSG::DEBUG << "  compared to: " << answer << endreq;
             
             m_AcdVals->browse("ACD_TileCount");

@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/test/test_AnalysisNtuple.cxx,v 1.3 2003/02/25 06:26:11 burnett Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/test/test_AnalysisNtuple.cxx,v 1.4 2003/02/26 01:29:07 lsrea Exp $
 
 // Include files
 // Gaudi system includes
@@ -118,8 +118,8 @@ StatusCode test_AnalysisNtuple::execute()
     sc = m_toolvec[1]->getVal("TKR_Energy_Corr", answer);
     std::cout << "  compared to: " << answer << std::endl;
     
-    m_toolvec[4]->browse("VTX_DOCA");
-    sc = m_toolvec[4]->getVal("VTX_DOCA", answer);
+    m_toolvec[4]->browse("VTX_zdir");
+    sc = m_toolvec[4]->getVal("VTX_zdir", answer);
     std::cout << "  compared to: " << answer << std::endl;
     
     m_toolvec[6]->browse("ACD_TileCount");
