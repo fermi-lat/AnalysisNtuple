@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.5 2003/03/03 07:23:08 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.6 2003/03/03 22:49:26 lsrea Exp $
 
 // Include files
 
@@ -125,6 +125,11 @@ StatusCode GltValsTool::calculate()
     //SmartDataPtr<Event::TkrFitTrackCol>    
     //    pTracks(m_pEventSvc,EventModel::TkrRecon::TkrFitTrackCol);
 
+    Trig_tower  = -1;
+    Trig_layer  = 18;
+    Trig_xTower = -1;
+    Trig_yTower = -1; 
+   
     if(!pEvent || !pClusters) return StatusCode::FAILURE;
     
     unsigned int word = pEvent->trigger();
