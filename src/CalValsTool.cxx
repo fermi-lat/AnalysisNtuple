@@ -3,7 +3,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.49 2005/01/04 23:49:33 atwood Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.50 2005/01/17 19:19:07 lsrea Exp $
 */
 
 // Include files
@@ -448,10 +448,9 @@ StatusCode CalValsTool::calculate()
     
     // If vertexed - use first vertex
     if(pVerts) {
-//        Event::TkrVertexColPtr gammaPtr =  pVerts->begin(); 
-//        Event::TkrVertex *gamma = *gammaPtr; 
-//        x0 = gamma->getPosition();
-//        t0 = gamma->getDirection();
+        Event::TkrVertex* vertex = *(pVerts->begin()); 
+        x0 = vertex->getPosition();
+        t0 = vertex->getDirection();
     }
   
     // this "cos(theta)" doesn't distinguish between up and down
@@ -559,7 +558,7 @@ StatusCode CalValsTool::calculate()
     if (good_layers>0) edge_corr /= good_layers;
     CAL_Edge_Corr = edge_corr; 
     
-    double cal_half_width = 0.5*std::max(m_calXWidth, m_calYWidth);
+    //double cal_half_width = 0.5*std::max(m_calXWidth, m_calYWidth);
     
     //       Leakage Correction  
     // First: get the rad.lens. in the tracker 
@@ -648,7 +647,7 @@ StatusCode CalValsTool::calculate()
     
     // The "final" correction derived empirically from analyizing and flattening the 
     // resultant energy in cos(theta) and log10(E) 
-    double logEsum = log10(ene_sum_corr); 
+    //double logEsum = log10(ene_sum_corr); 
     //double ad_hoc_factor = (1.35-.15*logEsum )/(1.+.9*(.6 - costh)*(.6 - costh))/
                                // (1.-.125*logEsum + (.125*logEsum)*costh);  
     //double ad_hoc_factor = (1.23 - .065*logEsum)/(1.+.14*(logEsum-1.)*(costh-.74));  
@@ -757,7 +756,7 @@ double CalValsTool::containedFraction(Point pos, double gap,
     return in_frac;
 }
 
-StatusCode CalValsTool::aveRadLens(Point x0, Vector t0, double radius, int numSamples)
+StatusCode CalValsTool::aveRadLens(Point /* x0 */, Vector t0, double radius, int numSamples)
 { // This method finds the averages and rms for a cylinder of rays passing through 
   // the calorimeter of the radiation lengths in CsI and other material. 
   // The radius of the cylinder is "radius" and the number of rays = numSample (plus the 

@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.49 2005/01/04 23:49:33 atwood Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.50 2005/01/17 19:19:07 lsrea Exp $
 */
 
 // To Do:
@@ -177,6 +177,10 @@ private:
 
     double Tkr_2TkrAngle;
     double Tkr_2TkrHDoca;
+
+    // here's some test stuff... if it works for a couple it will work for all
+    //float Tkr_float;
+    //int   Tkr_int;
 };
 
 // Static factory for instantiation of algtool objects
@@ -384,9 +388,12 @@ StatusCode TkrValsTool::calculate()
     //placeholder for offset
     double z0 = 0.0;
 
-    double radThin  = m_tkrGeom->getAveConv(STANDARD); // was 0.03
-    double radThick = m_tkrGeom->getAveConv(SUPER);    // was 0.18
-    double radTray  = m_tkrGeom->getAveRest(ALL);      // was 0.015
+    //special stuff here
+    Tkr_1_FirstGapPlane = -1;
+
+    double radThin  = m_tkrGeom->getAveConv(STANDARD); 
+    double radThick = m_tkrGeom->getAveConv(SUPER); 
+    double radTray  = m_tkrGeom->getAveRest(ALL);
 
     //Recover EventHeader Pointer
     //SmartDataPtr<Event::EventHeader> pEvent(m_pEventSvc, EventModel::EventHeader);
@@ -405,11 +412,11 @@ StatusCode TkrValsTool::calculate()
 
     int nNoConv = m_tkrGeom->numNoConverter();
     int nThick  = m_tkrGeom->numSuperGlast();
-    int nThin   = m_tkrGeom->numLayers() - nThick - nNoConv;
+    //int nThin   = m_tkrGeom->numLayers() - nThick - nNoConv;
 
     double die_width = m_tkrGeom->ladderPitch();
     int nDies = m_tkrGeom->nWaferAcross();
-
+    
     if (pTracks){   
         // Count number of tracks
         int nTracks = pTracks->size();
@@ -418,9 +425,9 @@ StatusCode TkrValsTool::calculate()
         if(nTracks < 1) return sc;
 
         // Get the first Track - it should be the "Best Track"
-        Event::TkrTrackColConPtr pTrack1 = pTracks->begin();
+        Event::TkrTrackColConPtr pTrack = pTracks->begin();
 
-        const Event::TkrTrack* track_1 = *pTrack1;
+        const Event::TkrTrack* track_1 = *pTrack;
 
         Tkr_1_Chisq        = track_1->getChiSquareSmooth();
         Tkr_1_FirstChisq   = track_1->chiSquareSegment();
@@ -520,9 +527,9 @@ StatusCode TkrValsTool::calculate()
         double chisq_first = 0.;
         double chisq_last  = 0.; 
         Event::TkrTrackHitVecConItr pHit = track_1->begin();
-
-        int gapId;
+        int gapId = -1;
         bool gapFound = false;
+        int plane = m_tkrGeom->getPlane((*pHit)->getTkrId());
         while(pHit != track_1->end()) {
             const Event::TkrTrackHit* hit = *pHit++;
             unsigned int bits = hit->getStatusBits();
@@ -531,9 +538,12 @@ StatusCode TkrValsTool::calculate()
                 Point  gapPos = hit->getPoint(Event::TkrTrackHit::PREDICTED);
                 Tkr_1_GapX = gapPos.x();
                 Tkr_1_GapY = gapPos.y();
-                gapId = m_tkrGeom->getPlane(hit->getTkrId());
+                //This doesn't work until there's a valid TkrId for every hit
+                //gapId = m_tkrGeom->getPlane(hit->getTkrId());
+                gapId = plane;
                 gapFound = true;
             }
+            plane--;
             if (!(bits & Event::TkrTrackHit::HITONFIT)) continue;
             const Event::TkrCluster* cluster = hit->getClusterPtr();
             int size =  const_cast<Event::TkrCluster*>(cluster)->size();
@@ -549,6 +559,13 @@ StatusCode TkrValsTool::calculate()
             double threshold   =  0.25;   // Mips
             double countThreshold = 15; // counts
             double normFactor  =  1./53.;
+            double mips;
+            double rawToT = cluster->getRawToT();
+            if (cluster->getVersion()==0) {
+                mips = normFactor*(std::min(totMax,rawToT)+countThreshold);
+            } else {
+                mips = cluster->getMips();
+            }
 
             double tot = cluster->ToT();
             if(tot>=totMax) tot = totMax;
@@ -592,20 +609,20 @@ StatusCode TkrValsTool::calculate()
                 }
                 double factor = path1*costh1*slope;
                 double path2 = sqrt(path1*path1 + factor*factor);
-                tot = normFactor*(tot+countThreshold)/path2;
+                mips /= path2;
             }
 
-            if(tot > max_ToT) max_ToT = tot; 
-            if(tot < min_ToT) min_ToT = tot; 
+            if(mips > max_ToT) max_ToT = mips; 
+            if(mips < min_ToT) min_ToT = mips; 
             hit_counter++;  
-            if (hit_counter==1) Tkr_1_ToTFirst = tot;
-            Tkr_1_ToTAve += tot;
+            if (hit_counter==1) Tkr_1_ToTFirst = mips;
+            Tkr_1_ToTAve += mips;
             if(hit_counter < 3) {
-                first_ToT += tot;
+                first_ToT += mips;
                 chisq_first += hit->getChiSquareSmooth();
             }
             if(hit_counter > Tkr_1_Hits - 2){
-                last_ToT += tot;
+                last_ToT += mips;
                 chisq_last += hit->getChiSquareSmooth();
             }
         }
@@ -646,8 +663,8 @@ StatusCode TkrValsTool::calculate()
         }
 
         if(nTracks > 1) {
-            pTrack1++;
-            const Event::TkrTrack* track_2 = *pTrack1;
+            pTrack++;
+            const Event::TkrTrack* track_2 = *pTrack;
 
             Tkr_2_Chisq        = track_2->getChiSquareSmooth();
             Tkr_2_FirstChisq     = track_2->chiSquareSegment();
@@ -783,6 +800,8 @@ StatusCode TkrValsTool::calculate()
             case NOCONV:
                 thisRad = 0.0;
                 blank_hits += numHits;
+                break;
+            default:
                 break;
             }
             if (ilayer==firstLayer) {
