@@ -3,7 +3,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.40 2004/06/16 00:34:00 lsrea Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.41 2004/08/09 17:58:04 atwood Exp $
 */
 
 // Include files
@@ -522,8 +522,8 @@ StatusCode CalValsTool::calculate()
     double max_corr = 2.5; //This limits the size of the edge correction (was 1.4)
     double edge_corr = 0.; 
     double good_layers = 0.; 
-    for(int i=0; i<8; i++){
-        if(ene_Layer[i] < 5.) {
+    for(int i=0; i<ene_Layer.size(); i++){
+        if(ene_Layer[i] < 2.) {
             ene_sum_corr += ene_Layer[i];
             continue; 
         }
