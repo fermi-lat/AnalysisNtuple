@@ -23,59 +23,59 @@ contains notes to the user.</font></p>
 to be up-to-date for merit.)&nbsp; </font><font face="Comic Sans MS" color="#0000ff" size="3">The
 names here are likely to change... underscores removed, consistent prefixes
 added, maybe &quot;IM&quot; changed to &quot;Event&quot;...</font></p>
-<table width="741" border="1">
+<table width="741" border="1" height="451">
   <tbody>
     <tr>
-      <td width="184"><font face="Comic Sans MS">Run</font></td>
-      <td width="541"><font face="Comic Sans MS">&nbsp;Run number</font></td>
+      <td width="184" height="23"><font face="Comic Sans MS">Run</font></td>
+      <td width="541" height="23"><font face="Comic Sans MS">&nbsp;Run number</font></td>
     </tr>
     <tr>
-      <td width="184"><font face="Comic Sans MS">Event_ID</font></td>
-      <td width="541"><font face="Comic Sans MS">&nbsp;Event sequence number (as
+      <td width="184" height="23"><font face="Comic Sans MS">Event_ID</font></td>
+      <td width="541" height="23"><font face="Comic Sans MS">&nbsp;Event sequence number (as
         generated) in the run</font></td>
     </tr>
     <tr>
-      <td width="184"><font face="Comic Sans MS">MC_src_Id</font></td>
-      <td width="541"><font face="Comic Sans MS">&nbsp;Unique integer associated
+      <td width="184" height="46"><font face="Comic Sans MS">MC_src_Id</font></td>
+      <td width="541" height="46"><font face="Comic Sans MS">&nbsp;Unique integer associated
         with each MC source&nbsp;<font color="#ff0000"> (&quot;Id&quot; here and
         &quot;ID&quot; above should be made consistent)</font></font></td>
     </tr>
     <tr>
-      <td width="184"><font face="Comic Sans MS">elapsed_time</font></td>
-      <td width="541"><font face="Comic Sans MS">&nbsp;elapsed time in seconds
+      <td width="184" height="23"><font face="Comic Sans MS">elapsed_time</font></td>
+      <td width="541" height="23"><font face="Comic Sans MS">&nbsp;elapsed time in seconds
         since t0 (for DC1: 18-July-2005)</font></td>
     </tr>
     <tr>
-      <td width="184"><font face="Comic Sans MS">FilterStatus_HI<font color="#0000ff">*</font></font></td>
-      <td width="541"><font face="Comic Sans MS">&nbsp;High order 17 bits of
+      <td width="184" height="46"><font face="Comic Sans MS">FilterStatus_HI<font color="#0000ff">*</font></font></td>
+      <td width="541" height="46"><font face="Comic Sans MS">&nbsp;High order 17 bits of
         filter status word; these are the veto bits. If this word is non-zero,
         the event was vetoed by the OnboardFilter code.</font></td>
     </tr>
     <tr>
-      <td width="184"><font face="Comic Sans MS">FilterStatus_LO<font color="#0000ff">*</font></font></td>
-      <td width="541"><font face="Comic Sans MS">&nbsp;Low order 15 bits of
+      <td width="184" height="46"><font face="Comic Sans MS">FilterStatus_LO<font color="#0000ff">*</font></font></td>
+      <td width="541" height="46"><font face="Comic Sans MS">&nbsp;Low order 15 bits of
         filter status word; these give status of the OnboardFilter for this
         event.*&nbsp;</font></td>
     </tr>
     <tr>
-      <td width="184"><font face="Comic Sans MS">IMgoodCalProb</font></td>
-      <td width="541"><font face="Comic Sans MS">&nbsp;Classification tree
+      <td width="184" height="23"><font face="Comic Sans MS">IMgoodCalProb</font></td>
+      <td width="541" height="23"><font face="Comic Sans MS">&nbsp;Classification tree
         probability that Cal energy is well measured</font></td>
     </tr>
     <tr>
-      <td width="184"><font face="Comic Sans MS">IMvertexProb</font></td>
-      <td width="541"><font face="Comic Sans MS">&nbsp;Classification tree
+      <td width="184" height="46"><font face="Comic Sans MS">IMvertexProb</font></td>
+      <td width="541" height="46"><font face="Comic Sans MS">&nbsp;Classification tree
         probability that the vertex gives a better measure of the direction than
         the best track alone</font></td>
     </tr>
     <tr>
-      <td width="184"><font face="Comic Sans MS">IMcoreProb</font></td>
-      <td width="541"><font face="Comic Sans MS">&nbsp;Classification tree
+      <td width="184" height="23"><font face="Comic Sans MS">IMcoreProb</font></td>
+      <td width="541" height="23"><font face="Comic Sans MS">&nbsp;Classification tree
         probability that the event is in the core of the PSF</font></td>
     </tr>
     <tr>
-      <td width="184"><font face="Comic Sans MS">IMpsfErrPred</font></td>
-      <td width="541"><font face="Comic Sans MS">&nbsp;Classification tree
+      <td width="184" height="92"><font face="Comic Sans MS">IMpsfErrPred</font></td>
+      <td width="541" height="92"><font face="Comic Sans MS">&nbsp;Classification tree
         prediction of the PSF for this event, normalized to the 68% point
         predicted from an analytic model. That is, &quot;1&quot; means that this
         event is likely to have the nominal PSF; a lower number means that the
@@ -500,34 +500,34 @@ Ntuple, arranged by tool, and by sequential order within each tool</font></p>
       <td width="181" height="23"><font face="Comic Sans MS">Tkr1ToTFirst</font></td>
       <td width="541" height="23"><font face="Comic Sans MS">&nbsp;ToT of first
         hit on best track (all ToT's are adjusted for pathlength in the
-        non-measuring direction in the strip)</font></td>
+        non-measuring direction in the strip) <i><b><font color="#0000FF">NEW!!</font></b></i></font></td>
     </tr>
     <tr>
       <td width="181" height="23"><font face="Comic Sans MS">Tkr1ToTAve</font></td>
       <td width="541" height="23"><font face="Comic Sans MS">&nbsp;Average ToT
-        for the hits on the best track</font></td>
+        for the hits on the best track <i><b><font color="#0000FF">NEW!!</font></b></i></font></td>
     </tr>
     <tr>
       <td width="181" height="23"><font face="Comic Sans MS">Tkr1ToTTrAve</font></td>
       <td width="541" height="23"><font face="Comic Sans MS">&nbsp;Average ToT
-        for the hits on the best track, excluding the largest and smallest</font></td>
+        for the hits on the best track, excluding the largest and smallest <i><b><font color="#0000FF">NEW!!</font></b></i></font></td>
     </tr>
     <tr>
       <td width="181" height="23"><font face="Comic Sans MS">Tkr1ToTAsym</font></td>
       <td width="541" height="23"><font face="Comic Sans MS">&nbsp;Asymmetry
-        between last two and first two ToT's for the best track</font></td>
+        between last two and first two ToT's for the best track <i><b><font color="#0000FF">NEW!!</font></b></i></font></td>
     </tr>
     <tr>
       <td width="181" height="23"><font face="Comic Sans MS">Tkr1ChisqAsym</font></td>
       <td width="541" height="23"><font face="Comic Sans MS">&nbsp;Asymmetry
         between last two and first two track-segment delta-<b><span style="mso-char-type: symbol; mso-symbol-font-family: Mathematica1; font-size: 12.0pt; font-family: Mathematica1; mso-ascii-font-family: Times New Roman; mso-fareast-font-family: Times New Roman; mso-hansi-font-family: Times New Roman; mso-bidi-font-family: Times New Roman; mso-ansi-language: EN-US; mso-fareast-language: EN-US; mso-bidi-language: AR-SA">c</span></b><b><span style="font-size:12.0pt;font-family:&quot;Times New Roman&quot;;mso-fareast-font-family:
 &quot;Times New Roman&quot;;mso-ansi-language:EN-US;mso-fareast-language:EN-US;
-mso-bidi-language:AR-SA"><sup>2</sup>'s</span></b></font></td>
+mso-bidi-language:AR-SA"><sup>2</sup>'s </span></b><i><b><font color="#0000FF">NEW!!</font></b></i></font></td>
     </tr>
     <tr>
       <td width="181" height="23"><font face="Comic Sans MS">Tkr1SSDVeto</font></td>
       <td width="541" height="23"><font face="Comic Sans MS">&nbsp;number of hit
-        layers before start of track</font></td>
+        layers before start of track <i><b><font color="#0000FF">NEW!!</font></b></i></font></td>
     </tr>
     <tr>
       <td width="181" height="23"><font face="Comic Sans MS" size="3">Tkr2Chisq</font></td>
@@ -951,7 +951,7 @@ mso-bidi-language:AR-SA"><sup>2</sup>'s</span></b></font></td>
     <tr>
       <td width="182" height="23"><font face="Comic Sans MS">CalMIPRatio</font></td>
       <td width="540" height="23"><font face="Comic Sans MS">&nbsp;ratio of
-        measured energy to that expected from a minimum-ionizing particle</font></td>
+        measured energy to that expected from a minimum-ionizing particle <i><b><font color="#0000FF">NEW!!</font></b></i></font></td>
     </tr>
     <tr>
       <td width="182" height="23"><font face="Comic Sans MS">CalXEcentr</font></td>

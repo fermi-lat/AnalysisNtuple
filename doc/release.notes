@@ -2,6 +2,7 @@
   @brief Package AnalysisNtule
   @verbatim
 
+ v1r8    03-Oct-03   LSR  New CalMIPRatio, Tkr1ChisqAsym, Tkr1SSDVeto, several ToT variables
  v1r7p6  30-Sep-03   LSR  McEnergy now kinetic energy; fix theta and phi; put documentation into cvs
  v1r7p5  16-Sep-03   HMK  Add Acd_ActiveDistTop
  v1r7p4  09-Sep-03   LSR  reinstate CalEnergyLLCorr (with the correct calculation!)
