@@ -2,7 +2,7 @@
 @brief Uses the XxxValsTools to produce a comprehensive ntuple
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.19 2004/02/20 02:30:01 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.20 2004/06/17 19:44:00 lsrea Exp $
 */
 
 // Gaudi system includes
@@ -49,7 +49,7 @@ IValsTool::Visitor::eVisitorRet NtupleVisitor::analysisValue(std::string varName
 { 
     StatusCode sc;
     if (m_ntupleSvc) {
-        sc = m_ntupleSvc->addItem(m_ntupleName.c_str(), varName.c_str(), value );
+        sc = m_ntupleSvc->addItem(m_ntupleName,  varName, &value );
         if (sc.isFailure()) return IValsTool::Visitor::ERROR;
     }    
     return IValsTool::Visitor::CONT;
@@ -72,7 +72,7 @@ public:
     
 private: 
     /// number of times called
-    int m_count; 
+    double m_count; 
     
     /// access the ntupleWriter service to write out to ROOT ntuples
     INTupleWriterSvc *m_ntupleSvc;
@@ -172,9 +172,9 @@ StatusCode AnalysisNtupleAlg::initialize(){
     // get a pointer to our ntupleWriterSvc
     m_ntupleSvc = 0;
     if (!m_tupleName.empty()& m_doNtuple) {
-        if (service("ntupleWriterSvc", m_ntupleSvc, true).isFailure()) {
+        if (service("RootTupleSvc", m_ntupleSvc, true).isFailure()) {
             log << MSG::ERROR 
-                << "AnalysisNtupleAlg failed to get the ntupleWriterSvc" 
+                << "AnalysisNtupleAlg failed to get the RootTupleSvc" 
                 << endreq;
             return fail;
         }
@@ -190,7 +190,7 @@ StatusCode AnalysisNtupleAlg::initialize(){
 
     if (!m_tupleName.empty() & m_doNtuple) {
                 
-        if(m_ntupleSvc->addItem(m_tupleName.c_str(), "NumCalls", 0).isFailure()) {
+        if(m_ntupleSvc->addItem(m_tupleName,  "NumCalls",  &m_count ).isFailure()) {
             log << MSG::ERROR << "AddItem failed" << endreq;
             return fail;
         }
@@ -225,10 +225,10 @@ StatusCode AnalysisNtupleAlg::execute()
         return sc;
     }
     */
-    
+#if 0    // old intupleSvc required this: now it is automatic
     if (!m_tupleName.empty()& m_doNtuple) {
                
-        if(m_ntupleSvc->addItem(m_tupleName.c_str(), "NumCalls", m_count).isFailure()) {
+        if(m_ntupleSvc->addItem(m_tupleName.c_str(), "NumCalls", &m_count).isFailure()) {
             log << MSG::ERROR << "AddItem failed" << endreq;
             return fail;
         }
@@ -242,7 +242,10 @@ StatusCode AnalysisNtupleAlg::execute()
             }
         }
     }
-
+#else
+    ++m_count;
+    m_ntupleSvc->storeRowFlag(true);  // needed to save the event with RootTupleSvc
+#endif
     // all the tools have been called at this point, so from now on,
     ///  we can call them with the no-calculate flag
     

@@ -44,13 +44,13 @@ reconRootReaderAlg.ReconRootFile="$(ANALYSISNTUPLEROOT)/src/test/recon.root";
 
 ApplicationMgr.DLLs   += { "RootHistCnv", "ntupleWriterSvc"};
 ApplicationMgr.HistogramPersistency = "ROOT";
-ApplicationMgr.ExtSvc += { "NTupleSvc", "ntupleWriterSvc" };
+ApplicationMgr.ExtSvc += { "RootTupleSvc"};
 
 // NTUPLE Setup and definition
 
-ApplicationMgr.HistogramPersistency = "ROOT";
-ntupleWriterSvc.tuple_name = { "GLEAM" };
-NTupleSvc.Output = {"GLEAM DATAFILE='ntupleOutput.root' OPT='NEW'"};
+//ApplicationMgr.HistogramPersistency = "ROOT";
+//ntupleWriterSvc.tuple_name = { "GLEAM" };
+//NTupleSvc.Output = {"GLEAM DATAFILE='ntupleOutput.root' OPT='NEW'"};
 
 AnalysisNtupleAlg.tupleName="GLEAM";
 
