@@ -2,7 +2,7 @@
 @brief Calculates the Trigger analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.18 2005/02/17 19:13:46 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.19 2005/03/03 00:37:27 lsrea Exp $
 */
 
 // Include files
@@ -237,7 +237,7 @@ StatusCode GltValsTool::calculate()
                     (x_hits[tower][layer+2] > 0 && y_hits[tower][layer+2] > 0 )) 
                 {
                     nTrigsThis++;
-                    if(layer < iTrig_layer) {
+                    if(layer > iTrig_layer) {
                         iTrig_layer = layer;
                         iTrig_tower = tower;
                     }

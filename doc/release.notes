@@ -2,6 +2,7 @@
   @brief Package AnalysisNtule
   @verbatim
  
+ v2r2p2  07-Mar-05   LSR  get GltLayer number correctly (bottom to top now)
  v2r2p1  02-Mar-05   LSR  fix use of trigger bits (they're words, not bits)
  v2r2    24-Feb-05   LSR  put McSourceId back in... missing since last October!
  v2r2    17-Feb-05   LSR  use enums package for trigger bit definitions
