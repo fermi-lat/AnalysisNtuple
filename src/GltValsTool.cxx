@@ -2,7 +2,7 @@
 @brief Calculates the Trigger analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.17 2005/01/02 23:58:45 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.18 2005/02/17 19:13:46 lsrea Exp $
 */
 
 // Include files
@@ -182,7 +182,7 @@ StatusCode GltValsTool::calculate()
 
     Trig_evtFlags = eventSummary==0 ? 0 : eventSummary->eventFlags();
 
-    bool three_in_a_row = ((word & (1<<enums::b_Track))!=0);
+    bool three_in_a_row = ((word & enums::b_Track)!=0);
 
     int tower, layer;
     // needs to be recast into an indexed vector maybe
