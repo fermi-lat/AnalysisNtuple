@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.33 2003/10/03 17:03:40 atwood Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.34 2003/10/12 07:06:43 lsrea Exp $
 */
 
 // Include files
@@ -232,6 +232,7 @@ namespace {
 
       double CAL_TwrEdge;
 	  double CAL_LATEdge; 
+	  double CAL_CalTkrAngle;
 
       double CAL_TE_Nrm;
       double CAL_Track_Sep;
@@ -360,6 +361,7 @@ namespace {
       addItem("CalTrackSep",   &CAL_Track_Sep);
       addItem("CalTrackDoca",  &CAL_Track_DOCA);
 	  addItem("CalTwrGap",     &CAL_TwrGap);
+	  addItem("CalTkrAngle",   &CAL_CalTkrAngle);
 
 	  addItem("CalELayer0",    &CAL_eLayer[0]);
       addItem("CalELayer1",    &CAL_eLayer[1]);
@@ -498,7 +500,10 @@ StatusCode CalValsTool::calculate()
         x0 = gamma->getPosition();
         t0 = gamma->getDirection();
     }
-    
+	if(fabs(cal_dir.x()) < 1.) {
+		CAL_CalTkrAngle = acos(t0*cal_dir);
+	}
+	else CAL_CalTkrAngle = -.1; 
     // this "cos(theta)" doesn't distinguish between up and down
     double costh  = fabs(t0.z()); 
     // This "phi" is restricted to the range 0 to pi/2
