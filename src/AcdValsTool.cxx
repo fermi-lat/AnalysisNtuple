@@ -1,7 +1,12 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.1 2003/02/25 02:36:58 lsrea Exp $
 
-// Include files
+/*! 
+@brief Calculates Acd Values
 
+@authors Bill Atwood, Leon Rochester
+
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.2 2003/02/26 17:38:48 lsrea Exp $
+
+*/
 
 #include "ValBase.h"
 
@@ -18,7 +23,6 @@
 #include "Event/Recon/TkrRecon/TkrVertex.h"
 #include "Event/Recon/TkrRecon/TkrFitTrack.h"
 #include "Event/Recon/AcdRecon/AcdRecon.h"
-
 
 
 class AcdValsTool : public ValBase

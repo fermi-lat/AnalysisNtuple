@@ -1,5 +1,5 @@
 
-// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.5 2003/03/01 04:04:00 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.6 2003/03/01 16:05:01 lsrea Exp $
 
 // Gaudi system includes
 #include "GaudiKernel/MsgStream.h"
@@ -18,16 +18,23 @@
 // for access to geometry perhaps
 #include "GlastSvc/GlastDetSvc/IGlastDetSvc.h"
 
-// visitor to do the ntuple (see IValsTool.h)
+/** @class NtupleVisitor
+@brief implementation of ValsVisitor (See IValsTool)
+*/
+
 class NtupleVisitor : virtual public ValsVisitor
 {
 public:
+    /// constructor can set ntuple service and ntupleName
     NtupleVisitor(INTupleWriterSvc* ntupleSvc=0, std::string ntupleName="") 
         : m_ntupleSvc(ntupleSvc), m_ntupleName(ntupleName) {}
+    /// returns names and values to the visitor
     virtual ValsVisitor::eVisitorRet analysisValue(std::string varName, double& value) const;
     
 private:
+    /// pointer to the ntuple servic
     INTupleWriterSvc* m_ntupleSvc;
+    /// name of the ntuple; should be the same as is set in NtupleWriterSvc
     std::string m_ntupleName;
 };
 
@@ -41,9 +48,13 @@ ValsVisitor::eVisitorRet NtupleVisitor::analysisValue(std::string varName, doubl
     return ValsVisitor::CONT;
 }
 
-/** @class AnalysisNtuple
-@brief fills the ntuple vfrom the XxxValsTools
+/*! @class AnalysisNtupleAlg
+@brief fills the ntuple from the XxxValsTools
+@author Leon Rochester
 */
+
+// $Header$
+
 class AnalysisNtupleAlg : public Algorithm {
 public:
     AnalysisNtupleAlg(const std::string& name, ISvcLocator* pSvcLocator);
@@ -65,7 +76,7 @@ private:
     
     /// Common interface to analysis tools
     std::vector<IValsTool*> m_toolvec;
-    
+    /// pointer to visitor passed in the traverse method of the tools.
     ValsVisitor* m_visitor;    
 };
 
@@ -111,6 +122,7 @@ StatusCode AnalysisNtupleAlg::initialize(){
     
     // calc tools
     
+    // TkrHitValsTool not currently called
     const char * toolnames[] = {"McValsTool", "GltValsTool", "TkrValsTool", 
         "VtxValsTool", "CalValsTool", "AcdValsTool"};
     

@@ -12,9 +12,14 @@
 #include <map>
 
 /** @class ValBase
-@brief 
+@brief base class for the XxxValsTools
+
+@author Leon Rochester
 
 */
+
+// $Header
+
 class ValBase : public IValsTool,  public AlgTool,  virtual public IIncidentListener
 {
 public:
@@ -33,7 +38,7 @@ public:
     virtual void zeroVals();
     /// add an item to the map
     virtual void addItem(std::string varName, double* pValue);
-    /// check if calculation is already done for this event
+    /// do calculation if not already done for this event
     virtual StatusCode doCalcIfNotDone();
     /// get a particular value, using ntuple name
     virtual StatusCode getVal(std::string varName, double& value);
@@ -43,13 +48,13 @@ public:
     virtual StatusCode browse(std::string varName = "");
     /// this is called by the incident service at the beginning of an event
     virtual void handle(const Incident& inc);
-    /// callback for visitor
+    /// called by visitor to initiate calls to analysisValues()
     virtual ValsVisitor::eVisitorRet traverse(ValsVisitor* v);
     
-    /// calculate all values, over-ridden by XxxValsTool
+    /// calculate all values; implemented by each XxxValsTool
     virtual StatusCode calculate();
     
-    // common initialization for subclasses
+    // common initialization
     virtual StatusCode initialize();
     
 protected:

@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.3 2003/02/26 17:38:48 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.4 2003/03/01 16:05:01 lsrea Exp $
 
 // Include files
 
@@ -34,6 +34,12 @@ namespace {
     }
     
 }
+
+/*! @class VtxValsTool
+@brief calculates Vtx values
+
+@authors Bill Atwood, Leon Rochester
+*/
 
 class VtxValsTool : public ValBase
 {

@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.3 2003/02/26 17:38:48 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.4 2003/03/01 04:04:00 lsrea Exp $
 
 // Include files
 
@@ -25,6 +25,12 @@ namespace {
     const int _nLayers = 18;
     const int _nTowers = 16;
 }
+
+/*! @class GltValsTool
+@brief calculates trigger values
+
+@authors Bill Atwood, Leon Rochester
+*/
 
 class GltValsTool : public ValBase
 {

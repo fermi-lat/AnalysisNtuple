@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.6 2003/02/26 17:38:48 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.7 2003/03/01 04:04:00 lsrea Exp $
 
 // Include files
 
@@ -154,6 +154,12 @@ namespace {
     }
     
 }
+
+/*! @class CalValsTool
+@brief calculates Cal values
+
+@authors Bill Atwood, Leon Rochester
+*/
 
 class CalValsTool :   public ValBase
 {

@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/test/test_AnalysisNtuple.cxx,v 1.5 2003/02/26 17:16:21 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/test/test_AnalysisNtuple.cxx,v 1.6 2003/02/27 21:11:38 lsrea Exp $
 
 // Include files
 // Gaudi system includes
@@ -19,7 +19,7 @@
 // Define the class here instead of in a header file: not needed anywhere but here!
 //------------------------------------------------------------------------------
 /** 
-A simple algorithm.
+The test program for AnalysisNtuple is AnalysisNtupleAlg
 */
 
 class test_AnalysisNtuple : public Algorithm {

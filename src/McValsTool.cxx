@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.1 2003/02/26 02:25:21 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.2 2003/02/26 17:38:48 lsrea Exp $
 
 // Include files
 
@@ -23,6 +23,12 @@
 // Reconstructed Tracks.... 
 #include "Event/Recon/TkrRecon/TkrKalFitTrack.h"
 #include "Event/Recon/TkrRecon/TkrVertex.h"
+
+/*! @class McValsTool
+@brief calculates Monte Carlo values
+
+@authors Bill Atwood, Leon Rochester
+*/
 
 class McValsTool : public ValBase
 {

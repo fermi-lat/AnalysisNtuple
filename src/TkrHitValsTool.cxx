@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrHitValsTool.cxx,v 1.1 2003/02/25 02:36:59 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrHitValsTool.cxx,v 1.2 2003/02/26 17:38:48 lsrea Exp $
 
 // Include files
 
@@ -21,6 +21,12 @@
 namespace {
     const int _nLayers = 18;
 }
+
+/*! @class TkrHitValsTool
+@brief calculates TkrHit values
+
+@authors Bill Atwood, Leon Rochester
+*/
 
 class TkrHitValsTool : public ValBase
 {
