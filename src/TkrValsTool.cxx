@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header$
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.10 2003/03/05 02:03:29 lsrea Exp $
 */
 
 // Include files
@@ -30,8 +30,8 @@ $Header$
 #include "TkrUtil/ITkrQueryClustersTool.h"
 #include "GlastSvc/Reco/IKalmanParticle.h"
 
-//#include "GlastSvc/Reco/IPropagatorSvc.h"
-#include "GlastSvc/Reco/IPropagatorTool.h"
+#include "GlastSvc/Reco/IPropagatorSvc.h"
+//#include "GlastSvc/Reco/IPropagatorTool.h"
 #include "GaudiKernel/IToolSvc.h"
 
 #ifndef M_PI
@@ -101,7 +101,7 @@ private:
     /// pointer to queryclusterstool
     ITkrQueryClustersTool* pQueryClusters;
     /// 
-    //IPropagatorSvc* m_propSvc;
+    IPropagatorSvc* m_propSvc;
     
     IKalmanParticle*       pKalParticle;
     
@@ -213,7 +213,7 @@ StatusCode TkrValsTool::initialize()
             return StatusCode::FAILURE;
         }
         
-        /*
+        
         // this doesn't seem quite ready, or I don't know how to use it
         if (service("GlastPropagatorSvc", m_propSvc).isFailure()) {
         log << MSG::ERROR << "Couldn't find the GlastPropagatorSvc!" << endreq;
@@ -221,8 +221,8 @@ StatusCode TkrValsTool::initialize()
         }
         
           pKalParticle = m_propSvc->getPropagator();
-        */
         
+        /*
         // Which propagator to use?
         int m_PropagatorType = 1; 
         IPropagatorTool* propTool = 0;
@@ -238,7 +238,8 @@ StatusCode TkrValsTool::initialize()
             sc = toolSvc()->retrieveTool("RecoTool", propTool);
             log << MSG::INFO << "Using Gismo Particle Propagator" << endreq;
         }
-        pKalParticle = propTool->getPropagator();     
+        pKalParticle = propTool->getPropagator();   
+        */
         
     } else {
         return StatusCode::FAILURE;

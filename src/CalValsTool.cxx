@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header$
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.10 2003/03/05 02:03:29 lsrea Exp $
 */
 
 // Include files
@@ -27,8 +27,8 @@ $Header$
 #include "Event/Recon/CalRecon/CalCluster.h"
 
 #include "GlastSvc/Reco/IKalmanParticle.h"
-#include "GlastSvc/Reco/IPropagatorTool.h"
-//#include "GlastSvc/Reco/IPropagatorSvc.h"
+//#include "GlastSvc/Reco/IPropagatorTool.h"
+#include "GlastSvc/Reco/IPropagatorSvc.h"
 
 #include "GlastSvc/GlastDetSvc/IGlastDetSvc.h"
 
@@ -190,7 +190,7 @@ private:
     /// store the towerPitch
     double m_towerPitch;
     /// 
-    //IPropagatorSvc* m_propSvc;
+    IPropagatorSvc* m_propSvc;
     
     //Global Calorimeter Tuple Items
     double CAL_EnergySum;
@@ -262,7 +262,7 @@ StatusCode CalValsTool::initialize()
         }
         m_detSvc->getNumericConstByName("towerPitch", &m_towerPitch);
 
-        /*
+        
         // getting ready for this.
         if (service("GlastPropagatorSvc", m_propSvc).isFailure()) {
         log << MSG::ERROR << "Couldn't find the GlastPropagatorSvc!" << endreq;
@@ -270,8 +270,8 @@ StatusCode CalValsTool::initialize()
         }
         
           pKalParticle = m_propSvc->getPropagator();
-        */
         
+        /*
         // Which propagator to use?
         int m_PropagatorType = 1; 
         IPropagatorTool* propTool = 0;
@@ -297,6 +297,7 @@ StatusCode CalValsTool::initialize()
             log << MSG::INFO << "Using Gismo Particle Propagator" << endreq;
         }
         pKalParticle = propTool->getPropagator(); 
+        */
         
     } else {
         return StatusCode::FAILURE;
