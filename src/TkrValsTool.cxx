@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.40 2004/08/09 17:58:44 atwood Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.41 2004/09/10 04:59:02 lsrea Exp $
 */
 
 // To Do:
@@ -385,7 +385,6 @@ namespace {
     double gap       = 18.; 
     double hard_frac = .7; 
 
-    double maxToTVal = 250.;  // won't be needed after new tag of TkrDigi
     double maxPath = 2500.; // limit the upward propagator    
 }
 
@@ -405,7 +404,7 @@ StatusCode TkrValsTool::calculate()
     double radThick = pTkrGeoSvc->getAveConv(SUPER);    // was 0.18
     double radTray  = pTkrGeoSvc->getAveRest(ALL);      // was 0.015
 
-
+    ITkrToTSvc* pToTSvc = pTkrGeoSvc->getTkrToTSvc();
 
     //Recover EventHeader Pointer
     //SmartDataPtr<Event::EventHeader> pEvent(m_pEventSvc, EventModel::EventHeader);
@@ -418,9 +417,8 @@ StatusCode TkrValsTool::calculate()
     if(!pTracks) return StatusCode::FAILURE;
 
     // all variable values are preset to zero. Be sure to re-initialize the ones you care about  
-
+    
     //Make sure we have valid reconstructed data
-
 
     int nNoConv = pTkrGeoSvc->numNoConverter();
     int nThick  = pTkrGeoSvc->numSuperGlast();
@@ -493,8 +491,6 @@ StatusCode TkrValsTool::calculate()
         Tkr_TrackLength = -(Tkr_1_z0-z0)/Tkr_1_zdir;
 
         double z_dist    = fabs((pTkrGeoSvc->trayHeight()+3.)/t1.z()); 
-        //double x_twr = sign(x1.x())*(fmod(fabs(x1.x()),m_towerPitch) - m_towerPitch/2.);
-        //double y_twr = sign(x1.y())*(fmod(fabs(x1.y()),m_towerPitch) - m_towerPitch/2.);
         double x_twr = globalToLocal(x1.x(), m_towerPitch, m_xNum);
         double y_twr = globalToLocal(x1.y(), m_towerPitch, m_yNum);
 
@@ -529,8 +525,6 @@ StatusCode TkrValsTool::calculate()
         }
 
         // SSD Die loaction and edge... 
-        //double x_die = sign(x_twr)*(fmod(fabs(x_twr),die_width) - die_width/2.);
-        //double y_die = sign(y_twr)*(fmod(fabs(y_twr),die_width) - die_width/2.);
         double x_die = globalToLocal(x_twr, die_width, nDies);
         double y_die = globalToLocal(y_twr, die_width, nDies);
 
@@ -539,41 +533,38 @@ StatusCode TkrValsTool::calculate()
         Tkr_1_DieEdge  = die_width/2. - Tkr_1_DieEdge; 
 
         // Section to dig out the TOT information
+        double totMax      =  pToTSvc->getMaxToT();   // counts
         double first_ToT = 0.; 
         double last_ToT  = 0.; 
-        double min_ToT   = maxToTVal; 
+        double min_ToT   = totMax; 
         double max_ToT   = 0.;  
         int    hit_counter = 0; 
         double chisq_first = 0.;
         double chisq_last  = 0.; 
         Event::TkrFitPlaneConPtr pln_pointer = track_1->begin();
         //for the ToT path correction; use the directions of each hit
-        double slopeX; // = fabs(t1.x()/t1.z());
-        double slopeY; // = fabs(t1.y()/t1.z());
-        //double pathFactorX; // = 1./sqrt(1. + slopeX*slopeX);
-        //double pathFactorY; // = 1./sqrt(1. + slopeY*slopeY);
+        double slopeX;
+        double slopeY;
 
 		int gapId = -1; 
-		int lastLayer = -1; 
+		int lastPlane = -1; 
         while(pln_pointer != track_1->end()) {
             Event::TkrFitPlane plane = *pln_pointer;
 
-			int thisPlane = plane.getIDPlane();
-			int thisIview = Event::TkrCluster::viewToInt(plane.getProjection());
-			int thisLayer = 0;
-			if(thisPlane%2 != 0) thisLayer = 2.*thisPlane+thisIview;
-			else                 thisLayer = 2.*thisPlane+((thisIview+1)%2);
-
-			if(lastLayer < 0) { //First Hit
-				lastLayer = thisLayer;
-			}
-			else {
-				if(gapId < 0 && lastLayer+1 != thisLayer){
-					gapId = lastLayer+1;
-					Event::TkrFitPlane lastPlane = *(--pln_pointer);
+			int thisLayer = plane.getIDPlane();
+			int thisView = Event::TkrCluster::viewToInt(plane.getProjection());
+            int tray, botTop;
+			pTkrGeoSvc->layerToTray(thisLayer, thisView, tray, botTop);
+            int thisPlane = pTkrGeoSvc->trayToPlane(tray, botTop);
+            // first hit
+			if(lastPlane < 0) { lastPlane = thisPlane;
+			} else {
+				if(gapId < 0 && lastPlane+1 != thisPlane){
+					gapId = lastPlane+1;
+					Event::TkrFitPlane lastFitPlane = *(--pln_pointer);
 					pln_pointer++;
-					Point lastPoint = lastPlane.getPoint(Event::TkrFitHit::FIT);
-					Event::TkrFitHit lastHit = lastPlane.getHit(Event::TkrFitHit::FIT);
+					Point lastPoint = lastFitPlane.getPoint(Event::TkrFitHit::FIT);
+					Event::TkrFitHit lastHit = lastFitPlane.getHit(Event::TkrFitHit::FIT);
 					double xSlope = lastHit.getPar().getXSlope();
 					double ySlope = lastHit.getPar().getYSlope();
 					Vector localDir = Vector(-xSlope,-ySlope,-1.).unit();
@@ -588,7 +579,7 @@ StatusCode TkrValsTool::calculate()
 					Tkr_1_GapY = gapPoint.y();
 				}
 			}
-			lastLayer = thisLayer;
+			lastPlane = thisPlane;
 
             int hit_Id = plane.getIDHit();
             Event::TkrCluster* cluster = pClusters->getHit(hit_Id);
@@ -603,18 +594,22 @@ StatusCode TkrValsTool::calculate()
             double slope1       = (v==Event::TkrCluster::X) ? slopeX : slopeY;
 
             // theta is the projected angle along the strip
-            //double theta        = atan(slope);
             // theta1 is the projected angle across the strip
             double theta1       = atan(slope1);
 
             double aspectRatio = 0.228/0.400;
-            double totMax      =  250.;   // counts
-            double threshold   =  0.25;   // Mips
-            double countThreshold = 15; // counts
-            double normFactor  =  1./53.;
+            double threshold   =  0.25;   // Mips (for old-style)
+            double countThreshold = 15; // counts (for old-style)
+            double normFactor  =  1./53.; // (for old-style)
 
-            double tot = cluster->ToT();
-            if(tot>=totMax) tot = totMax;
+            double mips;
+            double rawToT = cluster->getRawToT();
+            if (cluster->getVersion()==0) {
+                mips = normFactor*(std::min(totMax,rawToT)+countThreshold);
+            } else {
+                mips = cluster->getMips();
+            }
+
             double path1 = 1.0;
 
             // get the path length for the hit
@@ -622,8 +617,7 @@ StatusCode TkrValsTool::calculate()
             //   more work is definitely in order!
 
             // theta1 first
-            if (tot>=totMax) { tot = normFactor*(totMax+countThreshold); }
-            else {
+            if(rawToT<totMax) {
                 double costh1 = cos(theta1);
                 if (size==1) {
                     if (slope1< aspectRatio) {
@@ -653,20 +647,20 @@ StatusCode TkrValsTool::calculate()
                 }
                 double factor = path1*costh1*slope;
                 double path2 = sqrt(path1*path1 + factor*factor);
-                tot = normFactor*(tot+countThreshold)/path2;
+                mips /= path2;
             }
 
-            if(tot > max_ToT) max_ToT = tot; 
-            if(tot < min_ToT) min_ToT = tot; 
+            if(mips > max_ToT) max_ToT = mips; 
+            if(mips < min_ToT) min_ToT = mips; 
             hit_counter++;  
-            if (hit_counter==1) Tkr_1_ToTFirst = tot;
-            Tkr_1_ToTAve += tot;
+            if (hit_counter==1) Tkr_1_ToTFirst = mips;
+            Tkr_1_ToTAve += mips;
             if(hit_counter < 3) {
-                first_ToT += tot;
+                first_ToT += mips;
                 chisq_first += plane.getDeltaChiSq(Event::TkrFitHit::SMOOTH);
             }
             if(hit_counter > Tkr_1_Hits - 2){
-                last_ToT += tot;
+                last_ToT += mips;
                 chisq_last += plane.getDeltaChiSq(Event::TkrFitHit::SMOOTH);
             }
             pln_pointer++;
@@ -683,8 +677,6 @@ StatusCode TkrValsTool::calculate()
         m_G4PropTool->setStepStart(x1, -t1); //Note minus sign - swim backwards towards ACD
 
         double topOfTkr = pTkrGeoSvc->getReconLayerZ(0) + 2.0; // higher than first silicon layer
-        //double xEdge = 0.5*m_xNum*m_towerPitch;
-        //double yEdge = 0.5*m_yNum*m_towerPitch;
         double arc_min = fabs((topOfTkr-x1.z())/t1.z());
         arc_min = std::min( arc_min, maxPath); 
         m_G4PropTool->step(arc_min);  
@@ -778,10 +770,8 @@ StatusCode TkrValsTool::calculate()
         double costh = fabs(t1.z()); 
         arc_min = (x1.z() - pTkrGeoSvc->calZTop())/costh; 
         pKalParticle->setStepStart(x1, t1, arc_min);
-        //double total_radlen = pKalParticle->radLength(); 
 
         // Compute the sum-of radiation_lengths x Hits in each layer
-        //double tracker_ene_sum  = 0.;
         double tracker_ene_corr = 0.; 
         double rad_len_sum  = 0.; 
         double radlen       = 0.;

@@ -2,7 +2,7 @@
 @brief Uses the XxxValsTools to produce a comprehensive ntuple
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.23 2004/08/24 16:45:07 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.24 2004/09/10 04:59:02 lsrea Exp $
 */
 
 // Gaudi system includes
@@ -235,7 +235,6 @@ StatusCode AnalysisNtupleAlg::initialize(){
 StatusCode AnalysisNtupleAlg::execute()
 {
     StatusCode   sc = StatusCode::SUCCESS;
-    StatusCode fail = StatusCode::FAILURE;
     
     MsgStream   log( msgSvc(), name() );
 
@@ -253,7 +252,7 @@ StatusCode AnalysisNtupleAlg::execute()
                
         if(m_ntupleSvc->addItem(m_tupleName.c_str(), "NumCalls", &m_count).isFailure()) {
             log << MSG::ERROR << "AddItem failed" << endreq;
-            return fail;
+            return StatusCode::FAILURE;
         }
         ++m_count;
         
@@ -261,7 +260,7 @@ StatusCode AnalysisNtupleAlg::execute()
         for( int i =0; i<size; ++i){
             if(m_toolvec[i]->traverse(m_visitor)==IValsTool::Visitor::ERROR) {
                 log << MSG::ERROR << m_toolvec[i] << " traversal failed" << endreq;
-                return fail;
+                return StatusCode::FAILURE;
             }
         }
     }

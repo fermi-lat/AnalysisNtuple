@@ -3,7 +3,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.42 2004/08/24 16:20:25 baughman Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.43 2004/08/24 16:45:07 heather Exp $
 */
 
 // Include files
@@ -20,8 +20,8 @@
 #include "Event/TopLevel/EventModel.h"
 #include "Event/TopLevel/Event.h"
 
-#include "Event/Recon/TkrRecon/TkrCluster.h"
-#include "Event/Recon/TkrRecon/TkrClusterCol.h"
+//#include "Event/Recon/TkrRecon/TkrCluster.h"
+//#include "Event/Recon/TkrRecon/TkrClusterCol.h"
 #include "Event/Recon/TkrRecon/TkrFitTrack.h"
 #include "Event/Recon/TkrRecon/TkrKalFitTrack.h"
 #include "Event/Recon/TkrRecon/TkrVertex.h"
@@ -371,7 +371,7 @@ StatusCode CalValsTool::calculate()
     //Make sure we have valid cluster data
     if (!pCals) return sc;
 
-    double z0 = 0.0; // placeholder for offset
+    //double z0 = 0.0; // placeholder for offset
     
     Event::CalCluster* calCluster = pCals->front();
     
@@ -553,7 +553,7 @@ StatusCode CalValsTool::calculate()
     if (good_layers>0) edge_corr /= good_layers;
     CAL_Edge_Corr = edge_corr; 
     
-    double cal_half_width = 0.5*std::max(m_calXWidth, m_calYWidth);
+    //double cal_half_width = 0.5*std::max(m_calXWidth, m_calYWidth);
     
     //       Leakage Correction  
     // First: get the rad.lens. in the tracker 
@@ -633,7 +633,7 @@ StatusCode CalValsTool::calculate()
     
     // The "final" correction derived empirically from analyizing and flattening the 
     // resultant energy in cos(theta) and log10(E) 
-    double logEsum = log10(ene_sum_corr); 
+    //double logEsum = log10(ene_sum_corr); 
     //double ad_hoc_factor = (1.35-.15*logEsum )/(1.+.9*(.6 - costh)*(.6 - costh))/
                                // (1.-.125*logEsum + (.125*logEsum)*costh);  
     //double ad_hoc_factor = (1.23 - .065*logEsum)/(1.+.14*(logEsum-1.)*(costh-.74));  
@@ -742,7 +742,7 @@ double CalValsTool::containedFraction(Point pos, double gap,
     return in_frac;
 }
 
-StatusCode CalValsTool::aveRadLens(Point x0, Vector t0, double radius, int numSamples)
+StatusCode CalValsTool::aveRadLens(Point /*x0*/, Vector t0, double radius, int numSamples)
 { // This method finds the averages and rms for a cylinder of rays passing through 
   // the calorimeter of the radiation lengths in CsI and other material. 
   // The radius of the cylinder is "radius" and the number of rays = numSample (plus the 
