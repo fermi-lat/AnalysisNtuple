@@ -3,7 +3,7 @@
 @brief Calculates the "Event" analysis variables from the other ntuple variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.5 2003/06/11 23:26:31 atwood Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.6 2003/07/17 22:50:51 atwood Exp $
 */
 
 #include "ValBase.h"
@@ -46,7 +46,7 @@ public:
 private:
 
     //Global ACDTuple Items
-    double EvtEnergyOpt;
+    //double EvtEnergyOpt;
     double EvtEnergySumOpt;
     double EvtEnergyRaw;
 	double EvtEnergyTracker;
@@ -59,12 +59,18 @@ private:
     double EvtVtxEAngle;
     double EvtTkrComptonRatio;
 	double EvtTkrEComptonRatio;
+	double EvtPSFModel; 
+
     double EvtTkr1EChisq;
     double EvtTkr1EFirstChisq;
     double EvtTkr1EQual;
+	double EvtTkr1ECovDet; 
+	double EvtTkr1PSFMdRat;
+
     double EvtTkr2EChisq;
     double EvtTkr2EFirstChisq;
     double EvtTkr2EQual;
+
 	double EvtCalETLRatio;
 	double EvtCalEXtalRatio;
 	double EvtCalEXtalTrunc;
@@ -171,7 +177,7 @@ StatusCode EvtValsTool::initialize()
 
     // load up the map
 
-    addItem("EvtEnergyOpt",     &EvtEnergyOpt);
+    //addItem("EvtEnergyOpt",     &EvtEnergyOpt);
     addItem("EvtEnergySumOpt",  &EvtEnergySumOpt);
 	addItem("EvtEnergyTracker", &EvtEnergyTracker);
     addItem("EvtEnergyRaw",     &EvtEnergyRaw);
@@ -184,12 +190,18 @@ StatusCode EvtValsTool::initialize()
     addItem("EvtVtxEAngle",     &EvtVtxEAngle);
     addItem("EvtTkrComptonRatio", &EvtTkrComptonRatio);
 	addItem("EvtTkrEComptonRatio", &EvtTkrEComptonRatio);
+	addItem("EvtPSFModel",      &EvtPSFModel);
+
     addItem("EvtTkr1EChisq",    &EvtTkr1EChisq);
     addItem("EvtTkr1EFirstChisq", &EvtTkr1EFirstChisq);
     addItem("EvtTkr1EQual",     &EvtTkr1EQual);
+    addItem("EvtTkr1PSFMdRat",  &EvtTkr1PSFMdRat);
+    addItem("EvtTkr1ECovDet",   &EvtTkr1ECovDet);
+
     addItem("EvtTkr2EChisq",    &EvtTkr2EChisq);
     addItem("EvtTkr2EFirstChisq", &EvtTkr2EFirstChisq);
     addItem("EvtTkr2EQual",     &EvtTkr2EQual);
+
 	addItem("EvtCalETLRatio",   &EvtCalETLRatio);
 	addItem("EvtCalEXtalRatio", &EvtCalEXtalRatio);
 	addItem("EvtCalEXtalTrunc", &EvtCalEXtalTrunc);
@@ -226,10 +238,10 @@ StatusCode EvtValsTool::calculate()
         EvtEnergyRaw = eTkr + eCalSum;
     }
 
-    double eTkrKalEne, eCal, eCalRLn, eTkrBest;
+    double eTkrKalEne, eCalRLn, eTkrBest; //, eCal
 	int CAL_Type;
-    if (   m_pCalTool->getVal("CalEnergyCorr", eCal, firstCheck).isSuccess()
-		&& m_pCalTool->getVal("CalTotRLn", eCalRLn, firstCheck).isSuccess()
+    if (  // m_pCalTool->getVal("CalEnergyCorr", eCal, firstCheck).isSuccess() &&
+		   m_pCalTool->getVal("CalTotRLn", eCalRLn, firstCheck).isSuccess()
 		&& m_pTkrTool->getVal("TkrSumKalEne", eTkrKalEne, firstCheck).isSuccess()) 
     {
 		eTkrBest = std::max(eTkr+eCalSum, eTkrKalEne);
@@ -241,8 +253,8 @@ StatusCode EvtValsTool::calculate()
 		}
 		else {CAL_Type = 2;} 
 
-        if(CAL_Type == 0) EvtEnergyOpt = eTkrBest;
-		else              EvtEnergyOpt = eTkr + eCal;
+       // if(CAL_Type == 0) EvtEnergyOpt = eTkrBest;
+	   //	else              EvtEnergyOpt = eTkr + eCal;
     }
    
     double eCalSumCorr;
@@ -271,9 +283,22 @@ StatusCode EvtValsTool::calculate()
         }
     }
     
+	EvtPSFModel = sqrt(pow((6.1/EvtEnergySumOpt),2) + (.001745*.001745));
     EvtLogESum = log10(std::min(std::max(EvtEnergySumOpt,20.),50000.));
 	double logE = EvtLogESum;
     double logE2 = logE*logE; 
+    
+	double tkr1CovDet;
+	if (m_pTkrTool->getVal("Tkr1CovDet",tkr1CovDet, nextCheck).isSuccess()) {
+        EvtTkr1ECovDet = tkr1CovDet/pow(EvtEnergySumOpt, 1.3);
+    }
+
+	double tkr1ThetaErr, tkr1PhiErr;
+	if (m_pTkrTool->getVal("Tkr1ThetaErr",tkr1ThetaErr, nextCheck).isSuccess() &&
+		m_pTkrTool->getVal("Tkr1PhiErr",tkr1PhiErr, nextCheck).isSuccess()) {
+		EvtTkr1PSFMdRat = sqrt(tkr1ThetaErr*tkr1ThetaErr + tkr1PhiErr*tkr1PhiErr)/ 
+			              EvtPSFModel;
+	}
 
     double tkr1ConE;
     if (m_pTkrTool->getVal("Tkr1ConEne",tkr1ConE, nextCheck).isSuccess()) {
