@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.21 2003/08/22 16:17:47 atwood Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.22 2003/08/22 22:18:19 atwood Exp $
 */
 
 // Include files
@@ -407,6 +407,9 @@ StatusCode TkrValsTool::calculate()
     StatusCode sc = StatusCode::SUCCESS;
     
     MsgStream log(msgSvc(), name());
+
+    //placeholder for offset
+    double z0 = 0.0;
     
     //Recover EventHeader Pointer
     //SmartDataPtr<Event::EventHeader> pEvent(m_pEventSvc, EventModel::EventHeader);
@@ -487,7 +490,7 @@ StatusCode TkrValsTool::calculate()
 		Tkr_1_ErrAsym     = fabs(Tkr_1_Sxy/(Tkr_1_Sxx + Tkr_1_Syy));
 		Tkr_1_CovDet      = sqrt(Tkr_1_Sxx*Tkr_1_Syy-Tkr_1_Sxy*Tkr_1_Sxy)*Tkr_1_zdir*Tkr_1_zdir;
 
-        Tkr_TrackLength = -Tkr_1_z0/Tkr_1_zdir;
+        Tkr_TrackLength = -(Tkr_1_z0-z0)/Tkr_1_zdir;
         
         double z_dist    = fabs((pTkrGeoSvc->trayHeight()+3.)/t1.z()); 
         double x_twr = sign(x1.x())*(fmod(fabs(x1.x()),towerPitch) - towerPitch/2.);
@@ -508,15 +511,15 @@ StatusCode TkrValsTool::calculate()
 		
 		Tkr_1_TwrGap = 0.; 
         if(s_x < s_y) { // Goes out x side of CAL Module
-		    if(x1.z() + s_x*t1.z() > 0) {
-			    double s_max = fabs((x1.z())/t1.z());
+		    if(x1.z() - z0 + s_x*t1.z() > 0) {
+			    double s_max = fabs((x1.z()-z0)/t1.z());
 			    Tkr_1_TwrGap = gap/fabs(x_slope);
 			    if((Tkr_1_TwrGap + s_x)> s_max ) Tkr_1_TwrGap = s_max-s_x;
 		    }
 	    }
 	    else {          // Goes out y side
-		    if(x1.z() + s_y*t1.z() > 0) {
-			    double s_max = fabs(x1.z()/t1.z());
+		    if(x1.z() - z0 + s_y*t1.z() > 0) {
+			    double s_max = fabs((x1.z()-z0)/t1.z());
 			    Tkr_1_TwrGap = gap/fabs(y_slope);
 			    if((Tkr_1_TwrGap + s_y)> s_max ) Tkr_1_TwrGap = s_max-s_y;
 		    }
@@ -677,7 +680,7 @@ StatusCode TkrValsTool::calculate()
 		// Coef's from Lin. Regression analysis in Miner
         // defined in anonymous namespace above
         Tkr_Energy     = (cfThin*thin_hits + cfThick*thick_hits + cfNoConv*blank_hits
-            + cfRadLen*rad_len_sum + cfZ*x1.z())/costh;
+            + cfRadLen*rad_len_sum + cfZ*(x1.z()-z0))/costh;
         //Tkr_Energy_Sum = tracker_ene_sum + cfNoConv1*blank_hits;  
         Tkr_Edge_Corr  = tracker_ene_corr/rad_len_sum;
         Tkr_Energy_Corr= Tkr_Edge_Corr*Tkr_Energy;

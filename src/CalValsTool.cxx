@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.28 2003/08/24 22:39:47 atwood Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.29 2003/08/27 14:50:06 atwood Exp $
 */
 
 // Include files
@@ -422,6 +422,8 @@ StatusCode CalValsTool::calculate()
         
     //Make sure we have valid cluster data
     if (!pCals) return sc;
+
+    double z0 = 0.0; // placeholder for offset
     
     Event::CalCluster* calCluster = pCals->front();
     
@@ -631,8 +633,8 @@ StatusCode CalValsTool::calculate()
     // Find the distance in Cal to nearest edge along shower axis
     //       Need to check sides as well as back
     Vector t_axis = axis.direction();     // This points in +z direction
-    double s_top  = -(-m_calZTop + axis.position().z())/t_axis.z();
-	double s_exit = -(axis.position().z())/t_axis.z(); 
+    double s_top  = -(axis.position().z() - m_calZTop)/t_axis.z();
+	double s_exit = -(axis.position().z() - z0)/t_axis.z(); 
     Point cal_top = axis.position(s_top); // Entry point into calorimeter
 	Point tkr_exit= axis.position(s_exit);// Exit point from tracker
 
