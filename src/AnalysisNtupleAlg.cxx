@@ -2,7 +2,7 @@
 @brief Uses the XxxValsTools to produce a comprehensive ntuple
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.13 2003/04/01 00:02:00 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.14 2003/04/01 19:44:54 lsrea Exp $
 */
 
 // Gaudi system includes
@@ -120,19 +120,23 @@ StatusCode AnalysisNtupleAlg::initialize(){
     std::string toolnames [] = {"Mc", "Glt", "TkrHit", "Tkr", "Vtx",  "Cal", "Acd", ""};
 
     int i;
+    int namesSize;
+
     if (m_toolnames.empty()) {
         for (i=0; ; ++i) {
             if (toolnames[i]=="") break;
             m_toolnames.push_back(toolnames[i]+"ValsTool");
         }
     } else {
-        for (i=0; i<m_toolnames.size(); ++i) {
+        namesSize = m_toolnames.size();
+        for (i=0; i<namesSize; ++i) {
             m_toolnames[i] = m_toolnames[i]+"ValsTool";
         }
     }
 
     log << MSG::INFO << "Tools requested: ";
-    for (i=0; i<m_toolnames.size(); ++i) {
+    namesSize = m_toolnames.size();
+    for (i=0; i<namesSize; ++i) {
         log << m_toolnames[i] << " " ;
     }
     log << endreq;
@@ -149,7 +153,8 @@ StatusCode AnalysisNtupleAlg::initialize(){
         return StatusCode::FAILURE;
     }
         
-    for (i =0; i<m_toolnames.size(); ++i){
+    namesSize = m_toolnames.size();
+    for (i =0; i<namesSize; ++i){
         m_toolvec.push_back(0);
         sc = pToolSvc->retrieveTool(m_toolnames[i], m_toolvec.back());
         if( sc.isFailure() ) {
@@ -248,7 +253,8 @@ StatusCode AnalysisNtupleAlg::execute()
         std::string varname;
         std::vector<std::string> varnames;
         varnames.clear();
-        for (i=0; i<m_toolnames.size(); ++i) {
+        int namesSize = m_toolnames.size();
+        for (i=0; i<namesSize; ++i) {
             std::string toolname = m_toolnames[i];
             if      (toolname=="McValsTool"     ) {varname = "McXErr";}
             else if (toolname=="GltValsTool"    ) {varname = "GltTotal";}
@@ -263,7 +269,8 @@ StatusCode AnalysisNtupleAlg::execute()
                
         // check browse() against getVal() for each tool
                 
-        for(i=0; i<m_toolvec.size(); ++i){
+        int vecSize = m_toolvec.size();
+        for(i=0; i<vecSize; ++i){
             varname = varnames[i];
             if (varname=="") continue;
             m_toolvec[i]->browse(varnames[i]);

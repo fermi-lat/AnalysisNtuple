@@ -2,6 +2,7 @@
   @brief Package AnalysisNtule
   @verbatim
 
+ v1r3p9  17-Apr-03   LSR  add author; fix unix warnings
  v1r3p8  03-Apr-03   LSR  fix bug in TkrValsTool; TkrRadLen was coming out too big!
  v1r3p7  03-Apr-03   LSR  move ntupleWriteSvc to the public section of the requirements file (for unix)
  v1r3p6  01-Apr-03   LSR  Activate TkrHitValsTool, and add tools list property (No fooling!)
