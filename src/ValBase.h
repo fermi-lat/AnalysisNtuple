@@ -2,7 +2,7 @@
 @brief header file for ValBase.cxx
 @author Leon Rochester
 
-$Header$
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.h,v 1.14 2003/03/05 02:03:29 lsrea Exp $
 */
 
 #ifndef ValBase_h
@@ -74,7 +74,7 @@ protected:
     IDataProviderSvc* m_pEventSvc;
     /// flag to signal new event
     bool m_newEvent;
-    /// flag to signal that handle is set
-    bool m_handleSet;
+    // flag to signal that handle is set
+    //bool m_handleSet;
 };
 #endif

@@ -2,7 +2,7 @@
 @brief Uses the XxxValsTools to produce a comprehensive ntuple
 @author Leon Rochester
 
-$Header$
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.10 2003/03/05 02:03:29 lsrea Exp $
 */
 
 // Gaudi system includes
@@ -198,7 +198,7 @@ StatusCode AnalysisNtupleAlg::execute()
         double answer;
         
         //do a browse
-        m_toolvec[0]->browse();
+        m_toolvec[4]->browse();
                 
         std::string varnames[nTools] = {"McXErr", "GltType", "TkrEnergyCorr", 
             "VtxZDir", "CalEneSumCorr", "AcdTileCount"};

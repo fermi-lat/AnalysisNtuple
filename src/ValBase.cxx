@@ -2,7 +2,7 @@
 @brief implements all the methods of the XxxValsTools
 @author Leon Rochester
 
-$Header$
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.cxx,v 1.15 2003/03/05 02:03:29 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -30,7 +30,7 @@ StatusCode ValBase::initialize()
     IDataProviderSvc* eventsvc = 0;
 
     m_newEvent = true;
-    m_handleSet = false;
+    //m_handleSet = false;
     m_ntupleMap.clear();
 
     MsgStream log(msgSvc(), name());
@@ -53,8 +53,10 @@ StatusCode ValBase::initialize()
             return sc;
         }
         m_pEventSvc = eventsvc;
-    }    
-    //incsvc->addListener(this, "BeginEvent", 100);
+    } 
+    
+    //set up listener for IncidentSvc
+    incsvc->addListener(this, "BeginEvent", 100);
     return sc;
 }
 
@@ -121,17 +123,20 @@ StatusCode ValBase::doCalcIfNotDone()
     StatusCode sc = StatusCode::SUCCESS; 
 
     MsgStream log(msgSvc(), name());
+
+    bool force = true;
    
-#if 1  
+#if 0  
     // kludge to get around multiple initializations of tool
     // too many calls to addListener otherwise!
+    // I don't think it's needed anymore
     if(!m_handleSet) {
         m_incSvc->addListener(this, "BeginEvent", 100);
         m_handleSet = true;
     }
 #endif
 
-    if(m_newEvent) {
+    if(m_newEvent || force) {
         if (!m_pEventSvc)  return StatusCode::FAILURE;
         zeroVals();
         sc = calculate();
