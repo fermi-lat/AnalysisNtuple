@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.53 2005/01/30 07:16:48 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.54 2005/01/31 22:43:59 lsrea Exp $
 */
 
 // To Do:
@@ -385,8 +385,8 @@ StatusCode TkrValsTool::calculate()
     //Tkr_float = 5.5;
     //Tkr_int   = 123;
 
-    //placeholder for offset
-    double z0 = 0.0;
+    //offset comes from Geometry
+    double z0 = m_tkrGeom->gettkrZBot();
 
     //special stuff here
     Tkr_1_FirstGapPlane = -1;
