@@ -13,13 +13,7 @@
 ValBase::ValBase(const std::string& type, 
                          const std::string& name, 
                          const IInterface* parent)
-  : AlgTool( type, name, parent )
-  , m_newEvent(true)
-  , m_handleSet(false)
-{ 
-    m_ntupleMap.clear();
- 
-}
+  : AlgTool( type, name, parent ) { }
 
 
 StatusCode ValBase::initialize()
@@ -27,6 +21,11 @@ StatusCode ValBase::initialize()
     // use the incident service to register begin, end events
     IIncidentSvc* incsvc = 0;
     IDataProviderSvc* eventsvc = 0;
+
+    m_newEvent = true;
+    m_handleSet = false;
+    m_ntupleMap.clear();
+    m_orderList.clear();
 
     MsgStream log(msgSvc(), name());
 
@@ -67,7 +66,26 @@ void ValBase::zeroVals()
 void ValBase::addItem(std::string varName, double* pValue)
 {
     m_ntupleMap[varName] = pValue;
+
+    // make an entry in the list for this item, iter not yet known
+    Order* ord = new Order;
+    ord->setName(varName);
+
+    m_orderList.push_back(ord);
+
+    // this is a bit inefficient, but it only happens once
+    // go through the order list, find the name in the tupleMap,
+    //   and fill in the iters, so after each call to addItem
+    //   the list is correct
+    for (int i=0; i< m_orderList.size(); i++ ) {
+        Order* ord = m_orderList[i];
+        std::string ordName = ord->getName();
+        mapIter iter = m_ntupleMap.find(ordName);
+        ord->setIter(iter);
+        std::string mapName = (ord->iter)->first;
+    }
 }
+
 
 StatusCode ValBase::browse(std::string varName) 
 {
@@ -191,11 +209,20 @@ ValsVisitor::eVisitorRet ValBase::traverse(ValsVisitor* v)
     StatusCode sc;
 
     ValsVisitor::eVisitorRet ret = ValsVisitor::DONE;
-    constMapIter it = m_ntupleMap.begin();
 
     if(doCalcIfNotDone().isFailure()) return ValsVisitor::ERROR;
-   
+
+    /*
+    constMapIter it = m_ntupleMap.begin();    
     for (it; it!=m_ntupleMap.end(); it++) {
+        double value = *(it->second);
+        ret = v->analysisValue(it->first, value);
+        if (ret!= ValsVisitor::CONT) return ret;
+    }
+    */
+    constMapIter it;
+    for(int i=0; i<m_orderList.size(); i++) {
+        it = m_orderList[i]->iter;
         double value = *(it->second);
         ret = v->analysisValue(it->first, value);
         if (ret!= ValsVisitor::CONT) return ret;

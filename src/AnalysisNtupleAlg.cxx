@@ -1,5 +1,5 @@
 
-// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.1 2003/02/26 01:29:06 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.2 2003/02/26 17:16:21 lsrea Exp $
 
 // Gaudi system includes
 #include "GaudiKernel/MsgStream.h"
@@ -83,7 +83,9 @@ AnalysisNtupleAlg::AnalysisNtupleAlg(const std::string& name, ISvcLocator* pSvcL
 ,m_count(0)
 {
     // declare properties with setProperties calls
-    declareProperty("tupleName",  m_tupleName="");    
+    declareProperty("tupleName",  m_tupleName=""); 
+    // so it looks like NTupleWriterSvc property, no harm having both!
+    declareProperty("tuple_name",  m_tupleName="");    
 }
 
 StatusCode AnalysisNtupleAlg::initialize(){
