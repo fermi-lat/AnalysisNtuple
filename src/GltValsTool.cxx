@@ -2,7 +2,7 @@
 @brief Calculates the Trigger analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.9 2003/08/19 18:44:21 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.10 2004/06/04 20:36:44 lsrea Exp $
 */
 
 // Include files
@@ -155,8 +155,12 @@ StatusCode GltValsTool::calculate()
     if(!pEvent || !pClusters) return StatusCode::FAILURE;
 
     unsigned int word = pEvent->trigger();
-    if(word > 1024) return sc; 
-    bool three_in_a_row = (word/4)%2 == 1; 
+    // remove this test, GEM bits cause it to fail
+    //if(word > 1024) return sc; 
+
+    //bool three_in_a_row = (word/4)%2 == 1;
+    // better, but should use an enum:
+    bool three_in_a_row = ((word & 4)!=0);
     Trig_word = word;
 
     int tower, layer;
