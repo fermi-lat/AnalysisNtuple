@@ -1,6 +1,7 @@
 /** @file release.notes
   @brief Package AnalysisNtule
   @verbatim
+ v1r8p10 19-Feb-04   TU   Modify McAnalValsTool for new McToolBox interface
  v1r8p9  10-Feb-04   LSR  Fix kludge req. to satisfy new CMT... should figure out the real fix sometime
  v1r8p8  12-Jan-04   LSR  Fix McAnalValsTool to compile
  v1r8p7  09-Jan-04   LSR  Add McAnalValsTool
