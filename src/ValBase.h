@@ -30,6 +30,8 @@ typedef valMap::const_iterator constMapIter;
     
     /// clear map values
     virtual void zeroVals();
+    /// add an item to the map
+    virtual void addItem(std::string varName, double* pValue);
     /// check if calculation is already done for this event
     virtual StatusCode doCalcIfNotDone();
     /// get a particular value, using ntuple name

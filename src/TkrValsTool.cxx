@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.4 2003/02/25 02:36:58 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.5 2003/02/26 01:29:06 lsrea Exp $
 
 // Include files
 
@@ -235,78 +235,78 @@ StatusCode TkrValsTool::initialize()
     
     // load up the map
     
-    m_ntupleMap["TKR_No_Tracks"]    = &Tkr_No_Tracks;
-    m_ntupleMap["TKR_Sum_KalEne"]   = &Tkr_Sum_KalEne;
-    m_ntupleMap["TKR_Sum_ConEne"]   = &Tkr_Sum_ConEne;
-    m_ntupleMap["TKR_Energy"]       = &Tkr_Energy;
-    m_ntupleMap["TKR_Energy_Sum"]   = &Tkr_Energy_Sum;
-    m_ntupleMap["TKR_Energy_Corr"]  = &Tkr_Energy_Corr;
-    m_ntupleMap["TKR_Edge_Corr"]    = &Tkr_Edge_Corr;
-    m_ntupleMap["TKR_Total_Hits"]   = &Tkr_Total_Hits;
-    m_ntupleMap["TKR_Thin_Hits"]    = &Tkr_Thin_Hits;
-    m_ntupleMap["TKR_Thick_Hits"]   = &Tkr_Thick_Hits;
-    m_ntupleMap["TKR_Blank_Hits"]   = &Tkr_Blank_Hits;
+    addItem("TKR_No_Tracks",    &Tkr_No_Tracks);
+    addItem("TKR_Sum_KalEne",   &Tkr_Sum_KalEne);
+    addItem("TKR_Sum_ConEne",   &Tkr_Sum_ConEne);
+    addItem("TKR_Energy",       &Tkr_Energy);
+    addItem("TKR_Energy_Sum",   &Tkr_Energy_Sum);
+    addItem("TKR_Energy_Corr",  &Tkr_Energy_Corr);
+    addItem("TKR_Edge_Corr",    &Tkr_Edge_Corr);
+    addItem("TKR_Total_Hits",   &Tkr_Total_Hits);
+    addItem("TKR_Thin_Hits",    &Tkr_Thin_Hits);
+    addItem("TKR_Thick_Hits",   &Tkr_Thick_Hits);
+    addItem("TKR_Blank_Hits",   &Tkr_Blank_Hits);
     
-    m_ntupleMap["TKR_RadLength"]    = &Tkr_RadLength;
-    m_ntupleMap["TKR_TwrEdge"]      = &Tkr_TwrEdge;
+    addItem("TKR_RadLength",    &Tkr_RadLength);
+    addItem("TKR_TwrEdge",      &Tkr_TwrEdge);
     
-    m_ntupleMap["TKR_1_Chisq"]      = &Tkr_1_Chisq;
-    m_ntupleMap["TKR_1_1stChisq"]   = &Tkr_1_1stChisq;
+    addItem("TKR_1_Chisq",      &Tkr_1_Chisq);
+    addItem("TKR_1_1stChisq",   &Tkr_1_1stChisq);
     
-    m_ntupleMap["TKR_1_Hits"]       = &Tkr_1_Hits;
-    m_ntupleMap["TKR_1_1stHits"]    = &Tkr_1_1stHits;
-    m_ntupleMap["TKR_1_1stLayer"]   = &Tkr_1_1stLayer;
-    m_ntupleMap["TKR_1_DifHits"]    = &Tkr_1_DifHits;
+    addItem("TKR_1_Hits",       &Tkr_1_Hits);
+    addItem("TKR_1_1stHits",    &Tkr_1_1stHits);
+    addItem("TKR_1_1stLayer",   &Tkr_1_1stLayer);
+    addItem("TKR_1_DifHits",    &Tkr_1_DifHits);
     
-    m_ntupleMap["TKR_1_Gaps"]       = &Tkr_1_Gaps;
-    m_ntupleMap["TKR_1_1stGaps"]    = &Tkr_1_1stGaps;
+    addItem("TKR_1_Gaps",       &Tkr_1_Gaps);
+    addItem("TKR_1_1stGaps",    &Tkr_1_1stGaps);
     
-    m_ntupleMap["TKR_1_Qual"]       = &Tkr_1_Qual;
-    m_ntupleMap["TKR_1_Type"]       = &Tkr_1_Type;
-    m_ntupleMap["TKR_1_TwrEdge"]    = &Tkr_1_TwrEdge;
-    m_ntupleMap["TKR_1_PrjTwrEdge"] = &Tkr_1_PrjTwrEdge;
-    m_ntupleMap["TKR_1_DieEdge"]    = &Tkr_1_DieEdge;
+    addItem("TKR_1_Qual",       &Tkr_1_Qual);
+    addItem("TKR_1_Type",       &Tkr_1_Type);
+    addItem("TKR_1_TwrEdge",    &Tkr_1_TwrEdge);
+    addItem("TKR_1_PrjTwrEdge", &Tkr_1_PrjTwrEdge);
+    addItem("TKR_1_DieEdge",    &Tkr_1_DieEdge);
     
-    m_ntupleMap["TKR_1_KalEne"]     = &Tkr_1_KalEne;
-    m_ntupleMap["TKR_1_ConEne"]     = &Tkr_1_ConEne;
-    m_ntupleMap["TKR_1_KalThetaMS"] = &Tkr_1_KalThetaMS;
+    addItem("TKR_1_KalEne",     &Tkr_1_KalEne);
+    addItem("TKR_1_ConEne",     &Tkr_1_ConEne);
+    addItem("TKR_1_KalThetaMS", &Tkr_1_KalThetaMS);
     
-    m_ntupleMap["TKR_1_xdir"]       = &Tkr_1_xdir;
-    m_ntupleMap["TKR_1_ydir"]       = &Tkr_1_ydir;
-    m_ntupleMap["TKR_1_zdir"]       = &Tkr_1_zdir;
-    m_ntupleMap["TKR_1_Phi"]        = &Tkr_1_Phi;
-    m_ntupleMap["TKR_1_x0"]         = &Tkr_1_x0;
-    m_ntupleMap["TKR_1_y0"]         = &Tkr_1_y0;
-    m_ntupleMap["TKR_1_z0"]         = &Tkr_1_z0;
+    addItem("TKR_1_xdir",       &Tkr_1_xdir);
+    addItem("TKR_1_ydir",       &Tkr_1_ydir);
+    addItem("TKR_1_zdir",       &Tkr_1_zdir);
+    addItem("TKR_1_Phi",        &Tkr_1_Phi);
+    addItem("TKR_1_x0",         &Tkr_1_x0);
+    addItem("TKR_1_y0",         &Tkr_1_y0);
+    addItem("TKR_1_z0",         &Tkr_1_z0);
     
-    m_ntupleMap["TKR_2_Chisq"]      = &Tkr_2_Chisq;
-    m_ntupleMap["TKR_2_1stChisq"]   = &Tkr_2_1stChisq;
+    addItem("TKR_2_Chisq",      &Tkr_2_Chisq);
+    addItem("TKR_2_1stChisq",   &Tkr_2_1stChisq);
     
-    m_ntupleMap["TKR_2_Hits"]       = &Tkr_2_Hits;
-    m_ntupleMap["TKR_2_1stHits"]    = &Tkr_2_1stHits;
-    m_ntupleMap["TKR_2_1stLayer"]   = &Tkr_2_1stLayer;
-    m_ntupleMap["TKR_2_DifHits"]    = &Tkr_2_DifHits;
+    addItem("TKR_2_Hits",       &Tkr_2_Hits);
+    addItem("TKR_2_1stHits",    &Tkr_2_1stHits);
+    addItem("TKR_2_1stLayer",   &Tkr_2_1stLayer);
+    addItem("TKR_2_DifHits",    &Tkr_2_DifHits);
     
-    m_ntupleMap["TKR_2_Gaps"]       = &Tkr_2_Gaps;
-    m_ntupleMap["TKR_2_1stGaps"]    = &Tkr_2_1stGaps;
+    addItem("TKR_2_Gaps",       &Tkr_2_Gaps);
+    addItem("TKR_2_1stGaps",    &Tkr_2_1stGaps);
     
-    m_ntupleMap["TKR_2_Qual"]       = &Tkr_2_Qual;
-    m_ntupleMap["TKR_2_Type"]       = &Tkr_2_Type;
-    m_ntupleMap["TKR_2_TwrEdge"]    = &Tkr_2_TwrEdge;
-    m_ntupleMap["TKR_2_PrjTwrEdge"] = &Tkr_2_PrjTwrEdge;
-    m_ntupleMap["TKR_2_DieEdge"]    = &Tkr_2_DieEdge;
+    addItem("TKR_2_Qual",       &Tkr_2_Qual);
+    addItem("TKR_2_Type",       &Tkr_2_Type);
+    addItem("TKR_2_TwrEdge",    &Tkr_2_TwrEdge);
+    addItem("TKR_2_PrjTwrEdge", &Tkr_2_PrjTwrEdge);
+    addItem("TKR_2_DieEdge",    &Tkr_2_DieEdge);
     
-    m_ntupleMap["TKR_2_KalEne"]     = &Tkr_2_KalEne;
-    m_ntupleMap["TKR_2_ConEne"]     = &Tkr_2_ConEne;
-    m_ntupleMap["TKR_2_KalThetaMS"] = &Tkr_2_KalThetaMS;
+    addItem("TKR_2_KalEne",     &Tkr_2_KalEne);
+    addItem("TKR_2_ConEne",     &Tkr_2_ConEne);
+    addItem("TKR_2_KalThetaMS", &Tkr_2_KalThetaMS);
     
-    m_ntupleMap["TKR_2_xdir"]       = &Tkr_2_xdir;
-    m_ntupleMap["TKR_2_ydir"]       = &Tkr_2_ydir;
-    m_ntupleMap["TKR_2_zdir"]       = &Tkr_2_zdir;
-    m_ntupleMap["TKR_2_Phi"]        = &Tkr_2_Phi;
-    m_ntupleMap["TKR_2_x0"]         = &Tkr_2_x0;
-    m_ntupleMap["TKR_2_y0"]         = &Tkr_2_y0;
-    m_ntupleMap["TKR_2_z0"]         = &Tkr_2_z0;    
+    addItem("TKR_2_xdir",       &Tkr_2_xdir);
+    addItem("TKR_2_ydir",       &Tkr_2_ydir);
+    addItem("TKR_2_zdir",       &Tkr_2_zdir);
+    addItem("TKR_2_Phi",        &Tkr_2_Phi);
+    addItem("TKR_2_x0",         &Tkr_2_x0);
+    addItem("TKR_2_y0",         &Tkr_2_y0);
+    addItem("TKR_2_z0",         &Tkr_2_z0);    
     
     zeroVals();
     

@@ -32,6 +32,8 @@ StatusCode ValBase::initialize()
 
     StatusCode sc = StatusCode::FAILURE;
 
+    log << MSG::INFO << "ValBase is initializing" << endreq;
+
     if (serviceLocator()) {
         sc = serviceLocator()->service( "IncidentSvc", incsvc, true );
         if(sc.isFailure()){
@@ -62,9 +64,16 @@ void ValBase::zeroVals()
     }
 }
 
+void ValBase::addItem(std::string varName, double* pValue)
+{
+    m_ntupleMap[varName] = pValue;
+}
+
 StatusCode ValBase::browse(std::string varName) 
 {
     MsgStream log(msgSvc(), name());
+
+    log << MSG::INFO << "ValBase::browse called" << endreq;
 
     std::string delim     = "\"";
     std::string separator = " ";

@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.1 2003/02/26 01:29:06 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.2 2003/02/26 17:16:21 lsrea Exp $
 
 // Include files
 
@@ -106,27 +106,27 @@ StatusCode VtxValsTool::initialize()
     // load up the map
     
     // Pair reconstruction
-    m_ntupleMap["VTX_xdir"] =      &VTX_xdir;     
-    m_ntupleMap["VTX_ydir"] =      &VTX_ydir;     
-    m_ntupleMap["VTX_zdir"] =      &VTX_zdir;     
-    m_ntupleMap["VTX_Phi"] =       &VTX_Phi;      
-    m_ntupleMap["VTX_x0"] =        &VTX_x0;       
-    m_ntupleMap["VTX_y0"] =        &VTX_y0;       
-    m_ntupleMap["VTX_z0"] =        &VTX_z0;       
-    m_ntupleMap["VTX_Angle"] =     &VTX_Angle;    
-    m_ntupleMap["VTX_DOCA"] =      &VTX_DOCA;     
-    m_ntupleMap["VTX_Head_Sep"] =  &VTX_Head_Sep; 
+    addItem("VTX_xdir",      &VTX_xdir);     
+    addItem("VTX_ydir",      &VTX_ydir);     
+    addItem("VTX_zdir",      &VTX_zdir);     
+    addItem("VTX_Phi",       &VTX_Phi);      
+    addItem("VTX_x0",        &VTX_x0);       
+    addItem("VTX_y0",        &VTX_y0);       
+    addItem("VTX_z0",        &VTX_z0);       
+    addItem("VTX_Angle",     &VTX_Angle);    
+    addItem("VTX_DOCA",      &VTX_DOCA);     
+    addItem("VTX_Head_Sep",  &VTX_Head_Sep); 
     
-    m_ntupleMap["VTX_S1"] =        &VTX_S1;       
-    m_ntupleMap["VTX_S2"] =        &VTX_S2;       
+    addItem("VTX_S1",        &VTX_S1);       
+    addItem("VTX_S2",        &VTX_S2);       
     
-    m_ntupleMap["VTX_DOCA_Wgt"] =  &VTX_DOCA_Wgt; 
-    m_ntupleMap["VTX_HS_Wgt"] =    &VTX_HS_Wgt;   
+    addItem("VTX_DOCA_Wgt",  &VTX_DOCA_Wgt); 
+    addItem("VTX_HS_Wgt",    &VTX_HS_Wgt);   
     
-    m_ntupleMap["VTX_S1_Wgt"] =    &VTX_S1_Wgt;   
-    m_ntupleMap["VTX_T12_Wgt"] =   &VTX_T12_Wgt;  
-    m_ntupleMap["VTX_T2Q_Wgt"] =   &VTX_T2Q_Wgt;
-    m_ntupleMap["VTX_Total_Wgt"] = &VTX_Total_Wgt;
+    addItem("VTX_S1_Wgt",    &VTX_S1_Wgt);   
+    addItem("VTX_T12_Wgt",   &VTX_T12_Wgt);  
+    addItem("VTX_T2Q_Wgt",   &VTX_T2Q_Wgt);
+    addItem("VTX_Total_Wgt", &VTX_Total_Wgt);
     
     
     zeroVals();

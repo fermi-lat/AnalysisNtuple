@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.2 2003/02/24 17:55:45 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.1 2003/02/25 02:36:58 lsrea Exp $
 
 // Include files
 
@@ -79,11 +79,11 @@ StatusCode AcdValsTool::initialize()
    }
       
     // load up the map
-    m_ntupleMap["ACD_Total_Energy"] = &ACD_Total_Energy;
-    m_ntupleMap["ACD_TileCount"]    = &ACD_Tile_Count;
-    m_ntupleMap["ACD_DOCA"]         = &ACD_DOCA;
-    m_ntupleMap["ACD_ActiveDist"]   = &ACD_ActiveDist;
-    m_ntupleMap["ACD_GammaDOCA"]    = &ACD_GammaDOCA;
+    addItem("ACD_Total_Energy", &ACD_Total_Energy);
+    addItem("ACD_TileCount",    &ACD_Tile_Count);
+    addItem("ACD_DOCA",         &ACD_DOCA);
+    addItem("ACD_ActiveDist",   &ACD_ActiveDist);
+    addItem("ACD_GammaDOCA",    &ACD_GammaDOCA);
     
     zeroVals();
     

@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.4 2003/02/25 02:36:58 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.5 2003/02/26 01:29:06 lsrea Exp $
 
 // Include files
 
@@ -293,43 +293,43 @@ StatusCode CalValsTool::initialize()
     
     // load up the map
     
-    m_ntupleMap["CAL_EnergySum"] =   &CAL_EnergySum;
-    m_ntupleMap["CAL_Energy_Corr"] = &CAL_Energy_Corr;
-    m_ntupleMap["CAL_EneSum_Corr"] = &CAL_EneSum_Corr;
+    addItem("CAL_EnergySum",   &CAL_EnergySum);
+    addItem("CAL_Energy_Corr", &CAL_Energy_Corr);
+    addItem("CAL_EneSum_Corr", &CAL_EneSum_Corr);
     
-    m_ntupleMap["CAL_Leak_Corr"] =   &CAL_Leak_Corr;
-    m_ntupleMap["CAL_Leak_Corr2"] =  &CAL_Leak_Corr2;
+    addItem("CAL_Leak_Corr",   &CAL_Leak_Corr);
+    addItem("CAL_Leak_Corr2",  &CAL_Leak_Corr2);
     
-    m_ntupleMap["CAL_Edge_Corr"] =   &CAL_Edge_Corr;
-    m_ntupleMap["CAL_EdgeSum_Corr"] = &CAL_EdgeSum_Corr;
-    m_ntupleMap["CAL_Total_Corr"] =  &CAL_Total_Corr;
-    m_ntupleMap["CAL_TotSum_Corr"] = &CAL_TotSum_Corr;
+    addItem("CAL_Edge_Corr",   &CAL_Edge_Corr);
+    addItem("CAL_EdgeSum_Corr", &CAL_EdgeSum_Corr);
+    addItem("CAL_Total_Corr",  &CAL_Total_Corr);
+    addItem("CAL_TotSum_Corr", &CAL_TotSum_Corr);
     
-    m_ntupleMap["CAL_Tot_RLn"] =     &CAL_Tot_RLn;
-    m_ntupleMap["CAL_Cnt_RLn"] =     &CAL_Cnt_RLn;
-    m_ntupleMap["CAL_DeadTot_Rat"] = &CAL_DeadTot_Rat;
-    m_ntupleMap["CAL_DeadCnt_Rat"] = &CAL_DeadCnt_Rat;
-    m_ntupleMap["CAL_a_Parm"] =      &CAL_a_Parm;
-    m_ntupleMap["CAL_b_Parm"] =      &CAL_b_Parm;
-    m_ntupleMap["CAL_t_Pred"] =      &CAL_t_Pred;
+    addItem("CAL_Tot_RLn",     &CAL_Tot_RLn);
+    addItem("CAL_Cnt_RLn",     &CAL_Cnt_RLn);
+    addItem("CAL_DeadTot_Rat", &CAL_DeadTot_Rat);
+    addItem("CAL_DeadCnt_Rat", &CAL_DeadCnt_Rat);
+    addItem("CAL_a_Parm",      &CAL_a_Parm);
+    addItem("CAL_b_Parm",      &CAL_b_Parm);
+    addItem("CAL_t_Pred",      &CAL_t_Pred);
     
-    m_ntupleMap["CAL_TwrEdge"] =     &CAL_TwrEdge;
-    m_ntupleMap["CAL_TE_Nrm"] =      &CAL_TE_Nrm;
-    m_ntupleMap["CAL_Track_Sep"] =   &CAL_Track_Sep;
-    m_ntupleMap["CAL_Track_DOCA"] =  &CAL_Track_DOCA;
-    m_ntupleMap["CAL_Track_Angle"] = &CAL_Track_Angle;
+    addItem("CAL_TwrEdge",     &CAL_TwrEdge);
+    addItem("CAL_TE_Nrm",      &CAL_TE_Nrm);
+    addItem("CAL_Track_Sep",   &CAL_Track_Sep);
+    addItem("CAL_Track_DOCA",  &CAL_Track_DOCA);
+    addItem("CAL_Track_Angle", &CAL_Track_Angle);
     
-    m_ntupleMap["CAL_x0"] =          &CAL_x0;
-    m_ntupleMap["CAL_y0"] =          &CAL_y0;
-    m_ntupleMap["CAL_z0"] =          &CAL_z0;
-    m_ntupleMap["CAL_xdir"] =        &CAL_xdir;
-    m_ntupleMap["CAL_ydir"] =        &CAL_ydir;
-    m_ntupleMap["CAL_zdir"] =        &CAL_zdir;
+    addItem("CAL_x0",          &CAL_x0);
+    addItem("CAL_y0",          &CAL_y0);
+    addItem("CAL_z0",          &CAL_z0);
+    addItem("CAL_xdir",        &CAL_xdir);
+    addItem("CAL_ydir",        &CAL_ydir);
+    addItem("CAL_zdir",        &CAL_zdir);
     
-    m_ntupleMap["CAL_x0_corr"] =      &CAL_x0_corr;
-    m_ntupleMap["CAL_y0_corr"] =      &CAL_y0_corr;
-    m_ntupleMap["CAL_z0_corr"] =      &CAL_z0_corr;
-    m_ntupleMap["CAL_TwrEdge_corr"] =  &CAL_TwrEdge_corr; 
+    addItem("CAL_x0_corr",      &CAL_x0_corr);
+    addItem("CAL_y0_corr",      &CAL_y0_corr);
+    addItem("CAL_z0_corr",      &CAL_z0_corr);
+    addItem("CAL_TwrEdge_corr",  &CAL_TwrEdge_corr); 
     
     zeroVals();
     

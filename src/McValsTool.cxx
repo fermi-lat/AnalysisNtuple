@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/MCValsTool.cxx,v 1.2 2003/02/26 01:12:43 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.1 2003/02/26 02:25:21 lsrea Exp $
 
 // Include files
 
@@ -97,26 +97,26 @@ StatusCode McValsTool::initialize()
     
     // load up the map
 
-    m_ntupleMap["MC_Energy"]        = &MC_Energy;       
-    m_ntupleMap["MC_x0"]            = &MC_x0;           
-    m_ntupleMap["MC_y0"]            = &MC_y0;           
-    m_ntupleMap["MC_z0"]            = &MC_z0;           
+    addItem("MC_Energy",        &MC_Energy);       
+    addItem("MC_x0",            &MC_x0);           
+    addItem("MC_y0",            &MC_y0);           
+    addItem("MC_z0",            &MC_z0);           
     
-    m_ntupleMap["MC_xdir"]          = &MC_xdir;         
-    m_ntupleMap["MC_ydir"]          = &MC_ydir;         
-    m_ntupleMap["MC_zdir"]          = &MC_zdir;         
+    addItem("MC_xdir",          &MC_xdir);         
+    addItem("MC_ydir",          &MC_ydir);         
+    addItem("MC_zdir",          &MC_zdir);         
     
-    m_ntupleMap["MC_x_err"]         = &MC_x_err;        
-    m_ntupleMap["MC_y_err"]         = &MC_y_err;        
-    m_ntupleMap["MC_z_err"]         = &MC_z_err;        
+    addItem("MC_x_err",         &MC_x_err);        
+    addItem("MC_y_err",         &MC_y_err);        
+    addItem("MC_z_err",         &MC_z_err);        
     
-    m_ntupleMap["MC_xdir_err"]      = &MC_xdir_err;     
-    m_ntupleMap["MC_ydir_err"]      = &MC_ydir_err;     
-    m_ntupleMap["MC_zdir_err"]      = &MC_zdir_err;     
+    addItem("MC_xdir_err",      &MC_xdir_err);     
+    addItem("MC_ydir_err",      &MC_ydir_err);     
+    addItem("MC_zdir_err",      &MC_zdir_err);     
     
-    m_ntupleMap["MC_dir_err"]       = &MC_dir_err;      
-    m_ntupleMap["MC_TKR1_dir_err"]  = &MC_TKR1_dir_err; 
-    m_ntupleMap["MC_TKR2_dir_err"]  = &MC_TKR2_dir_err;   
+    addItem("MC_dir_err",       &MC_dir_err);      
+    addItem("MC_TKR1_dir_err",  &MC_TKR1_dir_err); 
+    addItem("MC_TKR2_dir_err",  &MC_TKR2_dir_err);   
     
     zeroVals();
     
