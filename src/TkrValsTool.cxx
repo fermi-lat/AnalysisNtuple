@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.15 2003/04/24 21:05:41 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.16 2003/05/07 15:05:20 lsrea Exp $
 */
 
 // Include files
@@ -145,6 +145,7 @@ private:
     double Tkr_1_TwrEdge;
     double Tkr_1_PrjTwrEdge;
     double Tkr_1_DieEdge;
+	double Tkr_1_TwrGap;
     double Tkr_1_xdir;
     double Tkr_1_ydir;
     double Tkr_1_zdir;
@@ -264,6 +265,7 @@ StatusCode TkrValsTool::initialize()
     addItem("Tkr1TwrEdge",    &Tkr_1_TwrEdge);
     addItem("Tkr1PrjTwrEdge", &Tkr_1_PrjTwrEdge);
     addItem("Tkr1DieEdge",    &Tkr_1_DieEdge);
+    addItem("Tkr1TwrGap",    &Tkr_1_TwrGap);
     
     addItem("Tkr1KalEne",     &Tkr_1_KalEne);
     addItem("Tkr1ConEne",     &Tkr_1_ConEne);
@@ -417,6 +419,29 @@ StatusCode TkrValsTool::calculate()
         Tkr_1_TwrEdge    = towerPitch/2. - Tkr_1_TwrEdge;
         Tkr_1_PrjTwrEdge = towerPitch/2. - Tkr_1_PrjTwrEdge;
         
+		// New section go compute gap lengths in tracker and cal
+		double x_slope   = (fabs(t1.x()) > .0001)? t1.x():.00001;
+		double s_x       = (sign(t1.x())*towerPitch/2. - x_twr)/x_slope; 
+	    double y_slope   = (fabs(t1.y()) > .0001)? t1.y():.00001;
+		double s_y       = (sign(t1.y())*towerPitch/2. - y_twr)/y_slope;
+		
+		Tkr_1_TwrGap = 0.; 
+        if(s_x < s_y) { // Goes out x side of CAL Module
+		    if(x1.z() + s_x*t1.z() > 0) {
+			    double s_max = fabs((x1.z())/t1.z());
+			    Tkr_1_TwrGap = gap/fabs(x_slope);
+			    if((Tkr_1_TwrGap + s_x)> s_max ) Tkr_1_TwrGap = s_max-s_x;
+		    }
+	    }
+	    else {          // Goes out y side
+		    if(x1.z() + s_y*t1.z() > 0) {
+			    double s_max = fabs(x1.z()/t1.z());
+			    Tkr_1_TwrGap = gap/fabs(y_slope);
+			    if((Tkr_1_TwrGap + s_y)> s_max ) Tkr_1_TwrGap = s_max-s_y;
+		    }
+	    }
+
+		// SSD Die loaction and edge... 
         double x_die = sign(x_twr)*(fmod(fabs(x_twr),die_width) - die_width/2.);
         double y_die = sign(y_twr)*(fmod(fabs(y_twr),die_width) - die_width/2.);
         

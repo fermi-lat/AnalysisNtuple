@@ -3,7 +3,7 @@
 @brief Calculates the "Event" analysis variables from the other ntuple variables
 @author Bill Atwood, Leon Rochester
 
-$Header$
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.1 2003/05/07 15:01:48 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -259,11 +259,11 @@ StatusCode EvtValsTool::calculate()
     double logE2 = logE*logE;
     double tkr1Chisq;
     if (m_pTkrTool->getVal("Tkr1Chisq", tkr1Chisq).isSuccess()) {
-        EvtTkr1EChisq = tkr1Chisq/(9.22 - 3.7*logE + 412.*logE2);
+        EvtTkr1EChisq = tkr1Chisq/(9.22 - 3.7*logE + .412*logE2);
     }
     double tkr1_1stChisq;
     if (m_pTkrTool->getVal("Tkr1FirstChisq", tkr1_1stChisq).isSuccess()) {
-        EvtTkr1EFirstChisq = tkr1_1stChisq/(4.51 - 1.8*logE + 23.*logE2);
+        EvtTkr1EFirstChisq = tkr1_1stChisq/(4.51 - 1.8*logE + .23*logE2);
     }
     double tkr1Qual;
     if (m_pTkrTool->getVal("Tkr1Qual", tkr1Qual).isSuccess()) {
@@ -272,15 +272,15 @@ StatusCode EvtValsTool::calculate()
     }
     double tkr2Chisq;
     if (m_pTkrTool->getVal("Tkr2Chisq", tkr2Chisq).isSuccess()) {
-        EvtTkr2EChisq = tkr2Chisq/(8.95 - 4.77*logE + 948.*logE2);
+        EvtTkr2EChisq = tkr2Chisq/(8.95 - 4.77*logE + .948*logE2);
     }
     double tkr2_1stChisq;
     if (m_pTkrTool->getVal("Tkr2FirstChisq", tkr2_1stChisq).isSuccess()) {
-        EvtTkr2EFirstChisq = tkr2_1stChisq/(6.3 - 4.09*logE + 971*logE2);
+        EvtTkr2EFirstChisq = tkr2_1stChisq/(6.3 - 4.09*logE + .971*logE2);
     }
     double tkr2Qual;
     if (m_pTkrTool->getVal("Tkr2Qual", tkr2Qual).isSuccess()) {
-        EvtTkr2EFirstChisq = tkr2Qual/(61.3 + 34.8*sqrt(logE-1.6)
+        EvtTkr2EQual = tkr2Qual/(61.3 + 34.8*sqrt(logE-1.6)
             - 16.4*logE);
     }
 

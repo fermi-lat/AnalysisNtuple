@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.13 2003/03/11 06:43:03 lsrea Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.14 2003/05/07 15:05:20 lsrea Exp $
 */
 
 // Include files
@@ -25,6 +25,7 @@
 #include "Event/Recon/TkrRecon/TkrKalFitTrack.h"
 #include "Event/Recon/TkrRecon/TkrVertex.h"
 #include "Event/Recon/CalRecon/CalCluster.h"
+#include "Event/Recon/CalRecon/CalXtalRecData.h"
 
 #include "GlastSvc/Reco/IKalmanParticle.h"
 //#include "GlastSvc/Reco/IPropagatorTool.h"
@@ -220,14 +221,20 @@ namespace {
       double CAL_TwrEdge;
       double CAL_TE_Nrm;
       double CAL_Track_Sep;
+	  double CAL_Xtal_Ratio;
+	  double CAL_eLayer[8];
+	  double CAL_No_Xtals_Trunc;
+	  double CAL_Long_Rms;
+	  double CAL_Trans_Rms;
+
       
       //Calimeter items with Recon - Tracks
       double CAL_Track_DOCA;
       double CAL_Track_Angle;
+	  double CAL_TwrGap; 
       double CAL_x0_corr;
       double CAL_y0_corr;
       double CAL_z0_corr;
-      double CAL_TwrEdge_corr; 
   };
   
   // Static factory for instantiation of algtool objects
@@ -277,7 +284,7 @@ namespace {
       
       // load up the map
       
-      addItem("CalEnergySum",   &CAL_EnergySum);
+      addItem("CalEnergySum",  &CAL_EnergySum);
       addItem("CalEnergyCorr", &CAL_Energy_Corr);
       addItem("CalEneSumCorr", &CAL_EneSum_Corr);
       
@@ -285,7 +292,7 @@ namespace {
       addItem("CalLeakCorr2",  &CAL_Leak_Corr2);
       
       addItem("CalEdgeCorr",   &CAL_Edge_Corr);
-      addItem("CalEdgeSumCorr", &CAL_EdgeSum_Corr);
+      addItem("CalEdgeSumCorr",&CAL_EdgeSum_Corr);
       addItem("CalTotalCorr",  &CAL_Total_Corr);
       addItem("CalTotSumCorr", &CAL_TotSum_Corr);
       
@@ -298,23 +305,35 @@ namespace {
       addItem("CalTPred",      &CAL_t_Pred);
       addItem("CalDeltaT",     &CAL_deltaT);
       
-      addItem("CalTwrEdge",     &CAL_TwrEdge);
-      addItem("CalTE_Nrm",      &CAL_TE_Nrm);
+      addItem("CalTwrEdge",    &CAL_TwrEdge);
+      addItem("CalTENrm",      &CAL_TE_Nrm);
       addItem("CalTrackSep",   &CAL_Track_Sep);
       addItem("CalTrackDoca",  &CAL_Track_DOCA);
-      addItem("CalTrackAngle", &CAL_Track_Angle);
+	  addItem("CalTwrGap",     &CAL_TwrGap);
+      addItem("CalXtalRatio",  &CAL_Xtal_Ratio);
+	  addItem("CalELayer0",    &CAL_eLayer[0]);
+      addItem("CalELayer1",    &CAL_eLayer[1]);
+	  addItem("CalELayer2",    &CAL_eLayer[2]);
+	  addItem("CalELayer3",    &CAL_eLayer[3]);
+	  addItem("CalELayer4",    &CAL_eLayer[4]);
+	  addItem("CalELayer5",    &CAL_eLayer[5]);
+	  addItem("CalELayer6",    &CAL_eLayer[6]);
+	  addItem("CalELayer7",    &CAL_eLayer[7]);
+	  addItem("CalXtalsTrunc", &CAL_No_Xtals_Trunc);
+	  addItem("CalLongRms",    &CAL_Long_Rms);
+	  addItem("CalTransRms",   &CAL_Trans_Rms);
+
+      addItem("CalX0",         &CAL_x0);
+      addItem("CalY0",         &CAL_y0);
+      addItem("CalZ0",         &CAL_z0);
+      addItem("CalXDir",       &CAL_xdir);
+      addItem("CalYDir",       &CAL_ydir);
+      addItem("CalZDir",       &CAL_zdir);
       
-      addItem("CalX0",          &CAL_x0);
-      addItem("CalY0",          &CAL_y0);
-      addItem("CalZ0",          &CAL_z0);
-      addItem("CalXDir",        &CAL_xdir);
-      addItem("CalYDir",        &CAL_ydir);
-      addItem("CalZDir",        &CAL_zdir);
-      
-      addItem("CalX0Corr",      &CAL_x0_corr);
-      addItem("CalY0Corr",      &CAL_y0_corr);
-      addItem("CalZ0Corr",      &CAL_z0_corr);
-      addItem("CalTwrEdgeCorr",  &CAL_TwrEdge_corr); 
+      addItem("CalX0Corr",     &CAL_x0_corr);
+      addItem("CalY0Corr",     &CAL_y0_corr);
+      addItem("CalZ0Corr",     &CAL_z0_corr);
+
       
       zeroVals();
       
@@ -337,6 +356,8 @@ StatusCode CalValsTool::calculate()
     //    pClusters(m_pEventSvc,EventModel::TkrRecon::TkrClusterCol);
     SmartDataPtr<Event::CalClusterCol>     
         pCals(m_pEventSvc,EventModel::CalRecon::CalClusterCol);
+	SmartDataPtr<Event::CalXtalRecCol> 
+		pxtalrecs(m_pEventSvc,EventModel::CalRecon::CalXtalRecCol);
         
     //Make sure we have valid cluster data
     if (!pCals) return sc;
@@ -344,6 +365,25 @@ StatusCode CalValsTool::calculate()
     Event::CalCluster* calCluster = pCals->front();
     
     CAL_EnergySum   = calCluster->getEnergySum();
+	for(int i = 0; i<8; i++) CAL_eLayer[i] = calCluster->getEneLayer(i);
+
+	CAL_Long_Rms = calCluster->getRmsLong();
+	CAL_Trans_Rms = calCluster->getRmsTrans();
+
+	//Code from meritAlg
+	int no_xtals=0;
+    int no_xtals_trunc=0;
+    for( Event::CalXtalRecCol::const_iterator jlog=pxtalrecs->begin(); jlog != pxtalrecs->end(); ++jlog){
+
+        const Event::CalXtalRecData& recLog = **jlog;
+        
+        double eneLog = recLog.getEnergy();
+        if(eneLog>0)no_xtals++;
+        if(eneLog>0.01*CAL_EnergySum)no_xtals_trunc++;
+    }
+    CAL_Xtal_Ratio= (no_xtals>0) ? float(no_xtals_trunc)/no_xtals : 0;
+	CAL_No_Xtals_Trunc = float(no_xtals_trunc); 
+
     //Overwritten below, if there are tracks
     CAL_Energy_Corr = calCluster->getEnergyCorrected(); 
     if(CAL_EnergySum < 2.) return sc;  
@@ -615,9 +655,32 @@ StatusCode CalValsTool::calculate()
     CAL_b_Parm      = b2; 
     
     CAL_Leak_Corr   = in_frac;
-    CAL_Leak_Corr2  = in_frac_2; 
-    CAL_TwrEdge_corr = twrEdgeC(CAL_x0_corr, CAL_y0_corr, twr_pitch, iView, outside);       
+    CAL_Leak_Corr2  = in_frac_2;   
     CAL_deltaT      = CAL_Cnt_RLn - CAL_t_Pred;
+
+	    // New section to compute arclength of trajectory (caltop - taxis) falling between towers
+	double x_twr = signC(-t_axis.x())*(fmod(fabs(cal_top.x()),twr_pitch) - twr_pitch/2.);
+    double y_twr = signC(-t_axis.y())*(fmod(fabs(cal_top.y()),twr_pitch) - twr_pitch/2.);
+    double x_slope   = (fabs(t_axis.x()) > .0001)? -t_axis.x():.00001;
+    double s_x       = (signC(x_slope)*twr_pitch/2. - x_twr)/x_slope; 
+	double y_slope   = (fabs(t_axis.y()) > .0001)? -t_axis.y():.00001;
+    double s_y       = (signC(y_slope)*twr_pitch/2. - y_twr)/y_slope;
+		
+	CAL_TwrGap = 0.; 
+    if(s_x < s_y) { // Goes out x side of CAL Module
+		if(cal_top.z() - s_x*t_axis.z() > -160) {
+			double s_max = (160.+cal_top.z())/t_axis.z();
+			CAL_TwrGap = gap/fabs(x_slope);
+			if((CAL_TwrGap + s_x)> s_max ) CAL_TwrGap = s_max-s_x;
+		}
+	}
+	else {          // Goes out y side
+		if(cal_top.z() - s_y*t_axis.z() > -160) {
+			double s_max = (160.+cal_top.z())/t_axis.z();
+			CAL_TwrGap = gap/fabs(y_slope);
+			if((CAL_TwrGap + s_y)> s_max ) CAL_TwrGap = s_max-s_y;
+		}
+	}
     
     return sc;
 }

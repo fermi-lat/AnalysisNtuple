@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header$
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.5 2003/03/05 02:03:29 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -21,6 +21,9 @@ $Header$
 #include "Event/Recon/TkrRecon/TkrVertex.h"
 #include "Event/Recon/TkrRecon/TkrFitTrack.h"
 #include "Event/Recon/AcdRecon/AcdRecon.h"
+
+#include <algorithm>
+#include <numeric>
 
 /** @class AcdValsTool.cxx 
 @brief Calculates Acd Values
@@ -48,9 +51,37 @@ private:
     double ACD_DOCA;
     double ACD_ActiveDist;
     double ACD_GammaDOCA; 
+	double ACD_ActDistR0;
+    double ACD_ActDistR1;
+	double ACD_ActDistR2;
+	double ACD_tileCount0;
+    double ACD_tileCount1;
+	double ACD_tileCount2;
+
     
 };
+namespace {
 
+    // predicate to identify top, (row -1) or  side  (row 0-2)
+    class acd_row { 
+    public:
+        acd_row(int row):m_row(row){}
+        bool operator() ( std::pair<idents::AcdId ,double> entry){
+            return m_row==-1? entry.first.face() == 0 : entry.first.row()==m_row;
+        }
+        int m_row;
+    };
+    // used by accumulate to get maximum for a given row
+    class acd_max_energy { 
+    public:
+        acd_max_energy(int row):m_row(row), m_acd_row(row){}
+        double operator()(double energy, std::pair<idents::AcdId ,double> entry) {
+            return m_acd_row(entry)? std::max(energy, entry.second) : energy;
+        }
+        int m_row;
+        acd_row m_acd_row;
+    };
+}
 // Static factory for instantiation of algtool objects
 static ToolFactory<AcdValsTool> s_factory;
 const IToolFactory& AcdValsToolFactory = s_factory;
@@ -89,7 +120,15 @@ StatusCode AcdValsTool::initialize()
     addItem("AcdDoca",         &ACD_DOCA);
     addItem("AcdActiveDist",   &ACD_ActiveDist);
     addItem("AcdGammaDoca",    &ACD_GammaDOCA);
-    
+
+    addItem("AcdActDistSideRow0",&ACD_ActDistR0);
+	addItem("AcdActDistSideRow1",&ACD_ActDistR1);
+    addItem("AcdActDistSideRow2",&ACD_ActDistR2);
+
+    addItem("AcdNoSideRow0",   &ACD_tileCount0);
+    addItem("AcdNoSideRow1",   &ACD_tileCount1);
+    addItem("AcdNoSideRow2",   &ACD_tileCount2);   
+
     zeroVals();
     
     return sc;
@@ -116,6 +155,33 @@ StatusCode AcdValsTool::calculate()
         ACD_DOCA          = pACD->getDoca();
         ACD_ActiveDist    = pACD->getActiveDist();
         ACD_GammaDOCA     = pACD->getGammaDoca();
+
+		const std::vector<double> & adist = pACD->getRowActDistCol();
+ 	    ACD_ActDistR0 = adist[1];
+        ACD_ActDistR1 = adist[2];
+	    ACD_ActDistR2 = adist[3];
+
+		//Code from meritAlg.... 
+	    // get the map of energy vs tile id: have to construct from two parallel vectors
+	   float m_acd_tileCount[4];
+       const std::vector<double> energies = pACD->getEnergyCol();
+       const std::vector<idents::AcdId>& ids = pACD->getIdCol();
+       std::vector<double>::const_iterator eit = energies.begin();
+
+       std::map<idents::AcdId, double> emap;
+       for( std::vector<idents::AcdId>::const_iterator idit = ids.begin(); 
+           idit != ids.end() && eit !=energies.end(); ++idit, ++ eit){
+           emap[*idit]=*eit;
+       }
+
+      // use acd_row predicate to count number of tiles per side row
+      if(true)for( int row = 0; row<3; ++row){ 
+          m_acd_tileCount[row+1] = std::count_if(emap.begin(), emap.end(), acd_row(row) );
+      }
+	  ACD_tileCount0 = m_acd_tileCount[1];
+      ACD_tileCount1 = m_acd_tileCount[2];
+	  ACD_tileCount2 = m_acd_tileCount[3];       
+
     } else {
         return StatusCode::FAILURE;
     }
