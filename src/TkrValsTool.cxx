@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.16 2003/05/07 15:05:20 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.17 2003/05/08 15:51:30 atwood Exp $
 */
 
 // Include files
@@ -66,13 +66,62 @@ namespace {
         return edge;
     }
     
-    double circle_fracT(double r) {
+	double circle_frac(double r) {
         double rl = (fabs(r) < 1.) ? fabs(r):1.; 
         double a_slice = 2.*(M_PI/4. - rl*sqrt(1.-rl*rl)/2. - asin(rl)/2.);
         double in_frac = 1.-a_slice/M_PI;
         if(r < 0.) in_frac = a_slice/M_PI;
         return in_frac;
-    }    
+    }
+    
+    double circle_frac_simp(double r, double angle_factor) {
+        double slice_0 = circle_frac(r);
+        double slice_p = circle_frac(r+angle_factor);
+        double slice_m = circle_frac(r-angle_factor);
+        return (slice_p + 4.*slice_0 + slice_m)/6.;
+    }
+    
+    double contained_frac(double x, double y, double pitch, double gap,  
+        double r, double costh, double phi) {
+        // Get the projected angles for the gap
+        double tanth = sqrt(1.-costh*costh)/costh;
+        double gap_x = gap - 20.*sin(phi)*tanth; 
+        if(gap_x < 5.) gap_x = 5.;
+        double gap_y = gap - 20.*cos(phi)*tanth;
+        if(gap_y < 5.) gap_y = 5.; 
+        
+        // X Edges
+        double x_twr = sign(x)*(fmod(fabs(x),pitch) - pitch/2.);
+        double edge = pitch/2. - fabs(x_twr);
+        double r_frac_plus = (edge-gap_x/2.)/r; 
+        double angle_factor = sin(phi)*(1./costh - 1.);
+        double in_frac_x  =  circle_frac_simp(r_frac_plus, angle_factor);
+        if(fabs(x) < 1.5*pitch) { // X edge is not outside limit of LAT
+            double r_frac_minus = (edge + gap_x/2.)/r;
+            in_frac_x += circle_frac_simp(-r_frac_minus, angle_factor);
+        }
+        
+        // Y Edges
+        double y_twr = sign(y)*(fmod(fabs(y),pitch) - pitch/2.);
+        edge = pitch/2. - fabs(y_twr);
+        r_frac_plus = (edge-gap_y/2.)/r; 
+        angle_factor = cos(phi)*(1./costh - 1.);
+        double in_frac_y  =  circle_frac_simp(r_frac_plus, angle_factor);
+        if(fabs(y) < 1.5*pitch) { // X edge is not outside limit of LAT
+            double r_frac_minus = (edge + gap_y/2.)/r;
+            in_frac_y += circle_frac_simp(-r_frac_minus, angle_factor);
+        }
+        
+        // Cross term assumes x and y are independent 
+        double in_frac = 1.;
+        if(in_frac_x > .999) in_frac = in_frac_y;
+        else if(in_frac_y > .999) in_frac = in_frac_x; 
+        else in_frac = 1. - (1.-in_frac_x) - (1.-in_frac_y) + 
+            (1.-in_frac_x)*(1.-in_frac_y);  //Cross Term Correction?  
+        if(in_frac < .01) in_frac = .01;
+        
+        return in_frac;
+    }
 }
 
 /*! @class TkrValsTool
@@ -332,7 +381,7 @@ namespace {
     double rm_hard   = 30.; 
     double rm_soft   = 130;
     double gap       = 18.; 
-    double hard_frac = .6; 
+    double hard_frac = .7; 
     
     double minHeight = 26.5;
 }
@@ -521,20 +570,6 @@ StatusCode TkrValsTool::calculate()
         
         int max_planes = pTkrGeoSvc->numLayers();
         
-        double two_phi = 2.*Tkr_1_Phi; 
-        double angle_factor_G = 1.- (1.- costh)*sin(two_phi)*sin(two_phi); 
-        double angle_factor_R = 1.+ (1./costh - 1.)*sqrt(0.5)*sin(two_phi)*sin(two_phi); 
-        gap     *= angle_factor_G;
-        rm_hard *= angle_factor_R;
-        rm_soft *= angle_factor_R;
-        
-        // take care of conversion 1/2 way through first radiator
-        rad_len_sum = radThin/2.;
-        if(top_plane >= nThin) {
-            // "0." won't happen for standard geometry, because 3 layers are required for track
-            rad_len_sum = (top_plane<max_planes-nNoConv ? 0.5*radThick : 0.);
-        }
-        
         for(int iplane = top_plane; iplane < max_planes; iplane++) {
             
             double xms = 0.;
@@ -564,22 +599,17 @@ StatusCode TkrValsTool::calculate()
             int outside = 0; 
             int iView   = 0;
             double layer_edge = twrEdgeT(x_hit.x(), x_hit.y(), 
-                pTkrGeoSvc->numXTowers(), pTkrGeoSvc->numYTowers(), 
-                towerPitch, iView, outside);
-            double rm_frac_plus = (layer_edge-gap/2.)/rm_soft; 
-            double in_frac_soft = circle_fracT(rm_frac_plus);
-            if(!outside) {
-                double rm_frac_minus = (layer_edge + gap/2.)/rm_soft;
-                if(rm_frac_minus > 0.)in_frac_soft += circle_fracT(-rm_frac_minus);
-            }
+                                         pTkrGeoSvc->numXTowers(), pTkrGeoSvc->numYTowers(), 
+                                         towerPitch, iView, outside);
+ 
+            double in_frac_soft = contained_frac(x_hit.x(), x_hit.y(), towerPitch, gap,  
+                                                  rm_soft, costh, Tkr_1_Phi);
             if(in_frac_soft < .01) in_frac_soft = .01; 
-            rm_frac_plus = (layer_edge-gap/2.)/rm_hard; 
-            double in_frac_hard = circle_fracT(rm_frac_plus);
-            if(!outside) {
-                double rm_frac_minus = (layer_edge + gap/2.)/rm_hard;
-                if(rm_frac_minus > 0.)in_frac_hard += circle_fracT(-rm_frac_minus);
-            }
+ 
+            double in_frac_hard = contained_frac(x_hit.x(), x_hit.y(), towerPitch, gap,  
+                                                  rm_hard, costh, Tkr_1_Phi);
             if(in_frac_hard < .01) in_frac_hard = .01; 
+
             double corr_factor = 1./((1.-hard_frac)*in_frac_soft + hard_frac*in_frac_hard);
             if(corr_factor > max_corr) corr_factor = max_corr; 
             double delta_rad= radlen-radlen_old;
@@ -612,8 +642,7 @@ StatusCode TkrValsTool::calculate()
             arc_len += fabs( deltaZ/t1.z()); 
             radlen_old = radlen; 
         }
-        Tkr_RadLength  = rad_len_sum;
-        // Coef's from Lin. Regression analysis in Miner
+		// Coef's from Lin. Regression analysis in Miner
         // defined in anonymous namespace above
         Tkr_Energy     = (cfThin*thin_hits + cfThick*thick_hits + cfNoConv*blank_hits
             + cfRadLen*rad_len_sum + cfZ*x1.z())/costh;
@@ -625,6 +654,18 @@ StatusCode TkrValsTool::calculate()
         Tkr_Thick_Hits = thick_hits;
         Tkr_Blank_Hits = blank_hits; 
         Tkr_TwrEdge    = ave_edge/rad_len_sum; 
+
+		// take care of conversion 1/2 way through first radiator
+        if(top_plane >= nThin) {
+            // "0." won't happen for standard geometry, because 3 layers are required for track
+            rad_len_sum += (top_plane<max_planes-nNoConv ? 0.5*radThick : 0.);
+        }
+		else {
+            rad_len_sum += radThin/2.;
+		}
+        Tkr_RadLength  = rad_len_sum;
+
+
     }          
     
     return sc;
