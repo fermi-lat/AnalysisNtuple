@@ -2,7 +2,7 @@
 @brief Calculates the Mc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.6 2003/03/05 02:03:29 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.7 2003/05/07 15:05:20 lsrea Exp $
 */
 // Include files
 
@@ -196,10 +196,13 @@ StatusCode McValsTool::calculate()
             Event::TkrVertex*   gamma = *pVtxr++; 
             Point  x0 = gamma->getPosition();
             Vector t0 = gamma->getDirection();
-            
-            MC_x_err  = x0.x()-Mc_x0.x(); 
-            MC_y_err  = x0.y()-Mc_x0.y();
-            MC_z_err  = x0.z()-Mc_x0.z();
+
+			// Reference position errors at the start of recon track(s)
+			double arc_len = (x0.z()-Mc_x0.z())/Mc_t0.z();
+            HepPoint3D x_start = Mc_x0 + arc_len*Mc_t0;
+            MC_x_err  = x0.x()-x_start.x(); 
+            MC_y_err  = x0.y()-x_start.y();
+            MC_z_err  = x0.z()-x_start.z();
             
             MC_xdir_err = t0.x()-Mc_t0.x(); 
             MC_ydir_err = t0.y()-Mc_t0.y();
