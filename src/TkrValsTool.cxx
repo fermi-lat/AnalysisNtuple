@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.52 2005/01/25 23:06:25 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.53 2005/01/30 07:16:48 lsrea Exp $
 */
 
 // To Do:
@@ -529,7 +529,7 @@ StatusCode TkrValsTool::calculate()
         Event::TkrTrackHitVecConItr pHit = track_1->begin();
         int gapId = -1;
         bool gapFound = false;
-        int plane = m_tkrGeom->getPlane((*pHit)->getTkrId());
+        //int plane = m_tkrGeom->getPlane((*pHit)->getTkrId());
         while(pHit != track_1->end()) {
             const Event::TkrTrackHit* hit = *pHit++;
             unsigned int bits = hit->getStatusBits();
@@ -538,12 +538,15 @@ StatusCode TkrValsTool::calculate()
                 Point  gapPos = hit->getPoint(Event::TkrTrackHit::PREDICTED);
                 Tkr_1_GapX = gapPos.x();
                 Tkr_1_GapY = gapPos.y();
-                //This doesn't work until there's a valid TkrId for every hit
-                //gapId = m_tkrGeom->getPlane(hit->getTkrId());
-                gapId = plane;
+                //TkrId is good!
+                gapId = m_tkrGeom->getPlane(hit->getTkrId());
+                //gapId1 = plane;
+                //if (gapId1!=gapId) {
+                //    std::cout << "GapId1/GapId " << gapId1 << " " << gapId << std::endl;
+                //}
                 gapFound = true;
             }
-            plane--;
+            //plane--;
             if (!(bits & Event::TkrTrackHit::HITONFIT)) continue;
             const Event::TkrCluster* cluster = hit->getClusterPtr();
             int size =  (int) (const_cast<Event::TkrCluster*>(cluster))->size();

@@ -2,7 +2,8 @@
   @brief Package AnalysisNtule
   @verbatim
  
- v2r1p3  29-Jan-05   TU   use new numberOfHitsNear()
+ v2r1p4  31-Jan-05   LSR  use TkrId for non-cluster hits
+ v2r1p3  29-Jan-05   LSR  use new numberOfHitsNear()
  v2r1p2  24-Jan-05   TU   more for Tkr, CalValsTool
  v2r1p1  17-Jan-05   TU   use new TkrGeometrySvc methods 
  v2r1p0  05-Jan-05   TU   Incorporate Bill's changes to the ntuple 
