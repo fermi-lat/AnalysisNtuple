@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.22 2003/06/12 23:38:30 lsrea Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.23 2003/06/13 00:35:08 lsrea Exp $
 */
 
 // Include files
@@ -130,7 +130,8 @@ namespace {
         // Following expression for b (beta) comes from CalRecon
         // double beta      = exp(0.031*log(CAL_EnergySum/1000.))/2.29;
         // The above expression gives too small values
-        double b      = exp(0.031*log(E/1000.))/2.3;    //RR176
+        double b      = 1.2*exp(0.031*log(E/1000.))/2.3;   //July 16, 2003 * 1.2
+		//double b      = .51*exp(0.02*log(E/1000.));  // 17-July
         return b;
     }
     
@@ -211,6 +212,7 @@ namespace {
       double CAL_EdgeSum_Corr;     
       double CAL_Total_Corr; 
       double CAL_TotSum_Corr; 
+	  double CAL_Energy_LLCorr; 
       double CAL_Tot_RLn;
       double CAL_Cnt_RLn; 
       double CAL_DeadTot_Rat;
@@ -322,7 +324,8 @@ namespace {
       addItem("CalEnergySum",  &CAL_EnergySum);
       addItem("CalEnergyCorr", &CAL_Energy_Corr);
       addItem("CalEneSumCorr", &CAL_EneSum_Corr);
-      
+	  addItem("Cal_Energy_LLCorr", &CAL_Energy_LLCorr);
+   
       addItem("CalLeakCorr",   &CAL_Leak_Corr);
       addItem("CalLeakCorr2",  &CAL_Leak_Corr2);
       
@@ -402,8 +405,9 @@ StatusCode CalValsTool::calculate()
     CAL_EnergySum   = calCluster->getEnergySum();
 	for(int i = 0; i<8; i++) CAL_eLayer[i] = calCluster->getEneLayer(i);
 
-	CAL_Long_Rms = calCluster->getRmsLong();
-	CAL_Trans_Rms = calCluster->getRmsTrans();
+	CAL_Long_Rms      = calCluster->getRmsLong();
+	CAL_Trans_Rms     = calCluster->getRmsTrans();
+	CAL_Energy_LLCorr = calCluster->getEnergyCorrected();
 
 	//Code from meritAlg
 	int no_xtals=0;
@@ -481,10 +485,10 @@ StatusCode CalValsTool::calculate()
     
     // Section to apply edge and leakage correction to Cal data. 
     // First apply layer by layer edge correction  
-    Ray axis(cal_pos, x_diff.unit());
-    double arc_len = cal_pos.z()/t0.z(); 
-    Point z_0 = axis.position(arc_len); 
-    axis = Ray(z_0, x_diff.unit());
+    Ray axis(x0, -t0); //Ray axis(cal_pos, x_diff.unit());
+    double arc_len = -(m_calZTop-x0.z())/t0.z(); 
+    Point z_0 = axis.position(arc_len); // Track entry point to top of Cal Stack 
+    axis = Ray(z_0, x_diff.unit()); //Ray(z_0, -t0); //
 
     std::vector<Vector> pos_Layer = calCluster->getPosLayer();
     std::vector<double> ene_Layer = calCluster->getEneLayer();
@@ -511,10 +515,10 @@ StatusCode CalValsTool::calculate()
         Event::TkrFitTrackBase::TrackEnd end = Event::TkrFitTrackBase::End; 
         Ray trj_1 = Ray(track_1->getPosition(end), track_1->getDirection(end)); 
         Ray trj_2 = Ray(track_2->getPosition(end), track_2->getDirection(end));
-        double delta_z = trj_1.position().z() - (-26.5);
+        double delta_z = trj_1.position().z() - m_calZTop;
         double arc_len = delta_z/fabs(trj_1.direction().z());
         Point cal_1 = trj_1.position(arc_len); 
-        delta_z = trj_2.position().z() - (-26.5);
+        delta_z = trj_2.position().z() - m_calZTop;
         arc_len = delta_z/fabs(trj_2.direction().z());
         Point cal_2 = trj_2.position(arc_len);
         double separation = (cal_1.x()-cal_2.x())*(cal_1.x()-cal_2.x()) +
@@ -553,7 +557,7 @@ StatusCode CalValsTool::calculate()
             twr_pitch, gap, rm_soft, costh, phi_90);
         
         // Cut off correction upon leaving (through a side)
-        if(in_frac_soft < .5) break;
+        if(in_frac_soft < .5) in_frac_soft = .5;
         
         double in_frac_hard = contained_frac(xyz_layer.x(), xyz_layer.y(), 
             twr_pitch, gap, rm_hard, costh, phi_90);
@@ -569,6 +573,7 @@ StatusCode CalValsTool::calculate()
     if(ene_sum_corr < 1.) return sc;
     
     CAL_EdgeSum_Corr = ene_sum_corr/CAL_EnergySum;
+
     if (good_layers>0) edge_corr /= good_layers;
     CAL_Edge_Corr = edge_corr; 
     
@@ -601,6 +606,10 @@ StatusCode CalValsTool::calculate()
     CAL_x0    = cal_top.x();
     CAL_y0    = cal_top.y();   
 
+	// Only do leakage correction for tracks which "hit" the Calorimeter
+	if(fabs(CAL_x0) > cal_half_width || fabs(CAL_y0) > cal_half_width) return sc; 
+
+
     double s_xp   = (-cal_half_width + tkr_exit.x())/t_axis.x();
     double s_xm   = ( cal_half_width + tkr_exit.x())/t_axis.x();
     double s_minx = (s_xp > s_xm) ? s_xp:s_xm; // Choose soln > 0. 
@@ -609,7 +618,7 @@ StatusCode CalValsTool::calculate()
     double s_ym   = ( cal_half_width + tkr_exit.y())/t_axis.y();
     double s_miny = (s_yp > s_ym) ? s_yp:s_ym; // Choose soln > 0. 
     
-    double s_minz = cal_depth/t_axis.z();
+    double s_minz = (m_calZTop - m_calZBot)/t_axis.z();
     // Now pick min. soln. of the x, y, and z sides 
     double s_min  = (s_minx < s_miny) ? s_minx:s_miny;  
     s_min         = (s_min  < s_minz) ? s_min :s_minz;
@@ -697,23 +706,24 @@ StatusCode CalValsTool::calculate()
     
     ene_sum_corr /= in_frac_2; //Using 2nd order solution
     
-    // Final cos(theta) dependence (?) - I saw this in the data Winter 2002. Needs to be understood.
-    double cos_factor = .75 + .25*costh;
-    
     // Final Delta t factor (?).  Again - present in sumlated data - Needs to be understood 
 	// Perhaps this is the event to event compensation for variations in the initiation of showers. 
     CAL_t_Pred      = a2/b2*(TMath::Gamma(a2+1.,b2*t_total)/
-                             TMath::Gamma(a2,b2*t_total))- 1.; 
+                             TMath::Gamma(a2,b2*t_total)); 
     CAL_deltaT      = t - CAL_t_Pred;
     
-	// Note the overall final fudge factor of 1.03.
-    ene_sum_corr *= 1.03*(1+.06*CAL_deltaT)/cos_factor;
-    
+	// The "final" correction derived empirically from analyizing and flattening the 
+	// resultant energy in cos(theta) and log10(E) 
+	double logEsum = log10(ene_sum_corr); 
+    //double ad_hoc_factor = (1.35-.15*logEsum )/(1.+.9*(.6 - costh)*(.6 - costh))/
+		                       // (1.-.125*logEsum + (.125*logEsum)*costh);  
+	double ad_hoc_factor = (1.23 - .065*logEsum)/(1.+.14*(logEsum-1.)*(costh-.74));  
+
     // Store the results away 
-    CAL_EneSum_Corr = ene_sum_corr;
-    CAL_Energy_Corr = CAL_EnergySum*edge_corr/in_frac_2/cos_factor; 
+    CAL_EneSum_Corr = ene_sum_corr * ad_hoc_factor;
+    CAL_Energy_Corr = CAL_EnergySum*edge_corr * ad_hoc_factor/in_frac_2; 
     CAL_TotSum_Corr = CAL_EneSum_Corr/CAL_EnergySum;
-    CAL_Total_Corr  = edge_corr/in_frac_2/cos_factor; 
+    CAL_Total_Corr  = CAL_Energy_Corr/CAL_EnergySum; 
     CAL_Tot_RLn     = t_total;
     CAL_Cnt_RLn     = t;
     CAL_DeadTot_Rat = radLen_Stuff/t_total;
