@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.18 2003/06/07 06:19:06 lsrea Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.19 2003/06/07 23:14:55 atwood Exp $
 */
 
 // Include files
@@ -137,14 +137,12 @@ namespace {
         // Following expression for a (alpha) comes from CalRecon
         // double alpha      = 2.65*exp(0.15*log(E/1000.));
         // The above expression gives too large values
-        double a = 2.50*exp(0.19*log(E/1000.));    //RR182
+        //double a = 2.50*exp(0.19*log(E/1000.));    //RR182
+		// Found that these power law models diverge as E increases.  
+		//double a = .98*log10(E) - .23; 
+		double a = .9*log10(E); 
         return a;
-    }
-    
-    double gamma_alpha(double a, double b) {
-        double val = TMath::Gamma(a+1., b)/TMath::Gamma(a, b); 
-        return val;
-    }
+	}
     
     double erf_cal(double x) {
         double t = 1./(1.+.47047*x);
@@ -591,7 +589,7 @@ StatusCode CalValsTool::calculate()
     else                         t_tracker += .09/costh; 
     
     // Find the distance in Cal to nearest edge along shower axis
-    // Need to check sides as well as back
+    //       Need to check sides as well as back
     Vector t_axis = axis.direction();     // This points in +z direction
     double s_top  = -(-cal_top_z + axis.position().z())/t_axis.z();
 	double s_exit = -(axis.position().z())/t_axis.z(); 
@@ -661,28 +659,36 @@ StatusCode CalValsTool::calculate()
     double t_cal_tot = radLen_CsI + radLen_Crap; 
     double t_total   = t_tracker  + t_cal_tot;
     
-    // Energy centroid in radiation lengths for this event in rad.lens.
+    // Energy centroid in radiation lengths for this event.
     double t         = t_tracker + radLen_Cntr;
-    
-    // Following expression for b (beta) comes from CalRecon
-    // double beta      = exp(0.031*log(CAL_EnergySum/1000.))/2.29;
-    // The above expression gives too small values
-    double beta0      = exp(0.081*log(ene_sum_corr/1000.))/2.25; //RR178
-    
-    double beta_t  = beta0 * t_total;
-    double alpha_t = beta0 * t;
-    if(t > 1.2 * t_total) alpha_t = 1.2*beta_t; 
-    else {    // Iterations solution for alpha
-        double alpha_t2 = alpha_t/(gamma_alpha(alpha_t, beta_t));
-        alpha_t         = .75*alpha_t + .25*alpha_t2; 
-    }
-    // Don't accept giant leakage corrections
-    double in_frac = TMath::Gamma(alpha_t, beta_t); 
-    if(in_frac < .2)  in_frac = .2; 
- 
-    // 2nd Iteration to find energy
-    double a1 = alpha(ene_sum_corr);
+
+    // 2 Iterations to find energy
+    // Note: the TMath incomplete gamma functions is really the fractional inner incomplete
+	//       gamma function - i.e. its just what we need to do shower models.  
+	//Leon: this is the algorithm that gave the best results for estimating
+	//      leakage:
+	//        a) In the shower model (wallet card) the ratio of the a & b paremters
+	//           is the energy centroid (check it for yourself).  Also b is all but
+	//           energy independent (not ours ... problem here -see below ... but the wallet cards)
+	//           So given our event centroid and b - > make first guess for a.  But the ratio of 
+	//           a/b = <t> only in an infinitely deep cal.  
+	//        b) This gives first approx. for energy leakage fraction from model.
+	//        c) Now find a & b from parametric  models parametric models using "corrected energy".
+	//      I don't think is great. The reality is that first estimation correction raises
+	//      the energy by ~ 10% at 10 GeV.  The second iteration using the a & b models gives
+	//      a total correction of ~ + 33%. 
+	//      The powerlaw parameterization of b and a are funny. Particularly b - our b for 
+	//      CsI is ~ .46 and raising with E (i.e. too small - like smaller then uranium!  - and 
+	//      changing too fast).  These are vistiges from the code in CalRecon. 
+	//      Overall it seems to work albeit for heuristic methodology. Note however we may get strange
+	//      results when used outside the energy range 50 MeV - 18 GeV.  I hope here that 
+	//      the stuff Giebells is doing will come to the rescue - transistion from one to the other??
+	//   
+//  double a1 = alpha(ene_sum_corr);
     double b1 =  beta(ene_sum_corr); 
+	double a1 = b1*t + 1.; //  + 1 is to compensates for finite cal effect.  This would better 
+	                       // match it  to the final answer.  In reality it has a minor effect since all this 
+	                       // typically affects things as log(E). 
     double in_frac_1 = TMath::Gamma(a1, b1*t_total);
     double a2 = alpha(ene_sum_corr/in_frac_1);
     double b2 =  beta(ene_sum_corr/in_frac_1); 
@@ -690,21 +696,23 @@ StatusCode CalValsTool::calculate()
     
     ene_sum_corr /= in_frac_2; //Using 2nd order solution
     
-    // Final cos(theta) dependence (?)
+    // Final cos(theta) dependence (?) - I saw this in the data Winter 2002. Needs to be understood.
     double cos_factor = .75 + .25*costh;
     
-    // Final Delta t factor (?) 
+    // Final Delta t factor (?).  Again - present in sumlated data - Needs to be understood 
+	// Perhaps this is the event to event compensation for variations in the initiation of showers. 
     CAL_t_Pred      = a2/b2*(TMath::Gamma(a2+1.,b2*t_total)/
                              TMath::Gamma(a2,b2*t_total))- 1.; 
     CAL_deltaT      = t - CAL_t_Pred;
     
-    ene_sum_corr *= (1+.06*CAL_deltaT)/cos_factor;
+	// Note the overall final fudge factor of 1.03.
+    ene_sum_corr *= 1.03*(1+.06*CAL_deltaT)/cos_factor;
     
     // Store the results away 
     CAL_EneSum_Corr = ene_sum_corr;
     CAL_Energy_Corr = CAL_EnergySum*edge_corr/in_frac_2/cos_factor; 
     CAL_TotSum_Corr = CAL_EneSum_Corr/CAL_EnergySum;
-    CAL_Total_Corr  = edge_corr/in_frac/cos_factor; 
+    CAL_Total_Corr  = edge_corr/in_frac_2/cos_factor; 
     CAL_Tot_RLn     = t_total;
     CAL_Cnt_RLn     = t;
     CAL_DeadTot_Rat = radLen_Crap/t_total;
@@ -712,7 +720,7 @@ StatusCode CalValsTool::calculate()
     CAL_a_Parm      = a2;
     CAL_b_Parm      = b2; 
     
-    CAL_Leak_Corr   = in_frac;
+    CAL_Leak_Corr   = in_frac_1;
     CAL_Leak_Corr2  = in_frac_2;   
 	CAL_TwrGap      = arcLen_Crap - arcLen_Gap;
 
