@@ -8,41 +8,30 @@
 
 #include "AnalysisNtuple/IValsTool.h"
 #include <string>
+#include <vector>
 #include <map>
 
 /** @class ValBase
-  @brief 
+@brief 
 
-  */
+*/
 class ValBase : public IValsTool,  public AlgTool,  virtual public IIncidentListener
 {
 public:
-
-typedef std::map<std::string, double*> valMap;
-typedef valMap::iterator mapIter;
-typedef valMap::const_iterator constMapIter;
-
-/// little class to preserve the order in the ntuple
-class Order
-{   
-public:
-    Order(std::string name="", mapIter iter=0) {}
-    std::string name;
-    mapIter iter;
-    void setIter(mapIter newIter) { iter = newIter; }
-    void setName(std::string newName) { name = newName; }
-    std::string getName() { return name; }
-    mapIter getIter() {return iter; }
-};
-
+    
+    typedef std::pair<std::string, double*> valPair;
+    typedef std::vector<valPair*> valMap;
+    //typedef valMap::iterator mapIter;
+    //typedef valMap::const_iterator constMapIter;
+    
     ValBase(const std::string& type, 
-            const std::string& name, 
-            const IInterface* parent);
+        const std::string& name, 
+        const IInterface* parent);
     
     ~ValBase() 
     {
-        for (int i=0; i<m_orderList.size(); i++) {
-            Order* ord = m_orderList[i];
+        for (int i=0; i<m_ntupleMap.size(); i++) {
+            valPair* ord = m_ntupleMap[i];
             delete ord;
         }
     }
@@ -66,17 +55,14 @@ public:
     
     /// calculate all values, over-ridden by XxxValsTool
     virtual StatusCode calculate();
-
+    
     // common initialization for subclasses
     virtual StatusCode initialize();
-
+    
 protected:
     
     /// map containing ntuple names, and pointers to the ntuple variables
     valMap m_ntupleMap;
-    /// to preserve the order of the ntuple 
-    //  probably should be a vector of pairs:  std::vector< std::pair<std::string, mapIter>* >;
-    std::vector<Order*> m_orderList;
     /// pointer to incident service
     IIncidentSvc* m_incSvc;
     /// let ValBase handle the pointer to the data service, everyone uses it

@@ -10,6 +10,8 @@
 #include "Event/TopLevel/EventModel.h"
 #include "Event/TopLevel/Event.h"
 
+#include <algorithm>
+
 ValBase::ValBase(const std::string& type, 
                          const std::string& name, 
                          const IInterface* parent)
@@ -25,7 +27,6 @@ StatusCode ValBase::initialize()
     m_newEvent = true;
     m_handleSet = false;
     m_ntupleMap.clear();
-    m_orderList.clear();
 
     MsgStream log(msgSvc(), name());
 
@@ -47,43 +48,23 @@ StatusCode ValBase::initialize()
             return sc;
         }
         m_pEventSvc = eventsvc;
-    }
-    
+    }    
     //incsvc->addListener(this, "BeginEvent", 100);
     return sc;
 }
 
-
-
 void ValBase::zeroVals()
 {
-    mapIter it = m_ntupleMap.begin();
-    for (it; it!=m_ntupleMap.end(); it++) {
-        *(it->second) = 0.0;
+    for (int i=0; i<m_ntupleMap.size(); i++) {
+        *(m_ntupleMap[i]->second) = 0.0;
     }
 }
 
 void ValBase::addItem(std::string varName, double* pValue)
 {
-    m_ntupleMap[varName] = pValue;
+    valPair* pair = new valPair(varName, pValue);
 
-    // make an entry in the list for this item, iter not yet known
-    Order* ord = new Order;
-    ord->setName(varName);
-
-    m_orderList.push_back(ord);
-
-    // this is a bit inefficient, but it only happens once
-    // go through the order list, find the name in the tupleMap,
-    //   and fill in the iters, so after each call to addItem
-    //   the list is correct
-    for (int i=0; i< m_orderList.size(); i++ ) {
-        Order* ord = m_orderList[i];
-        std::string ordName = ord->getName();
-        mapIter iter = m_ntupleMap.find(ordName);
-        ord->setIter(iter);
-        std::string mapName = (ord->iter)->first;
-    }
+    m_ntupleMap.push_back(pair);
 }
 
 
@@ -105,15 +86,15 @@ StatusCode ValBase::browse(std::string varName)
         std::cout   << " Values of the variables:" << std::endl << indent;
     }
     int length = indent.size();
-    constMapIter it = m_ntupleMap.begin();
-    for (it; it!=m_ntupleMap.end(); it++) {
-        if (varName!="" && varName!=it->first) continue;
-        length += (it->first).size() + 2*delim.size() + separator.size() + 15;
+    for (int i=0; i<m_ntupleMap.size(); i++) {
+        valPair* pair = m_ntupleMap[i];
+        if (varName!="" && varName!=pair->first) continue;
+        length += (pair->first).size() + 2*delim.size() + separator.size() + 15;
         if(length>78) {
             std::cout <<std::endl << indent ;
             length = indent.size();
         }
-        std::cout  << delim << it->first << delim << ": " << *(it->second) << " ";
+        std::cout  << delim << pair->first << delim << ": " << *(pair->second) << " ";
     }
     std::cout << std::endl;
     return StatusCode::SUCCESS;
@@ -148,14 +129,16 @@ StatusCode ValBase::getVal(std::string varName, double& value)
 {
     StatusCode sc = StatusCode::SUCCESS;
     
-    constMapIter it = m_ntupleMap.find(varName);
+    for (int i=0; i<m_ntupleMap.size(); i++) {
+        if (m_ntupleMap[i]->first == varName) break;
+    }
     
-    if (it==m_ntupleMap.end()) { 
+    if (i==m_ntupleMap.size()) { 
         announceBadName(varName); 
         return StatusCode::FAILURE;
     } else {
         if(doCalcIfNotDone().isFailure()) return StatusCode::FAILURE;
-        value = *(it->second);
+        value = *m_ntupleMap[i]->second;
     }
     return sc;
 }
@@ -164,24 +147,23 @@ void ValBase::announceBadName(std::string varName)
 {
     MsgStream log(msgSvc(), name());
 
-    mapIter it;
-    
     std::string delim     = "\"";
     std::string separator = " ";
     std::string indent    = "    ";
     
     std::cout << " ValsTool called with unknown name: " << delim << varName << delim << std::endl;
     std::cout << " Known names are: " ;
-    int count;
+
     int length = indent.size();
-    it = m_ntupleMap.begin();
-    for (it, count=0; it!=m_ntupleMap.end(); it++, count++) {
-        length += ((it->first).size() + 2*delim.size() + separator.size());
+
+    for (int i=0, count=0; i<m_ntupleMap.size(); i++, count++) {
+        valPair* pair = m_ntupleMap[i];
+        length += ((pair->first).size() + 2*delim.size() + separator.size());
         if(length>78) {
             std::cout << std::endl << indent ;
             length = indent.size();
         }
-        std::cout << delim << it->first << delim << " ";
+        std::cout << delim << pair->first << delim << " ";
     }
     std::cout << std::endl;
 }
@@ -212,22 +194,12 @@ ValsVisitor::eVisitorRet ValBase::traverse(ValsVisitor* v)
 
     if(doCalcIfNotDone().isFailure()) return ValsVisitor::ERROR;
 
-    /*
-    constMapIter it = m_ntupleMap.begin();    
-    for (it; it!=m_ntupleMap.end(); it++) {
-        double value = *(it->second);
-        ret = v->analysisValue(it->first, value);
+    for (int i=0; i<m_ntupleMap.size(); i++) {
+        valPair* pair = m_ntupleMap[i];
+        double value = *(pair->second);
+        ret = v->analysisValue(pair->first, value);
         if (ret!= ValsVisitor::CONT) return ret;
     }
-    */
-    constMapIter it;
-    for(int i=0; i<m_orderList.size(); i++) {
-        it = m_orderList[i]->iter;
-        double value = *(it->second);
-        ret = v->analysisValue(it->first, value);
-        if (ret!= ValsVisitor::CONT) return ret;
-    }
-    
     return ValsVisitor::DONE;
 }
 
