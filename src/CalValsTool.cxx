@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.27 2003/08/24 22:17:28 atwood Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.28 2003/08/24 22:39:47 atwood Exp $
 */
 
 // Include files
@@ -752,8 +752,8 @@ StatusCode CalValsTool::calculate()
 	double logEsum = log10(ene_sum_corr); 
     //double ad_hoc_factor = (1.35-.15*logEsum )/(1.+.9*(.6 - costh)*(.6 - costh))/
 		                       // (1.-.125*logEsum + (.125*logEsum)*costh);  
-	double ad_hoc_factor = (1.23 - .065*logEsum)/(1.+.14*(logEsum-1.)*(costh-.74));  
-
+	//double ad_hoc_factor = (1.23 - .065*logEsum)/(1.+.14*(logEsum-1.)*(costh-.74));  
+    double ad_hoc_factor = (1.08 + .02*logEsum);  
     // Store the results away 
     CAL_EneSum_Corr = ene_sum_corr * ad_hoc_factor;
     CAL_Energy_Corr = CAL_EnergySum*edge_corr * ad_hoc_factor/in_frac_2; 
