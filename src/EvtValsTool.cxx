@@ -3,7 +3,7 @@
 @brief Calculates the "Event" analysis variables from the other ntuple variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.13 2004/02/13 06:22:38 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.14 2004/06/16 00:34:00 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -238,8 +238,7 @@ StatusCode EvtValsTool::calculate()
 
     double eTkrKalEne, eCalRLn, eTkrBest; //, eCal
     int CAL_Type;
-    if (  // m_pCalTool->getVal("CalEnergyCorr", eCal, firstCheck).isSuccess() &&
-        m_pCalTool->getVal("CalTotRLn", eCalRLn, firstCheck).isSuccess()
+    if (   m_pCalTool->getVal("CalCsIRLn", eCalRLn, firstCheck).isSuccess()
         && m_pTkrTool->getVal("TkrSumKalEne", eTkrKalEne, firstCheck).isSuccess()) 
     {
         eTkrBest = std::max(eTkr+eCalSum, eTkrKalEne);
@@ -250,44 +249,55 @@ StatusCode EvtValsTool::calculate()
             else {CAL_Type = 1;}
         }
         else {CAL_Type = 2;} 
-
-       // if(CAL_Type == 0) EvtEnergyOpt = eTkrBest;
-       //   else              EvtEnergyOpt = eTkr + eCal;
     }
-   
-    double eCalSumCorr;
-    if(m_pCalTool->getVal("CalEneSumCorr", eCalSumCorr, nextCheck).isSuccess()) {
+
+ // EdgeAngle:   distance from tower edge / cos(theta) 
+    double tkrEdge, calEdge, tkr1ZDir = -1.;
+    if(m_pTkrTool->getVal("Tkr1ZDir",tkr1ZDir, nextCheck).isSuccess()) {
+        if (m_pTkrTool->getVal("TkrTwrEdge", tkrEdge, nextCheck).isSuccess()) {
+            EvtTkrEdgeAngle = -tkrEdge/tkr1ZDir;
+        }
+        if (m_pCalTool->getVal("CalTwrEdge", calEdge, nextCheck).isSuccess()) {
+            EvtCalEdgeAngle = -calEdge/tkr1ZDir;
+        }
+    }
+	double tkr1ZDir2 = tkr1ZDir*tkr1ZDir;  
+	// Final Energy Selection: (Combo approach) 
+	//    Use Kalman energy when not enough in the Cal,
+	//    use Last Layer Correction when avaialable (eCalEneLLCorr > 0) or else
+	//    use integrated edge and leakage correction from CalValsTool
+    double eCalSumCorr, eCalEneLLCorr;
+    if(    m_pCalTool->getVal("CalEneSumCorr", eCalSumCorr, nextCheck).isSuccess()
+		&& m_pCalTool->getVal("CalEnergyLLCorr", eCalEneLLCorr, nextCheck).isSuccess()) {
         if(CAL_Type == 0) EvtEnergySumOpt = eTkrBest;
-        else              EvtEnergySumOpt = eTkr + eCalSumCorr;
+		else {
+			if(eCalEneLLCorr > 0) EvtEnergySumOpt = eCalEneLLCorr; //This is wrong! LL has comp.for TkrEne!
+			else {
+				// Note: There is an adhoc-factor of ~.6(1+cos(theta))^2 correction. Why is this needed? 
+				EvtEnergySumOpt = (eTkr + eCalSumCorr)/(1-.2*(1+tkr1ZDir)*(1+tkr1ZDir));
+			}
+		}
     }
     
     double mcEnergy;
     if(m_pMcTool->getVal("McEnergy", mcEnergy, firstCheck).isSuccess()){
         EvtMcEnergySigma = (EvtEnergySumOpt - mcEnergy)/(mcEnergy);
     }
-
-    double tkrEdge, calEdge, tkr1ZDir = -1., tkr1ZDir2 = 1.; ;
-    if(m_pTkrTool->getVal("Tkr1ZDir",tkr1ZDir, nextCheck).isSuccess()) {
-        tkr1ZDir2 = tkr1ZDir*tkr1ZDir;
-        const double minSTkr = 0.001;
-        double sTkr = std::max(minSTkr,sqrt(std::max(0.0, 1.-tkr1ZDir2)));
-        if (m_pTkrTool->getVal("TkrTwrEdge", tkrEdge, nextCheck).isSuccess()) {
-            EvtTkrEdgeAngle = (30.-tkrEdge)/sTkr;
-        }
-        if (m_pCalTool->getVal("CalTwrEdge", calEdge, nextCheck).isSuccess()) {
-            EvtCalEdgeAngle = (30. -calEdge)/sTkr;
-        }
-    }
+    // Model simple for PSF(68%) 
     EvtPSFModel = sqrt(pow((.061/pow((std::max(EvtEnergySumOpt,1.)/100),.8)),2) + (.001745*.001745));
+
+	// Log(base 10) of measured energy - useful for parameterizing effects
     EvtLogESum = log10(std::min(std::max(EvtEnergySumOpt,10.),1000000.));
     double logE = std::min(std::max(EvtLogESum,1.3), 4.7);
     double logE2 = logE*logE; 
     
+	// Track 1 covariance determinant with energy dependence compensation
     double tkr1CovDet;
     if (m_pTkrTool->getVal("Tkr1CovDet",tkr1CovDet, nextCheck).isSuccess()) {
         EvtTkr1ECovDet = tkr1CovDet/pow(std::max(EvtEnergySumOpt,1.0), 1.3);
     }
 
+	// Ratio of PSF model to event total PSF error. Note PhiErr = sin(theta)*d(phi)
     double tkr1ThetaErr, tkr1PhiErr;
     if (m_pTkrTool->getVal("Tkr1ThetaErr",tkr1ThetaErr, nextCheck).isSuccess() &&
         m_pTkrTool->getVal("Tkr1PhiErr",tkr1PhiErr, nextCheck).isSuccess()) {
@@ -295,18 +305,24 @@ StatusCode EvtValsTool::calculate()
                           EvtPSFModel;
     }
 
+	// Fraction of energy in Track 1
     double tkr1ConE;
     if (m_pTkrTool->getVal("Tkr1ConEne",tkr1ConE, nextCheck).isSuccess()) {
         if(EvtEnergySumOpt>0.0) EvtTkr1EFrac = tkr1ConE/EvtEnergySumOpt;
     }
 
+	// Vtx kinematic variable:  angle * event energy / Track_1 energy fraction
     double vtxAngle;
     if (m_pVtxTool->getVal("VtxAngle", vtxAngle, firstCheck).isSuccess()) {
         if (tkr1ConE>0.0) EvtVtxKin = vtxAngle*EvtEnergySumOpt*EvtEnergySumOpt/tkr1ConE;
     }
 
+	// Vtx angle x event energy  ~ constant
     EvtVtxEAngle = vtxAngle*EvtEnergySumOpt;
     
+	// Hit counting around track compared to hits on track.  Compton scatters
+	// have a ratio ~< 1 (as do MIPs etc.  - this is similar to the former
+	// Surplus Hit Ratio
     double totHits, tkr1First;
     if (m_pTkrTool->getVal("TkrTotalHits", totHits, nextCheck).isSuccess()) {
         if (m_pTkrTool->getVal("Tkr1FirstLayer", tkr1First, nextCheck).isSuccess()){
@@ -316,6 +332,7 @@ StatusCode EvtValsTool::calculate()
         }
     }
 
+	// Energy compensated track 1 chisq
     double tkr1Chisq;
     if (m_pTkrTool->getVal("Tkr1Chisq", tkr1Chisq, nextCheck).isSuccess()) {
         EvtTkr1EChisq = tkr1Chisq/(11.5 - 3.73*logE + .362*logE2)
