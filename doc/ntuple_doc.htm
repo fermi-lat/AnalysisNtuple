@@ -2,7 +2,7 @@
 
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
-<meta name="GENERATOR" content="Microsoft FrontPage 5.0">
+<meta name="GENERATOR" content="Microsoft FrontPage 6.0">
 <meta name="ProgId" content="FrontPage.Editor.Document">
 <title>Merit</title>
 </head>
@@ -384,6 +384,24 @@ as I find them.)</font></p>
         number of gaps</font></td>
     </tr>
     <tr>
+      <td width="181" height="23"><font face="Comic Sans MS">Tkr1FirstGapLayer</font></td>
+      <td width="541" height="23">&nbsp;<font face="Comic Sans MS">Layer Number 
+		of first gap on Track 1 </font><b><i><font color="#0000FF" face="Arial">&nbsp;&nbsp; 
+		NEW Variable!</font></i></b></td>
+    </tr>
+    <tr>
+      <td width="181" height="23"><font face="Comic Sans MS">Tkr1XGap</font></td>
+      <td width="541" height="23">&nbsp;<font face="Comic Sans MS">X Location of 
+		first gap on Track 1 </font><b><i><font color="#0000FF" face="Arial">&nbsp;&nbsp; 
+		NEW Variable!</font></i></b> </td>
+    </tr>
+    <tr>
+      <td width="181" height="23"><font face="Comic Sans MS">Tkr1YGap</font></td>
+      <td width="541" height="23"><font face="Comic Sans MS">&nbsp;Y Location of 
+		first gap on Track 1 </font><b><i><font color="#0000FF" face="Arial">&nbsp;&nbsp; 
+		NEW Variable!</font></i></b> </td>
+    </tr>
+    <tr>
       <td width="181" height="23"><font face="Comic Sans MS" size="3">Tkr1FirstGaps</font></td>
       <td width="541" height="23"><font face="Comic Sans MS">&nbsp;Track 1
         number of gaps in first <i>Tkr1FirstHits</i> layers on track 1</font></td>
@@ -489,12 +507,12 @@ as I find them.)</font></p>
     <tr>
       <td width="181" height="23"><font face="Comic Sans MS">Tkr1ThetaErr</font></td>
       <td width="541" height="23"><font face="Comic Sans MS">&nbsp;error on the
-        measurement of theta</font></td>
+        measurement of theta derived from cov. matrix</font></td>
     </tr>
     <tr>
       <td width="181" height="23"><font face="Comic Sans MS">Tkr1PhiErr</font></td>
       <td width="541" height="23"><font face="Comic Sans MS">&nbsp;error on the
-        measurement of phi.</font></td>
+        measurement of phi derived from cov. matrix</font></td>
     </tr>
     <tr>
       <td width="181" height="23"><font face="Comic Sans MS">TkrErrAsym</font></td>
@@ -829,12 +847,23 @@ mso-bidi-language:AR-SA"> </span></b><i><b><font color="#0000FF">NEW!!</font></b
     <tr>
       <td width="182" height="23"><font face="Comic Sans MS" size="3">CalLeakCorr2</font></td>
       <td width="540" height="23"><font face="Comic Sans MS">&nbsp;Approximation
-        for leakage correction.</font></td>
+        for leakage correction. <font color="#FF0000">OBSOLETE - No longer 
+		present</font></font></td>
+    </tr>
+    <tr>
+      <td width="182" height="23"><font face="Comic Sans MS" size="3">CalLeakCorr</font></td>
+      <td width="540" height="23"><font face="Comic Sans MS">&nbsp;Approximation 
+		for leakage correction. </font></td>
     </tr>
     <tr>
       <td width="182" height="23"><font face="Comic Sans MS" size="3">CalEdgeSumCorr</font></td>
       <td width="540" height="23"><font face="Comic Sans MS">&nbsp;Effective 
       layer-by-layer edge correction; multiplicative</font></td>
+    </tr>
+    <tr>
+      <td width="182" height="23"><font face="Comic Sans MS" size="3">CalEdgeCorr</font></td>
+      <td width="540" height="23"><font face="Comic Sans MS">&nbsp;Averaged 
+		layer-by-layer edge correction; multiplicative</font></td>
     </tr>
     <tr>
       <td width="182" height="23"><font face="Comic Sans MS" size="3">CalTotSumCorr</font></td>
@@ -879,9 +908,16 @@ mso-bidi-language:AR-SA"> </span></b><i><b><font color="#0000FF">NEW!!</font></b
         between measured and predicted energy centroids</font></td>
     </tr>
     <tr>
+      <td width="182" height="23"><font face="Comic Sans MS" size="3">CalTwrEdgeCntr</font></td>
+      <td width="540" height="23"><font face="Comic Sans MS">Distance of energy centroid from tower boundary 
+		(boundary = midpoint between Towers)&nbsp; </font><i><b>
+		<font face="Arial" color="#0000FF">Was CalTwrEdge - See Below!</font></b></i></td>
+    </tr>
+    <tr>
       <td width="182" height="23"><font face="Comic Sans MS" size="3">CalTwrEdge</font></td>
-      <td width="540" height="23"><font face="Comic Sans MS">&nbsp;Distance of
-        energy centroid from tower boundary ( &gt;~30 mm is inside active CAL)</font></td>
+      <td width="540" height="23"><font face="Comic Sans MS">&nbsp;Distance of Track 
+		1 entry at top of Cal from tower boundary </font><i><b>
+		<font face="Arial" color="#0000FF">New Definition &amp; New Variable!</font></b></i></td>
     </tr>
     <tr>
       <td width="182" height="23"><font face="Comic Sans MS">CalLATEdge</font></td>
@@ -984,6 +1020,12 @@ mso-bidi-language:AR-SA"> </span></b><i><b><font color="#0000FF">NEW!!</font></b
       <td width="540" height="23"><font face="Comic Sans MS">&nbsp;Ratio of number of 
       Xtals with energy &gt; 1% of CalEnergySum to total number of struck Xtals in 
       the event.</font></td>
+    </tr>
+    <tr>
+      <td width="182" height="23"><font face="Comic Sans MS">CalXtalMaxEne</font></td>
+      <td width="540" height="23">&nbsp;<font face="Comic Sans MS">Max. Energy 
+		found in a single Xtal&nbsp; </font><i><b>
+		<font face="Arial" color="#0000FF">New Variable!</font></b></i></td>
     </tr>
     <tr>
       <td width="182" height="23"><font face="Comic Sans MS">CalLongRms</font></td>
