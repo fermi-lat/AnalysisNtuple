@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/test/test_AnalysisNtuple.cxx,v 1.2 2003/02/24 22:12:37 burnett Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/test/test_AnalysisNtuple.cxx,v 1.3 2003/02/25 06:26:11 burnett Exp $
 
 // Include files
 // Gaudi system includes
@@ -28,13 +28,13 @@ public:
     StatusCode initialize();
     StatusCode execute();
     StatusCode finalize();
-
+    
 private: 
-
-  //! number of times called
-
-  int m_count; 
-
+    
+    //! number of times called
+    
+    int m_count; 
+    
     //tool stuff
     IToolSvc * m_pToolSvc;
     std::vector<IValsTool*> m_toolvec;
@@ -56,21 +56,19 @@ test_AnalysisNtuple::test_AnalysisNtuple(const std::string& name, ISvcLocator* p
 :Algorithm(name, pSvcLocator)
 ,m_count(0)
 {
-
+    
 }
-
-
 
 //------------------------------------------------------------------------
 
 //! set parameters and attach to various perhaps useful services.
 
 StatusCode test_AnalysisNtuple::initialize(){
-    StatusCode  sc = StatusCode::SUCCESS;
+    StatusCode sc   = StatusCode::SUCCESS;
+    StatusCode fail = StatusCode::FAILURE;
     MsgStream log(msgSvc(), name());
     log << MSG::INFO << "initialize" << endreq;
-
-        
+    
     // set up tools
     m_pToolSvc = 0;
     
@@ -80,11 +78,10 @@ StatusCode test_AnalysisNtuple::initialize(){
         return StatusCode::FAILURE;
     }
 
-
     const char * toolnames[] = {"CalValsTool","TkrValsTool",
-    "MCValsTool","TkrHitValsTool", "GltValsTool", "AcdValsTool"};
+    "McValsTool","TkrHitValsTool", "VtxValsTool", "GltValsTool", "AcdValsTool"};
 
-    for( int i =0; i< 6; ++i){
+    for( int i =0; i< 7; ++i){
         m_toolvec.push_back(0);
         sc = m_pToolSvc->retrieveTool(toolnames[i], m_toolvec.back());
         if( sc.isFailure() ) {
@@ -92,7 +89,7 @@ StatusCode test_AnalysisNtuple::initialize(){
             return sc;
         }
     }
-    
+  
     return sc;
 }
 
@@ -103,8 +100,45 @@ StatusCode test_AnalysisNtuple::execute()
 {
     StatusCode  sc = StatusCode::SUCCESS;
     MsgStream   log( msgSvc(), name() );
-    log << MSG::INFO << " No test yet!" << endreq;
+    
+    double answer;
+    
+    //do a browse
+    m_toolvec[5]->browse();
+    
+    // check browse() against getVal() for each tool
 
+    log << MSG::INFO << "Checks of getVal() against browse():" << endreq << endreq;
+    
+    m_toolvec[0]->browse("CAL_EneSum_Corr");
+    sc = m_toolvec[0]->getVal("CAL_EneSum_Corr", answer);
+    std::cout << "  compared to: " << answer << std::endl;
+    
+    m_toolvec[1]->browse("TKR_Energy_Corr");
+    sc = m_toolvec[1]->getVal("TKR_Energy_Corr", answer);
+    std::cout << "  compared to: " << answer << std::endl;
+    
+    m_toolvec[4]->browse("VTX_DOCA");
+    sc = m_toolvec[4]->getVal("VTX_DOCA", answer);
+    std::cout << "  compared to: " << answer << std::endl;
+    
+    m_toolvec[6]->browse("ACD_TileCount");
+    sc = m_toolvec[6]->getVal("ACD_TileCount", answer);
+    std::cout << "  compared to: " << answer << std::endl;
+    
+    m_toolvec[2]->browse("MC_x_err");
+    sc = m_toolvec[2]->getVal("MC_x_err", answer);
+    std::cout << "  compared to: " << answer << std::endl;
+    
+    m_toolvec[5]->browse("TRG_zDir");
+    sc = m_toolvec[5]->getVal("TRG_zDir", answer);
+    std::cout << "  compared to: " << answer << std::endl;
+    
+    m_toolvec[3]->browse("TKR_Hits_In_Lyr_12");
+    sc = m_toolvec[3]->getVal("TKR_Hits_In_Lyr_12", answer);
+    std::cout << "  compared to: " << answer << std::endl;
+    
+    
     return sc;
 }
 
@@ -117,10 +151,9 @@ StatusCode test_AnalysisNtuple::finalize(){
     StatusCode  sc = StatusCode::SUCCESS;
     MsgStream log(msgSvc(), name());
     log << MSG::INFO << "finalize after " << m_count << " calls." << endreq;
-
+    
     return sc;
 }
-
 
 
 

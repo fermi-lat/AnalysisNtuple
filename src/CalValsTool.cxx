@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.3 2003/02/24 22:12:36 burnett Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.4 2003/02/25 02:36:58 lsrea Exp $
 
 // Include files
 
@@ -21,9 +21,6 @@
 #include "Event/Recon/TkrRecon/TkrVertex.h"
 #include "Event/Recon/CalRecon/CalCluster.h"
 
-#include "TkrUtil/ITkrGeometrySvc.h"
-#include "TkrUtil/ITkrQueryClustersTool.h"
-
 #include "GlastSvc/Reco/IKalmanParticle.h"
 #include "GlastSvc/Reco/IPropagatorTool.h"
 //#include "GlastSvc/Reco/IPropagatorSvc.h"
@@ -36,123 +33,127 @@
 #define M_PI = 3.14159265358979323846
 #endif
 
-double signC(double x) { return (x<0.) ? -1.:1.;} 
-
-double twrEdgeC(double x, double y, double pitch, int &XY, int &outter) {
-    double edge = 0.; 
-    double x_twr = signC(x)*(fmod(fabs(x),pitch) - pitch/2.);
-    double y_twr = signC(y)*(fmod(fabs(y),pitch) - pitch/2.);
+namespace {
+    const int _nTowers = 4;
+        
+    double signC(double x) { return (x<0.) ? -1.:1.;} 
     
-    outter = 0; 
-    
-    if(fabs(x_twr) > fabs(y_twr)) {
-        edge = pitch/2. - fabs(x_twr);
-        XY = 1; 
-        if(fabs(x) > 1.5*pitch) outter = 1;
+    double twrEdgeC(double x, double y, double pitch, int &XY, int &outer) {
+        double edge = 0.; 
+        double x_twr = signC(x)*(fmod(fabs(x),pitch) - pitch/2.);
+        double y_twr = signC(y)*(fmod(fabs(y),pitch) - pitch/2.);
+        
+        outer = 0; 
+        
+        if(fabs(x_twr) > fabs(y_twr)) {
+            edge = pitch/2. - fabs(x_twr);
+            XY = 1; 
+            if(fabs(x) > 0.5*(_nTowers-1)*pitch) outer = 1;
+        }
+        else {
+            edge = pitch/2. - fabs(y_twr);
+            XY = 2;
+            if(fabs(y) > 0.5*(_nTowers-1)*pitch) outer = 1;
+        }
+        return edge;
     }
-    else {
+    
+    double circle_frac(double r) {
+        double rl = (fabs(r) < 1.) ? fabs(r):1.; 
+        double a_slice = 2.*(M_PI/4. - rl*sqrt(1.-rl*rl)/2. - asin(rl)/2.);
+        double in_frac = 1.-a_slice/M_PI;
+        if(r < 0.) in_frac = a_slice/M_PI;
+        return in_frac;
+    }
+    
+    double circle_frac_simp(double r, double angle_factor) {
+        double slice_0 = circle_frac(r);
+        double slice_p = circle_frac(r+angle_factor);
+        double slice_m = circle_frac(r-angle_factor);
+        return (slice_p + 4.*slice_0 + slice_m)/6.;
+    }
+    
+    double contained_frac(double x, double y, double pitch, double gap,  
+        double r, double costh, double phi) {
+        // Get the projected angles for the gap
+        double tanth = sqrt(1.-costh*costh)/costh;
+        double gap_x = gap - 40.*sin(phi)*tanth; //was 20 in RR185
+        if(gap_x < 5.) gap_x = 5.;
+        double gap_y = gap - 40.*cos(phi)*tanth;
+        if(gap_y < 5.) gap_y = 5.; 
+        
+        // X Edges
+        double x_twr = signC(x)*(fmod(fabs(x),pitch) - pitch/2.);
+        double edge = pitch/2. - fabs(x_twr);
+        double r_frac_plus = (edge-gap_x/2.)/r; 
+        double angle_factor = sin(phi)*(1./costh - 1.);
+        double in_frac_x  =  circle_frac_simp(r_frac_plus, angle_factor);
+        if(fabs(x) < 1.5*pitch) { // X edge is not outside limit of LAT
+            double r_frac_minus = (edge + gap_x/2.)/r;
+            in_frac_x += circle_frac_simp(-r_frac_minus, angle_factor);
+        }
+        
+        // Y Edges
+        double y_twr = signC(y)*(fmod(fabs(y),pitch) - pitch/2.);
         edge = pitch/2. - fabs(y_twr);
-        XY = 2;
-        if(fabs(y) > 1.5*pitch) outter = 1;
-    }
-    return edge;
-}
-
-double circle_frac(double r) {
-    double rl = (fabs(r) < 1.) ? fabs(r):1.; 
-    double a_slice = 2.*(M_PI/4. - rl*sqrt(1.-rl*rl)/2. - asin(rl)/2.);
-    double in_frac = 1.-a_slice/M_PI;
-    if(r < 0.) in_frac = a_slice/M_PI;
-    return in_frac;
-}
-
-double circle_frac_simp(double r, double angle_factor) {
-    double slice_0 = circle_frac(r);
-    double slice_p = circle_frac(r+angle_factor);
-    double slice_m = circle_frac(r-angle_factor);
-    return (slice_p + 4.*slice_0 + slice_m)/6.;
-}
-
-double contained_frac(double x, double y, double pitch, double gap,  
-                      double r, double costh, double phi) {
-    // Get the projected angles for the gap
-    double tanth = sqrt(1.-costh*costh)/costh;
-    double gap_x = gap - 40.*sin(phi)*tanth; //was 20 in RR185
-    if(gap_x < 5.) gap_x = 5.;
-    double gap_y = gap - 40.*cos(phi)*tanth;
-    if(gap_y < 5.) gap_y = 5.; 
-    
-    // X Edges
-    double x_twr = signC(x)*(fmod(fabs(x),pitch) - pitch/2.);
-    double edge = pitch/2. - fabs(x_twr);
-    double r_frac_plus = (edge-gap_x/2.)/r; 
-    double angle_factor = sin(phi)*(1./costh - 1.);
-    double in_frac_x  =  circle_frac_simp(r_frac_plus, angle_factor);
-    if(fabs(x) < 1.5*pitch) { // X edge is not outside limit of LAT
-        double r_frac_minus = (edge + gap_x/2.)/r;
-        in_frac_x += circle_frac_simp(-r_frac_minus, angle_factor);
+        r_frac_plus = (edge-gap_y/2.)/r; 
+        angle_factor = cos(phi)*(1./costh - 1.);
+        double in_frac_y  =  circle_frac_simp(r_frac_plus, angle_factor);
+        if(fabs(y) < 1.5*pitch) { // X edge is not outside limit of LAT
+            double r_frac_minus = (edge + gap_y/2.)/r;
+            in_frac_y += circle_frac_simp(-r_frac_minus, angle_factor);
+        }
+        
+        // Cross term assumes x and y are independent 
+        double in_frac = 1.;
+        if(in_frac_x > .999) in_frac = in_frac_y;
+        else if(in_frac_y > .999) in_frac = in_frac_x; 
+        else in_frac = 1. - (1.-in_frac_x) - (1.-in_frac_y) + 
+            (1.-in_frac_x)*(1.-in_frac_y);  //Cross Term Correction?  
+        if(in_frac < .01) in_frac = .01;
+        
+        return in_frac;
     }
     
-    // Y Edges
-    double y_twr = signC(y)*(fmod(fabs(y),pitch) - pitch/2.);
-    edge = pitch/2. - fabs(y_twr);
-    r_frac_plus = (edge-gap_y/2.)/r; 
-    angle_factor = cos(phi)*(1./costh - 1.);
-    double in_frac_y  =  circle_frac_simp(r_frac_plus, angle_factor);
-    if(fabs(y) < 1.5*pitch) { // X edge is not outside limit of LAT
-        double r_frac_minus = (edge + gap_y/2.)/r;
-        in_frac_y += circle_frac_simp(-r_frac_minus, angle_factor);
+    double beta(double E) {
+        // Following expression for b (beta) comes from CalRecon
+        // double beta      = exp(0.031*log(CAL_EnergySum/1000.))/2.29;
+        // The above expression gives too small values
+        
+        // double b      = exp(0.031*log(E/1000.))/1.95;  //RR175
+        double b      = exp(0.031*log(E/1000.))/2.3;    //RR176
+        return b;
     }
     
-    // Cross term assumes x and y are independent 
-    double in_frac = 1.;
-    if(in_frac_x > .999) in_frac = in_frac_y;
-    else if(in_frac_y > .999) in_frac = in_frac_x; 
-    else in_frac = 1. - (1.-in_frac_x) - (1.-in_frac_y) + 
-        (1.-in_frac_x)*(1.-in_frac_y);  //Cross Term Correction?  
-    if(in_frac < .01) in_frac = .01;
+    double alpha(double E) {
+        // Following expression for a (alpha) comes from CalRecon
+        // double alpha      = 2.65*exp(0.15*log(E/1000.));
+        // The above expression gives too large values
+        
+        //  double a = 2.75*exp(0.14*log(E/1000.));  //RR175
+        //  double a = 2.90*exp(0.115*log(E/1000.)); //RR176
+        //  double a = 2.70*exp(0.15*log(E/1000.));  //RR179
+        //  double a = 2.50*exp(0.18*log(E/1000.));  //RR180
+        double a = 2.50*exp(0.19*log(E/1000.));    //RR182
+        return a;
+    }
     
-    return in_frac;
-}
-
-double beta(double E) {
-    // Following expression for b (beta) comes from CalRecon
-    // double beta      = exp(0.031*log(CAL_EnergySum/1000.))/2.29;
-    // The above expression gives too small values
+    double gamma_alpha(double a, double b) {
+        double val = TMath::Gamma(a+1., b)/TMath::Gamma(a, b); 
+        return val;
+    }
     
-    // double b      = exp(0.031*log(E/1000.))/1.95;  //RR175
-    double b      = exp(0.031*log(E/1000.))/2.3;    //RR176
-    return b;
-}
-
-double alpha(double E) {
-    // Following expression for a (alpha) comes from CalRecon
-    // double alpha      = 2.65*exp(0.15*log(E/1000.));
-    // The above expression gives too large values
+    double erf_cal(double x) {
+        double t = 1./(1.+.47047*x);
+        double results = 1. -(.34802 - (.09587 -.74785*t)*t)*t*exp(-x*x);
+        return results;
+    }
+    double cal_trans(double x) {
+        if(x < 0) return (.5*(1. + erf_cal(-x)));
+        else      return (.5*(1. - erf_cal( x)));
+    }
     
-    //  double a = 2.75*exp(0.14*log(E/1000.));  //RR175
-    //  double a = 2.90*exp(0.115*log(E/1000.)); //RR176
-    //  double a = 2.70*exp(0.15*log(E/1000.));  //RR179
-    //  double a = 2.50*exp(0.18*log(E/1000.));  //RR180
-    double a = 2.50*exp(0.19*log(E/1000.));    //RR182
-    return a;
 }
-
-double gamma_alpha(double a, double b) {
-    double val = TMath::Gamma(a+1., b)/TMath::Gamma(a, b); 
-    return val;
-}
-
-double erf_cal(double x) {
-    double t = 1./(1.+.47047*x);
-    double results = 1. -(.34802 - (.09587 -.74785*t)*t)*t*exp(-x*x);
-    return results;
-}
-double cal_trans(double x) {
-    if(x < 0) return (.5*(1. + erf_cal(-x)));
-    else      return (.5*(1. - erf_cal( x)));
-}
-
 
 class CalValsTool :   public ValBase
 {
@@ -171,14 +172,12 @@ public:
 private:
     
     // some pointers to services
-    
-    
-    /// pointer to tracker geometry
-    ITkrGeometrySvc*       pTkrGeoSvc;
-    
+        
     IKalmanParticle*       pKalParticle;   
     /// the GlastDetSvc used for access to detector info
     IGlastDetSvc*    m_detSvc; 
+    /// store the towerPitch
+    double m_towerPitch;
     /// 
     //IPropagatorSvc* m_propSvc;
     
@@ -238,33 +237,30 @@ StatusCode CalValsTool::initialize()
     StatusCode sc = StatusCode::SUCCESS;
     
     MsgStream log(msgSvc(), name());
-
+    
     if( ValBase::initialize().isFailure()) return StatusCode::FAILURE;
-
+    
     // get the services
     
     if( serviceLocator() ) {
-
-         sc = serviceLocator()->service( "TkrGeometrySvc", pTkrGeoSvc, true );
-        if(sc.isFailure()) {
-            log << MSG::ERROR << "Could not find TkrGeometrySvc" << endreq;
-            return sc;
-        }                
-        // now try to find the GlastDevSvc service
+        
+        // find the GlastDevSvc service
         if (service("GlastDetSvc", m_detSvc).isFailure()){
             log << MSG::ERROR << "Couldn't find the GlastDetSvc!" << endreq;
             return StatusCode::FAILURE;
         }
-        
+        m_detSvc->getNumericConstByName("towerPitch", &m_towerPitch);
+
         /*
+        // getting ready for this.
         if (service("GlastPropagatorSvc", m_propSvc).isFailure()) {
-            log << MSG::ERROR << "Couldn't find the GlastPropagatorSvc!" << endreq;
-            return StatusCode::FAILURE;
+        log << MSG::ERROR << "Couldn't find the GlastPropagatorSvc!" << endreq;
+        return StatusCode::FAILURE;
         }
-
-        pKalParticle = m_propSvc->getPropagator();
+        
+          pKalParticle = m_propSvc->getPropagator();
         */
-
+        
         // Which propagator to use?
         int m_PropagatorType = 1; 
         IPropagatorTool* propTool = 0;
@@ -272,7 +268,7 @@ StatusCode CalValsTool::initialize()
         {
             // Look for the G4PropagatorSvc service
             sc = toolSvc()->retrieveTool("G4PropagatorTool", propTool);
-
+            
             if( sc.isFailure()) {
                 log << MSG::ERROR <<"Couldn't retrieve G4PropagatorTool" << endreq;
                 return sc;
@@ -290,13 +286,13 @@ StatusCode CalValsTool::initialize()
             log << MSG::INFO << "Using Gismo Particle Propagator" << endreq;
         }
         pKalParticle = propTool->getPropagator(); 
-    
+        
     } else {
         return StatusCode::FAILURE;
     }
     
     // load up the map
-
+    
     m_ntupleMap["CAL_EnergySum"] =   &CAL_EnergySum;
     m_ntupleMap["CAL_Energy_Corr"] = &CAL_Energy_Corr;
     m_ntupleMap["CAL_EneSum_Corr"] = &CAL_EneSum_Corr;
@@ -346,10 +342,14 @@ StatusCode CalValsTool::calculate()
     StatusCode sc = StatusCode::SUCCESS;
     
     // Recover Track associated info. 
-    SmartDataPtr<Event::TkrFitTrackCol>  pTracks(m_pEventSvc,EventModel::TkrRecon::TkrFitTrackCol);
-    SmartDataPtr<Event::TkrVertexCol>     pVerts(m_pEventSvc,EventModel::TkrRecon::TkrVertexCol);
-    SmartDataPtr<Event::TkrClusterCol> pClusters(m_pEventSvc,EventModel::TkrRecon::TkrClusterCol);
-    SmartDataPtr<Event::CalClusterCol>     pCals(m_pEventSvc,EventModel::CalRecon::CalClusterCol);
+    SmartDataPtr<Event::TkrFitTrackCol>  
+        pTracks(m_pEventSvc,EventModel::TkrRecon::TkrFitTrackCol);
+    SmartDataPtr<Event::TkrVertexCol>     
+        pVerts(m_pEventSvc,EventModel::TkrRecon::TkrVertexCol);
+    SmartDataPtr<Event::TkrClusterCol> 
+        pClusters(m_pEventSvc,EventModel::TkrRecon::TkrClusterCol);
+    SmartDataPtr<Event::CalClusterCol>     
+        pCals(m_pEventSvc,EventModel::CalRecon::CalClusterCol);
     
     
     
@@ -372,7 +372,7 @@ StatusCode CalValsTool::calculate()
         CAL_ydir        = cal_dir.y();
         CAL_zdir        = cal_dir.z();
         
-        double twr_pitch = pTkrGeoSvc->towerPitch(); 
+        double twr_pitch = m_towerPitch;
         int iView = 0;
         int outside = 0;
         CAL_TwrEdge = twrEdgeC(CAL_x0, CAL_y0, twr_pitch, iView, outside);
@@ -386,7 +386,8 @@ StatusCode CalValsTool::calculate()
         
         // Get the first track
         Event::TkrFitConPtr pTrack1 = pTracks->begin();
-        Event::TkrKalFitTrack* track_1  = dynamic_cast<Event::TkrKalFitTrack*>(*pTrack1);
+        Event::TkrKalFitTrack* track_1  
+            = dynamic_cast<Event::TkrKalFitTrack*>(*pTrack1);
         
         // Get the start and direction 
         Point  x0 = track_1->getPosition();
@@ -412,7 +413,8 @@ StatusCode CalValsTool::calculate()
         double x_diff_sq = x_diff*x_diff;
         double x_diff_t0 = x_diff*t0;
         CAL_Track_DOCA = sqrt(x_diff_sq - x_diff_t0*x_diff_t0);
-        double cosCalt0 = -t0*cal_dir; // The direction in Cal is opposite to tracking!
+        // The direction in Cal is opposite to tracking!
+        double cosCalt0 = -t0*cal_dir; 
         CAL_Track_Angle = acos(cosCalt0);
         
         // Section to apply edge and leakage correction to Cal data. 
@@ -446,7 +448,8 @@ StatusCode CalValsTool::calculate()
         // This increasingly matters below 1000 MeV.
         if(num_tracks > 1) {
             pTrack1++;
-            Event::TkrKalFitTrack* track_2  = dynamic_cast<Event::TkrKalFitTrack*>(*pTrack1);
+            Event::TkrKalFitTrack* track_2  
+                = dynamic_cast<Event::TkrKalFitTrack*>(*pTrack1);
             Event::TkrFitTrackBase::TrackEnd end = Event::TkrFitTrackBase::End; 
             Ray trj_1 = Ray(track_1->getPosition(end), track_1->getDirection(end)); 
             Ray trj_2 = Ray(track_2->getPosition(end), track_2->getDirection(end));
@@ -488,16 +491,17 @@ StatusCode CalValsTool::calculate()
             double arc_len = (pos_Layer[i] - pos).magnitude();
             Point xyz_layer = axis.position(-arc_len);
             
-            double in_frac_soft = contained_frac(xyz_layer.x(), xyz_layer.y(), twr_pitch, gap,  
-                rm_soft, costh, phi_90);
+            double in_frac_soft = contained_frac(xyz_layer.x(), xyz_layer.y(), 
+                twr_pitch, gap, rm_soft, costh, phi_90);
             
             // Cut off correction upon leaving (through a side)
             if(in_frac_soft < .5) break;
             
-            double in_frac_hard = contained_frac(xyz_layer.x(), xyz_layer.y(), twr_pitch, gap,  
-                rm_hard, costh, phi_90);
+            double in_frac_hard = contained_frac(xyz_layer.x(), xyz_layer.y(), 
+                twr_pitch, gap, rm_hard, costh, phi_90);
             
-            double corr_factor = 1./((1.-hard_frac)*in_frac_soft + hard_frac*in_frac_hard);
+            double corr_factor 
+                = 1./((1.-hard_frac)*in_frac_soft + hard_frac*in_frac_hard);
             if(corr_factor > max_corr) corr_factor = max_corr;  
             double ene_corr = ene_Layer[i]*corr_factor;
             ene_sum_corr += ene_corr;

@@ -20,6 +20,7 @@ public:
 
 typedef std::map<std::string, double*> valMap;
 typedef valMap::iterator mapIter;
+typedef valMap::const_iterator constMapIter;
 
     ValBase(const std::string& type, 
             const std::string& name, 
@@ -29,11 +30,6 @@ typedef valMap::iterator mapIter;
     
     /// clear map values
     virtual void zeroVals();
-    /// fill ntuple values into tupleSvc
-    virtual StatusCode fillNtuple(INTupleWriterSvc* pSvc, std::string tupleName);
-    /// put one value into the ntuple
-    virtual StatusCode fillNtuple(INTupleWriterSvc* pSvc,
-        std::string tupleName, std::string varName);
     /// check if calculation is already done for this event
     virtual StatusCode doCalcIfNotDone();
     /// get a particular value, using ntuple name
@@ -41,9 +37,11 @@ typedef valMap::iterator mapIter;
     /// output the list of names
     virtual void announceBadName(std::string varName);
     /// output the names and values, either all (default) or just one;
-    virtual void browseValues(std::string varName = "");
+    virtual StatusCode browse(std::string varName = "");
     /// this is called by the incident service at the beginning of an event
     virtual void handle(const Incident& inc);
+    /// callback for visitor
+    virtual ValsVisitor::eVisitorRet traverse(ValsVisitor* v);
     
     /// calculate all values, over-ridden by XxxValsTool
     virtual StatusCode calculate();

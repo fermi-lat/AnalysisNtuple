@@ -9,7 +9,6 @@
 
 #include "Event/TopLevel/EventModel.h"
 #include "Event/TopLevel/Event.h"
-#include "ntupleWriterSvc/INTupleWriterSvc.h"
 
 ValBase::ValBase(const std::string& type, 
                          const std::string& name, 
@@ -63,25 +62,7 @@ void ValBase::zeroVals()
     }
 }
 
-StatusCode ValBase::fillNtuple(INTupleWriterSvc* pSvc, 
-                               std::string tupleName,
-                               std::string varName) 
-{
-    StatusCode sc = StatusCode::SUCCESS;
-    
-    mapIter it = m_ntupleMap.find(varName);
-    if (it==m_ntupleMap.end()) {
-        announceBadName(varName);
-        return StatusCode::FAILURE;
-    } else {
-        sc = doCalcIfNotDone();
-        double value = *(it->second);
-        if ((sc = pSvc->addItem(tupleName.c_str(), varName.c_str(), value)).isFailure()) return sc;
-    }
-    return sc;
-}
-
-void ValBase::browseValues(std::string varName) 
+StatusCode ValBase::browse(std::string varName) 
 {
     MsgStream log(msgSvc(), name());
 
@@ -89,13 +70,15 @@ void ValBase::browseValues(std::string varName)
     std::string separator = " ";
     std::string indent    = "    ";
     
+    if(doCalcIfNotDone().isFailure()) return StatusCode::FAILURE;
+    
     if (varName!="") {
         std::cout  << " Variable " ;
     } else {
         std::cout   << " Values of the variables:" << std::endl << indent;
     }
     int length = indent.size();
-    mapIter it = m_ntupleMap.begin();
+    constMapIter it = m_ntupleMap.begin();
     for (it; it!=m_ntupleMap.end(); it++) {
         if (varName!="" && varName!=it->first) continue;
         length += (it->first).size() + 2*delim.size() + separator.size() + 15;
@@ -106,20 +89,7 @@ void ValBase::browseValues(std::string varName)
         std::cout  << delim << it->first << delim << ": " << *(it->second) << " ";
     }
     std::cout << std::endl;
-}
-
-StatusCode ValBase::fillNtuple (INTupleWriterSvc* pSvc, std::string tupleName) 
-{
-    StatusCode sc = StatusCode::SUCCESS;
-    
-    sc = doCalcIfNotDone();
-    mapIter it = m_ntupleMap.begin();
-    for (it; it!=m_ntupleMap.end(); it++) {
-        std::string varName = it->first;
-        double value       = *(it->second);
-        if ((sc = pSvc->addItem(tupleName.c_str(), varName.c_str(), value)).isFailure()) return sc;
-    }
-    return sc;
+    return StatusCode::SUCCESS;
 }
 
 StatusCode ValBase::doCalcIfNotDone()
@@ -140,34 +110,34 @@ StatusCode ValBase::doCalcIfNotDone()
     if(m_newEvent) {
         zeroVals();
         sc = calculate();
-        std::cout << "calculation done for this event" << std::endl;
+        //std::cout << "calculation done for this event" << std::endl;
         m_newEvent = false;
     }
     return sc;
 }       
 
 
-StatusCode ValBase::getVal(std::string varName, double& value) {
-    
+StatusCode ValBase::getVal(std::string varName, double& value)
+{
     StatusCode sc = StatusCode::SUCCESS;
     
-    mapIter it = m_ntupleMap.find(varName);
+    constMapIter it = m_ntupleMap.find(varName);
     
     if (it==m_ntupleMap.end()) { 
         announceBadName(varName); 
         return StatusCode::FAILURE;
     } else {
-        sc = doCalcIfNotDone();
+        if(doCalcIfNotDone().isFailure()) return StatusCode::FAILURE;
         value = *(it->second);
     }
     return sc;
 }
 
-void ValBase::announceBadName(std::string varName) {
-
+void ValBase::announceBadName(std::string varName)  
+{
     MsgStream log(msgSvc(), name());
 
-    mapIter it = m_ntupleMap.begin();
+    mapIter it;
     
     std::string delim     = "\"";
     std::string separator = " ";
@@ -198,13 +168,33 @@ StatusCode ValBase::calculate() {
 }
 
 void ValBase::handle(const Incident & inc) 
-{
-    
+{    
     MsgStream log(msgSvc(), name());
 
     if(inc.type()=="BeginEvent") {
-        std::cout << "handle called at BeginEvent" << std::endl;
+        //std::cout << "handle called at BeginEvent" << std::endl;
         m_newEvent = true;
     }
 }
+
+ValsVisitor::eVisitorRet ValBase::traverse(ValsVisitor* v)
+{
+    StatusCode sc;
+
+    ValsVisitor::eVisitorRet ret = ValsVisitor::DONE;
+    constMapIter it = m_ntupleMap.begin();
+
+    if(doCalcIfNotDone().isFailure()) return ValsVisitor::ERROR;
+   
+    for (it; it!=m_ntupleMap.end(); it++) {
+        double value = *(it->second);
+        ret = v->analysisValue(it->first, value);
+        if (ret!= ValsVisitor::CONT) return ret;
+    }
+    
+    return ValsVisitor::DONE;
+}
+
+
+
 

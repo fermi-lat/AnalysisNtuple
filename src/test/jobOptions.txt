@@ -19,8 +19,8 @@ EventSelector.Input = "NONE";
 //  Geometry definition
 //
 
-ApplicationMgr.DLLs += {"GlastSvc"};
-ApplicationMgr.DLLs += {"Recon"};
+ApplicationMgr.DLLs+= {"RootIo", "GlastSvc", "G4Propagator", "Recon", "TkrUtil"};
+ApplicationMgr.DLLs+= {"AnalysisNtuple"};
 
 
 
@@ -28,23 +28,32 @@ ApplicationMgr.DLLs += {"Recon"};
 //  topalg
 //
 ApplicationMgr.TopAlg = {
-	"test_AnalysisNtuple"
+    "mcRootReaderAlg",
+    "digiRootReaderAlg",
+    "reconRootReaderAlg",
+    "test_AnalysisNtuple"
     };
 
-//Remove some towers and layers
-ApplicationMgr.DLLs+= {"TkrUtil"};
-ApplicationMgr.DLLs+= {"AnalysisNtuple"};
+mcRootReaderAlg.mcRootFile="$(ANALYSISNTUPLEROOT)/src/test/mc.root";
+
+digiRootReaderAlg.digiRootFile="$(ANALYSISNTUPLEROOT)/src/test/digi.root";
+
+reconRootReaderAlg.ReconRootFile="$(ANALYSISNTUPLEROOT)/src/test/recon.root";
+
 
 
 // Set output level threshold (2=DEBUG, 3=INFO, 4=WARNING, 5=ERROR, 6=FATAL )
+
 MessageSvc.OutputLevel = 2;
-ApplicationMgr.EvtMax = 1;
+test_AnalysisNtuple.OutputLevel = 2;
+ToolSvc.OutputLevel = 4;
+ApplicationMgr.EvtMax = 2;
+
 
 //==============================================================
 //
 // End of job options file
 //
 //##############################################################
-
 
 

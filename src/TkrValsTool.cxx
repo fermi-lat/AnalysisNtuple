@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.3 2003/02/24 22:12:36 burnett Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.4 2003/02/25 02:36:58 lsrea Exp $
 
 // Include files
 
@@ -33,36 +33,39 @@
 #define M_PI = 3.14159265358979323846
 #endif
 
-double sign(double x) { return (x<0.) ? -1.:1.;} 
-
-double twrEdgeT(double x, double y, double pitch, int &XY, int &outter) {
-    double edge = 0.; 
-    double x_twr = sign(x)*(fmod(fabs(x),pitch) - pitch/2.);
-    double y_twr = sign(y)*(fmod(fabs(y),pitch) - pitch/2.);
+namespace {
+    const int _nTowers = 4;
     
-    outter = 0; 
+    double sign(double x) { return (x<0.) ? -1.:1.;} 
     
-    if(fabs(x_twr) > fabs(y_twr)) {
-        edge = pitch/2. - fabs(x_twr);
-        XY = 1; 
-        if(fabs(x) > 1.5*pitch) outter = 1;
+    double twrEdgeT(double x, double y, double pitch, int &XY, int &outer) {
+        double edge = 0.; 
+        double x_twr = sign(x)*(fmod(fabs(x),pitch) - pitch/2.);
+        double y_twr = sign(y)*(fmod(fabs(y),pitch) - pitch/2.);
+        
+        outer = 0; 
+        
+        if(fabs(x_twr) > fabs(y_twr)) {
+            edge = pitch/2. - fabs(x_twr);
+            XY = 1; 
+            if(fabs(x) > 0.5*(_nTowers-1)*pitch) outer = 1;
+        }
+        else {
+            edge = pitch/2. - fabs(y_twr);
+            XY = 2;
+            if(fabs(y) > 0.5*(_nTowers-1)*pitch) outer = 1;
+        }
+        return edge;
     }
-    else {
-        edge = pitch/2. - fabs(y_twr);
-        XY = 2;
-        if(fabs(y) > 1.5*pitch) outter = 1;
-    }
-    return edge;
+    
+    double circle_fracT(double r) {
+        double rl = (fabs(r) < 1.) ? fabs(r):1.; 
+        double a_slice = 2.*(M_PI/4. - rl*sqrt(1.-rl*rl)/2. - asin(rl)/2.);
+        double in_frac = 1.-a_slice/M_PI;
+        if(r < 0.) in_frac = a_slice/M_PI;
+        return in_frac;
+    }    
 }
-
-double circle_fracT(double r) {
-    double rl = (fabs(r) < 1.) ? fabs(r):1.; 
-    double a_slice = 2.*(M_PI/4. - rl*sqrt(1.-rl*rl)/2. - asin(rl)/2.);
-    double in_frac = 1.-a_slice/M_PI;
-    if(r < 0.) in_frac = a_slice/M_PI;
-    return in_frac;
-}    
-
 
 class TkrValsTool :  public ValBase 
 {
@@ -88,7 +91,7 @@ private:
     ITkrQueryClustersTool* pQueryClusters;
     /// 
     //IPropagatorSvc* m_propSvc;
- 
+    
     IKalmanParticle*       pKalParticle;
     
     
@@ -180,7 +183,7 @@ StatusCode TkrValsTool::initialize()
     StatusCode sc = StatusCode::SUCCESS;
     
     MsgStream log(msgSvc(), name());
-
+    
     if((ValBase::initialize()).isFailure()) return StatusCode::FAILURE;
     
     // get the services
@@ -192,7 +195,7 @@ StatusCode TkrValsTool::initialize()
             log << MSG::ERROR << "Could not find TkrGeometrySvc" << endreq;
             return sc;
         }
-                
+        
         sc = toolSvc()->retrieveTool("TkrQueryClustersTool", pQueryClusters);
         if (sc.isFailure()) {
             log << MSG::ERROR << "Couldn't retrieve TkrQueryClusterTool" << endreq;
@@ -202,11 +205,11 @@ StatusCode TkrValsTool::initialize()
         /*
         // this doesn't seem quite ready, or I don't know how to use it
         if (service("GlastPropagatorSvc", m_propSvc).isFailure()) {
-            log << MSG::ERROR << "Couldn't find the GlastPropagatorSvc!" << endreq;
-            return StatusCode::FAILURE;
+        log << MSG::ERROR << "Couldn't find the GlastPropagatorSvc!" << endreq;
+        return StatusCode::FAILURE;
         }
-
-        pKalParticle = m_propSvc->getPropagator();
+        
+          pKalParticle = m_propSvc->getPropagator();
         */
         
         // Which propagator to use?
@@ -225,11 +228,11 @@ StatusCode TkrValsTool::initialize()
             log << MSG::INFO << "Using Gismo Particle Propagator" << endreq;
         }
         pKalParticle = propTool->getPropagator();     
-
+        
     } else {
         return StatusCode::FAILURE;
     }
-
+    
     // load up the map
     
     m_ntupleMap["TKR_No_Tracks"]    = &Tkr_No_Tracks;
@@ -518,8 +521,9 @@ StatusCode TkrValsTool::calculate()
             }
             double xSprd = sqrt(4.+xms*16.); // 4.0 sigma and not smaller then 2mm (was 2.5 sigma)
             double ySprd = sqrt(4.+yms*16.); // Limit to a tower... 
-            if(xSprd > pTkrGeoSvc->trayWidth()/2.) xSprd = pTkrGeoSvc->trayWidth()/2.;
-            if(ySprd > pTkrGeoSvc->trayWidth()/2.) ySprd = pTkrGeoSvc->trayWidth()/2.;
+            double halfTray = 0.5*pTkrGeoSvc->trayWidth();
+            if(xSprd > halfTray) xSprd = halfTray;
+            if(ySprd > halfTray) ySprd = halfTray   ;
             
             // Assume location of shower center is given by 1st track
             Point x_hit = x1 + arc_len*t1;
