@@ -1,6 +1,10 @@
 /** @file release.notes
   @brief Package AnalysisNtule
   @verbatim
+ v1r8p13 04-Jun-04   LSR  Lots of changes:
+                             Handle incomplete LAT
+                             Consolidate common code in Tkr/CalValsTool
+                             Add Tkr1/2LastLayer, Tkr2Theta
  v1r8p12 22-Mar-04   HMK  Add Acd counts for top and last row side tiles
  v1r8p11 19-Feb-04   LSR  Disable ntuple writing by default, also 1st attempt to bullet-proof McAnalValsTool
  v1r8p10 19-Feb-04   TU   Modify McAnalValsTool for new McToolBox interface

@@ -1,8 +1,9 @@
+    
 /** @file CalValsTool.cxx
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.37 2003/12/19 05:38:12 atwood Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.38 2004/01/13 01:34:18 lsrea Exp $
 */
 
 // Include files
@@ -43,85 +44,6 @@
 namespace {
 
     // M_PI defined in ValBase.h
-    
-    double signC(double x) { return (x<0.) ? -1.:1.;} 
- 
-    double activeDist(double x, double y, double xpitch, double ypitch, int nx, int ny, int &XY, int &outer) {
-        double edge = 0.; 
-        double x_twr = signC(x)*(fmod(fabs(x),xpitch) - xpitch/2.);
-        double y_twr = signC(y)*(fmod(fabs(y),ypitch) - ypitch/2.);
-        
-        outer = 0; 
-        
-        if(fabs(x_twr)/xpitch > fabs(y_twr)/ypitch) {
-            edge = xpitch/2. - fabs(x_twr);
-            XY = 1; 
-            if(fabs(x) > 0.5*(nx-1)*xpitch) outer = 1;
-        }
-        else {
-            edge = ypitch/2. - fabs(y_twr);
-            XY = 2;
-            if(fabs(y) > 0.5*(ny-1)*ypitch) outer = 1;
-        }
-        return edge;
-    }
-    
-    double circle_frac(double r) {
-        double rl = (fabs(r) < 1.) ? fabs(r):1.; 
-        double a_slice = 2.*(M_PI/4. - rl*sqrt(1.-rl*rl)/2. - asin(rl)/2.);
-        double in_frac = 1.-a_slice/M_PI;
-        if(r < 0.) in_frac = a_slice/M_PI;
-        return in_frac;
-    }
-    
-    double circle_frac_simp(double r, double angle_factor) {
-        double slice_0 = circle_frac(r);
-        double slice_p = circle_frac(r+angle_factor);
-        double slice_m = circle_frac(r-angle_factor);
-        return (slice_p + 4.*slice_0 + slice_m)/6.;
-    }
-    
-    double contained_frac(double x, double y, int nx, int ny, double pitch, double gap,  
-        double r, double costh, double phi) {
-        // Get the projected angles for the gap
-        double tanth = sqrt(1.-costh*costh)/costh;
-        double gap_x = gap - 40.*sin(phi)*tanth; //was 20 in RR185
-        if(gap_x < 5.) gap_x = 5.;
-        double gap_y = gap - 40.*cos(phi)*tanth;
-        if(gap_y < 5.) gap_y = 5.; 
-        
-        // X Edges
-        double x_twr = signC(x)*(fmod(fabs(x),pitch) - pitch/2.);
-        double edge = pitch/2. - fabs(x_twr);
-        double r_frac_plus = (edge-gap_x/2.)/r; 
-        double angle_factor = sin(phi)*(1./costh - 1.);
-        double in_frac_x  =  circle_frac_simp(r_frac_plus, angle_factor);
-        if(fabs(x) < 0.5*(nx-1)*pitch) { // X edge is not outside limit of LAT
-            double r_frac_minus = (edge + gap_x/2.)/r;
-            in_frac_x += circle_frac_simp(-r_frac_minus, angle_factor);
-        }
-        
-        // Y Edges
-        double y_twr = signC(y)*(fmod(fabs(y),pitch) - pitch/2.);
-        edge = pitch/2. - fabs(y_twr);
-        r_frac_plus = (edge-gap_y/2.)/r; 
-        angle_factor = cos(phi)*(1./costh - 1.);
-        double in_frac_y  =  circle_frac_simp(r_frac_plus, angle_factor);
-        if(fabs(y) < 0.5*(ny-1)*pitch) { // X edge is not outside limit of LAT
-            double r_frac_minus = (edge + gap_y/2.)/r;
-            in_frac_y += circle_frac_simp(-r_frac_minus, angle_factor);
-        }
-        
-        // Cross term assumes x and y are independent 
-        double in_frac = 1.;
-        if(in_frac_x > .999) in_frac = in_frac_y;
-        else if(in_frac_y > .999) in_frac = in_frac_x; 
-        else in_frac = 1. - (1.-in_frac_x) - (1.-in_frac_y) + 
-            (1.-in_frac_x)*(1.-in_frac_y);  //Cross Term Correction?  
-        if(in_frac < .01) in_frac = .01;
-        
-        return in_frac;
-    }
     
     double beta(double E) {
         // Following expression for b (beta) comes from CalRecon
@@ -176,6 +98,11 @@ namespace {
       StatusCode calculate();
       
   private:
+
+      double activeDist(Point pos, int& view) const;
+      double containedFraction(Point pos, double gap, 
+                                      double r, double costh, double phi) const;
+
       
       // some pointers to services  
       /// GlastDetSvc used for access to detector info
@@ -291,18 +218,24 @@ namespace {
               return StatusCode::FAILURE;
           }
 
+          /*
           if( m_detSvc->getNumericConstByName("towerPitch", &m_towerPitch).isFailure() ||
               m_detSvc->getNumericConstByName("xNum",  &m_xNum).isFailure() ||
               m_detSvc->getNumericConstByName("yNum",  &m_yNum).isFailure() )  {
               log << MSG::ERROR << "Couldn't get detModel consts" << endreq;
               return StatusCode::FAILURE;
           }
+          */
 
           // find TkrGeometrySvc service
           if (service("TkrGeometrySvc", m_geoSvc, true).isFailure()){
               log << MSG::ERROR << "Couldn't find the TkrGeometrySvc!" << endreq;
               return StatusCode::FAILURE;
           }
+
+          m_towerPitch = m_geoSvc->towerPitch();
+          m_xNum = m_geoSvc->numXTowers();
+          m_yNum = m_geoSvc->numYTowers();
 
           if (getCalInfo().isFailure()) {
                log << MSG::ERROR << "Couldn't initialize the CAL constants" << endreq;
@@ -470,14 +403,11 @@ StatusCode CalValsTool::calculate()
     CAL_ydir        = cal_dir.y();
     CAL_zdir        = cal_dir.z();
     
-    double twr_pitch = m_towerPitch;
-    int iView = 0;
-    int outside = 0;
-    CAL_TwrEdge = activeDist(CAL_xEcntr, CAL_yEcntr, twr_pitch, twr_pitch, 
-                             m_xNum, m_yNum, iView, outside);
+    int view = 0;
+    Point pos(CAL_xEcntr, CAL_yEcntr, 0);
+    CAL_TwrEdge = activeDist(pos, view);
     
-    if(iView==1) CAL_TE_Nrm  = cal_dir.x();
-    else         CAL_TE_Nrm  = cal_dir.y();
+    CAL_TE_Nrm = ( view==0 ? cal_dir.x() : cal_dir.y() );
     
     // with no tracks we've done what we can do.
     if(!pTracks) return sc; 
@@ -552,9 +482,28 @@ StatusCode CalValsTool::calculate()
     Ray trj_1 = Ray(track_1->getPosition(end), track_1->getDirection(end));
     double delta_z = trj_1.position().z() - m_calZTop;
     arc_len = delta_z/fabs(trj_1.direction().z());
-    Point cal_1 = trj_1.position(arc_len); 
-    if(fabs(cal_1.x()) > fabs(cal_1.y())) CAL_LATEdge = m_calXWidth/2. - fabs(cal_1.x());
-    else                                  CAL_LATEdge = m_calYWidth/2. - fabs(cal_1.y());
+    Point cal_1 = trj_1.position(arc_len);
+
+    // this new code below gives the same answer as this commented code
+    //    in the case of the full LAT
+    //if(fabs(cal_1.x()) > fabs(cal_1.y())) CAL_LATEdge = m_calXWidth/2. - fabs(cal_1.x());
+    //else                                  CAL_LATEdge = m_calYWidth/2. - fabs(cal_1.y());
+
+
+    // get the lower and upper limits for the CAL in the installed towers
+    double deltaX = 0.5*(m_xNum*m_towerPitch - m_calXWidth);
+    double deltaY = 0.5*(m_yNum*m_towerPitch - m_calYWidth);
+    double calXLo = m_geoSvc->getLATLimit(0,LOW)  + deltaX;
+    double calXHi = m_geoSvc->getLATLimit(0,HIGH) - deltaX;
+    double calYLo = m_geoSvc->getLATLimit(1,LOW)  + deltaY;
+    double calYHi = m_geoSvc->getLATLimit(1,HIGH) - deltaY;
+
+    // now find the point closest to an edge
+
+    double calX = cal_1.x(); double calY = cal_1.y();
+    double dX = std::max(calXLo-calX, calX-calXHi);
+    double dY = std::max(calYLo-calY, calY-calYHi);
+    CAL_LATEdge = -std::max(dX, dY);
 
     if(num_tracks > 1) {
         pTrack1++;
@@ -599,14 +548,12 @@ StatusCode CalValsTool::calculate()
         double arc_len = (pos_Layer[i] - pos).magnitude();
         Point xyz_layer = axis.position(-arc_len);
         
-        double in_frac_soft = contained_frac(xyz_layer.x(), xyz_layer.y(), 
-            m_xNum, m_yNum, twr_pitch, gap, rm_soft, costh, phi_90);
+        double in_frac_soft = containedFraction(xyz_layer, gap, rm_soft, costh, phi_90);
         
         // Cut off correction upon leaving (through a side)
         if(in_frac_soft < .5) in_frac_soft = .5;
         
-        double in_frac_hard = contained_frac(xyz_layer.x(), xyz_layer.y(), 
-            m_xNum, m_yNum, twr_pitch, gap, rm_hard, costh, phi_90);
+        double in_frac_hard = containedFraction(xyz_layer, gap, rm_hard, costh, phi_90);
         
         double corr_factor 
             = 1./((1.-hard_frac)*in_frac_soft + hard_frac*in_frac_hard);
@@ -631,7 +578,7 @@ StatusCode CalValsTool::calculate()
     // Cal constants, from detModel
     //double cal_top_z = m_calZTop;
     //double cal_depth = -m_calZBot;
-    double cal_half_width = 0.5*std::max(m_calXWidth, m_calYWidth);
+    //double cal_half_width = 0.5*std::max(m_calXWidth, m_calYWidth);
     
     // Now do the leakage correction  
     // First: get the rad.lens. in the tracker 
@@ -650,18 +597,23 @@ StatusCode CalValsTool::calculate()
 
     CAL_z0    = cal_top.z();
     CAL_x0    = cal_top.x();
-    CAL_y0    = cal_top.y();   
+    CAL_y0    = cal_top.y();
+    double xLo = m_geoSvc->getLATLimit(0, LOW);
+    double xHi = m_geoSvc->getLATLimit(0, HIGH);
+    double yLo = m_geoSvc->getLATLimit(1, LOW);
+    double yHi = m_geoSvc->getLATLimit(1, HIGH);
 
     // Only do leakage correction for tracks which "hit" the Calorimeter
-    if(fabs(CAL_x0) > cal_half_width || fabs(CAL_y0) > cal_half_width) return sc; 
+    //if(fabs(CAL_x0) > cal_half_width || fabs(CAL_y0) > cal_half_width) return sc; 
+    if (CAL_x0<xLo || CAL_x0>xHi || CAL_y0<yLo || CAL_y0>yHi) return sc;
 
 
-    double s_xp   = (-cal_half_width + tkr_exit.x())/t_axis.x();
-    double s_xm   = ( cal_half_width + tkr_exit.x())/t_axis.x();
+    double s_xp   = (-xHi + tkr_exit.x())/t_axis.x();
+    double s_xm   = (-xLo + tkr_exit.x())/t_axis.x();
     double s_minx = (s_xp > s_xm) ? s_xp:s_xm; // Choose soln > 0. 
     
-    double s_yp   = (-cal_half_width + tkr_exit.y())/t_axis.y();
-    double s_ym   = ( cal_half_width + tkr_exit.y())/t_axis.y();
+    double s_yp   = (-yHi + tkr_exit.y())/t_axis.y();
+    double s_ym   = (-yLo + tkr_exit.y())/t_axis.y();
     double s_miny = (s_yp > s_ym) ? s_yp:s_ym; // Choose soln > 0. 
     
 //    double s_minz = (m_calZTop - m_calZBot)/t_axis.z();
@@ -691,10 +643,14 @@ StatusCode CalValsTool::calculate()
     for(; istep < numSteps; ++istep) {
         volId = m_G4PropTool->getStepVolumeId(istep);
         volId.prepend(prefix);
+        //std::cout << istep << " " << volId.name() << std::endl;
+        bool inXtal = ( volId.size()>7 && volId[0]==0 
+            && volId[3]==0 && volId[7]==0 ? true : false );
         double radLen_step = m_G4PropTool->getStepRadLength(istep);
         double arcLen_step = m_G4PropTool->getStepArcLen(istep); 
         Point x_step       = m_G4PropTool->getStepPosition(istep);
-        if(volId.size() > 8) { //This indicates being inside a CsI Xtal 
+        if(inXtal) {
+            //std::cout << "inXtal " << volId.name() << " " << arcLen_step << " " << radLen_step << std::endl;
             radLen_CsI  += radLen_step;
             arcLen_CsI  += arcLen_step;
         }
@@ -709,11 +665,10 @@ StatusCode CalValsTool::calculate()
         if(x_step.z() >= CAL_zEcntr) {
             radLen_Cntr += radLen_step;
             arcLen_Cntr += arcLen_step;
-            if(volId.size() < 8) 
-                radLen_CntrStuff += radLen_step;
+            if(!inXtal) radLen_CntrStuff += radLen_step;
         }
     }
-    double t_cal_tot = radLen_CsI + radLen_Stuff; 
+     double t_cal_tot = radLen_CsI + radLen_Stuff; 
     double t_total   = t_tracker  + t_cal_tot;
     
     // Energy centroid in radiation lengths for this event.
@@ -773,7 +728,7 @@ StatusCode CalValsTool::calculate()
     //CAL_Total_Corr  = CAL_Energy_Corr/CAL_EnergySum; 
     CAL_CsI_RLn     = radLen_CsI;
     CAL_MIP_Diff    = CAL_EnergySum - 12.07*radLen_CsI;
-    CAL_MIP_Ratio   = CAL_EnergySum /(12.07*radLen_CsI);
+    CAL_MIP_Ratio   = CAL_EnergySum /(12.07*std::max(radLen_CsI, 0.01));
     CAL_Tot_RLn     = t_total;
     CAL_Cnt_RLn     = t;
     CAL_DeadTot_Rat = radLen_Stuff/t_total;
@@ -797,3 +752,82 @@ StatusCode CalValsTool::getCalInfo()
 
     return StatusCode::SUCCESS;
 }
+
+double CalValsTool::activeDist(Point pos, int &view) const
+{
+    double edge = 0.;
+    double x = pos.x();
+    double y = pos.y();
+    double x_twr = globalToLocal(x, m_towerPitch, m_xNum);
+    double y_twr = globalToLocal(y, m_towerPitch, m_yNum);
+    //double x_twr = sign(x)*(fmod(fabs(x),m_towerPitch) - m_towerPitch/2.);
+    //double y_twr = sign(y)*(fmod(fabs(y),m_towerPitch) - m_towerPitch/2.);
+
+    if( fabs(x_twr) > fabs(y_twr) ) {
+        edge = m_towerPitch/2. - fabs(x_twr);
+        view = 0; 
+    }
+    else {
+        edge = m_towerPitch/2. - fabs(y_twr);
+        view = 1;
+    }
+    return edge;
+}
+
+double CalValsTool::containedFraction(Point pos, double gap, 
+                                      double r, double costh, double phi) const
+{
+    double x = pos.x();
+    double y = pos.y();
+    // Get the projected angles for the gap
+    double tanth = sqrt(1.-costh*costh)/costh;
+    double gap_x = gap - 40.*sin(phi)*tanth; //was 20 in RR185
+    if(gap_x < 5.) gap_x = 5.;
+    double gap_y = gap - 40.*cos(phi)*tanth;
+    if(gap_y < 5.) gap_y = 5.; 
+
+    // X Edges
+    double x_twr = globalToLocal(x, m_towerPitch, m_xNum);
+    //double x_twr = sign(x)*(fmod(fabs(x),m_towerPitch) - m_towerPitch/2.);
+    double edge = m_towerPitch/2. - fabs(x_twr);
+    double r_frac_plus = (edge-gap_x/2.)/r; 
+    double angle_factor = sin(phi)*(1./costh - 1.);
+    double in_frac_x  =  circleFractionSimpson(r_frac_plus, angle_factor);
+    // This should work even for missing towers, 
+    //     because the radlens, etc., come from the propagator
+    //if(fabs(x) < 0.5*(m_geoSvc->numXTowers()-1)*m_towerPitch) { // X edge is not outside limit of LAT
+    if (x>m_geoSvc->getLATLimit(0,LOW)+0.5*m_towerPitch
+        && x<m_geoSvc->getLATLimit(0,HIGH)-0.5*m_towerPitch) 
+    {
+
+        double r_frac_minus = (edge + gap_x/2.)/r;
+        in_frac_x += circleFractionSimpson(-r_frac_minus, angle_factor);
+    }
+
+    // Y Edges
+    //double y_twr = sign(y)*(fmod(fabs(y),m_towerPitch) - m_towerPitch/2.);
+    double y_twr = globalToLocal(y, m_towerPitch, m_yNum);
+    edge = m_towerPitch/2. - fabs(y_twr);
+    r_frac_plus = (edge-gap_y/2.)/r; 
+    angle_factor = cos(phi)*(1./costh - 1.);
+    double in_frac_y  =  circleFractionSimpson(r_frac_plus, angle_factor);
+    //if(fabs(y) < 0.5*(m_geoSvc->numYTowers()-1)*m_towerPitch) { // X edge is not outside limit of LAT
+    if (y>m_geoSvc->getLATLimit(1,LOW)+0.5*m_towerPitch
+        && y<m_geoSvc->getLATLimit(1,HIGH)-0.5*m_towerPitch) 
+    {
+        double r_frac_minus = (edge + gap_y/2.)/r;
+        in_frac_y += circleFractionSimpson(-r_frac_minus, angle_factor);
+    }
+
+    // Cross term assumes x and y are independent 
+    double in_frac = 1.;
+    if(in_frac_x > .999) in_frac = in_frac_y;
+    else if(in_frac_y > .999) in_frac = in_frac_x; 
+    else in_frac = 1. - (1.-in_frac_x) - (1.-in_frac_y) + 
+        (1.-in_frac_x)*(1.-in_frac_y);  //Cross Term Correction?  
+    if(in_frac < .01) in_frac = .01;
+
+    return in_frac;
+}
+
+

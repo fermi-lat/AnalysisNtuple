@@ -2,7 +2,7 @@
 @brief Calculates the Trigger analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.8 2003/03/05 02:03:29 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.9 2003/08/19 18:44:21 lsrea Exp $
 */
 
 // Include files
@@ -66,7 +66,7 @@ private:
     double Trig_layer;
     double Trig_total; 
     double Trig_numTowers;
-    double Trig_type; // was: 1= corner, 2 = side, 3 = core, now number of exposed sides
+    double Trig_type; // was: 1= corner, 2 = side, 3 = core, now number of exposed sides (0-4)
     double Trig_moment; 
     double Trig_zDir; 
 };
@@ -226,6 +226,8 @@ StatusCode GltValsTool::calculate()
         // Now classify according to tower type
         // new classification is number of exposed sides
         if(iTrig_tower >= 0) {
+            iTrig_type = pTkrGeoSvc->getTowerType(iTrig_tower);
+            /*
             idents::TowerId towerId = idents::TowerId(iTrig_tower);
             xTower = towerId.ix();
             yTower = towerId.iy();
@@ -234,6 +236,7 @@ StatusCode GltValsTool::calculate()
             if (xTower==nXTowers-1) iTrig_type++;
             if (yTower==0)          iTrig_type++;
             if (yTower==nYTowers-1) iTrig_type++;
+            */
         }
 
         // Now find the average location of all hits

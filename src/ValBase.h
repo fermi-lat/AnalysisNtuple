@@ -2,7 +2,7 @@
 @brief header file for ValBase.cxx
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.h,v 1.19 2003/10/12 07:06:43 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.h,v 1.20 2003/10/15 00:24:47 lsrea Exp $
 */
 
 #ifndef ValBase_h
@@ -67,8 +67,35 @@ public:
     
     // common initialization
     virtual StatusCode initialize();
+
+
     
 protected:
+
+    /// some static methods
+
+    /// sign of a number
+    static double sign(double x) { return x>0 ? 1.: -1. ;}
+    /// turn a global coordinate (tower, ladder, wafer) roughly into a local one
+    static double globalToLocal(double x, double pitch, int n) {
+        double xNorm = x/pitch + 0.5*n;
+        return sign(x)*(fmod(fabs(xNorm),1.0) - 0.5)*pitch ;
+    }
+
+    static double circleFraction(double r) {
+        double rl = (fabs(r) < 1.) ? fabs(r):1.; 
+        double a_slice = 2.*(M_PI/4. - rl*sqrt(1.-rl*rl)/2. - asin(rl)/2.);
+        double in_frac = 1.-a_slice/M_PI;
+        if(r < 0.) in_frac = a_slice/M_PI;
+        return in_frac;
+    }
+
+    static double circleFractionSimpson(double r, double angle_factor) {
+        double slice_0 = circleFraction(r);
+        double slice_p = circleFraction(r+angle_factor);
+        double slice_m = circleFraction(r-angle_factor);
+        return (slice_p + 4.*slice_0 + slice_m)/6.;
+    }
     
     /// map containing ntuple names, and pointers to the ntuple variables
     valMap m_ntupleMap;
@@ -84,5 +111,7 @@ protected:
 
     /// count calls to tools
     static int m_calcCount;
+
+
 };
 #endif
