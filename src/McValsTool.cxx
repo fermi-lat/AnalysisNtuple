@@ -2,7 +2,7 @@
 @brief Calculates the Mc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.9 2003/09/03 19:37:50 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.10 2003/09/03 22:11:54 lsrea Exp $
 */
 // Include files
 
@@ -167,8 +167,10 @@ StatusCode McValsTool::calculate()
         Event::McParticle::StdHepId hepid= (*pMCPrimary)->particleProperty();
         MC_Id = (double)hepid;
         ParticleProperty* ppty = m_ppsvc->findByStdHepID( hepid );
-        std::string name = ppty->particle(); 
-        MC_Charge = ppty->charge();
+        if (ppty) {
+            std::string name = ppty->particle(); 
+            MC_Charge = ppty->charge();
+        }
         
         HepPoint3D Mc_x0;
         // launch point for charged particle; conversion point for neutral
