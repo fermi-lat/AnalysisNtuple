@@ -28,14 +28,7 @@ public:
         const std::string& name, 
         const IInterface* parent);
     
-    ~ValBase() 
-    {
-        for (int i=0; i<m_ntupleMap.size(); i++) {
-            valPair* ord = m_ntupleMap[i];
-            delete ord;
-        }
-    }
-    
+    ~ValBase(); 
     /// clear map values
     virtual void zeroVals();
     /// add an item to the map

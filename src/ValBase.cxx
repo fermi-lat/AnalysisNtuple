@@ -53,9 +53,18 @@ StatusCode ValBase::initialize()
     return sc;
 }
 
+ValBase::~ValBase()
+{
+    for (unsigned int i=0; i<m_ntupleMap.size(); i++) {
+        valPair* ord = m_ntupleMap[i];
+        delete ord;
+    }
+}
+
+
 void ValBase::zeroVals()
 {
-    for (int i=0; i<m_ntupleMap.size(); i++) {
+    for (unsigned int i=0; i<m_ntupleMap.size(); i++) {
         *(m_ntupleMap[i]->second) = 0.0;
     }
 }
@@ -86,7 +95,7 @@ StatusCode ValBase::browse(std::string varName)
         std::cout   << " Values of the variables:" << std::endl << indent;
     }
     int length = indent.size();
-    for (int i=0; i<m_ntupleMap.size(); i++) {
+    for (unsigned int i=0; i<m_ntupleMap.size(); i++) {
         valPair* pair = m_ntupleMap[i];
         if (varName!="" && varName!=pair->first) continue;
         length += (pair->first).size() + 2*delim.size() + separator.size() + 15;
@@ -129,7 +138,8 @@ StatusCode ValBase::getVal(std::string varName, double& value)
 {
     StatusCode sc = StatusCode::SUCCESS;
     
-    for (int i=0; i<m_ntupleMap.size(); i++) {
+    unsigned int i=0;
+    for (i=0; i<m_ntupleMap.size(); i++) {
         if (m_ntupleMap[i]->first == varName) break;
     }
     
@@ -194,7 +204,7 @@ ValsVisitor::eVisitorRet ValBase::traverse(ValsVisitor* v)
 
     if(doCalcIfNotDone().isFailure()) return ValsVisitor::ERROR;
 
-    for (int i=0; i<m_ntupleMap.size(); i++) {
+    for (unsigned int i=0; i<m_ntupleMap.size(); i++) {
         valPair* pair = m_ntupleMap[i];
         double value = *(pair->second);
         ret = v->analysisValue(pair->first, value);
