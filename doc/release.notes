@@ -2,7 +2,11 @@
   @brief Package AnalysisNtule
   @verbatim
 
- v1r5p5  17-Jul-03   WBA  Updates to Cal & EvtVals.  Added Giebels last layer energy. Reset b parameter to give more normal values; Implemented energy logic for NoCal Events and included the "best" tracker energy
+ v1r6    17-Jul-03   LSR  Accessed new TkrGeometrySvc methods to remove more hard-wired numbers
+                          Will change results in TkrValsTool
+ v1r5p5  17-Jul-03   WBA  Updates to Cal & EvtVals.  Added Giebels last layer energy
+                          Reset b parameter to give more normal values
+                          Implemented energy logic for NoCal Events and included the "best" tracker energy
  v1r5p4  12-Jun-03   LSR  Got rid a bunch of hardwired numbers 
                              but required a kludge that I don't understand
  v1r5p3  06-Jun-03   WBA  Modify for new geometry (still hardwired numbers... needs a real fix)
