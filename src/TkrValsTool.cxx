@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.18 2003/05/19 15:39:50 atwood Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.19 2003/06/12 00:00:06 atwood Exp $
 */
 
 // Include files
@@ -396,8 +396,6 @@ namespace {
     double rm_soft   = 130;
     double gap       = 18.; 
     double hard_frac = .7; 
-    
-    double minHeight = 26.5;
 }
 
 StatusCode TkrValsTool::calculate()
@@ -579,7 +577,7 @@ StatusCode TkrValsTool::calculate()
         
         // Computation of the tracker contribution to the total energy 
         double costh = fabs(t1.z()); 
-        double arc_min = (x1.z() + minHeight)/costh; 
+        double arc_min = (x1.z() - pTkrGeoSvc->calZTop())/costh; 
         pKalParticle->setStepStart(x1, t1, arc_min);
         //double total_radlen = pKalParticle->radLength(); 
         

@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.23 2003/06/13 00:35:08 lsrea Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.24 2003/07/17 22:49:39 atwood Exp $
 */
 
 // Include files
@@ -194,8 +194,8 @@ namespace {
       StatusCode getCalInfo();
 
       /// CAL vars
-      double m_calWidthX;
-      double m_calWidthY;
+      double m_calXWidth;
+      double m_calYWidth;
       double m_calZTop;
       double m_calZBot;
 
@@ -577,15 +577,15 @@ StatusCode CalValsTool::calculate()
     if (good_layers>0) edge_corr /= good_layers;
     CAL_Edge_Corr = edge_corr; 
     
-    // Set some Calorimeter constants - should come from detModel
+    // Set some Cal constants-- now these come from TkrGeometrySvc
     //double cal_top_z = -45.7;      // Meas off 1 Evt Disp.(29-may-03 - was -26.5) z co-ord. of top of Cal
     //double cal_half_width = 728.3; // measured from 1 Evt Disp - was (4*373.5(Tower Pitch) - 44(Cal Gap))/2
     //double cal_depth = 216.;       // Meas. off 1 Evt disp.. was 8 layers of the calorimeter
 
     // Cal constants, from detModel
-    double cal_top_z = m_calZTop;
+    //double cal_top_z = m_calZTop;
     double cal_depth = -m_calZBot;
-    double cal_half_width = 0.5*std::max(m_calWidthX, m_calWidthY);
+    double cal_half_width = 0.5*std::max(m_calXWidth, m_calYWidth);
     
     // Now do the leakage correction  
     // First: get the rad.lens. in the tracker 
@@ -597,7 +597,7 @@ StatusCode CalValsTool::calculate()
     // Find the distance in Cal to nearest edge along shower axis
     //       Need to check sides as well as back
     Vector t_axis = axis.direction();     // This points in +z direction
-    double s_top  = -(-cal_top_z + axis.position().z())/t_axis.z();
+    double s_top  = -(-m_calZTop + axis.position().z())/t_axis.z();
 	double s_exit = -(axis.position().z())/t_axis.z(); 
     Point cal_top = axis.position(s_top); // Entry point into calorimeter
 	Point tkr_exit= axis.position(s_exit);// Exit point from tracker
@@ -654,7 +654,7 @@ StatusCode CalValsTool::calculate()
 		else {
 			radLen_Stuff += radLen_step;
 			arcLen_Stuff += arcLen_step;
-			if(x_step.z() >= cal_top_z) {
+			if(x_step.z() >= m_calZTop) {
 				radLen_Gap += radLen_step;
 				arcLen_Gap += arcLen_step;
 			}
@@ -740,51 +740,10 @@ StatusCode CalValsTool::calculate()
 
 StatusCode CalValsTool::getCalInfo()
 {
-    MsgStream log(msgSvc(), name());
-
-	double csiLength, csiWidth, csiHeight;
-    double cellHorPitch, cellVertPitch;
-    int nCsiPerLayer, CALnLayer;
-
-    if (m_detSvc->getNumericConstByName("CsILength",  &csiLength).isFailure() ||
-        m_detSvc->getNumericConstByName("CsIHeight",  &csiHeight).isFailure() ||
-        m_detSvc->getNumericConstByName("CsIWidth",   &csiWidth ).isFailure() ||
-        m_detSvc->getNumericConstByName("CALnLayer",  &CALnLayer).isFailure() ||
-        m_detSvc->getNumericConstByName("nCsIPerLayer",  &nCsiPerLayer).isFailure() ||
-        m_detSvc->getNumericConstByName("cellHorPitch",  &cellHorPitch).isFailure() ||
-        m_detSvc->getNumericConstByName("cellVertPitch", &cellVertPitch).isFailure())
-    {return StatusCode::FAILURE;}
-
-    //get the top and bottom of the CAL crystals
-
-    idents::VolumeIdentifier topLayerId;
-    topLayerId.init(0,0);
-    int count;
-    // top layer of the Cal
-	// for some reason not clear yet, which Id is valid depends on what package is running
-	// for the moment, I'll just check them all until I get a good one, and if I don't then
-	// I bail... this is a really horrible kludge... seems to work though
-    for (count=0;count<6;++count) {topLayerId.append(0);} 
-    StatusCode sc;
-    HepTransform3D transfTop;
-	for (count=6;count<9;++count) {
-		topLayerId.append(0);
-        if((sc = m_detSvc->getTransform3DByID(topLayerId,&transfTop)).isSuccess()) break;
-	}
-	if(sc.isFailure()) {
-		log << MSG::ERROR << "Couldn't get Id for layer 0 of CAL" << endreq;
-		return sc;
-	}
-    Vector vecTop = transfTop.getTranslation();
-    m_calZTop = vecTop.z()+ 0.5*csiHeight;
-    
-    m_calZBot = m_calZTop - (CALnLayer-1)*cellVertPitch - csiHeight;
-
-    // get the maximum horizontal dimension of the crystals in a layer
-    double calWidth1 = (nCsiPerLayer-1)*cellHorPitch + csiWidth;
-    double ModWidth  = std::max(calWidth1, csiLength);
-    m_calWidthX = (m_xNum-1)*m_towerPitch + ModWidth;
-    m_calWidthY = (m_yNum-1)*m_towerPitch + ModWidth;
+    m_calZTop = m_geoSvc->calZTop();
+	m_calZBot = m_geoSvc->calZBot();
+	m_calXWidth = m_geoSvc->calXWidth();
+	m_calYWidth = m_geoSvc->calYWidth();
 
     return StatusCode::SUCCESS;
 }
