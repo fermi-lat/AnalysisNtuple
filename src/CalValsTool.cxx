@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.16 2003/05/16 23:26:03 lsrea Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.17 2003/05/30 15:09:08 atwood Exp $
 */
 
 // Include files
@@ -32,6 +32,8 @@
 #include "GlastSvc/Reco/IPropagatorSvc.h"
 
 #include "GlastSvc/GlastDetSvc/IGlastDetSvc.h"
+#include "idents/VolumeIdentifier.h"
+#include "CLHEP/Geometry/Transform3D.h"
 
 #include "TMath.h"
 
@@ -190,6 +192,9 @@ namespace {
       IGlastDetSvc*    m_detSvc; 
       /// store the towerPitch
       double m_towerPitch;
+      double m_csiHeight;
+      double m_csiLength;
+      int    m_CALnLayer;
       /// 
       IPropagatorSvc* m_propSvc;
       
@@ -269,6 +274,39 @@ namespace {
               return StatusCode::FAILURE;
           }
           m_detSvc->getNumericConstByName("towerPitch", &m_towerPitch);
+          m_detSvc->getNumericConstByName("CsILength",  &m_csiLength);
+          m_detSvc->getNumericConstByName("CsIHeight",  &m_csiHeight);
+          m_detSvc->getNumericConstByName("CALnLayer",  &m_CALnLayer);
+
+          //get the top and bottom of the CAL crystals
+
+          int layer = m_CALnLayer-1;
+          idents::VolumeIdentifier calPrefix, calPostfix, botLayerId, topLayerId;
+          calPrefix.init(0,0);
+          calPrefix.append(0); calPrefix.append(0); calPrefix.append(0); calPrefix.append(0);
+          topLayerId = calPrefix;
+          topLayerId.append(0);
+          topLayerId.append(0);
+          botLayerId = calPrefix;
+          botLayerId.append(layer);
+          botLayerId.append(layer%2);
+          calPostfix.init(0,0);
+          calPostfix.append(0); calPostfix.append(0); // calPostfix.append(0);
+          botLayerId.append(calPostfix);
+          topLayerId.append(calPostfix);
+          std::string botName = botLayerId.name();
+          std::string topName = topLayerId.name();
+          std::cout << "botName " << botName << " topName " << topName << std::endl;
+    
+          HepTransform3D transfTop;
+          m_detSvc->getTransform3DByID(topLayerId,&transfTop);
+          Vector vecTop = transfTop.getTranslation();
+          double calZTop = vecTop.z()+ 0.5*m_csiHeight;
+
+          HepTransform3D transfBot;
+          m_detSvc->getTransform3DByID(botLayerId,&transfBot);
+          Vector vecBot = transfBot.getTranslation();
+          double calZBot = vecBot.z() - 0.5*m_csiHeight;
                    
           // pick up the chosen propagator
           if (service("GlastPropagatorSvc", m_propSvc).isFailure()) {

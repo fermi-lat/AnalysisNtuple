@@ -2,6 +2,7 @@
   @brief Package AnalysisNtule
   @verbatim
 
+ v1r5p3  06-Jun-03   WBA  Modify for new geometry (still hardwired numbers... needs a real fix)
  v1r5p2  08-May-03   LSR  plug one last loophole
  v1r5p1  08-May-03   LSR  re-activated CalcIfNotDone; standard getVal() is still safe
  v1r5    07-May-03   LSR  add EvtValsTool; renaming and some cleanup
