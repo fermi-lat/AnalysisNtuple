@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.5 2003/02/26 01:29:06 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.6 2003/02/26 17:38:48 lsrea Exp $
 
 // Include files
 
@@ -377,7 +377,7 @@ StatusCode CalValsTool::calculate()
         int outside = 0;
         CAL_TwrEdge = twrEdgeC(CAL_x0, CAL_y0, twr_pitch, iView, outside);
         
-        if(iView = 1) CAL_TE_Nrm  = cal_dir.x();
+        if(iView==1) CAL_TE_Nrm  = cal_dir.x();
         else          CAL_TE_Nrm  = cal_dir.y();
         
         if(!pTracks) return sc; 

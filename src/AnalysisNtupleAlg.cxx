@@ -1,5 +1,5 @@
 
-// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.3 2003/02/26 21:31:10 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.4 2003/02/27 21:11:37 lsrea Exp $
 
 // Gaudi system includes
 #include "GaudiKernel/MsgStream.h"
@@ -136,7 +136,11 @@ StatusCode AnalysisNtupleAlg::initialize(){
     
     m_visitor = new NtupleVisitor(m_ntupleSvc, m_tupleName);
     
-    log << MSG::DEBUG << "AnalysisNtuple called" << endreq;
+    log << MSG::DEBUG;
+    if(log.isActive()) {
+        log << "AnalysisNtuple called" << endreq;
+    }
+    log << endreq;
     std::cout << "AnalysisNtuple called" << std::endl;
     
     return sc;
@@ -189,7 +193,11 @@ StatusCode AnalysisNtupleAlg::execute()
             //std::cout << "toolname " << varnames[i] << std::endl;  
             m_toolvec[i]->browse(varnames[i]);
             sc = m_toolvec[i]->getVal(varnames[i], answer);
-            log << MSG::DEBUG << "  compared to: " << answer << endreq;    
+            log << MSG::DEBUG;
+            if (log.isActive()) {
+                log << "  compared to: " << answer;
+            }
+            log << endreq;    
         }        
     }     
     return sc;

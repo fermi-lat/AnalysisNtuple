@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.2 2003/02/26 01:29:06 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.3 2003/02/26 17:38:48 lsrea Exp $
 
 // Include files
 
@@ -172,7 +172,7 @@ StatusCode GltValsTool::calculate()
         
         // Now classify according to tower type
         if(Trig_tower >= 0) {
-            int towerId = Trig_tower;
+            int towerId = (int) Trig_tower;
             Trig_xTower = towerId%4;
             Trig_yTower = towerId/4; 
             if(Trig_tower==0  || Trig_tower==3 || 

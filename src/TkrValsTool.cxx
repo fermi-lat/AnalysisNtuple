@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.5 2003/02/26 01:29:06 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.6 2003/02/26 17:38:48 lsrea Exp $
 
 // Include files
 
@@ -475,7 +475,7 @@ StatusCode TkrValsTool::calculate()
         double costh = fabs(t1.z()); 
         double arc_min = (x1.z() + minHeight)/costh; 
         pKalParticle->setStepStart(x1, t1, arc_min);
-        double total_radlen = pKalParticle->radLength(); 
+        //double total_radlen = pKalParticle->radLength(); 
         
         // Compute the sum-of radiation_lengths x Hits in each layer
         double tracker_ene_sum  = 0.;

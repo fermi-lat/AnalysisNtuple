@@ -56,15 +56,15 @@ StatusCode ValBase::initialize()
 ValBase::~ValBase()
 {
     mapIter it = m_ntupleMap.begin();
-    for (it; it!=m_ntupleMap.end(); ++it) {
-        delete *it;
+    for ( ; it!=m_ntupleMap.end(); ++it) {
+        delete (*it);
     }
 }
 
 void ValBase::zeroVals()
 {
     mapIter it = m_ntupleMap.begin();
-    for (it; it!=m_ntupleMap.end(); ++it) {
+    for ( ; it!=m_ntupleMap.end(); ++it) {
         *((*it)->second) = 0.0;
     }
 
@@ -97,7 +97,7 @@ StatusCode ValBase::browse(std::string varName)
     }
     int length = indent.size();
     constMapIter it = m_ntupleMap.begin();
-    for (it; it!=m_ntupleMap.end(); ++it) {
+    for ( ; it!=m_ntupleMap.end(); ++it) {
         valPair* pair = *it;
         if (varName!="" && varName!=pair->first) continue;
         length += (pair->first).size() + 2*delim.size() + separator.size() + 15;
@@ -141,7 +141,7 @@ StatusCode ValBase::getVal(std::string varName, double& value)
     StatusCode sc = StatusCode::SUCCESS;
     
     constMapIter it = m_ntupleMap.begin();
-    for (it; it!=m_ntupleMap.end(); ++it) {
+    for ( ; it!=m_ntupleMap.end(); ++it) {
         if ((*it)->first == varName) break;
     }
     
@@ -170,7 +170,7 @@ void ValBase::announceBadName(std::string varName)
     int count;
 
     constMapIter it = m_ntupleMap.begin();
-    for (it, count=0; it!=m_ntupleMap.end(); ++it, ++count) {
+    for (count=0; it!=m_ntupleMap.end(); ++it, ++count) {
         valPair* pair = *it;
         length += ((pair->first).size() + 2*delim.size() + separator.size());
         if(length>78) {
@@ -209,7 +209,7 @@ ValsVisitor::eVisitorRet ValBase::traverse(ValsVisitor* v)
     if(doCalcIfNotDone().isFailure()) return ValsVisitor::ERROR;
 
     constMapIter it = m_ntupleMap.begin();
-    for (it; it!=m_ntupleMap.end(); ++it) {
+    for ( ; it!=m_ntupleMap.end(); ++it) {
         valPair* pair = *it;
         double value = *(pair->second);
         ret = v->analysisValue(pair->first, value);
