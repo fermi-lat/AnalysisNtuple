@@ -2,6 +2,7 @@
   @brief Package AnalysisNtule
   @verbatim
 
+ v1r6p1  20-Jul-03   THB  remove use Recon from requirements
  v1r6    17-Jul-03   LSR  Accessed new TkrGeometrySvc methods to remove more hard-wired numbers
                           Will change results in TkrValsTool
  v1r5p5  17-Jul-03   WBA  Updates to Cal & EvtVals.  Added Giebels last layer energy
