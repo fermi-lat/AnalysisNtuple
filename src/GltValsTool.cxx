@@ -2,7 +2,7 @@
 @brief Calculates the Trigger analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.20 2005/03/07 22:36:06 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.21 2005/03/15 06:30:23 heather Exp $
 */
 
 // Include files
@@ -159,7 +159,7 @@ StatusCode GltValsTool::calculate()
     int nTowers  = nXTowers*nYTowers;
 
     int iTrig_tower  = -1;
-    int iTrig_layer  = nLayers;
+    int iTrig_layer  = -1;
     int xTower = -1;
     int yTower = -1; 
     int iTrig_type = 0;

@@ -2,6 +2,7 @@
   @brief Package AnalysisNtule
   @verbatim
  
+ v2r2p4  21-Mar-05   LSR  wrong default value for iTrig_layer
  v2r2p3  14-Mar-05   HMK  fix GltEventFlags to look at TDS /Event/EventSummary
  v2r2p2  07-Mar-05   LSR  get GltLayer number correctly (bottom to top now)
  v2r2p1  02-Mar-05   LSR  fix use of trigger bits (they're words, not bits)
