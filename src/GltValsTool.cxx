@@ -2,7 +2,7 @@
 @brief Calculates the Trigger analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.13 2004/09/30 17:12:21 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.14 2004/10/01 19:43:58 usher Exp $
 */
 
 // Include files
@@ -199,8 +199,10 @@ StatusCode GltValsTool::calculate()
         layer = nLayers;
         while(layer--)
         {
-            Event::TkrClusterVec xHitList = m_clusTool->getClustersReverseLayer(idents::TkrId::eMeasureX,layer);
-            Event::TkrClusterVec yHitList = m_clusTool->getClustersReverseLayer(idents::TkrId::eMeasureY,layer);
+            Event::TkrClusterVec xHitList = 
+                m_clusTool->getClustersReverseLayer(idents::TkrId::eMeasureX,layer);
+            Event::TkrClusterVec yHitList = 
+                m_clusTool->getClustersReverseLayer(idents::TkrId::eMeasureY,layer);
 
             int x_hitCount = xHitList.size(); 
             int y_hitCount = yHitList.size();

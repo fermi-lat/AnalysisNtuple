@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.42 2004/09/30 17:12:21 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.43 2004/10/01 19:43:58 usher Exp $
 */
 
 // To Do:
@@ -35,7 +35,6 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.42 
 #include "GlastSvc/Reco/IKalmanParticle.h"
 
 #include "GlastSvc/Reco/IPropagatorSvc.h"
-//#include "GlastSvc/Reco/IPropagatorTool.h"
 #include "GaudiKernel/IToolSvc.h"
 
 // M_PI defined in ValBase.h
@@ -376,8 +375,8 @@ namespace {
     double gap       = 18.; 
     double hard_frac = .7; 
 
-    double maxToTVal = 250.;  // won't be needed after new tag of TkrDigi
-    double maxPath = 2500.; // limit the upward propagator    
+    double maxToTVal =  250.;  // won't be needed after new tag of TkrDigi
+    double maxPath   = 2500.; // limit the upward propagator    
 }
 
 StatusCode TkrValsTool::calculate()
@@ -417,8 +416,7 @@ StatusCode TkrValsTool::calculate()
     int nThick  = pTkrGeoSvc->numSuperGlast();
     int nThin   = pTkrGeoSvc->numLayers() - nThick - nNoConv;
 
-    double die_width = pTkrGeoSvc->ladderNStrips()*pTkrGeoSvc->siStripPitch() +
-        + 2.*pTkrGeoSvc->siDeadDistance() + pTkrGeoSvc->ladderGap();
+    double die_width = pTkrGeoSvc->ladderPitch();
     int nDies = pTkrGeoSvc->nWaferAcross();
 
     if (pTracks)
@@ -441,8 +439,8 @@ StatusCode TkrValsTool::calculate()
         Tkr_1_Type         = track_1->getStatusBits();
         Tkr_1_Hits         = track_1->getNumHits();
         Tkr_1_FirstHits    = track_1->getNumSegmentPoints();
-        Tkr_1_FirstLayer   = track_1->front()->getTkrId().getLayer();
-        Tkr_1_LastLayer    = track_1->back()->getTkrId().getLayer();
+        Tkr_1_FirstLayer   = pTkrGeoSvc->getLayer(track_1->front()->getTkrId());
+        Tkr_1_LastLayer    = pTkrGeoSvc->getLayer(track_1->back()->getTkrId());
         Tkr_1_Gaps         = track_1->getNumGaps();
         Tkr_1_KalEne       = track_1->getKalEnergy(); 
         Tkr_1_ConEne       = track_1->getInitialEnergy(); 
@@ -519,8 +517,6 @@ StatusCode TkrValsTool::calculate()
         }
 
         // SSD Die loaction and edge... 
-        //double x_die = sign(x_twr)*(fmod(fabs(x_twr),die_width) - die_width/2.);
-        //double y_die = sign(y_twr)*(fmod(fabs(y_twr),die_width) - die_width/2.);
         double x_die = globalToLocal(x_twr, die_width, nDies);
         double y_die = globalToLocal(y_twr, die_width, nDies);
 
@@ -537,56 +533,35 @@ StatusCode TkrValsTool::calculate()
         double chisq_first = 0.;
         double chisq_last  = 0.; 
         Event::TkrTrackHitVecConItr pln_pointer = track_1->begin();
-        //for the ToT path correction; use the directions of each hit
-        //double slopeX; // = fabs(t1.x()/t1.z());
-        //double slopeY; // = fabs(t1.y()/t1.z());
-        //double pathFactorX; // = 1./sqrt(1. + slopeX*slopeX);
-        //double pathFactorY; // = 1./sqrt(1. + slopeY*slopeY);
-
-		int gapId = -1; 
-		int lastPlane = -1; 
+ 
+		int lastPlane;
+        int gapId;
+        bool firstHit = true;
+        bool gapFound = false;
         while(pln_pointer != track_1->end()) {
             const Event::TkrTrackHit* plane = *pln_pointer;
-// this needs a bunch of work, from here...
-// for the moment, just kill this
-/*
-
-// here we get the plane number of the hit
-// should be able to pass the TkrId to geomSvc and return the plane
-            int thisPlane = pTkrGeoSvc->getPlane(plane.getTkrId());
-			//int thisPlane = plane.getIDPlane();
-			//int thisIview = Event::TkrCluster::viewToInt(plane.getProjection());
-			//int thisLayer = 0;
-			//if(thisPlane%2 != 0) thisLayer = 2.*thisPlane+thisIview;
-			//else                 thisLayer = 2.*thisPlane+((thisIview+1)%2);
-
-			if(lastPlane < 0) { //First Hit
-				lastPlane = thisPlane;
-			}
-			else {
-				if(gapId < 0 && lastPlane+1 != thisPlane){
-					gapId = lastPlane+1;
-					Event::TkrTrackHit lastPlane = *(--pln_pointer);
-					pln_pointer++;
-					Point lastPoint = lastPlane.getPoint(Event::TkrTrackHit::FIT);
-					Event::TkrTrackHit lastHit = lastPlane.getHit(Event::TkrTrackHit::FIT);
-					Vector localDir = lastHit.getDirection(Event::TkrTrackHit::FIT);
-					Ray localSeg(lastPoint, localDir);
-					//int view; 
-					//int layer; 
-					//pTkrGeoSvc->planeToLayer (gapId, layer, view);
-					//double gapZ = pTkrGeoSvc->getReconLayerZ(layer,view);
-                    // or maybe
-                    double gapZ = pTkrGeoSvc->getPlaneZ(gapId);
-					double arcLen = (gapZ-lastPoint.z())/localDir.z();
-					Point gapPoint = localSeg.position(arcLen);
-					Tkr_1_GapX = gapPoint.x();
-					Tkr_1_GapY = gapPoint.y();
-				}
-			}
-			lastPlane = thisPlane;
-// to here...
-*/
+            idents::TkrId idPlane = plane->getTkrId();
+            int thisPlane = idPlane.getPlane();
+            if(firstHit) {
+                lastPlane = thisPlane;
+                firstHit = false;
+            }
+            else {
+                if(!gapFound && thisPlane != lastPlane-1){
+                    gapId = lastPlane-1;
+                    const Event::TkrTrackHit* lastHit = *(pln_pointer-1);
+                    Point  lastPoint = lastHit->getPoint(Event::TkrTrackHit::SMOOTHED);
+                    Vector lastDir   = lastHit->getDirection(Event::TkrTrackHit::SMOOTHED);
+                    Ray localSeg(lastPoint, lastDir);
+                    double gapZ    = pTkrGeoSvc->getPlaneZ(gapId);
+                    double arcLen  = (gapZ-lastPoint.z())/lastDir.z();
+                    Point gapPoint = localSeg.position(arcLen);
+                    Tkr_1_GapX = gapPoint.x();
+                    Tkr_1_GapY = gapPoint.y();
+                    gapFound = true;
+                }
+            }
+            lastPlane = thisPlane;
 
             const Event::TkrCluster* cluster = plane->getClusterPtr();
             int size =  const_cast<Event::TkrCluster*>(cluster)->size();
@@ -594,8 +569,6 @@ StatusCode TkrValsTool::calculate()
             double slope  = fabs(plane->getMeasuredSlope(Event::TkrTrackHit::SMOOTHED));
             double slope1 = fabs(plane->getNonMeasuredSlope(Event::TkrTrackHit::SMOOTHED));
 
-            // theta is the projected angle along the strip
-            //double theta        = atan(slope);
             // theta1 is the projected angle across the strip
             double theta1       = atan(slope1);
 
@@ -610,6 +583,7 @@ StatusCode TkrValsTool::calculate()
             double path1 = 1.0;
 
             // get the path length for the hit
+            // tries to get the average
             // the calculation is part analytic, part approximation and part fudge.
             //   more work is definitely in order!
 
@@ -618,10 +592,11 @@ StatusCode TkrValsTool::calculate()
             else {
                 double costh1 = cos(theta1);
                 if (size==1) {
+                    double sinth1 = sin(theta1);
                     if (slope1< aspectRatio) {
                         path1 = (1./costh1*(aspectRatio-slope1) + 
-                            (1/costh1 - 0.5*threshold)*(2*threshold*sin(theta1)))
-                            /(aspectRatio - slope1 + 2*threshold*sin(theta1));
+                            (1/costh1 - 0.5*threshold)*(2*threshold*sinth1))
+                            /(aspectRatio - slope1 + 2*threshold*sinth1);
                     } else if (slope1<aspectRatio/(1-2.*threshold*costh1)) {
                         path1 = 1; //1/costh1 - threshold*costh1;
                     } else { 
@@ -668,16 +643,15 @@ StatusCode TkrValsTool::calculate()
         Tkr_1_ToTAve /= Tkr_1_Hits;
         Tkr_1_ToTAsym = (last_ToT - first_ToT)/(first_ToT + last_ToT);
 // Should be Tkr_1_FirstGapPlane!!
-		Tkr_1_FirstGapLayer = gapId; 
+		Tkr_1_FirstGapLayer = pTkrGeoSvc->reversePlaneNumber(gapId); 
 
         // Chisq Asymmetry - Front vs Back ends of tracks
         Tkr_1_ChisqAsym = (chisq_last - chisq_first)/(chisq_last + chisq_first);
 
         m_G4PropTool->setStepStart(x1, -t1); //Note minus sign - swim backwards towards ACD
 
-        double topOfTkr = pTkrGeoSvc->getReconLayerZ(0) + 2.0; // higher than first silicon layer
-        //double xEdge = 0.5*m_xNum*m_towerPitch;
-        //double yEdge = 0.5*m_yNum*m_towerPitch;
+        int topPlane = pTkrGeoSvc->numPlanes()-1; 
+        double topOfTkr = pTkrGeoSvc->getPlaneZ(topPlane) + 1.0;
         double arc_min = fabs((topOfTkr-x1.z())/t1.z());
         arc_min = std::min( arc_min, maxPath); 
         m_G4PropTool->step(arc_min);  
@@ -692,7 +666,6 @@ StatusCode TkrValsTool::calculate()
             Point x_step       = m_G4PropTool->getStepPosition(istep); 
             if((x_step.z()-x1.z()) < 10.0) continue; 
             if(x_step.z() > topOfTkr || !pTkrGeoSvc->isInActiveLAT(x_step) ) break; 
-            //if(x_step.z() > topOfTkr || fabs(x_step.x()) > xEdge || fabs(x_step.y()) > yEdge) break; 
 
             // check that it's really a TKR hit (probably overkill)
             if(volId.size() != 9) continue; 
@@ -713,8 +686,8 @@ StatusCode TkrValsTool::calculate()
             Tkr_2_Type         = track_2->getStatusBits();
             Tkr_2_Hits         = track_2->getNumHits();
             Tkr_2_FirstHits    = track_2->getNumSegmentPoints();
-            Tkr_2_FirstLayer   = track_2->front()->getTkrId().getLayer();
-            Tkr_2_LastLayer    = track_2->back()->getTkrId().getLayer();
+            Tkr_2_FirstLayer   = pTkrGeoSvc->getLayer(track_2->front()->getTkrId());
+            Tkr_2_LastLayer    = pTkrGeoSvc->getLayer(track_2->back()->getTkrId());
             Tkr_2_Gaps         = track_2->getNumGaps();
             Tkr_2_KalEne       = track_2->getKalEnergy(); 
             Tkr_2_ConEne       = track_2->getInitialEnergy(); 
@@ -773,7 +746,6 @@ StatusCode TkrValsTool::calculate()
         //double total_radlen = pKalParticle->radLength(); 
 
         // Compute the sum-of radiation_lengths x Hits in each layer
-        //double tracker_ene_sum  = 0.;
         double tracker_ene_corr = 0.; 
         double rad_len_sum  = 0.; 
         double radlen       = 0.;
@@ -785,16 +757,15 @@ StatusCode TkrValsTool::calculate()
         int    blank_hits   = 0; 
         double ave_edge     = 0.; 
 
-        int top_plane     = track_1->front()->getTkrId().getLayer(); 
+        int topLayer     = pTkrGeoSvc->getLayer(track_1->front()->getTkrId()); 
+        int maxLayers    = pTkrGeoSvc->numLayers();
 
-        int max_planes = pTkrGeoSvc->numLayers();
-
-        for(int iplane = top_plane; iplane < max_planes; iplane++) {
+        for(int ilayer = topLayer; ilayer>=0; --ilayer) {
 
             double xms = 0.;
             double yms = 0.;
 
-            if(iplane > top_plane) {
+            if(ilayer < topLayer) {
                 Event::TkrFitMatrix Q = pKalParticle->mScat_Covr(Tkr_Sum_ConEne/2., arc_len);
                 xms = Q.getcovX0X0();
                 yms = Q.getcovY0Y0();
@@ -808,11 +779,12 @@ StatusCode TkrValsTool::calculate()
 
             // Assume location of shower center is given by 1st track
             Point x_hit = x1 + arc_len*t1;
-            int numHits = pQueryClusters->numberOfHitsNear(iplane, xSprd, ySprd, x_hit);
-            if(iplane == top_plane) {
+            int rlayer = pTkrGeoSvc->reverseLayerNumber(ilayer);
+            int numHits = pQueryClusters->numberOfHitsNear(rlayer, xSprd, ySprd, x_hit);
+            if(ilayer == topLayer) {
                 double xRgn = 30.*sqrt(1+(cos(Tkr_1_Phi)/costh)*(cos(Tkr_1_Phi)/costh));
                 double yRgn = 30.*sqrt(1+(sin(Tkr_1_Phi)/costh)*(sin(Tkr_1_Phi)/costh));
-                Tkr_HDCount = pQueryClusters->numberOfUUHitsNear(iplane, xRgn, yRgn, x_hit);
+                Tkr_HDCount = pQueryClusters->numberOfUUHitsNear(rlayer, xRgn, yRgn, x_hit);
             }
 
             //int outside = 0; 
@@ -828,17 +800,33 @@ StatusCode TkrValsTool::calculate()
             double corr_factor = 1./((1.-hard_frac)*in_frac_soft + hard_frac*in_frac_hard);
             if(corr_factor > max_corr) corr_factor = max_corr; 
             double delta_rad= radlen-radlen_old;
-            if(iplane < nThin) {
+            switch (pTkrGeoSvc->getLayerType(ilayer)) {
+                case STANDARD:
+                    if(delta_rad < radThin/costh) delta_rad=(radThin+radTray)/costh;
+                    thin_hits += numHits;
+                    break;
+                case SUPER:
+                    if(delta_rad < radThick/costh) delta_rad=(radThick+radTray)/costh;
+                    thick_hits += numHits;
+                    break;
+                case NOCONV:
+                    blank_hits += numHits;
+                    break;
+            }
+
+            /*
+            if(ilayer < nThin) {
                 if(delta_rad < radThin/costh) 
                     delta_rad=(radThin+radTray)/costh;
             }
-            else if(iplane < max_planes-2) {
+            else if(ilayer < maxLayers-2) {
                 if(delta_rad < radThick/costh) 
                     delta_rad=(radThick+radTray)/costh;
             }
-            if(iplane < nThin)                   thin_hits  += numHits;
-            else if(iplane < max_planes-nNoConv) thick_hits += numHits;
+            if(ilayer < nThin)                   thin_hits  += numHits;
+            else if(ilayer < maxLayers-nNoConv)  thick_hits += numHits;
             else                                 blank_hits += numHits;
+            */
 
             double ene_corr = corr_factor*delta_rad; //*ene; 
             tracker_ene_corr += ene_corr;
@@ -847,10 +835,9 @@ StatusCode TkrValsTool::calculate()
             rad_len_sum      += delta_rad;
 
             // Increment arc-length
-            int nextPlane = iplane+1;
-            if (iplane==max_planes-1) nextPlane--;
-            double deltaZ = pTkrGeoSvc->getReconLayerZ(iplane) -
-                pTkrGeoSvc->getReconLayerZ(nextPlane);
+            if(ilayer==0) break;
+            double deltaZ = pTkrGeoSvc->getLayerZ(ilayer) -
+                pTkrGeoSvc->getLayerZ(ilayer-1);
             arc_len += fabs( deltaZ/t1.z()); 
             radlen_old = radlen; 
         }
@@ -872,9 +859,9 @@ StatusCode TkrValsTool::calculate()
         Tkr_TwrEdge    = ave_edge/rad_len_sum; 
 
         // take care of conversion 1/2 way through first radiator
-        if(top_plane >= nThin) {
+        if(topLayer >= nThin) {
             // "0." won't happen for standard geometry, because 3 layers are required for track
-            rad_len_sum += (top_plane<max_planes-nNoConv ? 0.5*radThick : 0.);
+            rad_len_sum += (topLayer<maxLayers-nNoConv ? 0.5*radThick : 0.);
         }
         else {
             rad_len_sum += radThin/2.;
