@@ -2,6 +2,7 @@
   @brief Package AnalysisNtule
   @verbatim
 
+ v1r9p7  01-Sep-04   LSR  remove "use merit" from req. file
  v1r9p6  31-Aug-04   LSR  Add new variables -- To Mc: McSourceId
                             To Evt: EvtRun, EvtEventId, EvtElapsedTime
                             These will replace merit vars at some point 
