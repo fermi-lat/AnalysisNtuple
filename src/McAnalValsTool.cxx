@@ -1,7 +1,7 @@
 /** @file UserAlg.cxx
     @brief declartion, implementaion of the class UserAlg
 
-    $Header: /nfs/slac/g/glast/ground/cvs/userAlg/src/UserAlg.cxx,v 1.12 2003/03/15 23:19:31 burnett Exp $
+    $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McAnalValsTool.cxx,v 1.1 2004/01/09 20:40:22 usher Exp $
 */
 
 #include "ValBase.h"
@@ -23,7 +23,7 @@
 #include "Event/MonteCarlo/McParticle.h"
 #include "Event/MonteCarlo/McIntegratingHit.h"
 #include "Event/MonteCarlo/McPositionHit.h"
-#include "TkrRecon/MonteCarlo/ITkrMcTracksTool.h"
+#include "TkrUtil/ITkrMcTracksTool.h"
 
 #include <algorithm>
 
@@ -178,6 +178,10 @@ StatusCode McAnalValsTool::initialize()
     }
 
     sc = toolSvc()->retrieveTool("TkrMcTracksTool", m_mcTracks);
+    if (sc.isFailure()) {
+        log << MSG::ERROR << " TkrMcTracksTool not found!" << endreq;
+        return sc;
+    }
     
     // load up the map
 
