@@ -2,7 +2,7 @@
 @brief Uses the XxxValsTools to produce a comprehensive ntuple
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.12 2003/03/11 06:07:05 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.13 2003/04/01 00:02:00 lsrea Exp $
 */
 
 // Gaudi system includes
@@ -79,13 +79,11 @@ private:
     
     /// Common interface to analysis tools
     std::vector<IValsTool*> m_toolvec;
+    /// tool names
+    std::vector<std::string> m_toolnames;
     
     IValsTool::Visitor* m_visitor;    
 };
-
-namespace {
-    const int nTools = 6;
-}
 
 static const AlgFactory<AnalysisNtupleAlg>  Factory;
 const IAlgFactory& AnalysisNtupleAlgFactory = Factory;
@@ -97,7 +95,10 @@ AnalysisNtupleAlg::AnalysisNtupleAlg(const std::string& name, ISvcLocator* pSvcL
     // declare properties with setProperties calls
     declareProperty("tupleName",  m_tupleName=""); 
     // so it looks like NTupleWriterSvc property, no harm having both!
-    declareProperty("tuple_name",  m_tupleName="");    
+    declareProperty("tuple_name",  m_tupleName="");   
+    // List of tools to use -- maybe a bit kludgy, since the spelling need to be correct!
+    declareProperty("toolList", m_toolnames);
+    
 }
 
 StatusCode AnalysisNtupleAlg::initialize(){
@@ -106,9 +107,35 @@ StatusCode AnalysisNtupleAlg::initialize(){
     
     MsgStream log(msgSvc(), name());
     log << MSG::INFO << "initialize" << endreq;
-    
+
+    // calc tools - default is the full set!
+
     // Use the Job options service to set the Algorithm's parameters
+    m_toolnames.clear();
+
     setProperties();
+
+    //probably a better way to do this!
+    // default set:
+    std::string toolnames [] = {"Mc", "Glt", "TkrHit", "Tkr", "Vtx",  "Cal", "Acd", ""};
+
+    int i;
+    if (m_toolnames.empty()) {
+        for (i=0; ; ++i) {
+            if (toolnames[i]=="") break;
+            m_toolnames.push_back(toolnames[i]+"ValsTool");
+        }
+    } else {
+        for (i=0; i<m_toolnames.size(); ++i) {
+            m_toolnames[i] = m_toolnames[i]+"ValsTool";
+        }
+    }
+
+    log << MSG::INFO << "Tools requested: ";
+    for (i=0; i<m_toolnames.size(); ++i) {
+        log << m_toolnames[i] << " " ;
+    }
+    log << endreq;
     
     if( m_tupleName.empty()) {
         log << MSG::INFO << "tupleName property not set!  No ntuple output"<<endreq;
@@ -121,24 +148,16 @@ StatusCode AnalysisNtupleAlg::initialize(){
         log << MSG::ERROR << "Can't find ToolSvc, will quit now" << endreq;
         return StatusCode::FAILURE;
     }
-    
-    
-    // calc tools
-    
-    // TkrHitValsTool not currently called
-    const char * toolnames[] = {"McValsTool", "GltValsTool", "TkrValsTool", 
-        "VtxValsTool", "CalValsTool", "AcdValsTool"};
-    
-    for( int i =0; i<nTools; ++i){
+        
+    for (i =0; i<m_toolnames.size(); ++i){
         m_toolvec.push_back(0);
-        sc = pToolSvc->retrieveTool(toolnames[i], m_toolvec.back());
+        sc = pToolSvc->retrieveTool(m_toolnames[i], m_toolvec.back());
         if( sc.isFailure() ) {
-            log << MSG::ERROR << "Unable to find tool: " << toolnames[i] << endreq;
+            log << MSG::ERROR << "Unable to find tool: " << m_toolnames[i] << endreq;
             return sc;
         }
     }
-    
-    
+        
     // get a pointer to our ntupleWriterSvc
     if (!m_tupleName.empty()) {
         if (service("ntupleWriterSvc", m_ntupleSvc, true).isFailure()) {
@@ -223,17 +242,32 @@ StatusCode AnalysisNtupleAlg::execute()
         double answer;
         
         //do a browse
-        m_toolvec[4]->browse();
-                
-        std::string varnames[nTools] = {"McXErr", "GltType", "TkrEnergyCorr", 
-            "VtxZDir", "CalEneSumCorr", "AcdTileCount"};
+        m_toolvec[0]->browse();
+
+        int i;
+        std::string varname;
+        std::vector<std::string> varnames;
+        varnames.clear();
+        for (i=0; i<m_toolnames.size(); ++i) {
+            std::string toolname = m_toolnames[i];
+            if      (toolname=="McValsTool"     ) {varname = "McXErr";}
+            else if (toolname=="GltValsTool"    ) {varname = "GltTotal";}
+            else if (toolname=="TkrHitValsTool" ) {varname = "TkrHitsInLyr00";}
+            else if (toolname=="TkrValsTool"    ) {varname = "TkrEnergyCorr";}
+            else if (toolname=="VtxValsTool"    ) {varname = "VtxZDir";}
+            else if (toolname=="CalValsTool"    ) {varname = "CalEneSumCorr";}
+            else if (toolname=="AcdValsTool"    ) {varname = "AcdTileCount";}
+            else                                  {varname = "";}
+            varnames.push_back(varname);
+        }
                
         // check browse() against getVal() for each tool
                 
-        for( int i =0; i<nTools ; ++i){
-            //std::cout << "toolname " << varnames[i] << std::endl;  
+        for(i=0; i<m_toolvec.size(); ++i){
+            varname = varnames[i];
+            if (varname=="") continue;
             m_toolvec[i]->browse(varnames[i]);
-            sc = m_toolvec[i]->getVal(varnames[i], answer);
+            sc = m_toolvec[i]->getVal(varname, answer);
             log << MSG::DEBUG;
             if (log.isActive()) {
                 log << "  compared to: " << answer;

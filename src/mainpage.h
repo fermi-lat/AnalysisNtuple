@@ -53,6 +53,12 @@
  
  @param AnalysisNtupleAlg.tuple_name
   An alternate spelling, to match the one used by NTupleWriterSvc.
+
+ @param AnalysisNtupleAlg.toolList
+  A vector of strings that sets the list of tools requested. (Default is the 7 standard tools.) 
+  Each string is the name
+  of a tool with the "ValsTool" removed, so "TkrHitValsTool" becomes "TkrHit". This means that
+  any tool written for the package should be named "BlahBlahValsTool". 
   
   <hr>
  @section notes release.notes
