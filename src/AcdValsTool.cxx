@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.6 2003/05/08 15:51:30 atwood Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.7 2003/09/16 16:27:59 heather Exp $
 */
 
 #include "ValBase.h"
@@ -58,6 +58,7 @@ private:
 	double ACD_tileCount0;
     double ACD_tileCount1;
 	double ACD_tileCount2;
+    double ACD_ribbon_ActiveDist;
 
     
 };
@@ -130,6 +131,7 @@ StatusCode AcdValsTool::initialize()
     addItem("AcdNoSideRow0",   &ACD_tileCount0);
     addItem("AcdNoSideRow1",   &ACD_tileCount1);
     addItem("AcdNoSideRow2",   &ACD_tileCount2);   
+    addItem("AcdRibbonActDist", &ACD_ribbon_ActiveDist);
 
     zeroVals();
     
@@ -157,6 +159,7 @@ StatusCode AcdValsTool::calculate()
         ACD_DOCA          = pACD->getDoca();
         ACD_ActiveDist    = pACD->getActiveDist();
         ACD_GammaDOCA     = pACD->getGammaDoca();
+        ACD_ribbon_ActiveDist = pACD->getRibbonActiveDist();
 
 		const std::vector<double> & adist = pACD->getRowActDistCol();
  	    ACD_ActDistTop = adist[0];
