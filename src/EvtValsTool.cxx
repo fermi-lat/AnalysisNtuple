@@ -3,7 +3,7 @@
 @brief Calculates the "Event" analysis variables from the other ntuple variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.6 2003/07/17 22:50:51 atwood Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.7 2003/08/22 22:17:31 atwood Exp $
 */
 
 #include "ValBase.h"
@@ -283,7 +283,7 @@ StatusCode EvtValsTool::calculate()
         }
     }
     
-	EvtPSFModel = sqrt(pow((6.1/EvtEnergySumOpt),2) + (.001745*.001745));
+	EvtPSFModel = sqrt(pow((.061/pow((EvtEnergySumOpt/100),.8)),2) + (.001745*.001745));
     EvtLogESum = log10(std::min(std::max(EvtEnergySumOpt,20.),50000.));
 	double logE = EvtLogESum;
     double logE2 = logE*logE; 
