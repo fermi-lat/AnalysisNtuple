@@ -2,6 +2,7 @@
   @brief Package AnalysisNtule
   @verbatim
 
+ v1r3p7  03-Apr-03   LSR  move ntupleWriteSvc to the public section of the requirements file (for unix)
  v1r3p6  01-Apr-03   LSR  Activate TkrHitValsTool, and add tools list property (No fooling!)
  v1r3p5  31-mar-03   LSR  fix for the "missing 1st event -> missing ntuple" problem
  v1r3p4  11-mar-03   LSR  fix req. for unix
