@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.25 2003/09/30 19:01:20 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.26 2003/09/30 23:54:02 lsrea Exp $
 */
 
 // Include files
@@ -22,11 +22,13 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.25 
 
 #include "Event/Recon/TkrRecon/TkrCluster.h"
 #include "Event/Recon/TkrRecon/TkrClusterCol.h"
+#include "Event/Recon/TkrRecon/TkrFitPlane.h"
 #include "Event/Recon/TkrRecon/TkrFitTrack.h"
 #include "Event/Recon/TkrRecon/TkrKalFitTrack.h"
 #include "Event/Recon/TkrRecon/TkrVertex.h"
 #include "Event/Recon/TkrRecon/TkrFitMatrix.h"
 
+#include "GlastSvc/GlastDetSvc/IGlastDetSvc.h"
 #include "TkrUtil/ITkrGeometrySvc.h"
 #include "TkrUtil/ITkrQueryClustersTool.h"
 #include "GlastSvc/Reco/IKalmanParticle.h"
@@ -148,13 +150,16 @@ private:
     
     /// pointer to tracker geometry
     ITkrGeometrySvc*       pTkrGeoSvc;
+	/// GlastDetSvc used for access to detector info
+    IGlastDetSvc*         m_detSvc; 
     /// pointer to queryclusterstool
     ITkrQueryClustersTool* pQueryClusters;
     /// 
     IPropagatorSvc* m_propSvc;
     
     IKalmanParticle*       pKalParticle;
-    
+
+	IPropagator*           m_G4PropTool;    
     
     //Global Track Tuple Items
     double Tkr_No_Tracks;
@@ -208,6 +213,11 @@ private:
 	double Tkr_1_PhiErr;
 	double Tkr_1_ErrAsym;
 	double Tkr_1_CovDet;
+	double Tkr_1_ToTAve;
+	double Tkr_1_ToTTrAve;
+	double Tkr_1_ToTAsym;
+	double Tkr_1_ChisqAsym;
+	double Tkr_1_SSDVeto; 
    
     //Second Track Specifics
     double Tkr_2_Chisq;
@@ -268,15 +278,29 @@ StatusCode TkrValsTool::initialize()
             log << MSG::ERROR << "Could not find TkrGeometrySvc" << endreq;
             return fail;
         }
-               
+        // find GlastDevSvc service
+        if (service("GlastDetSvc", m_detSvc, true).isFailure()){
+              log << MSG::ERROR << "Couldn't find the GlastDetSvc!" << endreq;
+              return StatusCode::FAILURE;
+        }
+              
         // pick up the chosen propagator
         if (service("GlastPropagatorSvc", m_propSvc, true ).isFailure()) {
             log << MSG::ERROR << "Couldn't find the GlastPropagatorSvc!" << endreq;
             return fail;
-        }
-        
+        }  
         pKalParticle = m_propSvc->getPropagator();
-        
+
+	    IToolSvc* toolSvc = 0;
+		if(service("ToolSvc", toolSvc, true).isFailure()) {
+			log << MSG::ERROR << "Couldn't find the ToolSvc!" << endreq;
+            return StatusCode::FAILURE;
+        }
+	    if(!toolSvc->retrieveTool("G4PropagationTool", m_G4PropTool)) {
+			  log << MSG::ERROR << "Couldn't find the ToolSvc!" << endreq;
+              return StatusCode::FAILURE;
+		  }
+                  
     } else {
         return fail;
     }
@@ -342,6 +366,12 @@ StatusCode TkrValsTool::initialize()
 	addItem("Tkr1SXX",        &Tkr_1_Sxx);
     addItem("Tkr1SXY",        &Tkr_1_Sxy);
     addItem("Tkr1SYY",        &Tkr_1_Syy);
+
+	addItem("Tkr1ToTAve",     &Tkr_1_ToTAve);
+    addItem("Tkr1ToTTrAve",   &Tkr_1_ToTTrAve);
+    addItem("Tkr1ToTAsym",    &Tkr_1_ToTAsym);
+    addItem("Tkr1ChisqAsym",  &Tkr_1_ChisqAsym);
+	addItem("Tkr1SSDVeto",    &Tkr_1_SSDVeto);
 
     addItem("Tkr2Chisq",      &Tkr_2_Chisq);
     addItem("Tkr2FirstChisq", &Tkr_2_FirstChisq);
@@ -419,7 +449,7 @@ StatusCode TkrValsTool::calculate()
     // Recover Track associated info. 
     SmartDataPtr<Event::TkrFitTrackCol>  pTracks(m_pEventSvc,EventModel::TkrRecon::TkrFitTrackCol);
     //SmartDataPtr<Event::TkrVertexCol>     pVerts(m_pEventSvc,EventModel::TkrRecon::TkrVertexCol);
-    //SmartDataPtr<Event::TkrClusterCol> pClusters(m_pEventSvc,EventModel::TkrRecon::TkrClusterCol);
+    SmartDataPtr<Event::TkrClusterCol> pClusters(m_pEventSvc,EventModel::TkrRecon::TkrClusterCol);
 
     if(!pTracks) return StatusCode::FAILURE;
 
@@ -540,6 +570,69 @@ StatusCode TkrValsTool::calculate()
         Tkr_1_DieEdge  = (fabs(x_die) > fabs(y_die)) ? fabs(x_die) : fabs(y_die);
         Tkr_1_DieEdge  = die_width/2. - Tkr_1_DieEdge; 
         
+        // Section to dig out the TOT information
+		double first_ToT = 0.; 
+		double last_ToT  = 0.; 
+		double min_ToT   = 251.; 
+		double max_ToT   = 0.;  
+		int    hit_counter = 0; 
+		double chisq_first = 0.;
+		double chisq_last  = 0.; 
+		Event::TkrFitPlaneConPtr pln_pointer = track_1->begin();       
+        while(pln_pointer != track_1->end()) {
+			Event::TkrFitPlane plane = *pln_pointer;
+
+            int hit_Id = plane.getIDHit();
+			Event::TkrCluster* cluster = pClusters->getHit(hit_Id); 
+            double tot = cluster->ToT(); 
+			if(tot > 251.) tot = 251.; 
+			if(tot > max_ToT) max_ToT = tot; 
+			if(tot < min_ToT) min_ToT = tot; 
+			hit_counter++; 
+			Tkr_1_ToTAve += tot;
+			if(hit_counter < 3) {
+				first_ToT += tot;
+				chisq_first += plane.getDeltaChiSq(Event::TkrFitHit::SMOOTH);
+			}
+			if(hit_counter > Tkr_1_Hits - 2){
+				last_ToT += tot;
+				chisq_last += plane.getDeltaChiSq(Event::TkrFitHit::SMOOTH);
+			}
+            pln_pointer++;
+ 
+		}
+	    Tkr_1_ToTTrAve = (Tkr_1_ToTAve - max_ToT - min_ToT)/(Tkr_1_Hits-2.);
+		Tkr_1_ToTAve /= Tkr_1_Hits;
+		Tkr_1_ToTAsym = (last_ToT - first_ToT)/(first_ToT + last_ToT);
+
+		// Chisq Asymetry - Front vs Back ends of tracks
+		Tkr_1_ChisqAsym = (chisq_last - chisq_first)/(chisq_last + chisq_first);
+
+	    m_G4PropTool->setStepStart(x1, -t1); //Note minus sign - swim backwards towards ACD
+
+        double arc_min = fabs((610.-x1.z())/t1.z());
+		arc_min = (arc_min < 2500.) ? arc_min:2500.; 
+	    m_G4PropTool->step(arc_min);  
+        int numSteps = m_G4PropTool->getNumberSteps();
+	    
+	    idents::VolumeIdentifier volId;
+	    idents::VolumeIdentifier prefix = m_detSvc->getIDPrefix();
+
+	    for(int istep = 1; istep < numSteps; ++istep) { // Note: skip the first vol - as this is the head SSD
+		    volId = m_G4PropTool->getStepVolumeId(istep);
+		    volId.prepend(prefix);
+		    Point x_step       = m_G4PropTool->getStepPosition(istep); 
+			if((x_step.z()-x1.z()) < 10.0) continue; 
+			if(x_step.z() > 610. || fabs(x_step.x()) > 755. || fabs(x_step.y()) > 755.) break; 
+
+        // check that it's really a TKR hit (probably overkill)
+		    if(volId.size() != 9) continue; 
+			if(!(volId[0]==0 && volId[3]==1)) continue; // !(LAT && TKR)
+			if(volId[6]> 1) continue;  //It's a converter!  
+
+            Tkr_1_SSDVeto += 1.; 
+		}
+
         if(nParticles > 1) {
             pTrack1++;
             trackBase = *pTrack1;
@@ -597,7 +690,7 @@ StatusCode TkrValsTool::calculate()
         
         // Computation of the tracker contribution to the total energy 
         double costh = fabs(t1.z()); 
-        double arc_min = (x1.z() - pTkrGeoSvc->calZTop())/costh; 
+        arc_min = (x1.z() - pTkrGeoSvc->calZTop())/costh; 
         pKalParticle->setStepStart(x1, t1, arc_min);
         //double total_radlen = pKalParticle->radLength(); 
         
