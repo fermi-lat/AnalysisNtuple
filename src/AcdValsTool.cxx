@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.12 2004/08/23 19:56:44 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.13 2004/09/30 17:12:21 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -19,13 +19,12 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.12 
 #include "Event/TopLevel/Event.h"
 
 #include "Event/Recon/TkrRecon/TkrVertex.h"
-//#include "Event/Recon/TkrRecon/TkrFitTrack.h"
 #include "Event/Recon/AcdRecon/AcdRecon.h"
 #include "Event/Digi/AcdDigi.h"
 
 #include "GlastSvc/GlastDetSvc/IGlastDetSvc.h"
 // Point used by AcdDigi
-//#include "CLHEP/Geometry/Point3D.h"  <=== check this
+#include "CLHEP/Geometry/Point3D.h"  //<=== check this
 // Point used by TKR
 //#include "geometry/Point.h"  <=== check this
 
@@ -296,10 +295,10 @@ void AcdValsTool::tkrHitsCount() {
 
         // Loop over the clusters and calculate the distance from cluster
         // to ACD tile center
-        int numClusters = pClusters->nHits();
+        int numClusters = pClusters->size();
         int icluster;
         for (icluster = 0; icluster < numClusters; icluster++) {
-            Event::TkrCluster *clusterTds = pClusters->getHit(icluster);
+            Event::TkrCluster *clusterTds = (*pClusters)[icluster];
             Point clusterPos = clusterTds->position();
             HepPoint3D clusterP(clusterPos.x(), clusterPos.y(), clusterPos.z());
             double dist = clusterP.distance(acdCenter);

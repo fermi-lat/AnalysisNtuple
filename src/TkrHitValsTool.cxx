@@ -2,7 +2,7 @@
 @brief Calculates the Tkr hit analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/users/TkrGroup/AnalysisNtuple/src/TkrHitValsTool.cxx,v 1.2 2004/09/11 06:39:19 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrHitValsTool.cxx,v 1.6 2004/09/30 17:12:21 lsrea Exp $
 */
 
 // Include files
@@ -143,8 +143,8 @@ StatusCode TkrHitValsTool::calculate()
         int layerIdx = _nLayers;
         while(layerIdx--)
         {
-            int hitCount = m_clusTool->getClustersReverseLayer(Event::TkrCluster::X,layerIdx).size()
-                         + m_clusTool->getClustersReverseLayer(Event::TkrCluster::Y,layerIdx).size();
+            int hitCount = m_clusTool->getClustersReverseLayer(idents::TkrId::eMeasureX,layerIdx).size()
+                         + m_clusTool->getClustersReverseLayer(idents::TkrId::eMeasureY,layerIdx).size();
             
             if (hitCount > 0)
             {

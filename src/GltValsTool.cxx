@@ -2,7 +2,7 @@
 @brief Calculates the Trigger analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.12 2004/09/17 14:33:30 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.13 2004/09/30 17:12:21 lsrea Exp $
 */
 
 // Include files
@@ -199,16 +199,12 @@ StatusCode GltValsTool::calculate()
         layer = nLayers;
         while(layer--)
         {
-            Event::TkrClusterVec xHitList = m_clusTool->getClustersReverseLayer(Event::TkrCluster::X,layer);
-            Event::TkrClusterVec yHitList = m_clusTool->getClustersReverseLayer(Event::TkrCluster::Y,layer);
+            Event::TkrClusterVec xHitList = m_clusTool->getClustersReverseLayer(idents::TkrId::eMeasureX,layer);
+            Event::TkrClusterVec yHitList = m_clusTool->getClustersReverseLayer(idents::TkrId::eMeasureY,layer);
 
             int x_hitCount = xHitList.size(); 
             int y_hitCount = yHitList.size();
             if(x_hitCount > 0 && y_hitCount > 0) {
-                std::vector<Event::TkrCluster*> xHitList;
-                std::vector<Event::TkrCluster*> yHitList;
-                xHitList = pClusters->getHits(Event::TkrCluster::X,layer);
-                yHitList = pClusters->getHits(Event::TkrCluster::Y,layer);
 
                 int hit;
                 // x hits

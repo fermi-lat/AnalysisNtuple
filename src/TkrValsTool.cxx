@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.41 2004/09/10 04:59:02 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.42 2004/09/30 17:12:21 lsrea Exp $
 */
 
 // To Do:
@@ -386,8 +386,8 @@ StatusCode TkrValsTool::calculate()
 
     MsgStream log(msgSvc(), name());
 
-    Tkr_float = 5.5;
-    Tkr_int   = 123;
+    //Tkr_float = 5.5;
+    //Tkr_int   = 123;
 
     //placeholder for offset
     double z0 = 0.0;
@@ -538,8 +538,8 @@ StatusCode TkrValsTool::calculate()
         double chisq_last  = 0.; 
         Event::TkrTrackHitVecConItr pln_pointer = track_1->begin();
         //for the ToT path correction; use the directions of each hit
-        double slopeX; // = fabs(t1.x()/t1.z());
-        double slopeY; // = fabs(t1.y()/t1.z());
+        //double slopeX; // = fabs(t1.x()/t1.z());
+        //double slopeY; // = fabs(t1.y()/t1.z());
         //double pathFactorX; // = 1./sqrt(1. + slopeX*slopeX);
         //double pathFactorY; // = 1./sqrt(1. + slopeY*slopeY);
 
@@ -714,7 +714,7 @@ StatusCode TkrValsTool::calculate()
             Tkr_2_Hits         = track_2->getNumHits();
             Tkr_2_FirstHits    = track_2->getNumSegmentPoints();
             Tkr_2_FirstLayer   = track_2->front()->getTkrId().getLayer();
-            Tkr_2_LastLayer    = track_2->getLayer(Event::TkrFitTrackBase::End);
+            Tkr_2_LastLayer    = track_2->back()->getTkrId().getLayer();
             Tkr_2_Gaps         = track_2->getNumGaps();
             Tkr_2_KalEne       = track_2->getKalEnergy(); 
             Tkr_2_ConEne       = track_2->getInitialEnergy(); 
