@@ -2,6 +2,7 @@
   @brief Package AnalysisNtule
   @verbatim
 
+ v1r5p2  08-May-03   LSR  plug one last loophole
  v1r5p1  08-May-03   LSR  re-activated CalcIfNotDone; standard getVal() is still safe
  v1r5    07-May-03   LSR  add EvtValsTool; renaming and some cleanup
  v1r4p1  24-Apr-03   LSR  fixed jobOptions for new propagator

@@ -2,7 +2,7 @@
 @brief common abstract inteface for all the XxxValsTools
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/AnalysisNtuple/IValsTool.h,v 1.10 2003/03/05 02:03:28 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/AnalysisNtuple/IValsTool.h,v 1.11 2003/05/08 21:54:25 lsrea Exp $
 */
 
 #ifndef _H_IValsTool
@@ -11,7 +11,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/AnalysisNtuple/IValsTool.h,
 #include "GaudiKernel/IAlgTool.h"
 
 // Declaration of the interface ID ( interface id, major version, minor version) 
-static const InterfaceID IID_IValsTool("IValsTool", 3 , 0); 
+static const InterfaceID IID_IValsTool("IValsTool", 4 , 0); 
 
 /** @class IValsTool
 * @brief Abstract interface for the XxxValsTools, including visitor
@@ -19,6 +19,10 @@ static const InterfaceID IID_IValsTool("IValsTool", 3 , 0);
 * @author Leon Rochester
 *
 */
+
+namespace {
+    enum check { NOCALC = -1, CALC = 0, CHECK = 1};
+    }
 
 class   IValsTool : virtual public IAlgTool
 {
@@ -28,7 +32,7 @@ public:
     static const InterfaceID& interfaceID() { return IID_IValsTool; }
     
     /// get a particular value, using ntuple name
-    virtual StatusCode getVal(std::string varName, double& value, bool check = false) =0;
+    virtual StatusCode getVal(std::string varName, double& value, int check = CALC) =0;
     /// get a particular value, using ntuple name, with calc checking
     virtual StatusCode getValCheck(std::string varName, double& value) =0;
     /// output the names and values, either all (default) or just one;

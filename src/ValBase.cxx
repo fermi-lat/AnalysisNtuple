@@ -2,7 +2,7 @@
 @brief implements all the methods of the XxxValsTools
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.cxx,v 1.17 2003/05/07 15:05:20 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.cxx,v 1.18 2003/05/08 21:54:25 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -33,7 +33,7 @@ StatusCode ValBase::initialize()
     IDataProviderSvc* eventsvc = 0;
 
     m_newEvent = true;
-    m_check = true;
+    m_check = CHECK;
 
     m_ntupleMap.clear();
 
@@ -94,7 +94,7 @@ StatusCode ValBase::browse(std::string varName)
     // browse always triggers a calculation, which doesn't reset the m_newEvent flag
     MsgStream log(msgSvc(), name());
 
-    m_check = false;
+    m_check = CALC;
 
     log << MSG::INFO << "ValBase::browse called" << endreq;
 
@@ -103,10 +103,10 @@ StatusCode ValBase::browse(std::string varName)
     std::string indent    = "    ";
     
     if(doCalcIfNotDone().isFailure()) {
-        m_check = true;
+        m_check = CHECK;
         return StatusCode::FAILURE;
     }
-    m_check = true;
+    m_check = CHECK;
     
     if (varName!="") {
         std::cout  << " Variable " ;
@@ -138,16 +138,20 @@ StatusCode ValBase::doCalcIfNotDone()
 
     MsgStream log(msgSvc(), name());
 
-    // do the calculation if the first time through, or m_check is false
+    // if NOCALC means don't do the calculation
+    // if CALC   means always do the calculation
+    // if CHECK  means do the calculation if not already done, and reset m_newEvent
 
-    if(m_newEvent || !m_check) {
-        if (!m_pEventSvc)  return StatusCode::FAILURE;
-        zeroVals();
-        ++m_calcCount;
-        sc = calculate();
-        //std::cout << "calculation done for this event, total = " << m_calcCount << std::endl;
-        // only reset the newEvent flag if we're called with the check flag on.
-        if(m_check) m_newEvent = false;
+    if(m_check!=NOCALC) {
+        if(m_newEvent || m_check==CALC) {
+            if (!m_pEventSvc)  return StatusCode::FAILURE;
+            zeroVals();
+            ++m_calcCount;
+            sc = calculate();
+            //std::cout  << m_calcCount << " calculations so far" << std::endl;
+            // only reset the newEvent flag if we're called with the check flag on.
+            if(m_check==CHECK) m_newEvent = false;
+        }
     }
     return sc;
 }       
@@ -158,7 +162,7 @@ StatusCode ValBase::getValCheck(std::string varName, double& value)
     return getVal(varName, value, true);
 }
 
-StatusCode ValBase::getVal(std::string varName, double& value, bool check)
+StatusCode ValBase::getVal(std::string varName, double& value, int check)
 {
     // optional check flag, if true, do check (default is false)
 
@@ -173,16 +177,16 @@ StatusCode ValBase::getVal(std::string varName, double& value, bool check)
     
     if (it==m_ntupleMap.end()) { 
         announceBadName(varName); 
-        m_check = true;
+        m_check = CHECK;
         return StatusCode::FAILURE;
     } else {
         if(doCalcIfNotDone().isFailure()) {
-            m_check = true;
+            m_check = CHECK;
             return StatusCode::FAILURE;
         }
         value = *(*it)->second;
     }
-    m_check = true;
+    m_check = CHECK;
     return sc;
 }
 

@@ -2,7 +2,7 @@
 @brief Uses the XxxValsTools to produce a comprehensive ntuple
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.16 2003/05/07 14:57:40 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.17 2003/05/08 21:54:25 lsrea Exp $
 */
 
 // Gaudi system includes
@@ -237,6 +237,8 @@ StatusCode AnalysisNtupleAlg::execute()
         }
     }
 
+    // all the tools have been called at this point, so from now on,
+    ///  we can call them with the no-calculate flag
     
     bool debugStuff = false;
     log << MSG::DEBUG;
@@ -248,7 +250,6 @@ StatusCode AnalysisNtupleAlg::execute()
 
     if (countCalc || debugStuff) log << MSG::INFO << "number of calcs for standard call: " 
         << m_toolvec[0]->getCalcCount()<< endreq;
-
     
     if(debugStuff) {
         double answer;
@@ -257,7 +258,6 @@ StatusCode AnalysisNtupleAlg::execute()
         int i;
 
         //do a browse
-        //m_toolvec[namesSize-1]->browse();
 
         for (i=0;i<namesSize; ++i) {
             log << MSG::DEBUG << "Dump of variables in " << m_toolnames[i] << endreq;
@@ -287,8 +287,9 @@ StatusCode AnalysisNtupleAlg::execute()
         for(i=0; i<vecSize; ++i){
             varname = varnames[i];
             if (varname=="") continue;
+            // browse can only be called in forced calculation mode
             m_toolvec[i]->browse(varnames[i]);
-            sc = m_toolvec[i]->getValCheck(varname, answer);
+            sc = m_toolvec[i]->getVal(varname, answer, NOCALC);
             log << MSG::DEBUG;
             if (log.isActive()) {
                 log << "  compared to: " << answer;

@@ -2,7 +2,7 @@
 @brief header file for ValBase.cxx
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.h,v 1.15 2003/03/10 19:02:42 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.h,v 1.16 2003/05/08 21:54:25 lsrea Exp $
 */
 
 #ifndef ValBase_h
@@ -47,7 +47,7 @@ public:
     /// do calculation if not already done for this event
     virtual StatusCode doCalcIfNotDone();
     /// get a particular value, using ntuple name default forces calculation
-    virtual StatusCode getVal(std::string varName, double& value, bool check = false);
+    virtual StatusCode getVal(std::string varName, double& value, int check = 0);
     /// get a particular value, using ntuple name, with calc checking (called by AnaTup)
     virtual StatusCode getValCheck(std::string varName, double& value);
     /// output the list of names
@@ -77,8 +77,9 @@ protected:
     IDataProviderSvc* m_pEventSvc;
     /// flag to signal new event
     bool m_newEvent;
-    /// flag to allow an always-calculate call if false; if true checks and sets m_newEvent
-    bool m_check;
+    /// flag to allow an always-calculate call if 0; if 1 checks and sets m_newEvent
+    /// if -1 never skips calculation
+    int m_check;
 
     /// count calls to tools
     static int m_calcCount;
