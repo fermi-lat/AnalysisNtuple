@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.29 2003/10/15 00:24:47 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.30 2003/10/22 19:56:09 lsrea Exp $
 */
 
 // Include files
@@ -248,6 +248,9 @@ private:
 	double Tkr_2_x0;
 	double Tkr_2_y0;
 	double Tkr_2_z0;
+
+	double Tkr_2TkrAngle;
+	double Tkr_2TkrHDoca;
 };
 
 // Static factory for instantiation of algtool objects
@@ -405,6 +408,9 @@ StatusCode TkrValsTool::initialize()
 	addItem("Tkr2X0",         &Tkr_2_x0);
 	addItem("Tkr2Y0",         &Tkr_2_y0);
 	addItem("Tkr2Z0",         &Tkr_2_z0);    
+
+	addItem("Tkr2TkrAngle",         &Tkr_2TkrAngle); 
+	addItem("Tkr2TkrHDoca",         &Tkr_2TkrHDoca); 
 
 	zeroVals();
 
@@ -757,6 +763,11 @@ StatusCode TkrValsTool::calculate()
 
 			Tkr_2_DieEdge  = (fabs(x_die) > fabs(y_die)) ? fabs(x_die) : fabs(y_die);
 			Tkr_2_DieEdge  = die_width/2. - Tkr_2_DieEdge; 
+
+			Tkr_2TkrAngle = acos(t1*t2);  
+			Point x2p  = x2 + ((x1.z()-x2.z())/t2.z())*t2;
+			double doca_plane = (x2p-x1).mag();
+			Tkr_2TkrHDoca = -doca_plane*t1.z();
 		}
 
 		Tkr_Sum_KalEne    = Tkr_1_KalEne+Tkr_2_KalEne; 
