@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.38 2004/06/17 19:44:00 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.39 2004/06/21 11:44:02 lsrea Exp $
 */
 
 // To Do:
@@ -111,6 +111,9 @@ private:
     double Tkr_1_Chisq;
     double Tkr_1_FirstChisq;
     double Tkr_1_Gaps;
+	double Tkr_1_FirstGapLayer; 
+	double Tkr_1_GapX;
+	double Tkr_1_GapY;
     double Tkr_1_FirstGaps; 
     double Tkr_1_Hits;
     double Tkr_1_FirstHits;
@@ -278,6 +281,9 @@ StatusCode TkrValsTool::initialize()
     addItem("Tkr1DifHits",    &Tkr_1_DifHits);
 
     addItem("Tkr1Gaps",       &Tkr_1_Gaps);
+    addItem("Tkr1FirstGapLayer",&Tkr_1_FirstGapLayer);
+	addItem("Tkr1XGap",       &Tkr_1_GapX);
+    addItem("Tkr1YGap",       &Tkr_1_GapY);
     addItem("Tkr1FirstGaps",  &Tkr_1_FirstGaps);
 
     addItem("Tkr1Qual",       &Tkr_1_Qual);
@@ -384,9 +390,6 @@ StatusCode TkrValsTool::calculate()
     //placeholder for offset
     double z0 = 0.0;
 
-    //double radThin   = .03; 
-    //double radThick  = .18; 
-    //double radTray   = .015;
     double radThin  = pTkrGeoSvc->getAveConv(STANDARD); // was 0.03
     double radThick = pTkrGeoSvc->getAveConv(SUPER);    // was 0.18
     double radTray  = pTkrGeoSvc->getAveRest(ALL);      // was 0.015
@@ -471,7 +474,7 @@ StatusCode TkrValsTool::calculate()
         double cosPhi     = cos(Tkr_1_Phi);
         Tkr_1_ThetaErr      = t1.z()*t1.z()*sqrt(cosPhi*cosPhi*Tkr_1_Sxx + 
             2.*sinPhi*cosPhi*Tkr_1_Sxy + sinPhi*sinPhi*Tkr_1_Syy); 
-        Tkr_1_PhiErr        = (-t1.z())*sqrt(sinPhi*sinPhi*Tkr_1_Sxx + 
+        Tkr_1_PhiErr        = (-t1.z())*sqrt(sinPhi*sinPhi*Tkr_1_Sxx - 
             2.*sinPhi*cosPhi*Tkr_1_Sxy + cosPhi*cosPhi*Tkr_1_Syy);
         Tkr_1_ErrAsym     = fabs(Tkr_1_Sxy/(Tkr_1_Sxx + Tkr_1_Syy));
         Tkr_1_CovDet      = sqrt(Tkr_1_Sxx*Tkr_1_Syy-Tkr_1_Sxy*Tkr_1_Sxy)*Tkr_1_zdir*Tkr_1_zdir;
@@ -539,8 +542,42 @@ StatusCode TkrValsTool::calculate()
         //double pathFactorX; // = 1./sqrt(1. + slopeX*slopeX);
         //double pathFactorY; // = 1./sqrt(1. + slopeY*slopeY);
 
+		int gapId = -1; 
+		int lastLayer = -1; 
         while(pln_pointer != track_1->end()) {
             Event::TkrFitPlane plane = *pln_pointer;
+
+			int thisPlane = plane.getIDPlane();
+			int thisIview = Event::TkrCluster::viewToInt(plane.getProjection());
+			int thisLayer = 0;
+			if(thisPlane%2 != 0) thisLayer = 2.*thisPlane+thisIview;
+			else                 thisLayer = 2.*thisPlane+((thisIview+1)%2);
+
+			if(lastLayer < 0) { //First Hit
+				lastLayer = thisLayer;
+			}
+			else {
+				if(gapId < 0 && lastLayer+1 != thisLayer){
+					gapId = lastLayer+1;
+					Event::TkrFitPlane lastPlane = *(--pln_pointer);
+					pln_pointer++;
+					Point lastPoint = lastPlane.getPoint(Event::TkrFitHit::FIT);
+					Event::TkrFitHit lastHit = lastPlane.getHit(Event::TkrFitHit::FIT);
+					double xSlope = lastHit.getPar().getXSlope();
+					double ySlope = lastHit.getPar().getYSlope();
+					Vector localDir = Vector(-xSlope,-ySlope,-1.).unit();
+					Ray localSeg(lastPoint, localDir);
+					int view; 
+					int layer; 
+					pTkrGeoSvc->planeToLayer (gapId, layer, view);
+					double gapZ = pTkrGeoSvc->getReconLayerZ(layer,view);
+					double arcLen = (gapZ-lastPoint.z())/localDir.z();
+					Point gapPoint = localSeg.position(arcLen);
+					Tkr_1_GapX = gapPoint.x();
+					Tkr_1_GapY = gapPoint.y();
+				}
+			}
+			lastLayer = thisLayer;
 
             int hit_Id = plane.getIDHit();
             Event::TkrCluster* cluster = pClusters->getHit(hit_Id);
@@ -627,6 +664,7 @@ StatusCode TkrValsTool::calculate()
         Tkr_1_ToTTrAve = (Tkr_1_ToTAve - max_ToT - min_ToT)/(Tkr_1_Hits-2.);
         Tkr_1_ToTAve /= Tkr_1_Hits;
         Tkr_1_ToTAsym = (last_ToT - first_ToT)/(first_ToT + last_ToT);
+		Tkr_1_FirstGapLayer = gapId; 
 
         // Chisq Asymetry - Front vs Back ends of tracks
         Tkr_1_ChisqAsym = (chisq_last - chisq_first)/(chisq_last + chisq_first);
@@ -695,8 +733,6 @@ StatusCode TkrValsTool::calculate()
             Tkr_2_y0         = x2.y();
             Tkr_2_z0         = x2.z();
 
-            //double x_twr = sign(x2.x())*(fmod(fabs(x2.x()),m_towerPitch) - m_towerPitch/2.);
-            //double y_twr = sign(x2.y())*(fmod(fabs(x2.y()),m_towerPitch) - m_towerPitch/2.);
             double x_twr = globalToLocal(x2.x(), m_towerPitch, m_xNum);
             double y_twr = globalToLocal(x2.y(), m_towerPitch, m_yNum);
             double x_prj = x_twr - t2.x()*z_dist;
@@ -709,9 +745,7 @@ StatusCode TkrValsTool::calculate()
 
             double x_die = globalToLocal(x_twr, die_width, nDies);
             double y_die = globalToLocal(y_twr, die_width, nDies);
-            //double x_die = sign(x_twr)*(fmod(fabs(x_twr),die_width) - die_width/2.);
-            //double y_die = sign(y_twr)*(fmod(fabs(y_twr),die_width) - die_width/2.);
-
+  
             Tkr_2_DieEdge  = (fabs(x_die) > fabs(y_die)) ? fabs(x_die) : fabs(y_die);
             Tkr_2_DieEdge  = die_width/2. - Tkr_2_DieEdge; 
 
@@ -803,16 +837,13 @@ StatusCode TkrValsTool::calculate()
             else if(iplane < max_planes-nNoConv) thick_hits += numHits;
             else                                 blank_hits += numHits;
 
-            //double ene      = delta_rad*numHits*10.;
-            double ene_corr = corr_factor*delta_rad; //*ene;
-            //tracker_ene_sum  += ene; 
+            double ene_corr = corr_factor*delta_rad; //*ene; 
             tracker_ene_corr += ene_corr;
             total_hits       += numHits; 
             ave_edge         += layer_edge*delta_rad; 
             rad_len_sum      += delta_rad;
 
             // Increment arc-length
-            //arc_len += pTkrGeoSvc->trayHeight()/fabs(dir_ini.z());
             int nextPlane = iplane+1;
             if (iplane==max_planes-1) nextPlane--;
             double deltaZ = pTkrGeoSvc->getReconLayerZ(iplane) -
@@ -820,11 +851,15 @@ StatusCode TkrValsTool::calculate()
             arc_len += fabs( deltaZ/t1.z()); 
             radlen_old = radlen; 
         }
-        // Coef's from Lin. Regression analysis in Miner
+        // Coef's from Linear Regression analysis in Miner
         // defined in anonymous namespace above
+		// Note: there is a corner of phase space where this can get much too large
+		//  (a check would be to compare with TkrKalEneSum - if its larger, pick
+		//   TkrKalEneSum but maybe not -  this will happen in mis-tracked events)
         Tkr_Energy     = (cfThin*thin_hits + cfThick*thick_hits + cfNoConv*blank_hits
-            + cfRadLen*rad_len_sum + cfZ*(x1.z()-z0))/costh;
-        //Tkr_Energy_Sum = tracker_ene_sum + cfNoConv1*blank_hits;  
+			             + cfRadLen*std::min(rad_len_sum, 3.0)
+			             + cfZ*(x1.z()-z0))/std::max(costh, .4);
+ 
         Tkr_Edge_Corr  = tracker_ene_corr/rad_len_sum;
         Tkr_Energy_Corr= Tkr_Edge_Corr*Tkr_Energy;
         Tkr_Total_Hits = total_hits;
@@ -842,7 +877,11 @@ StatusCode TkrValsTool::calculate()
             rad_len_sum += radThin/2.;
         }
         Tkr_RadLength  = rad_len_sum;
-    }          
+    }         
+
+   // std::cout << "Tkr_KalEne: " << Tkr_1_KalEne << " " << Tkr_2_KalEne << std::endl 
+   //              <<" Tkr_KalThetaMS " <<  Tkr_1_KalThetaMS << " " << Tkr_2_KalThetaMS << std::endl;
+
     return sc;
 }
 
@@ -851,18 +890,10 @@ double TkrValsTool::towerEdge(Point pos) const
     double edge = 0.; 
     double x = pos.x();
     double y = pos.y();
-    //double x_twr = sign(x)*(fmod(fabs(x),pitch) - pitch/2.);
-    //double y_twr = sign(y)*(fmod(fabs(y),pitch) - pitch/2.);
+
     double x_twr = globalToLocal(x, m_towerPitch, m_xNum);
     double y_twr = globalToLocal(y, m_towerPitch, m_yNum);
 
-    /*
-    if(fabs(x_twr) > fabs(y_twr)) {
-        edge = m_towerPitch/2. - fabs(x_twr);
-    } else {
-        edge = m_towerPitch/2. - fabs(y_twr);
-    }
-    */
     edge = 0.5*m_towerPitch - std::max(fabs(x_twr),fabs(y_twr));
     return edge;
 }
@@ -880,7 +911,6 @@ double  TkrValsTool::containedFraction(Point pos, double gap,
     if(gap_y < 5.) gap_y = 5.; 
 
     // X Edges
-    //double x_twr = sign(x)*(fmod(fabs(x),pitch) - pitch/2.);
     double x_twr = globalToLocal(x, m_towerPitch, m_xNum);
     double edge = m_towerPitch/2. - fabs(x_twr);
     double r_frac_plus = (edge-gap_x/2.)/r; 
@@ -888,13 +918,11 @@ double  TkrValsTool::containedFraction(Point pos, double gap,
     double in_frac_x  =  circleFractionSimpson(r_frac_plus, angle_factor);
     if (x>pTkrGeoSvc->getLATLimit(0,LOW)+0.5*m_towerPitch
         && x<pTkrGeoSvc->getLATLimit(0,HIGH)-0.5*m_towerPitch) {
-    //if(fabs(x) < 0.5*(m_xNum-1)*m_towerPitch) { // X edge is not outside limit of LAT
         double r_frac_minus = (edge + gap_x/2.)/r;
         in_frac_x += circleFractionSimpson(-r_frac_minus, angle_factor);
     }
 
     // Y Edges
-    //double y_twr = sign(y)*(fmod(fabs(y),pitch) - pitch/2.);
     double y_twr = globalToLocal(y, m_towerPitch, m_yNum);
     edge = m_towerPitch/2. - fabs(y_twr);
     r_frac_plus = (edge-gap_y/2.)/r; 
@@ -902,7 +930,6 @@ double  TkrValsTool::containedFraction(Point pos, double gap,
     double in_frac_y  =  circleFractionSimpson(r_frac_plus, angle_factor);
     if (y>pTkrGeoSvc->getLATLimit(1,LOW)+0.5*m_towerPitch
         && y<pTkrGeoSvc->getLATLimit(1,HIGH)-0.5*m_towerPitch) {
-    //if(fabs(y) < 0.5*(m_yNum-1)*m_towerPitch) { // X edge is not outside limit of LAT
         double r_frac_minus = (edge + gap_y/2.)/r;
         in_frac_y += circleFractionSimpson(-r_frac_minus, angle_factor);
     }
