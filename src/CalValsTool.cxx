@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.25 2003/07/18 22:17:59 lsrea Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.26 2003/08/22 22:16:27 atwood Exp $
 */
 
 // Include files
@@ -55,7 +55,7 @@ namespace {
         
         outer = 0; 
         
-        if(fabs(x_twr) > fabs(y_twr)) {
+        if(fabs(x_twr)/xpitch > fabs(y_twr)/ypitch) {
             edge = xpitch/2. - fabs(x_twr);
             XY = 1; 
             if(fabs(x) > 0.5*(nx-1)*xpitch) outer = 1;
@@ -541,8 +541,9 @@ StatusCode CalValsTool::calculate()
 	double delta_z = trj_1.position().z() - m_calZTop;
     arc_len = delta_z/fabs(trj_1.direction().z());
     Point cal_1 = trj_1.position(arc_len); 
-	CAL_LATEdge = activeDist(cal_1.x(),cal_1.y(), m_calXWidth, m_calYWidth, 
-		                     1, 1, iView, outside);
+	if(fabs(cal_1.x()) > fabs(cal_1.y())) CAL_LATEdge = m_calXWidth/2. - fabs(cal_1.x());
+    else                                  CAL_LATEdge = m_calYWidth/2. - fabs(cal_1.y());
+
     if(num_tracks > 1) {
         pTrack1++;
         Event::TkrKalFitTrack* track_2  
