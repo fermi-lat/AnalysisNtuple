@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.21 2003/06/12 04:56:36 lsrea Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.22 2003/06/12 23:38:30 lsrea Exp $
 */
 
 // Include files
@@ -730,7 +730,9 @@ StatusCode CalValsTool::calculate()
 
 StatusCode CalValsTool::getCalInfo()
 {
-    double csiLength, csiWidth, csiHeight;
+    MsgStream log(msgSvc(), name());
+
+	double csiLength, csiWidth, csiHeight;
     double cellHorPitch, cellVertPitch;
     int nCsiPerLayer, CALnLayer;
 
@@ -749,11 +751,20 @@ StatusCode CalValsTool::getCalInfo()
     topLayerId.init(0,0);
     int count;
     // top layer of the Cal
-    for (count= 0;count<8;++count) {topLayerId.append(0);} 
-
+	// for some reason not clear yet, which Id is valid depends on what package is running
+	// for the moment, I'll just check them all until I get a good one, and if I don't then
+	// I bail... this is a really horrible kludge... seems to work though
+    for (count=0;count<6;++count) {topLayerId.append(0);} 
+    StatusCode sc;
     HepTransform3D transfTop;
-    if(m_detSvc->getTransform3DByID(topLayerId,&transfTop).isFailure())
-    {return StatusCode::FAILURE;}
+	for (count=6;count<9;++count) {
+		topLayerId.append(0);
+        if((sc = m_detSvc->getTransform3DByID(topLayerId,&transfTop)).isSuccess()) break;
+	}
+	if(sc.isFailure()) {
+		log << MSG::ERROR << "Couldn't get Id for layer 0 of CAL" << endreq;
+		return sc;
+	}
     Vector vecTop = transfTop.getTranslation();
     m_calZTop = vecTop.z()+ 0.5*csiHeight;
     
