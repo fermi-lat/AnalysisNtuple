@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.12 2003/03/10 19:02:42 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.13 2003/04/04 01:34:12 lsrea Exp $
 */
 
 // Include files
@@ -114,6 +114,7 @@ private:
     double Tkr_Energy_Sum;
     double Tkr_Energy_Corr;
     double Tkr_Edge_Corr;
+    double Tkr_HDCount; 
     double Tkr_Total_Hits;
     double Tkr_Thin_Hits;
     double Tkr_Thick_Hits;
@@ -132,6 +133,7 @@ private:
     
     double Tkr_1_Qual;
     double Tkr_1_Type;
+
     double Tkr_1_DifHits;
     double Tkr_1_KalEne;
     double Tkr_1_ConEne;
@@ -228,31 +230,32 @@ StatusCode TkrValsTool::initialize()
     
     // load up the map
     
-    addItem("TkrNumTracks",    &Tkr_No_Tracks);
+    addItem("TkrNumTracks",   &Tkr_No_Tracks);
     addItem("TkrSumKalEne",   &Tkr_Sum_KalEne);
     addItem("TkrSumConEne",   &Tkr_Sum_ConEne);
-    addItem("TkrEnergy",       &Tkr_Energy);
+    addItem("TkrEnergy",      &Tkr_Energy);
     addItem("TkrEnergySum",   &Tkr_Energy_Sum);
     addItem("TkrEnergyCorr",  &Tkr_Energy_Corr);
     addItem("TkrEdgeCorr",    &Tkr_Edge_Corr);
+    addItem("TkrHDCount",     &Tkr_HDCount); 
     addItem("TkrTotalHits",   &Tkr_Total_Hits);
     addItem("TkrThinHits",    &Tkr_Thin_Hits);
     addItem("TkrThickHits",   &Tkr_Thick_Hits);
     addItem("TkrBlankHits",   &Tkr_Blank_Hits);
     
-    addItem("TkrRadLength",    &Tkr_RadLength);
-    addItem("TkrTwrEdge",      &Tkr_TwrEdge);
+    addItem("TkrRadLength",   &Tkr_RadLength);
+    addItem("TkrTwrEdge",     &Tkr_TwrEdge);
     
     addItem("Tkr1Chisq",      &Tkr_1_Chisq);
-    addItem("Tkr1_1stChisq",   &Tkr_1_1stChisq);
+    addItem("Tkr1_1stChisq",  &Tkr_1_1stChisq);
     
     addItem("Tkr1Hits",       &Tkr_1_Hits);
-    addItem("Tkr1_1stHits",    &Tkr_1_1stHits);
-    addItem("Tkr1_1stLayer",   &Tkr_1_1stLayer);
+    addItem("Tkr1_1stHits",   &Tkr_1_1stHits);
+    addItem("Tkr1_1stLayer",  &Tkr_1_1stLayer);
     addItem("Tkr1DifHits",    &Tkr_1_DifHits);
     
     addItem("Tkr1Gaps",       &Tkr_1_Gaps);
-    addItem("Tkr1_1stGaps",    &Tkr_1_1stGaps);
+    addItem("Tkr1_1stGaps",   &Tkr_1_1stGaps);
     
     addItem("Tkr1Qual",       &Tkr_1_Qual);
     addItem("Tkr1Type",       &Tkr_1_Type);
@@ -276,12 +279,12 @@ StatusCode TkrValsTool::initialize()
     addItem("Tkr2_1stChisq",   &Tkr_2_1stChisq);
     
     addItem("Tkr2Hits",       &Tkr_2_Hits);
-    addItem("Tkr2_1stHits",    &Tkr_2_1stHits);
-    addItem("Tkr2_1stLayer",   &Tkr_2_1stLayer);
+    addItem("Tkr2_1stHits",   &Tkr_2_1stHits);
+    addItem("Tkr2_1stLayer",  &Tkr_2_1stLayer);
     addItem("Tkr2DifHits",    &Tkr_2_DifHits);
     
     addItem("Tkr2Gaps",       &Tkr_2_Gaps);
-    addItem("Tkr2_1stGaps",    &Tkr_2_1stGaps);
+    addItem("Tkr2_1stGaps",   &Tkr_2_1stGaps);
     
     addItem("Tkr2Qual",       &Tkr_2_Qual);
     addItem("Tkr2Type",       &Tkr_2_Type);
@@ -497,10 +500,10 @@ StatusCode TkrValsTool::calculate()
         rm_soft *= angle_factor_R;
         
         // take care of conversion 1/2 way through first radiator
-        radlen = radThin/2.;
+        rad_len_sum = radThin/2.;
         if(top_plane >= nThin) {
             // "0." won't happen for standard geometry, because 3 layers are required for track
-            radlen = (top_plane<max_planes-nNoConv ? 0.5*radThick : 0.);
+            rad_len_sum = (top_plane<max_planes-nNoConv ? 0.5*radThick : 0.);
         }
         
         for(int iplane = top_plane; iplane < max_planes; iplane++) {
@@ -523,6 +526,11 @@ StatusCode TkrValsTool::calculate()
             // Assume location of shower center is given by 1st track
             Point x_hit = x1 + arc_len*t1;
             int numHits = pQueryClusters->numberOfHitsNear(iplane, xSprd, ySprd, x_hit);
+            if(iplane == top_plane) {
+                double xRgn = 30.*sqrt(1+(cos(Tkr_1_Phi)/costh)*(cos(Tkr_1_Phi)/costh));
+                double yRgn = 30.*sqrt(1+(sin(Tkr_1_Phi)/costh)*(sin(Tkr_1_Phi)/costh)); 
+                Tkr_HDCount = pQueryClusters->numberOfUUHitsNear(iplane, xRgn, yRgn, x_hit);
+            }
             
             int outside = 0; 
             int iView   = 0;
