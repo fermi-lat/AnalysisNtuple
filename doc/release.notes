@@ -2,6 +2,7 @@
   @brief Package AnalysisNtule
   @verbatim
 
+ v1r9p3  25-Aug-04   LSR  Fix jobOptions for test program
          22-Aug-04   HMK  Add one of two new ACD variables for Bill: 
                           TkrHitsCount - number of clusters w/i some dist. of
                           center of ACD tiles

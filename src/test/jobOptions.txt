@@ -23,6 +23,11 @@ ApplicationMgr.DLLs+= {"RootIo", "GlastSvc", "G4Propagator","G4Generator",
                         "TkrUtil"};
 ApplicationMgr.DLLs+= {"AnalysisNtuple"};
 
+ApplicationMgr.DLLs   += { "CalibSvc" };
+
+// seems to be needed to stop CAL calibration from complaining...
+DetectorPersistencySvc.CnvServices += {"CalibMySQLCnvSvc"};
+
 // ----------------------------
 //  topalg
 //
@@ -36,11 +41,11 @@ ApplicationMgr.TopAlg = {
 // turn on ntupleWriterSvc for this test
 AnalysisNtupleAlg.doNtuple = true;
 
-mcRootReaderAlg.mcRootFile="$(ANALYSISNTUPLEROOT)/src/test/mc.root";
+mcRootReaderAlg.mcRootFile="$(ROOTTESTDATAROOT)/data/default/mc.root";
 
-digiRootReaderAlg.digiRootFile="$(ANALYSISNTUPLEROOT)/src/test/digi.root";
+digiRootReaderAlg.digiRootFile="$(ROOTTESTDATAROOT)/data/default/digi.root";
 
-reconRootReaderAlg.ReconRootFile="$(ANALYSISNTUPLEROOT)/src/test/recon.root";
+reconRootReaderAlg.ReconRootFile="$(ROOTTESTDATAROOT)/data/default/recon.root";
 
 ApplicationMgr.DLLs   += { "RootHistCnv", "ntupleWriterSvc"};
 ApplicationMgr.HistogramPersistency = "ROOT";
