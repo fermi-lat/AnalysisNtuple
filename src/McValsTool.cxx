@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.3 2003/03/03 07:23:08 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.4 2003/03/03 22:49:26 lsrea Exp $
 
 // Include files
 
@@ -121,8 +121,8 @@ StatusCode McValsTool::initialize()
     addItem("McZDirErr",      &MC_zdir_err);     
     
     addItem("McDirErr",       &MC_dir_err);      
-    addItem("McTKR1DirErr",   &MC_TKR1_dir_err); 
-    addItem("McTKR2DirErr",   &MC_TKR2_dir_err);   
+    addItem("McTkr1DirErr",   &MC_TKR1_dir_err); 
+    addItem("McTkr2DirErr",   &MC_TKR2_dir_err);   
     
     zeroVals();
     
