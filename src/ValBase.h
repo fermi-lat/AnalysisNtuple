@@ -4,6 +4,7 @@
 #include "GaudiKernel/IDataProviderSvc.h"
 #include "GaudiKernel/MsgStream.h"
 
+
 #include "Event/TopLevel/Event.h"
 
 #include "ntupleWriterSvc/INTupleWriterSvc.h"
@@ -12,13 +13,14 @@
 #include <map>
 
 // Some def's and functions to be used later
-class ValBase : public IValsTool {
+class ValBase : public IValsTool, virtual public IIncidentListener
+{
 public:
 
 typedef std::map<std::string, double*> valMap;
 typedef valMap::iterator mapIter;
 
-    ValBase() : m_run(-1), m_event(-1) {m_ntupleMap.clear();}
+    ValBase() : m_newEvent(true), m_handleSet(false) {m_ntupleMap.clear();}
     ~ValBase() {return;}
 
     /// clear map values
@@ -37,21 +39,24 @@ typedef valMap::iterator mapIter;
     /// output the names and values, either all (default) or just one;
     virtual void browseValues(std::string varName = "");
     /// store the data provider
-    virtual void setEventSvc(IDataProviderSvc* svc);
+    //virtual void setEventSvc(IDataProviderSvc* svc);
+    /// pass in the pointer to the incident service
+    virtual void setIncSvc(IIncidentSvc* incsvc);
+    /// this is called by the incident service at the beginning of an event
+    virtual void handle(const Incident& inc);
 
     /// calculate all values, over-ridden by XxxValsTool
     virtual StatusCode calculate();
-
 
 protected:
 
     /// map containing ntuple names, and pointers to the ntuple variables
     valMap m_ntupleMap;
-    /// run number, to test first time through
-    int m_run;
-    /// event number, to test first time through
-    int m_event;
-    /// passed in by Tool
-    IDataProviderSvc* pEventSvc;
+    /// flag to signal new event
+    bool m_newEvent;
+    /// flag to signal that handle is set
+    bool m_handleSet;
+    /// pointer to incident service
+    IIncidentSvc* m_incSvc;
 };
 #endif

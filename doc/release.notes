@@ -1,6 +1,9 @@
 /** @file release.notes
   @brief Package AnalysisNtule
   @verbatum
+
+ v0r1    24-Feb-03   LSR  Add IncidentSvc to signal new event
+ v0      23-Feb-03   THB  Initial import
   
   @endverbatum
  */

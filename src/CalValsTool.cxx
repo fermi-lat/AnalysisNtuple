@@ -1,4 +1,4 @@
-// $Header$
+// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.1.1.1 2003/02/23 21:31:10 burnett Exp $
 
 // Include files
 
@@ -256,14 +256,19 @@ StatusCode CalValsTool::initialize()
     
     if( serviceLocator() ) {
 
-        // all the XxxValsTools must retrieve EventDataSvc and pass it 
-        // to ValBase
+        IIncidentSvc* incSvc;
+        sc = serviceLocator()->service( "IncidentSvc", incSvc, true );
+        if(sc.isFailure()){
+            log << MSG::ERROR << "Could not find IncidentSvc" << endreq;
+            return sc;
+        }
+        setIncSvc(incSvc);
+
         sc = serviceLocator()->service( "EventDataSvc", m_pEventSvc, true );
         if(sc.isFailure()){
             log << MSG::ERROR << "Could not find EventSvc" << endreq;
             return sc;
         }
-        setEventSvc(m_pEventSvc);
 
         sc = serviceLocator()->service( "TkrGeometrySvc", pTkrGeoSvc, true );
         if(sc.isFailure()) {
@@ -279,14 +284,6 @@ StatusCode CalValsTool::initialize()
             return StatusCode::FAILURE;
         }
 
-        /*
-        sc = toolSvc()->retrieveTool("TkrQueryClustersTool", pQueryClusters);
-        if (sc.isFailure()) {
-            log << MSG::ERROR << "Couldn't retrieve TkrQueryClusterTool" << endreq;
-            return StatusCode::FAILURE;
-        }
-        */
-                
         // Which propagator to use?
         int m_PropagatorType = 0; 
         IPropagatorTool* propTool = 0;

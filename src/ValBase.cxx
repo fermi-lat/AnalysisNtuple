@@ -39,10 +39,9 @@ void ValBase::browseValues(std::string varName)
     std::string indent    = "    ";
     
     if (varName!="") {
-        std::cout  << " Run " << m_run << ", event " << m_event << " -- " ;
+        std::cout  << " Variable " ;
     } else {
-        std::cout  << " Values of the variables for run " << m_run << ", event " 
-        << m_event << ":" << std::endl;
+        std::cout  << " Values of the variables:" << std::endl;
     }
     int length = indent.size();
     mapIter it = m_ntupleMap.begin();
@@ -75,15 +74,18 @@ StatusCode ValBase::fillNtuple (INTupleWriterSvc* pSvc, std::string tupleName)
 StatusCode ValBase::doCalcIfNotDone()
 {
     StatusCode sc = StatusCode::SUCCESS;    
-    // Recover EventHeader Pointer
-    //std::cout << " EventSvc Pointer " << pEventSvc << std::endl;
-    SmartDataPtr<Event::EventHeader> pEvent(pEventSvc, EventModel::EventHeader);
-    if( pEvent->run()!=m_run || pEvent->event()!=m_event) {
+   
+    // kludge to get around multiple initializations of tool
+    // too many calls to addListener otherwise!
+    if(!m_handleSet) {
+        m_incSvc->addListener(this, "BeginEvent", 100);
+        m_handleSet = true;
+    }
+    if(m_newEvent) {
         zeroVals();
         sc = calculate();
         //std::cout << "calc done for this event" << std::endl;
-        m_run   = pEvent->run();
-        m_event = pEvent->event();
+        m_newEvent = false;
     }
     return sc;
 }       
@@ -128,14 +130,22 @@ void ValBase::announceBadName(std::string varName) {
     std::cout << std::endl;
 }
 
-
-void ValBase::setEventSvc(IDataProviderSvc* svc)
-{
-    pEventSvc = svc;
-}
-
 StatusCode ValBase::calculate() {
     std::cout << "No specific calc routine defined!" << std::endl;
     return StatusCode::SUCCESS;
 }
 
+void ValBase::handle(const Incident & inc) 
+{
+    if(inc.type()=="BeginEvent") {
+        //std::cout << "handle called at BeginEvent" << std::endl;
+        m_newEvent = true;
+    }
+}
+
+void ValBase::setIncSvc(IIncidentSvc* incSvc)
+{
+    m_incSvc = incSvc;
+    // for now, do this at the first event
+    //incSvc->addListener(this, "BeginEvent", 100);
+}
