@@ -2,7 +2,7 @@
 @brief Uses the XxxValsTools to produce a comprehensive ntuple
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.21 2004/06/22 18:49:46 burnett Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.22 2004/08/24 16:20:25 baughman Exp $
 */
 
 // Gaudi system includes
@@ -123,8 +123,7 @@ StatusCode AnalysisNtupleAlg::initialize(){
 
     //probably a better way to do this!
     // default set:
-    //std::string toolnames [] = {"Mc", "Glt", "TkrHit", "Tkr", "Vtx",  "Cal", "Acd", "Evt", "", "", "", ""};
-	std::string toolnames [] = {"TkrHit", "Tkr", "Vtx",  "Cal", "Evt", "EGRET", "", "", ""};
+    std::string toolnames [] = {"Mc", "Glt", "TkrHit", "Tkr", "Vtx",  "Cal", "Acd", "Evt", "", "", "", ""};
     int i;
     int namesSize;
 
@@ -287,7 +286,6 @@ StatusCode AnalysisNtupleAlg::execute()
             else if (toolname=="AcdValsTool"    ) {varname = "AcdTileCount";}
             else if (toolname=="EvtValsTool"    ) {varname = "EvtLogESum";}
             else if (toolname=="McAnalValsTool" ) {varname = "McPrmEnegy";}
-			else if (toolname=="EGRETValsTool"  ) {varname = "EGRET";}
             else                                  {varname = "";}
             varnames.push_back(varname);
         }
