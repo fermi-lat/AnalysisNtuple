@@ -1,7 +1,7 @@
 /** @file McAnalValsTool.cxx
     @brief declartion, implementaion of the class UserAlg
 
-    $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McAnalValsTool.cxx,v 1.5 2004/02/19 22:45:58 usher Exp $
+    $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McAnalValsTool.cxx,v 1.6 2004/02/20 02:30:01 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -27,6 +27,9 @@
 #include "GlastSvc/MonteCarlo/IMcGetTrackInfoTool.h"
 
 #include <algorithm>
+
+// to activate debug vars
+// #define DEBUG
 
 /*! @class McAnalValsTool
 @brief calculates Monte Carlo values
@@ -436,8 +439,10 @@ StatusCode McAnalValsTool::calculate()
             const Event::TkrPatCand* patCand = m_mcTracks->getBestTkrPatCand(mcMain);
             if (patCand)
             {
+#ifdef DEBUG
                 int numHits = m_mcTracks->getNumMcHits(patCand,mcMain);
                 int jjj=0;
+#endif
             }
 
             // If there are two gamma conversion tracks then do this part

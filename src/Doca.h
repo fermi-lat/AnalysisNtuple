@@ -2,7 +2,7 @@
 @brief header file for Doca.cxx (q.v.)
 @author Tracy Usher, Leon Rochester
 
-$Header$
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/Doca.h,v 1.3 2003/03/05 02:03:29 lsrea Exp $
 */
 
 

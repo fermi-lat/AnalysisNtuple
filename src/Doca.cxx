@@ -2,7 +2,7 @@
 @brief calculates the DOCA between two straight lines, and related quantities
 @author Tracy Usher, Leon Rochester
 
-$Header$
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/Doca.cxx,v 1.2 2003/03/05 02:03:29 lsrea Exp $
 */
 
 #include "Doca.h"

@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.36 2004/06/04 20:36:44 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.37 2004/06/16 00:34:00 lsrea Exp $
 */
 
 // To Do:
@@ -634,8 +634,8 @@ StatusCode TkrValsTool::calculate()
         m_G4PropTool->setStepStart(x1, -t1); //Note minus sign - swim backwards towards ACD
 
         double topOfTkr = pTkrGeoSvc->getReconLayerZ(0) + 2.0; // higher than first silicon layer
-        double xEdge = 0.5*m_xNum*m_towerPitch;
-        double yEdge = 0.5*m_yNum*m_towerPitch;
+        //double xEdge = 0.5*m_xNum*m_towerPitch;
+        //double yEdge = 0.5*m_yNum*m_towerPitch;
         double arc_min = fabs((topOfTkr-x1.z())/t1.z());
         arc_min = std::min( arc_min, maxPath); 
         m_G4PropTool->step(arc_min);  
@@ -778,8 +778,8 @@ StatusCode TkrValsTool::calculate()
                 Tkr_HDCount = pQueryClusters->numberOfUUHitsNear(iplane, xRgn, yRgn, x_hit);
             }
 
-            int outside = 0; 
-            int iView   = 0;
+            //int outside = 0; 
+            //int iView   = 0;
             double layer_edge = towerEdge(x_hit);
 
             double in_frac_soft = containedFraction(x_hit, gap, rm_soft, costh, Tkr_1_Phi);

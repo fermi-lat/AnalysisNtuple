@@ -2,7 +2,7 @@
 @brief Uses the XxxValsTools to produce a comprehensive ntuple
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.18 2003/05/09 05:22:08 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.19 2004/02/20 02:30:01 lsrea Exp $
 */
 
 // Gaudi system includes
@@ -35,6 +35,7 @@ public:
         : m_ntupleSvc(ntupleSvc), m_ntupleName(ntupleName) {}
     virtual IValsTool::Visitor::eVisitorRet 
         analysisValue(std::string varName, const double& value) const;
+    virtual ~NtupleVisitor() {}
     
 private:
     /// pointer to the ntuple servic
