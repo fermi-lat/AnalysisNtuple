@@ -21,6 +21,8 @@
   and sets up and calls the traverse() method of each tool with a pointer to a 
   visitor. Then it fills the ntuple with information from the visitor callback.
 
+  The definition of the variables can be found <a href="../ntuple_doc.htm"> here </a>.
+
   In debug mode, it exercises some other methods of the tools: getVal(), to return
   an individual value, and browse(), to print out a name and value.
 
