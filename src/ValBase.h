@@ -2,7 +2,7 @@
 @brief header file for ValBase.cxx
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.h,v 1.21 2004/06/04 20:36:44 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.h,v 1.22 2004/06/17 19:44:00 lsrea Exp $
 */
 
 #ifndef ValBase_h
@@ -27,11 +27,28 @@ class IDataProviderSvc;
 
 */
 
+class TypedPointer 
+{
+public:  
+    TypedPointer(std::string type, void* pointer) : m_type(type), m_pointer(pointer)
+    {}
+    ~TypedPointer() {}
+
+    std::string getType()   { return    m_type; }
+    void* getPointer()      { return    m_pointer; }
+    void setVal(int val)    { *(reinterpret_cast<int*>(getPointer())) = val; }
+    void setVal(float val)  { *(reinterpret_cast<float*>(getPointer())) = val; }
+    void setVal(double val) { *(reinterpret_cast<double*>(getPointer())) = val; }
+
+private:
+    std::string m_type;
+    void*       m_pointer;
+};
+
 class ValBase : public IValsTool,  public AlgTool,  virtual public IIncidentListener
 {
 public:
-    
-    typedef std::pair<std::string, double*> valPair;
+    typedef std::pair<std::string, TypedPointer*> valPair;
     typedef std::vector<valPair*> valMap;
     typedef valMap::iterator mapIter;
     typedef valMap::const_iterator constMapIter;
@@ -45,12 +62,18 @@ public:
     virtual void zeroVals();
     /// add an item to the map
     virtual void addItem(std::string varName, double* pValue);
+    virtual void addItem(std::string varName, float* pValue);
+    virtual void addItem(std::string varName, int* pValue);
     /// do calculation if not already done for this event
     virtual StatusCode doCalcIfNotDone();
     /// get a particular value, using ntuple name default forces calculation
     virtual StatusCode getVal(std::string varName, double& value, int check = 0);
+    virtual StatusCode getVal(std::string varName, float& value, int check = 0);
+    virtual StatusCode getVal(std::string varName, int& value, int check = 0);
     /// get a particular value, using ntuple name, with calc checking (called by AnaTup)
     virtual StatusCode getValCheck(std::string varName, double& value);
+    virtual StatusCode getValCheck(std::string varName, float& value);
+    virtual StatusCode getValCheck(std::string varName, int& value);
     /// output the list of names
     virtual void announceBadName(std::string varName);
     /// output the names and values, either all (default) or just one;

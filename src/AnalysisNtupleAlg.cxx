@@ -2,7 +2,7 @@
 @brief Uses the XxxValsTools to produce a comprehensive ntuple
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.22 2004/08/24 16:20:25 baughman Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.23 2004/08/24 16:45:07 heather Exp $
 */
 
 // Gaudi system includes
@@ -35,6 +35,10 @@ public:
         : m_ntupleSvc(ntupleSvc), m_ntupleName(ntupleName) {}
     virtual IValsTool::Visitor::eVisitorRet 
         analysisValue(std::string varName, const double& value) const;
+    virtual IValsTool::Visitor::eVisitorRet 
+        analysisValue(std::string varName, const float& value) const;
+    virtual IValsTool::Visitor::eVisitorRet 
+        analysisValue(std::string varName, const int& value) const;
     virtual ~NtupleVisitor() {}
     
 private:
@@ -46,6 +50,26 @@ private:
 
 IValsTool::Visitor::eVisitorRet NtupleVisitor::analysisValue(std::string varName, 
                                                              const double& value) const
+{ 
+    StatusCode sc;
+    if (m_ntupleSvc) {
+        sc = m_ntupleSvc->addItem(m_ntupleName,  varName, &value );
+        if (sc.isFailure()) return IValsTool::Visitor::ERROR;
+    }    
+    return IValsTool::Visitor::CONT;
+}
+IValsTool::Visitor::eVisitorRet NtupleVisitor::analysisValue(std::string varName, 
+                                                             const float& value) const
+{ 
+    StatusCode sc;
+    if (m_ntupleSvc) {
+        sc = m_ntupleSvc->addItem(m_ntupleName,  varName, &value );
+        if (sc.isFailure()) return IValsTool::Visitor::ERROR;
+    }    
+    return IValsTool::Visitor::CONT;
+}
+IValsTool::Visitor::eVisitorRet NtupleVisitor::analysisValue(std::string varName, 
+                                                             const int& value) const
 { 
     StatusCode sc;
     if (m_ntupleSvc) {

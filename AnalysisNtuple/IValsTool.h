@@ -2,7 +2,7 @@
 @brief common abstract inteface for all the XxxValsTools
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/AnalysisNtuple/IValsTool.h,v 1.11 2003/05/08 21:54:25 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/AnalysisNtuple/IValsTool.h,v 1.12 2003/05/09 05:22:08 lsrea Exp $
 */
 
 #ifndef _H_IValsTool
@@ -11,7 +11,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/AnalysisNtuple/IValsTool.h,
 #include "GaudiKernel/IAlgTool.h"
 
 // Declaration of the interface ID ( interface id, major version, minor version) 
-static const InterfaceID IID_IValsTool("IValsTool", 4 , 0); 
+static const InterfaceID IID_IValsTool("IValsTool", 5 , 0); 
 
 /** @class IValsTool
 * @brief Abstract interface for the XxxValsTools, including visitor
@@ -32,9 +32,13 @@ public:
     static const InterfaceID& interfaceID() { return IID_IValsTool; }
     
     /// get a particular value, using ntuple name
-    virtual StatusCode getVal(std::string varName, double& value, int check = CALC) =0;
+    virtual StatusCode getVal(std::string varName, double& value, int check = CALC) = 0;
+    virtual StatusCode getVal(std::string varName, float& value, int check = CALC) = 0;
+    virtual StatusCode getVal(std::string varName, int& value, int check = CALC) = 0;
     /// get a particular value, using ntuple name, with calc checking
     virtual StatusCode getValCheck(std::string varName, double& value) =0;
+    virtual StatusCode getValCheck(std::string varName, float& value) =0;
+    virtual StatusCode getValCheck(std::string varName, int& value) =0;
     /// output the names and values, either all (default) or just one;
     virtual StatusCode browse(std::string varName = "") =0;
     /// let the user trigger her own calculation
@@ -65,6 +69,10 @@ public:
         /// callback to send varnames and values to the client
         virtual Visitor::eVisitorRet analysisValue(std::string varName,
             const double& value) const =0;
+        virtual Visitor::eVisitorRet analysisValue(std::string varName,
+            const float& value) const =0;
+        virtual Visitor::eVisitorRet analysisValue(std::string varName,
+            const int& value) const =0;
     }; 
     
     

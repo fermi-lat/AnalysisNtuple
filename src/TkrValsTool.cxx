@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.39 2004/06/21 11:44:02 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.40 2004/08/09 17:58:44 atwood Exp $
 */
 
 // To Do:
@@ -183,6 +183,10 @@ private:
 
     double Tkr_2TkrAngle;
     double Tkr_2TkrHDoca;
+
+    // here's some test stuff... if it works for a couple it will work for all
+    float Tkr_float;
+    int   Tkr_int;
 };
 
 // Static factory for instantiation of algtool objects
@@ -355,6 +359,10 @@ StatusCode TkrValsTool::initialize()
     addItem("Tkr2TkrAngle",         &Tkr_2TkrAngle); 
     addItem("Tkr2TkrHDoca",         &Tkr_2TkrHDoca); 
 
+    // for test, uncomment these statements:
+    //addItem("TkrFloat", &Tkr_float);
+    //addItem("TkrInt",   &Tkr_int);
+
     zeroVals();
 
     return sc;
@@ -386,6 +394,9 @@ StatusCode TkrValsTool::calculate()
     StatusCode sc = StatusCode::SUCCESS;
 
     MsgStream log(msgSvc(), name());
+
+    Tkr_float = 5.5;
+    Tkr_int   = 123;
 
     //placeholder for offset
     double z0 = 0.0;

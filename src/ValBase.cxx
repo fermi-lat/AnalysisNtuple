@@ -2,7 +2,7 @@
 @brief implements all the methods of the XxxValsTools
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.cxx,v 1.20 2003/05/09 05:29:18 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.cxx,v 1.21 2003/10/12 07:06:43 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -75,18 +75,36 @@ void ValBase::zeroVals()
 {
     mapIter it = m_ntupleMap.begin();
     for ( ; it!=m_ntupleMap.end(); ++it) {
-        *((*it)->second) = 0.0;
+        TypedPointer* ptr = ((*it)->second);
+        if (ptr->getType()=="float")       *reinterpret_cast<float*>(ptr->getPointer()) = 0.0;
+        else if (ptr->getType()=="double") *reinterpret_cast<double*>(ptr->getPointer()) = 0.0;
+        else if (ptr->getType()=="int")    *reinterpret_cast<int*>(ptr->getPointer()) = 0;
     }
 
 }
 
 void ValBase::addItem(std::string varName, double* pValue)
 {
-    valPair* pair = new valPair(varName, pValue);
+    TypedPointer* ptr = new TypedPointer("double", (void*) pValue);
+    valPair* pair = new valPair(varName, ptr);
 
     m_ntupleMap.push_back(pair);
 }
 
+void ValBase::addItem(std::string varName, float* pValue)
+{
+    TypedPointer* ptr = new TypedPointer("float", (void*) pValue);
+    valPair* pair = new valPair(varName, ptr);
+
+    m_ntupleMap.push_back(pair);
+}
+void ValBase::addItem(std::string varName, int* pValue)
+{
+    TypedPointer* ptr = new TypedPointer("int", (void*) pValue);
+    valPair* pair = new valPair(varName, ptr);
+
+    m_ntupleMap.push_back(pair);
+}
 
 StatusCode ValBase::browse(std::string varName) 
 {
@@ -117,15 +135,26 @@ StatusCode ValBase::browse(std::string varName)
     for ( ; it!=m_ntupleMap.end(); ++it) {
         valPair* pair = *it;
         if (varName!="" && varName!=pair->first) continue;
+        /*
         int valLen = (*(pair->second)==0) ? 1 : 13;
         if (fmod(*(pair->second),1.)==0) valLen = 5;
+        */ 
+        int valLen = 13;
         int deltaL= (pair->first).size() + 2*delim.size() + separator.size() + valLen + 2;
         length += deltaL;
         if(length>78) {
             std::cout <<std::endl << indent ;
             length = indent.size() + deltaL;
         }
-        std::cout  << delim << pair->first << delim << ": " << *(pair->second) << separator;
+        std::cout << delim << pair->first << delim << ": " ;
+
+        TypedPointer* ptr = (*it)->second;
+        std::string type = ptr->getType();
+
+        if (type=="float")       {std::cout << *reinterpret_cast<float*>(ptr->getPointer());}
+        else if (type=="double") {std::cout << *reinterpret_cast<double*>(ptr->getPointer());}
+        else if (type=="int")    {std::cout << *reinterpret_cast<int*>(ptr->getPointer());}
+        std::cout << separator;
     }
     std::cout << std::endl;
     return StatusCode::SUCCESS;
@@ -160,6 +189,45 @@ StatusCode ValBase::getValCheck(std::string varName, double& value)
     // a simple way to force the check
     return getVal(varName, value, CHECK);
 }
+StatusCode ValBase::getValCheck(std::string varName, float& value)
+{
+    // a simple way to force the check
+    return getVal(varName, value, CHECK);
+}
+StatusCode ValBase::getValCheck(std::string varName, int& value)
+{
+    // a simple way to force the check
+    return getVal(varName, value, CHECK);
+}
+
+StatusCode ValBase::getVal(std::string varName, int& value, int check)
+{
+    // optional check flag
+
+    StatusCode sc = StatusCode::SUCCESS;
+
+    m_check = check;
+    
+    constMapIter it = m_ntupleMap.begin();
+    for ( ; it!=m_ntupleMap.end(); ++it) {
+        if ((*it)->first == varName) break;
+    }
+    
+    if (it==m_ntupleMap.end()) { 
+        announceBadName(varName); 
+        m_check = CHECK;
+        return StatusCode::FAILURE;
+    } else {
+        if(doCalcIfNotDone().isFailure()) {
+            m_check = CHECK;
+            return StatusCode::FAILURE;
+        }
+        TypedPointer* ptr = (*it)->second;
+        value = *(reinterpret_cast<int*>(ptr->getPointer()));
+    }
+    m_check = CHECK;
+    return sc;
+}
 
 StatusCode ValBase::getVal(std::string varName, double& value, int check)
 {
@@ -183,7 +251,37 @@ StatusCode ValBase::getVal(std::string varName, double& value, int check)
             m_check = CHECK;
             return StatusCode::FAILURE;
         }
-        value = *(*it)->second;
+        TypedPointer* ptr = (*it)->second;
+        value = *(reinterpret_cast<double*>(ptr->getPointer()));
+    }
+    m_check = CHECK;
+    return sc;
+}
+
+StatusCode ValBase::getVal(std::string varName, float& value, int check)
+{
+    // optional check flag
+
+    StatusCode sc = StatusCode::SUCCESS;
+
+    m_check = check;
+    
+    constMapIter it = m_ntupleMap.begin();
+    for ( ; it!=m_ntupleMap.end(); ++it) {
+        if ((*it)->first == varName) break;
+    }
+    
+    if (it==m_ntupleMap.end()) { 
+        announceBadName(varName); 
+        m_check = CHECK;
+        return StatusCode::FAILURE;
+    } else {
+        if(doCalcIfNotDone().isFailure()) {
+            m_check = CHECK;
+            return StatusCode::FAILURE;
+        }
+        TypedPointer* ptr = (*it)->second;
+        value = *(reinterpret_cast<float*>(ptr->getPointer()));
     }
     m_check = CHECK;
     return sc;
@@ -247,7 +345,16 @@ IValsTool::Visitor::eVisitorRet ValBase::traverse(IValsTool::Visitor* v,
     constMapIter it = m_ntupleMap.begin();
     for ( ; it!=m_ntupleMap.end(); ++it) {
         valPair* pair = *it;
-        ret = v->analysisValue(pair->first, *(pair->second));
+        TypedPointer* ptr = pair->second;
+        std::string type = ptr->getType();
+        if (type=="float") {
+            ret = v->analysisValue(pair->first, *(reinterpret_cast<float*>(ptr->getPointer())));
+        } else if (type=="double") {
+            ret = v->analysisValue(pair->first, *(reinterpret_cast<double*>(ptr->getPointer())));
+        } else {
+            ret = v->analysisValue(pair->first, *(reinterpret_cast<int*>(ptr->getPointer())));
+        }
+
         if (ret!= IValsTool::Visitor::CONT) return ret;
     }
     return IValsTool::Visitor::DONE;
