@@ -2,7 +2,7 @@
 @brief Uses the XxxValsTools to produce a comprehensive ntuple
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.17 2003/05/08 21:54:25 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.18 2003/05/09 05:22:08 lsrea Exp $
 */
 
 // Gaudi system includes
@@ -21,6 +21,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v
 
 // for access to geometry perhaps
 #include "GlastSvc/GlastDetSvc/IGlastDetSvc.h"
+
 
 /** @class NtupleVisitor
 @brief fields the callback from the tools; fills ntuple with names and values
@@ -81,8 +82,11 @@ private:
     std::vector<IValsTool*> m_toolvec;
     /// tool names
     std::vector<std::string> m_toolnames;
+    /// switch to turn on ntupleWriterSvc, for test purposes
+    bool m_doNtuple;
+
     
-    IValsTool::Visitor* m_visitor;    
+    IValsTool::Visitor* m_visitor; 
 };
 
 static const AlgFactory<AnalysisNtupleAlg>  Factory;
@@ -98,6 +102,7 @@ AnalysisNtupleAlg::AnalysisNtupleAlg(const std::string& name, ISvcLocator* pSvcL
     declareProperty("tuple_name",  m_tupleName="");   
     // List of tools to use -- maybe a bit kludgy, since the spelling need to be correct!
     declareProperty("toolList", m_toolnames);
+    declareProperty("doNtuple", m_doNtuple=false);
     
 }
 
@@ -117,7 +122,7 @@ StatusCode AnalysisNtupleAlg::initialize(){
 
     //probably a better way to do this!
     // default set:
-    std::string toolnames [] = {"Mc", "Glt", "TkrHit", "Tkr", "Vtx",  "Cal", "Acd", "Evt", ""};
+    std::string toolnames [] = {"Mc", "Glt", "TkrHit", "Tkr", "Vtx",  "Cal", "Acd", "Evt", "", "", "", ""};
 
     int i;
     int namesSize;
@@ -164,7 +169,8 @@ StatusCode AnalysisNtupleAlg::initialize(){
     }
         
     // get a pointer to our ntupleWriterSvc
-    if (!m_tupleName.empty()) {
+    m_ntupleSvc = 0;
+    if (!m_tupleName.empty()& m_doNtuple) {
         if (service("ntupleWriterSvc", m_ntupleSvc, true).isFailure()) {
             log << MSG::ERROR 
                 << "AnalysisNtupleAlg failed to get the ntupleWriterSvc" 
@@ -181,7 +187,7 @@ StatusCode AnalysisNtupleAlg::initialize(){
     }
     log << endreq;
 
-    if (!m_tupleName.empty()) {
+    if (!m_tupleName.empty() & m_doNtuple) {
                 
         if(m_ntupleSvc->addItem(m_tupleName.c_str(), "NumCalls", 0).isFailure()) {
             log << MSG::ERROR << "AddItem failed" << endreq;
@@ -219,9 +225,8 @@ StatusCode AnalysisNtupleAlg::execute()
     }
     */
     
-    if (!m_tupleName.empty()) {
-        
-        
+    if (!m_tupleName.empty()& m_doNtuple) {
+               
         if(m_ntupleSvc->addItem(m_tupleName.c_str(), "NumCalls", m_count).isFailure()) {
             log << MSG::ERROR << "AddItem failed" << endreq;
             return fail;
@@ -277,6 +282,7 @@ StatusCode AnalysisNtupleAlg::execute()
             else if (toolname=="CalValsTool"    ) {varname = "CalEneSumCorr";}
             else if (toolname=="AcdValsTool"    ) {varname = "AcdTileCount";}
             else if (toolname=="EvtValsTool"    ) {varname = "EvtLogESum";}
+            else if (toolname=="McAnalValsTool" ) {varname = "McPrmEnegy";}
             else                                  {varname = "";}
             varnames.push_back(varname);
         }

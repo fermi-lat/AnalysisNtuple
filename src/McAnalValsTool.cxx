@@ -1,7 +1,7 @@
 /** @file McAnalValsTool.cxx
     @brief declartion, implementaion of the class UserAlg
 
-    $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McAnalValsTool.cxx,v 1.4 2004/02/13 06:22:38 lsrea Exp $
+    $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McAnalValsTool.cxx,v 1.5 2004/02/19 22:45:58 usher Exp $
 */
 
 #include "ValBase.h"
@@ -180,16 +180,20 @@ StatusCode McAnalValsTool::initialize()
     }
 
     // TO DO here: gracefully return if tools not located, set up to NOT run the tool
+    m_mcEvent = 0;
     sc = toolSvc()->retrieveTool("McGetEventInfoTool", m_mcEvent);
     if (sc.isFailure()) {
-        log << MSG::ERROR << " McGetEventInfoTool not found!" << endreq;
-        return sc;
+        log << MSG::INFO << " McGetEventInfoTool not found" << endreq;
+        log << MSG::INFO << " Will not generate McAnalVals" << endreq;
+        return StatusCode::SUCCESS;
     }
 
+    m_mcTracks = 0;
     sc = toolSvc()->retrieveTool("McGetTrackInfoTool", m_mcTracks);
     if (sc.isFailure()) {
-        log << MSG::ERROR << " McGetTrackInfoTool not found!" << endreq;
-        return sc;
+        log << MSG::INFO << " McGetTrackInfoTool not found!" << endreq;
+        log << MSG::INFO << " Will not generate McAnalVals" << endreq;
+        return StatusCode::SUCCESS;
     }
     
     // load up the map
@@ -280,6 +284,8 @@ StatusCode McAnalValsTool::calculate()
 {
     StatusCode sc = StatusCode::SUCCESS;
     MsgStream  log( msgSvc(), name() );
+
+    if (m_mcEvent==0 || m_mcTracks==0) return sc;
 
     // Retrieving pointers from the TDS 
     SmartDataPtr<Event::EventHeader>   header(m_pEventSvc,    EventModel::EventHeader);

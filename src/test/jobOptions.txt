@@ -33,6 +33,9 @@ ApplicationMgr.TopAlg = {
     "AnalysisNtupleAlg"
     };
 
+// turn on ntupleWriterSvc for this test
+AnalysisNtupleAlg.doNtuple = true;
+
 mcRootReaderAlg.mcRootFile="$(ANALYSISNTUPLEROOT)/src/test/mc.root";
 
 digiRootReaderAlg.digiRootFile="$(ANALYSISNTUPLEROOT)/src/test/digi.root";
@@ -47,12 +50,13 @@ ApplicationMgr.ExtSvc += { "NTupleSvc", "ntupleWriterSvc" };
 
 ApplicationMgr.HistogramPersistency = "ROOT";
 ntupleWriterSvc.tuple_name = { "GLEAM" };
-NTupleSvc.Output = {"GLEAM DATAFILE='NTUPLE_Output.root' OPT='NEW'"};
+NTupleSvc.Output = {"GLEAM DATAFILE='ntupleOutput.root' OPT='NEW'"};
 
 AnalysisNtupleAlg.tupleName="GLEAM";
 
 //Test of tool list, just the default
-AnalysisNtupleAlg.toolList = {"Mc", "Glt", "TkrHit", "Tkr", "Vtx",  "Cal", "Acd", "Evt"};
+AnalysisNtupleAlg.toolList = {"Mc", "Glt", "TkrHit", "Tkr", 
+                              "Vtx",  "Cal", "Acd", "Evt" };
 
 
 // Set output level threshold (2=DEBUG, 3=INFO, 4=WARNING, 5=ERROR, 6=FATAL )
