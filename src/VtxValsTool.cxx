@@ -3,7 +3,7 @@
 @brief Calculates the Vtx analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.14 2004/09/30 17:12:21 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.15 2005/01/04 23:49:33 atwood Exp $
 */
 
 // Include files
@@ -181,6 +181,8 @@ StatusCode VtxValsTool::calculate()
 	VTX_y0        = x0.y();
 	VTX_z0        = x0.z();
 
+    VTX_Status  = gamma->getStatusBits(); 
+
 	// Get the first track location and direction
 	Point  x1 = track_1->front()->getPoint(Event::TkrTrackHit::SMOOTHED);
 	Vector t1 = track_1->front()->getDirection(Event::TkrTrackHit::SMOOTHED);
@@ -208,9 +210,8 @@ StatusCode VtxValsTool::calculate()
 
 		VTX_Quality = gamma->getQuality(); 
 		VTX_Chisq   = gamma->getChiSquare(); 
-		VTX_Status  = gamma->getStatusBits(); 
 		VTX_AddedRL = gamma->getAddedRadLen();
 	}
-
+    
 	return sc;
 }
