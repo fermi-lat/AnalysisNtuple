@@ -3,7 +3,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.39 2004/06/04 20:36:44 lsrea Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.40 2004/06/16 00:34:00 lsrea Exp $
 */
 
 // Include files
@@ -38,6 +38,7 @@
 #include "idents/TowerId.h" 
 #include "idents/VolumeIdentifier.h"
 #include "CLHEP/Geometry/Transform3D.h"
+#include "CLHEP/Vector/Rotation.h"
 
 #include "TMath.h"
 
@@ -77,12 +78,6 @@ namespace {
     
 }
 
-/*! @class CalValsTool
-@brief calculates Cal values
-
-  @authors Bill Atwood, Leon Rochester
-  */
-  
   class CalValsTool :   public ValBase
   {
   public:
@@ -102,6 +97,7 @@ namespace {
       double activeDist(Point pos, int& view) const;
       double containedFraction(Point pos, double gap, 
                                       double r, double costh, double phi) const;
+	  StatusCode aveRadLens(Point x0, Vector t0, double radius, int numSamples);
 
       
       // some pointers to services  
@@ -123,16 +119,25 @@ namespace {
       double m_calZTop;
       double m_calZBot;
 
+	  // Internal Variables
+	  double m_radLen_CsI, m_rms_RL_CsI;
+      double m_radLen_Stuff, m_rms_RL_Stuff;
+      double m_radLen_Cntr, m_rms_RL_Cntr; 
+      double m_radLen_CntrStuff, m_rms_RL_CntrStuff;
+
+      double m_arcLen_CsI; 
+      double m_arcLen_Stuff; 
+      double m_arcLen_Cntr;  
+
       IPropagatorSvc* m_propSvc;
       IPropagator * m_G4PropTool; 
 
 
       
       //Global Calorimeter Tuple Items
-      double CAL_EnergySum;
-      //double CAL_Leak_Corr; 
-      double CAL_Leak_Corr2;
-      //double CAL_Edge_Corr; 
+      double CAL_EnergySum; 
+      double CAL_Leak_Corr;
+      double CAL_Edge_Corr; 
       double CAL_EdgeSum_Corr;     
       //double CAL_Total_Corr; 
       double CAL_TotSum_Corr; 
@@ -141,6 +146,7 @@ namespace {
       double CAL_CsI_RLn;
       double CAL_Tot_RLn;
       double CAL_Cnt_RLn; 
+	  double CAL_LAT_RLn; 
       double CAL_DeadTot_Rat;
       double CAL_DeadCnt_Rat; 
       //double CAL_a_Parm;
@@ -157,7 +163,8 @@ namespace {
       double CAL_ydir;
       double CAL_zdir;
 
-      double CAL_TwrEdge;
+      double CAL_TwrEdgeCntr;
+	  double CAL_TwrEdge0;
       double CAL_LATEdge; 
 
       double CAL_TE_Nrm;
@@ -168,6 +175,7 @@ namespace {
       double CAL_BkHalf_Ratio;
 
       double CAL_Xtal_Ratio;
+      double CAL_Xtal_maxEne; 
       double CAL_eLayer[8];
       double CAL_No_Xtals_Trunc;
       double CAL_Long_Rms;
@@ -267,12 +275,10 @@ namespace {
       addItem("CalEnergySum",  &CAL_EnergySum);
       addItem("CalEnergyCorr", &CAL_Energy_Corr);
       addItem("CalEneSumCorr", &CAL_EneSum_Corr);
-      addItem("Cal_Energy_LLCorr", &CAL_Energy_LLCorr);
+      addItem("CalEnergyLLCorr", &CAL_Energy_LLCorr);
    
-      //addItem("CalLeakCorr",   &CAL_Leak_Corr);
-      addItem("CalLeakCorr2",  &CAL_Leak_Corr2);
-      
-      //addItem("CalEdgeCorr",   &CAL_Edge_Corr);
+      addItem("CalLeakCorr",  &CAL_Leak_Corr); 
+      addItem("CalEdgeCorr",   &CAL_Edge_Corr);
       addItem("CalEdgeSumCorr",&CAL_EdgeSum_Corr);
       //addItem("CalTotalCorr",  &CAL_Total_Corr);
       addItem("CalTotSumCorr", &CAL_TotSum_Corr);
@@ -280,6 +286,7 @@ namespace {
       addItem("CalCsIRLn",     &CAL_CsI_RLn);
       addItem("CalTotRLn",     &CAL_Tot_RLn);
       addItem("CalCntRLn",     &CAL_Cnt_RLn);
+	  addItem("CalLATRLn",     &CAL_LAT_RLn);
       addItem("CalDeadTotRat", &CAL_DeadTot_Rat);
       addItem("CalDeadCntRat", &CAL_DeadCnt_Rat);
       //addItem("CalAParm",      &CAL_a_Parm);
@@ -287,7 +294,8 @@ namespace {
       addItem("CalTPred",      &CAL_t_Pred);
       addItem("CalDeltaT",     &CAL_deltaT);
       
-      addItem("CalTwrEdge",    &CAL_TwrEdge);
+      addItem("CalTwrEdgeCntr",&CAL_TwrEdgeCntr);
+	  addItem("CalTwrEdge",   &CAL_TwrEdge0);
       addItem("CalLATEdge",    &CAL_LATEdge);
       addItem("CalTENrm",      &CAL_TE_Nrm);
       addItem("CalTrackSep",   &CAL_Track_Sep);
@@ -309,6 +317,7 @@ namespace {
 
       addItem("CalXtalsTrunc", &CAL_No_Xtals_Trunc);
       addItem("CalXtalRatio",  &CAL_Xtal_Ratio);
+      addItem("CalXtalMaxEne", &CAL_Xtal_maxEne);
 
       addItem("CalLongRms",    &CAL_Long_Rms);
       addItem("CalLRmsRatio",  &CAL_LRms_Ratio);
@@ -353,6 +362,12 @@ StatusCode CalValsTool::calculate()
     SmartDataPtr<Event::CalXtalRecCol> 
         pxtalrecs(m_pEventSvc,EventModel::CalRecon::CalXtalRecCol);
         
+	//Do some vital initializations
+    CAL_EnergySum     = 0.;
+	CAL_Energy_LLCorr = 0.;
+	CAL_EneSum_Corr   = 0.;
+    CAL_Energy_Corr   = 0.;
+
     //Make sure we have valid cluster data
     if (!pCals) return sc;
 
@@ -369,7 +384,7 @@ StatusCode CalValsTool::calculate()
         CAL_Lyr0_Ratio  = CAL_eLayer[0]/CAL_EnergySum;
         CAL_Lyr7_Ratio  = CAL_eLayer[7]/CAL_EnergySum;
         CAL_BkHalf_Ratio = (CAL_eLayer[4]+CAL_eLayer[5]+
-            CAL_eLayer[6]+CAL_eLayer[7])/CAL_EnergySum;
+                            CAL_eLayer[6]+CAL_eLayer[7])/CAL_EnergySum;
         CAL_LRms_Ratio    = CAL_Long_Rms / CAL_EnergySum;
     }
     
@@ -378,34 +393,37 @@ StatusCode CalValsTool::calculate()
     //Code from meritAlg
     int no_xtals=0;
     int no_xtals_trunc=0;
+    double max_log_energy = 0.; 
     for( Event::CalXtalRecCol::const_iterator jlog=pxtalrecs->begin(); jlog != pxtalrecs->end(); ++jlog){
 
         const Event::CalXtalRecData& recLog = **jlog;
         
         double eneLog = recLog.getEnergy();
+        if(eneLog > max_log_energy) max_log_energy = eneLog; 
         if(eneLog>0)no_xtals++;
         if(eneLog>0.01*CAL_EnergySum)no_xtals_trunc++;
     }
     CAL_Xtal_Ratio= (no_xtals>0) ? float(no_xtals_trunc)/no_xtals : 0;
     CAL_No_Xtals_Trunc = float(no_xtals_trunc); 
+    CAL_Xtal_maxEne = max_log_energy; 
 
     //Overwritten below, if there are tracks
     CAL_Energy_Corr = calCluster->getEnergyCorrected(); 
-    if(CAL_EnergySum < 2.) return sc;  
+    if(CAL_EnergySum < 5.) return sc;  
     
     Point  cal_pos  = calCluster->getPosition();
     Vector cal_dir  = calCluster->getDirection();
     
-    CAL_xEcntr       = cal_pos.x();
-    CAL_yEcntr       = cal_pos.y();
-    CAL_zEcntr       = cal_pos.z();
+    CAL_xEcntr      = cal_pos.x();
+    CAL_yEcntr      = cal_pos.y();
+    CAL_zEcntr      = cal_pos.z();
     CAL_xdir        = cal_dir.x();
     CAL_ydir        = cal_dir.y();
     CAL_zdir        = cal_dir.z();
     
     int view = 0;
     Point pos(CAL_xEcntr, CAL_yEcntr, 0);
-    CAL_TwrEdge = activeDist(pos, view);
+    CAL_TwrEdgeCntr = activeDist(pos, view);
     
     CAL_TE_Nrm = ( view==0 ? cal_dir.x() : cal_dir.y() );
     
@@ -436,17 +454,13 @@ StatusCode CalValsTool::calculate()
     // protect against zero denominator
     double phi_90    = (fabs(t0.x())<1.e-7) ? 0.5*M_PI : fabs(atan(-t0.y()/t0.x()));
     
-    // not used now
-    //double phi_45 = fabs(t0.y()/t0.x());
-    //if(phi_45 > 1.) phi_45 = 1./phi_45;
-    //phi_45 = atan(phi_45); 
-    
+    // Find the distance for energy centroid to track axis
     Vector x_diff = x0 - cal_pos;
     double x_diff_sq = x_diff*x_diff;
     double x_diff_t0 = x_diff*t0;
     CAL_Track_DOCA = sqrt(x_diff_sq - x_diff_t0*x_diff_t0);
 
-    // The direction in Cal is opposite to tracking!
+    // Compare Tkr and Cal directions.  Note: the direction in Cal is opposite to tracking!
     if(fabs(cal_dir.x()) < 1.) {
         double cosCalt0 = -t0*cal_dir; 
         CAL_Track_Angle = acos(cosCalt0);
@@ -454,11 +468,15 @@ StatusCode CalValsTool::calculate()
     else CAL_Track_Angle = -.1; 
     
     // Section to apply edge and leakage correction to Cal data. 
-    // First apply layer by layer edge correction  
-    Ray axis(x0, -t0); //Ray axis(cal_pos, x_diff.unit());
-    double arc_len = -(m_calZTop-x0.z())/t0.z(); 
-    Point z_0 = axis.position(arc_len); // Track entry point to top of Cal Stack 
-    axis = Ray(z_0, x_diff.unit()); //Ray(z_0, -t0); //
+    // First apply layer by layer edge correction 
+	Vector t_axis = x_diff.unit();  // Using "event" axis. Alternative: t_axis = - t0
+    Ray axis(x0, t_axis); 
+    double arc_len = (x0.z()- m_calZTop)/t_axis.z(); 
+    Point cal_top = axis.position(-arc_len); // Event axis entry point to top of Cal Stack 
+    axis      = Ray(cal_top, t_axis); // alternative: Ray(cal_top, -t0); //
+	CAL_x0    = cal_top.x();
+    CAL_y0    = cal_top.y();
+	CAL_z0    = cal_top.z();
 
     std::vector<Vector> pos_Layer = calCluster->getPosLayer();
     std::vector<double> ene_Layer = calCluster->getEneLayer();
@@ -466,31 +484,25 @@ StatusCode CalValsTool::calculate()
     double ene_sum_corr = 0.;
     
     // Factors controlling edge correction: core radius, fringe radius, core fraction
-    //    and size of inter-tower gap (active-to-active area) 
-    double rm_hard   = 18.; // Fixed at ~ 1 rad. len in CsI 
-    
-    double rm_soft   = 55.+ 200.*cal_trans((CAL_EnergySum-250)/200.); 
-     
-    double hard_frac =.50 +.35*cal_trans((670.- CAL_EnergySum)/300.);   
+    // and size of inter-tower gap (active-to-active area) 
+    // What counts is radius of the shower at the CAL entrance.  At low energy, for early
+    // conversions there should be a large radius.  
+    double rm_hard   = 36. + 36.*cal_trans((CAL_EnergySum-250)/200.)* arc_len/500.;  //was 18 - 36mm is ~Rm
+    double rm_soft   = 65. + 65.*cal_trans((CAL_EnergySum-250)/200.)* arc_len/500.;  
+    double hard_frac =  .5  + .5*cal_trans((670.- CAL_EnergySum)/300.);   
       
-    // is this related to towerPitch - CalModule width??
-    double gap       = 48;
+    // This is the effective inter-tower CalModule gap: approx = towerpitch - calwidth = 44 - 46 mm
+    double gap       = 36.;
     
-    // Reset shower area circle when multiple tracks are present
-    // This increasingly matters below 1000 MeV.
+    // Find the distance from the LAT edge for the leading track
     Event::TkrFitTrackBase::TrackEnd end = Event::TkrFitTrackBase::End;
     Ray trj_1 = Ray(track_1->getPosition(end), track_1->getDirection(end));
     double delta_z = trj_1.position().z() - m_calZTop;
     arc_len = delta_z/fabs(trj_1.direction().z());
+
     Point cal_1 = trj_1.position(arc_len);
 
-    // this new code below gives the same answer as this commented code
-    //    in the case of the full LAT
-    //if(fabs(cal_1.x()) > fabs(cal_1.y())) CAL_LATEdge = m_calXWidth/2. - fabs(cal_1.x());
-    //else                                  CAL_LATEdge = m_calYWidth/2. - fabs(cal_1.y());
-
-
-    // get the lower and upper limits for the CAL in the installed towers
+    // Get the lower and upper limits for the CAL in the installed towers
     double deltaX = 0.5*(m_xNum*m_towerPitch - m_calXWidth);
     double deltaY = 0.5*(m_yNum*m_towerPitch - m_calYWidth);
     double calXLo = m_geoSvc->getLATLimit(0,LOW)  + deltaX;
@@ -498,53 +510,24 @@ StatusCode CalValsTool::calculate()
     double calYLo = m_geoSvc->getLATLimit(1,LOW)  + deltaY;
     double calYHi = m_geoSvc->getLATLimit(1,HIGH) - deltaY;
 
-    // now find the point closest to an edge
-
+    // Find the distance closest to an edge
     double calX = cal_1.x(); double calY = cal_1.y();
     double dX = std::max(calXLo-calX, calX-calXHi);
     double dY = std::max(calYLo-calY, calY-calYHi);
     CAL_LATEdge = -std::max(dX, dY);
 
-    if(num_tracks > 1) {
-        pTrack1++;
-        Event::TkrKalFitTrack* track_2  
-            = dynamic_cast<Event::TkrKalFitTrack*>(*pTrack1);
- 
- 
-        Ray trj_2 = Ray(track_2->getPosition(end), track_2->getDirection(end));
- 
-        delta_z = trj_2.position().z() - m_calZTop;
-        arc_len = delta_z/fabs(trj_2.direction().z());
-        Point cal_2 = trj_2.position(arc_len);
-        double separation = (cal_1.x()-cal_2.x())*(cal_1.x()-cal_2.x()) +
-            (cal_1.y()-cal_2.y())*(cal_1.y()-cal_2.y());
-        separation = sqrt(separation); 
-        CAL_Track_Sep = separation;
-        
-        // Broaden shower core 
-        if(separation/2. > rm_hard) { 
-            rm_hard = separation/2.;
-        }
-        // Use track separation to limit the core fraction 
-        double saturation = separation/75.; 
-        if((1.-saturation) > hard_frac) hard_frac = 1. - saturation;
-    }
-    // Limit the hard(core) fraction
-    if(hard_frac < .50) hard_frac = .50; 
-    if(hard_frac > .85) hard_frac = .85; 
-    
-    double max_corr = 1.4;// + 3.6*cal_trans((80-CAL_EnergySum)/30.);
-    
     // Apply circle correction layer by layer in the calorimeter
-    // This is a essentially just a geometric correction 
+    // This is a essentially just a geometric correction which is 
+    // "integrated" layer by layer through the the Calorimeter. 
+    double max_corr = 2.5; //This limits the size of the edge correction (was 1.4)
     double edge_corr = 0.; 
     double good_layers = 0.; 
     for(int i=0; i<8; i++){
-        if(ene_Layer[i] < 2.) {
+        if(ene_Layer[i] < 5.) {
             ene_sum_corr += ene_Layer[i];
             continue; 
         }
-        Vector pos = z_0;
+        Vector pos = cal_top;
         double arc_len = (pos_Layer[i] - pos).magnitude();
         Point xyz_layer = axis.position(-arc_len);
         
@@ -568,111 +551,45 @@ StatusCode CalValsTool::calculate()
     CAL_EdgeSum_Corr = ene_sum_corr/CAL_EnergySum;
 
     if (good_layers>0) edge_corr /= good_layers;
-   // CAL_Edge_Corr = edge_corr; 
+    CAL_Edge_Corr = edge_corr; 
     
-    // Set some Cal constants-- now these come from TkrGeometrySvc
-    //double cal_top_z = -45.7;      // Meas off 1 Evt Disp.(29-may-03 - was -26.5) z co-ord. of top of Cal
-    //double cal_half_width = 728.3; // measured from 1 Evt Disp - was (4*373.5(Tower Pitch) - 44(Cal Gap))/2
-    //double cal_depth = 216.;       // Meas. off 1 Evt disp.. was 8 layers of the calorimeter
-
-    // Cal constants, from detModel
-    //double cal_top_z = m_calZTop;
-    //double cal_depth = -m_calZBot;
-    //double cal_half_width = 0.5*std::max(m_calXWidth, m_calYWidth);
+    double cal_half_width = 0.5*std::max(m_calXWidth, m_calYWidth);
     
-    // Now do the leakage correction  
+    //       Leakage Correction  
     // First: get the rad.lens. in the tracker 
     double t_tracker = track_1->getTkrCalRadlen();
     // Patch for error in KalFitTrack: 1/2 of first radiator left out
     int layer = track_1->getLayer();
     t_tracker += 0.5*m_geoSvc->getReconRadLenConv(layer)/costh;
+	// Need to fix a problem here.  There can be large fluctuations on single
+	// trajectories.  This should be fixed in TkrValsTool probably by averaging
+	// over a cylinder as we do in CalValsTool.
+	double tkr_radLen_nom = 0.; 
+    if(layer < 12) tkr_radLen_nom = (11.5 - layer)*.045 + 4*.195 + .03;
+	else           tkr_radLen_nom =  (15.5 - layer)*.195 + .03;
+	tkr_radLen_nom /= costh;
+	if(t_tracker > tkr_radLen_nom * 1.5) t_tracker = tkr_radLen_nom * 1.5;
+    if(t_tracker < tkr_radLen_nom * .5) t_tracker  = tkr_radLen_nom * .5;
 
     // Find the distance in Cal to nearest edge along shower axis
-    //       Need to check sides as well as back
-    Vector t_axis = axis.direction();     // This points in +z direction
-    double s_top  = -(axis.position().z() - m_calZTop)/t_axis.z();
-    double s_exit = -(axis.position().z() - z0)/t_axis.z(); 
-    Point cal_top = axis.position(s_top); // Entry point into calorimeter
-    Point tkr_exit= axis.position(s_exit);// Exit point from tracker
+    //       Need to check sides as well as the back
+   // double s_exit = -(axis.position().z() - z0)/t_axis.z();//  Not presently used
+   // Point tkr_exit= axis.position(s_exit);    // Exit point from tracker
 
-    CAL_z0    = cal_top.z();
-    CAL_x0    = cal_top.x();
-    CAL_y0    = cal_top.y();
-    double xLo = m_geoSvc->getLATLimit(0, LOW);
-    double xHi = m_geoSvc->getLATLimit(0, HIGH);
-    double yLo = m_geoSvc->getLATLimit(1, LOW);
-    double yHi = m_geoSvc->getLATLimit(1, HIGH);
+    Point pos0(CAL_x0, CAL_y0, 0);
+    CAL_TwrEdge0 = activeDist(pos0, view);
 
-    // Only do leakage correction for tracks which "hit" the Calorimeter
-    //if(fabs(CAL_x0) > cal_half_width || fabs(CAL_y0) > cal_half_width) return sc; 
-    if (CAL_x0<xLo || CAL_x0>xHi || CAL_y0<yLo || CAL_y0>yHi) return sc;
+    // Now get averaged radiation lengths
+	// The averaging is set for 6 + 1 samples at a radius of rm_hard/4
+	// Note: this method fills internal variables such as m_radLen_CsI & m_radLen_Stuff
+	if(aveRadLens(cal_top, -t_axis, rm_hard/4., 6) == StatusCode::FAILURE) return sc; 
 
-
-    double s_xp   = (-xHi + tkr_exit.x())/t_axis.x();
-    double s_xm   = (-xLo + tkr_exit.x())/t_axis.x();
-    double s_minx = (s_xp > s_xm) ? s_xp:s_xm; // Choose soln > 0. 
-    
-    double s_yp   = (-yHi + tkr_exit.y())/t_axis.y();
-    double s_ym   = (-yLo + tkr_exit.y())/t_axis.y();
-    double s_miny = (s_yp > s_ym) ? s_yp:s_ym; // Choose soln > 0. 
-    
-//    double s_minz = (m_calZTop - m_calZBot)/t_axis.z();
-    double s_minz = (tkr_exit.z() - m_calZBot)/t_axis.z();
-    // Now pick min. soln. of the x, y, and z sides 
-    double s_min  = (s_minx < s_miny) ? s_minx:s_miny;  
-    s_min         = (s_min  < s_minz) ? s_min :s_minz;
-    
-    // Set up a propagator to calc. rad. lens. 
-    m_G4PropTool->setStepStart(tkr_exit, -t_axis);
-    m_G4PropTool->step(s_min);  
-
-    // Now loop over the steps to extract the materials
-    int numSteps = m_G4PropTool->getNumberSteps();
-    int istep  = 0;
-    idents::VolumeIdentifier volId;
-    idents::VolumeIdentifier prefix = m_detSvc->getIDPrefix();
-    double radLen_CsI  = 0.;
-    double radLen_Stuff = 0.;
-    double radLen_Gap  = 0.; 
-    double radLen_Cntr = 0.; 
-    double radLen_CntrStuff = 0.; 
-    double arcLen_CsI  = 0.; 
-    double arcLen_Gap  = 0.; 
-    double arcLen_Stuff = 0.; 
-    double arcLen_Cntr = 0.; 
-    for(; istep < numSteps; ++istep) {
-        volId = m_G4PropTool->getStepVolumeId(istep);
-        volId.prepend(prefix);
-        //std::cout << istep << " " << volId.name() << std::endl;
-        bool inXtal = ( volId.size()>7 && volId[0]==0 
-            && volId[3]==0 && volId[7]==0 ? true : false );
-        double radLen_step = m_G4PropTool->getStepRadLength(istep);
-        double arcLen_step = m_G4PropTool->getStepArcLen(istep); 
-        Point x_step       = m_G4PropTool->getStepPosition(istep);
-        if(inXtal) {
-            //std::cout << "inXtal " << volId.name() << " " << arcLen_step << " " << radLen_step << std::endl;
-            radLen_CsI  += radLen_step;
-            arcLen_CsI  += arcLen_step;
-        }
-        else {
-            radLen_Stuff += radLen_step;
-            arcLen_Stuff += arcLen_step;
-            if(x_step.z() >= m_calZTop) {
-                radLen_Gap += radLen_step;
-                arcLen_Gap += arcLen_step;
-            }
-        }
-        if(x_step.z() >= CAL_zEcntr) {
-            radLen_Cntr += radLen_step;
-            arcLen_Cntr += arcLen_step;
-            if(!inXtal) radLen_CntrStuff += radLen_step;
-        }
-    }
-     double t_cal_tot = radLen_CsI + radLen_Stuff; 
-    double t_total   = t_tracker  + t_cal_tot;
+    double t_cal_tot = m_radLen_CsI + m_radLen_Stuff; //m_radLen_CsI; //s_min/20.; // 
+    ene_sum_corr    *=  t_cal_tot/m_radLen_CsI;       // Correct for unseen stuff
+    double t_total   =  t_tracker + t_cal_tot;
     
     // Energy centroid in radiation lengths for this event.
-    double t         = t_tracker + radLen_Cntr;
+    double t         = t_tracker + m_radLen_Cntr;
 
     // 2 Iterations to find energy
     // Note: the TMath incomplete gamma functions is really the fractional inner incomplete
@@ -681,12 +598,12 @@ StatusCode CalValsTool::calculate()
     //      leakage:
     //        a) In the shower model (wallet card) the ratio of the a & b paremters
     //           is the energy centroid (check it for yourself).  Also b is all but
-    //           energy independent (not ours ... problem here -see below ... but the wallet cards)
+    //           energy independent (not ours ... problem here -see below ... but the wallet card's)
     //           So given our event centroid and b - > make first guess for a.  But the ratio of 
     //           a/b = <t> only in an infinitely deep cal.  
     //        b) This gives first approx. for energy leakage fraction from model.
-    //        c) Now find a & b from parametric  models parametric models using "corrected energy".
-    //      I don't think is great. The reality is that first estimation correction raises
+    //        c) Now find a & b from parametric models using "corrected energy".
+    //      I don't think this is great. The reality is that first estimation correction raises
     //      the energy by ~ 10% at 10 GeV.  The second iteration using the a & b models gives
     //      a total correction of ~ + 33%. 
     //      The powerlaw parameterization of b and a are funny. Particularly b - our b for 
@@ -720,26 +637,26 @@ StatusCode CalValsTool::calculate()
     //double ad_hoc_factor = (1.35-.15*logEsum )/(1.+.9*(.6 - costh)*(.6 - costh))/
                                // (1.-.125*logEsum + (.125*logEsum)*costh);  
     //double ad_hoc_factor = (1.23 - .065*logEsum)/(1.+.14*(logEsum-1.)*(costh-.74));  
-    double ad_hoc_factor = (1.08 + .02*logEsum);  
+    double ad_hoc_factor = 1.07; //(1.08 + .02*logEsum);  
     // Store the results away 
     CAL_EneSum_Corr = ene_sum_corr * ad_hoc_factor;
     CAL_Energy_Corr = CAL_EnergySum*edge_corr * ad_hoc_factor/in_frac_2; 
     CAL_TotSum_Corr = CAL_EneSum_Corr/CAL_EnergySum;
     //CAL_Total_Corr  = CAL_Energy_Corr/CAL_EnergySum; 
-    CAL_CsI_RLn     = radLen_CsI;
-    CAL_MIP_Diff    = CAL_EnergySum - 12.07*radLen_CsI;
+    CAL_CsI_RLn     = m_radLen_CsI;
+    CAL_MIP_Diff    = CAL_EnergySum - 12.07*m_radLen_CsI;
     const double minRadLen = 0.1;
-    CAL_MIP_Ratio   = CAL_EnergySum /(12.07*std::max(radLen_CsI, minRadLen));
-    CAL_Tot_RLn     = t_total;
+    CAL_MIP_Ratio   = CAL_EnergySum /(12.07*std::max(m_radLen_CsI, minRadLen));
+    CAL_Tot_RLn     = t_cal_tot;
+	CAL_LAT_RLn     = t_total;
     CAL_Cnt_RLn     = t;
-    CAL_DeadTot_Rat = radLen_Stuff/std::max(minRadLen, t_total);
-    CAL_DeadCnt_Rat = radLen_CntrStuff/std::max(minRadLen, t);
+    CAL_DeadTot_Rat = m_radLen_Stuff/std::max(minRadLen, t_total);
+    CAL_DeadCnt_Rat = m_radLen_CntrStuff/std::max(minRadLen, t);
     //CAL_a_Parm      = a2;
     //CAL_b_Parm      = b2; 
     
-    //CAL_Leak_Corr   = in_frac_1;
-    CAL_Leak_Corr2  = in_frac_2;   
-    CAL_TwrGap      = arcLen_Stuff - arcLen_Gap;
+    CAL_Leak_Corr  = in_frac_2;   
+//    CAL_TwrGap      = m_arcLen_Stuff - m_arcLen_Gap;
 
     return sc;
 }
@@ -761,8 +678,6 @@ double CalValsTool::activeDist(Point pos, int &view) const
     double y = pos.y();
     double x_twr = globalToLocal(x, m_towerPitch, m_xNum);
     double y_twr = globalToLocal(y, m_towerPitch, m_yNum);
-    //double x_twr = sign(x)*(fmod(fabs(x),m_towerPitch) - m_towerPitch/2.);
-    //double y_twr = sign(y)*(fmod(fabs(y),m_towerPitch) - m_towerPitch/2.);
 
     if( fabs(x_twr) > fabs(y_twr) ) {
         edge = m_towerPitch/2. - fabs(x_twr);
@@ -782,21 +697,19 @@ double CalValsTool::containedFraction(Point pos, double gap,
     double y = pos.y();
     // Get the projected angles for the gap
     double tanth = sqrt(1.-costh*costh)/costh;
-    double gap_x = gap - 40.*sin(phi)*tanth; //was 20 in RR185
+    double gap_x = gap - 40.*sin(phi)*tanth; 
     if(gap_x < 5.) gap_x = 5.;
     double gap_y = gap - 40.*cos(phi)*tanth;
     if(gap_y < 5.) gap_y = 5.; 
 
     // X Edges
-    double x_twr = globalToLocal(x, m_towerPitch, m_xNum);
-    //double x_twr = sign(x)*(fmod(fabs(x),m_towerPitch) - m_towerPitch/2.);
+    double x_twr = globalToLocal(x, m_towerPitch, m_xNum); // member function of ValBase
     double edge = m_towerPitch/2. - fabs(x_twr);
     double r_frac_plus = (edge-gap_x/2.)/r; 
     double angle_factor = sin(phi)*(1./costh - 1.);
     double in_frac_x  =  circleFractionSimpson(r_frac_plus, angle_factor);
     // This should work even for missing towers, 
-    //     because the radlens, etc., come from the propagator
-    //if(fabs(x) < 0.5*(m_geoSvc->numXTowers()-1)*m_towerPitch) { // X edge is not outside limit of LAT
+    // because the radlens, etc., come from the propagator
     if (x>m_geoSvc->getLATLimit(0,LOW)+0.5*m_towerPitch
         && x<m_geoSvc->getLATLimit(0,HIGH)-0.5*m_towerPitch) 
     {
@@ -806,16 +719,14 @@ double CalValsTool::containedFraction(Point pos, double gap,
     }
 
     // Y Edges
-    //double y_twr = sign(y)*(fmod(fabs(y),m_towerPitch) - m_towerPitch/2.);
     double y_twr = globalToLocal(y, m_towerPitch, m_yNum);
     edge = m_towerPitch/2. - fabs(y_twr);
     r_frac_plus = (edge-gap_y/2.)/r; 
     angle_factor = cos(phi)*(1./costh - 1.);
     double in_frac_y  =  circleFractionSimpson(r_frac_plus, angle_factor);
-    //if(fabs(y) < 0.5*(m_geoSvc->numYTowers()-1)*m_towerPitch) { // X edge is not outside limit of LAT
     if (y>m_geoSvc->getLATLimit(1,LOW)+0.5*m_towerPitch
         && y<m_geoSvc->getLATLimit(1,HIGH)-0.5*m_towerPitch) 
-    {
+    {// X edge is not outside limit of LAT
         double r_frac_minus = (edge + gap_y/2.)/r;
         in_frac_y += circleFractionSimpson(-r_frac_minus, angle_factor);
     }
@@ -830,5 +741,132 @@ double CalValsTool::containedFraction(Point pos, double gap,
 
     return in_frac;
 }
+
+StatusCode CalValsTool::aveRadLens(Point x0, Vector t0, double radius, int numSamples)
+{ // This method finds the averages and rms for a cylinder of rays passing through 
+  // the calorimeter of the radiation lengths in CsI and other material. 
+  // The radius of the cylinder is "radius" and the number of rays = numSample (plus the 
+  //       the central ray).  
+  // Note: this method as to called in sequence.  It depends on various internal variables 
+  //       having already been calculated and dumps most of its output to internal vars.
+
+    // Initialize the internal transfer variables
+    m_radLen_CsI   = 0.;
+	m_rms_RL_CsI   = 0.;
+    m_radLen_Stuff = 0.;
+	m_rms_RL_Stuff = 0.;
+    m_radLen_Cntr  = 0.;
+	m_rms_RL_Cntr  = 0.; 
+    m_radLen_CntrStuff = 0.;
+	m_rms_RL_CntrStuff = 0.;
+
+    m_arcLen_CsI   = 0.; 
+    m_arcLen_Stuff = 0.; 
+    m_arcLen_Cntr  = 0.;  
+
+	
+    double xLo = m_geoSvc->getLATLimit(0, LOW);
+    double xHi = m_geoSvc->getLATLimit(0, HIGH);
+    double yLo = m_geoSvc->getLATLimit(1, LOW);
+    double yHi = m_geoSvc->getLATLimit(1, HIGH);
+
+    // Only do leakage correction for tracks which "hit" the Calorimeter
+	if (CAL_x0<xLo || CAL_x0>xHi || CAL_y0<yLo || CAL_y0>yHi) return StatusCode::FAILURE;
+    
+	double costheta = t0.z();
+	double sintheta = sqrt(1.-costheta*costheta);
+	double cosphi   = t0.x()/sintheta;
+	Vector p(costheta/cosphi, 0., -sintheta);
+	p  = p.unit();
+	int num_good = 0; 
+	int is = 0;
+	for(is = 0; is < numSamples+1; is++) {
+		Point x0(CAL_x0, CAL_y0, CAL_z0);
+		if(is > 0) { // Compute new starting point onto of Cal
+			double rotAng = (is-1)*2.*M_PI/numSamples; 
+			HepRotation rot(t0, rotAng);
+			Vector delta = rot*p;
+			Point xI = x0 + radius*delta;
+			double s = (CAL_z0 - xI.z())/costheta;
+			Ray segmt( xI, t0); 
+			x0 = segmt.position(s);
+		}
+		// Check if the start is inside LAT
+		if (x0.x()<xLo || x0.x()>xHi || x0.y()<yLo || x0.y()>yHi) continue; 
+		num_good += 1; 
+
+        // Compute the arclength through the CAL
+        double s_xp   = (-xHi + x0.x())/t0.x();
+        double s_xm   = (-xLo + x0.x())/t0.x();
+        double s_minx = (s_xp > s_xm) ? s_xp:s_xm; // Choose soln > 0. 
+    
+        double s_yp   = (-yHi + x0.y())/t0.y();
+        double s_ym   = (-yLo + x0.y())/t0.y();
+        double s_miny = (s_yp > s_ym) ? s_yp:s_ym; // Choose soln > 0. 
+    
+        double s_minz = -(m_calZTop - m_calZBot)/t0.z();
+        // Now pick min. soln. of the x, y, and z sides 
+        double s_min  = (s_minx < s_miny) ? s_minx:s_miny;  
+        s_min         = (s_min  < s_minz) ? s_min :s_minz;
+    
+        // Set up a propagator to calc. rad. lens. 
+	    m_G4PropTool->setStepStart(x0, t0);
+        m_G4PropTool->step(s_min);  
+
+       // Now loop over the steps to extract the materials
+       int numSteps = m_G4PropTool->getNumberSteps();
+       double rl_CsI       = 0.;
+	   double rl_CsICntr   = 0.; 
+	   double rl_Stuff     = 0.;
+	   double rl_StuffCntr = 0.;
+       idents::VolumeIdentifier volId;
+       idents::VolumeIdentifier prefix = m_detSvc->getIDPrefix();
+	   int istep  = 0;
+       for(; istep < numSteps; ++istep) {
+           volId = m_G4PropTool->getStepVolumeId(istep);
+           volId.prepend(prefix);
+           //std::cout << istep << " " << volId.name() << std::endl;
+           bool inXtal = ( volId.size()>7 && volId[0]==0 
+                          && volId[3]==0 && volId[7]==0 ? true : false );
+           double radLen_step = m_G4PropTool->getStepRadLength(istep);
+           double arcLen_step = m_G4PropTool->getStepArcLen(istep); 
+           Point x_step       = m_G4PropTool->getStepPosition(istep);
+           if(inXtal) {
+            //std::cout << "inXtal " << volId.name() << " " << arcLen_step << " " << radLen_step << std::endl;
+               rl_CsI  += radLen_step;
+               if(is == 0) m_arcLen_CsI  += arcLen_step;
+           }
+           else {
+               rl_Stuff += radLen_step;
+               if(is == 0) m_arcLen_Stuff += arcLen_step;
+           }
+           if(x_step.z() >= CAL_zEcntr) {  
+               if(is == 0) m_arcLen_Cntr  += arcLen_step;
+               if(!inXtal) rl_StuffCntr += radLen_step;
+			   else        rl_CsICntr   += radLen_step;
+		   }
+	    }
+	    // Increment accumlation variables
+       m_radLen_CsI   += rl_CsI;
+	   m_rms_RL_CsI   += rl_CsI*rl_CsI;
+       m_radLen_Stuff += rl_Stuff;
+	   m_rms_RL_Stuff += rl_Stuff*rl_Stuff;
+       m_radLen_Cntr  += rl_CsICntr+rl_StuffCntr;
+	   m_rms_RL_Cntr  += (rl_CsICntr+rl_StuffCntr)*(rl_CsICntr+rl_StuffCntr); 
+       m_radLen_CntrStuff += rl_StuffCntr;
+	   m_rms_RL_CntrStuff += rl_StuffCntr*rl_StuffCntr;
+	}
+	m_radLen_CsI   /= num_good;
+    m_rms_RL_CsI    = sqrt(m_rms_RL_CsI/num_good -m_radLen_CsI*m_radLen_CsI);
+    m_radLen_Stuff /= num_good;
+	m_rms_RL_Stuff  = sqrt(m_rms_RL_Stuff/num_good - m_radLen_Stuff*m_radLen_Stuff);
+	m_radLen_Cntr  /= num_good;
+	m_rms_RL_Cntr   = sqrt(m_rms_RL_Cntr/num_good - m_radLen_Cntr*m_radLen_Cntr);
+	m_radLen_CntrStuff  /= num_good;
+	m_rms_RL_CntrStuff   = sqrt(m_rms_RL_CntrStuff/num_good - m_radLen_CntrStuff*m_radLen_CntrStuff);
+	return StatusCode::SUCCESS;
+}
+
+
 
 
