@@ -3,7 +3,7 @@
 @brief Calculates the "Event" analysis variables from the other ntuple variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.12 2003/12/16 23:18:29 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.13 2004/02/13 06:22:38 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -268,8 +268,9 @@ StatusCode EvtValsTool::calculate()
 
     double tkrEdge, calEdge, tkr1ZDir = -1., tkr1ZDir2 = 1.; ;
     if(m_pTkrTool->getVal("Tkr1ZDir",tkr1ZDir, nextCheck).isSuccess()) {
-        tkr1ZDir2 = tkr1ZDir*tkr1ZDir; 
-        double sTkr = sqrt(1.-tkr1ZDir2);
+        tkr1ZDir2 = tkr1ZDir*tkr1ZDir;
+        const double minSTkr = 0.001;
+        double sTkr = std::max(minSTkr,sqrt(std::max(0.0, 1.-tkr1ZDir2)));
         if (m_pTkrTool->getVal("TkrTwrEdge", tkrEdge, nextCheck).isSuccess()) {
             EvtTkrEdgeAngle = (30.-tkrEdge)/sTkr;
         }

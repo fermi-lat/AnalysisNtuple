@@ -3,7 +3,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.38 2004/01/13 01:34:18 lsrea Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.39 2004/06/04 20:36:44 lsrea Exp $
 */
 
 // Include files
@@ -728,11 +728,12 @@ StatusCode CalValsTool::calculate()
     //CAL_Total_Corr  = CAL_Energy_Corr/CAL_EnergySum; 
     CAL_CsI_RLn     = radLen_CsI;
     CAL_MIP_Diff    = CAL_EnergySum - 12.07*radLen_CsI;
-    CAL_MIP_Ratio   = CAL_EnergySum /(12.07*std::max(radLen_CsI, 0.01));
+    const double minRadLen = 0.1;
+    CAL_MIP_Ratio   = CAL_EnergySum /(12.07*std::max(radLen_CsI, minRadLen));
     CAL_Tot_RLn     = t_total;
     CAL_Cnt_RLn     = t;
-    CAL_DeadTot_Rat = radLen_Stuff/t_total;
-    CAL_DeadCnt_Rat = radLen_CntrStuff/t;
+    CAL_DeadTot_Rat = radLen_Stuff/std::max(minRadLen, t_total);
+    CAL_DeadCnt_Rat = radLen_CntrStuff/std::max(minRadLen, t);
     //CAL_a_Parm      = a2;
     //CAL_b_Parm      = b2; 
     

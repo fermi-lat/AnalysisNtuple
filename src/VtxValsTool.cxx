@@ -3,7 +3,7 @@
 @brief Calculates the Vtx analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.11 2003/10/03 23:53:42 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.12 2003/12/16 23:18:29 lsrea Exp $
 */
 
 // Include files
@@ -241,14 +241,16 @@ StatusCode VtxValsTool::calculate()
             double s1   = VTX_S1;
             //double s2   = VTX_S2; 
             double root2 = sqrt(2.);
-            double q2    = track_2->getQuality();   
-            VTX_DOCA_Wgt = thrshold((dist-50./gamEne)/root2);  
-            VTX_S1_Wgt   = thrshold((s1-2.5)/(root2*1.5 * gamEne/100.));     
-            VTX_T12_Wgt  = thrshold((.01*t1t2*gamEne -.2)/(root2*.2));
+            double q2    = track_2->getQuality();
+            const double minEne = 1.0;
+            double thisEne = std::max(minEne, gamEne);
+            VTX_DOCA_Wgt = thrshold((dist-50./thisEne)/root2);  
+            VTX_S1_Wgt   = thrshold((s1-2.5)/(root2*1.5 * thisEne/100.));     
+            VTX_T12_Wgt  = thrshold((.01*t1t2*thisEne -.2)/(root2*.2));
             VTX_T2Q_Wgt  = thrshold((40. - q2)/(root2*20.)); 
             VTX_HS_Wgt   = thrshold((VTX_Head_Sep - 2.)/(root2*2.));
             
-            VTX_Total_Wgt= log(VTX_HS_Wgt*VTX_T12_Wgt*VTX_T2Q_Wgt);
+            VTX_Total_Wgt= log(std::max(1.e-8, VTX_HS_Wgt*VTX_T12_Wgt*VTX_T2Q_Wgt));
         }
     }
     

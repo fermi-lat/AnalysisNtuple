@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.35 2004/01/13 01:34:18 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.36 2004/06/04 20:36:44 lsrea Exp $
 */
 
 // To Do:
@@ -845,6 +845,10 @@ StatusCode TkrValsTool::calculate()
 
 
     }          
+
+    std::cout << "Tkr_KalEne: " << Tkr_1_KalEne << " " << Tkr_2_KalEne << std::endl 
+                 <<" Tkr_KalThetaMS " <<  Tkr_1_KalThetaMS << " " << Tkr_2_KalThetaMS << std::endl;
+
 
     return sc;
 }
