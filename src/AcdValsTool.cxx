@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.5 2003/03/05 02:03:29 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.6 2003/05/08 15:51:30 atwood Exp $
 */
 
 #include "ValBase.h"
@@ -51,6 +51,7 @@ private:
     double ACD_DOCA;
     double ACD_ActiveDist;
     double ACD_GammaDOCA; 
+    double ACD_ActDistTop;
 	double ACD_ActDistR0;
     double ACD_ActDistR1;
 	double ACD_ActDistR2;
@@ -121,6 +122,7 @@ StatusCode AcdValsTool::initialize()
     addItem("AcdActiveDist",   &ACD_ActiveDist);
     addItem("AcdGammaDoca",    &ACD_GammaDOCA);
 
+    addItem("AcdActDistTop",&ACD_ActDistTop);
     addItem("AcdActDistSideRow0",&ACD_ActDistR0);
 	addItem("AcdActDistSideRow1",&ACD_ActDistR1);
     addItem("AcdActDistSideRow2",&ACD_ActDistR2);
@@ -157,6 +159,7 @@ StatusCode AcdValsTool::calculate()
         ACD_GammaDOCA     = pACD->getGammaDoca();
 
 		const std::vector<double> & adist = pACD->getRowActDistCol();
+ 	    ACD_ActDistTop = adist[0];
  	    ACD_ActDistR0 = adist[1];
         ACD_ActDistR1 = adist[2];
 	    ACD_ActDistR2 = adist[3];
