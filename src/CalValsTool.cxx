@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.24 2003/07/17 22:49:39 atwood Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.25 2003/07/18 22:17:59 lsrea Exp $
 */
 
 // Include files
@@ -45,26 +45,25 @@
 #endif
 
 namespace {
-    const int _nTowers = 4;
     
     double signC(double x) { return (x<0.) ? -1.:1.;} 
-    
-    double twrEdgeC(double x, double y, double pitch, int &XY, int &outer) {
+ 
+	double activeDist(double x, double y, double xpitch, double ypitch, int nx, int ny, int &XY, int &outer) {
         double edge = 0.; 
-        double x_twr = signC(x)*(fmod(fabs(x),pitch) - pitch/2.);
-        double y_twr = signC(y)*(fmod(fabs(y),pitch) - pitch/2.);
+        double x_twr = signC(x)*(fmod(fabs(x),xpitch) - xpitch/2.);
+        double y_twr = signC(y)*(fmod(fabs(y),ypitch) - ypitch/2.);
         
         outer = 0; 
         
         if(fabs(x_twr) > fabs(y_twr)) {
-            edge = pitch/2. - fabs(x_twr);
+            edge = xpitch/2. - fabs(x_twr);
             XY = 1; 
-            if(fabs(x) > 0.5*(_nTowers-1)*pitch) outer = 1;
+            if(fabs(x) > 0.5*(nx-1)*xpitch) outer = 1;
         }
         else {
-            edge = pitch/2. - fabs(y_twr);
+            edge = ypitch/2. - fabs(y_twr);
             XY = 2;
-            if(fabs(y) > 0.5*(_nTowers-1)*pitch) outer = 1;
+            if(fabs(y) > 0.5*(ny-1)*ypitch) outer = 1;
         }
         return edge;
     }
@@ -84,7 +83,7 @@ namespace {
         return (slice_p + 4.*slice_0 + slice_m)/6.;
     }
     
-    double contained_frac(double x, double y, double pitch, double gap,  
+    double contained_frac(double x, double y, int nx, int ny, double pitch, double gap,  
         double r, double costh, double phi) {
         // Get the projected angles for the gap
         double tanth = sqrt(1.-costh*costh)/costh;
@@ -99,7 +98,7 @@ namespace {
         double r_frac_plus = (edge-gap_x/2.)/r; 
         double angle_factor = sin(phi)*(1./costh - 1.);
         double in_frac_x  =  circle_frac_simp(r_frac_plus, angle_factor);
-        if(fabs(x) < 0.5*(_nTowers-1)*pitch) { // X edge is not outside limit of LAT
+        if(fabs(x) < 0.5*(nx-1)*pitch) { // X edge is not outside limit of LAT
             double r_frac_minus = (edge + gap_x/2.)/r;
             in_frac_x += circle_frac_simp(-r_frac_minus, angle_factor);
         }
@@ -110,7 +109,7 @@ namespace {
         r_frac_plus = (edge-gap_y/2.)/r; 
         angle_factor = cos(phi)*(1./costh - 1.);
         double in_frac_y  =  circle_frac_simp(r_frac_plus, angle_factor);
-        if(fabs(y) < 0.5*(_nTowers-1)*pitch) { // X edge is not outside limit of LAT
+        if(fabs(y) < 0.5*(ny-1)*pitch) { // X edge is not outside limit of LAT
             double r_frac_minus = (edge + gap_y/2.)/r;
             in_frac_y += circle_frac_simp(-r_frac_minus, angle_factor);
         }
@@ -206,19 +205,21 @@ namespace {
       
       //Global Calorimeter Tuple Items
       double CAL_EnergySum;
-      double CAL_Leak_Corr; 
+      //double CAL_Leak_Corr; 
       double CAL_Leak_Corr2;
-      double CAL_Edge_Corr; 
+      //double CAL_Edge_Corr; 
       double CAL_EdgeSum_Corr;     
-      double CAL_Total_Corr; 
+      //double CAL_Total_Corr; 
       double CAL_TotSum_Corr; 
-	  double CAL_Energy_LLCorr; 
+	  //double CAL_Energy_LLCorr; 
+
+	  double CAL_CsI_RLn;
       double CAL_Tot_RLn;
       double CAL_Cnt_RLn; 
       double CAL_DeadTot_Rat;
       double CAL_DeadCnt_Rat; 
-      double CAL_a_Parm;
-      double CAL_b_Parm; 
+      //double CAL_a_Parm;
+      //double CAL_b_Parm; 
       double CAL_t_Pred; 
       double CAL_deltaT;
       
@@ -230,14 +231,25 @@ namespace {
       double CAL_xdir;
       double CAL_ydir;
       double CAL_zdir;
+
       double CAL_TwrEdge;
+	  double CAL_LATEdge; 
+
       double CAL_TE_Nrm;
       double CAL_Track_Sep;
+
+	  double CAL_Lyr0_Ratio;
+	  double CAL_Lyr7_Ratio;
+	  double CAL_BkHalf_Ratio;
+
 	  double CAL_Xtal_Ratio;
 	  double CAL_eLayer[8];
 	  double CAL_No_Xtals_Trunc;
 	  double CAL_Long_Rms;
 	  double CAL_Trans_Rms;
+	  double CAL_LRms_Ratio;
+
+	  double CAL_MIP_Diff; 
 
       
       //Calimeter items with Recon - Tracks
@@ -324,31 +336,33 @@ namespace {
       addItem("CalEnergySum",  &CAL_EnergySum);
       addItem("CalEnergyCorr", &CAL_Energy_Corr);
       addItem("CalEneSumCorr", &CAL_EneSum_Corr);
-	  addItem("Cal_Energy_LLCorr", &CAL_Energy_LLCorr);
+	  //addItem("Cal_Energy_LLCorr", &CAL_Energy_LLCorr);
    
-      addItem("CalLeakCorr",   &CAL_Leak_Corr);
+      //addItem("CalLeakCorr",   &CAL_Leak_Corr);
       addItem("CalLeakCorr2",  &CAL_Leak_Corr2);
       
-      addItem("CalEdgeCorr",   &CAL_Edge_Corr);
+      //addItem("CalEdgeCorr",   &CAL_Edge_Corr);
       addItem("CalEdgeSumCorr",&CAL_EdgeSum_Corr);
-      addItem("CalTotalCorr",  &CAL_Total_Corr);
+      //addItem("CalTotalCorr",  &CAL_Total_Corr);
       addItem("CalTotSumCorr", &CAL_TotSum_Corr);
-      
+ 
+	  addItem("CalCsIRLn",     &CAL_CsI_RLn);
       addItem("CalTotRLn",     &CAL_Tot_RLn);
       addItem("CalCntRLn",     &CAL_Cnt_RLn);
       addItem("CalDeadTotRat", &CAL_DeadTot_Rat);
       addItem("CalDeadCntRat", &CAL_DeadCnt_Rat);
-      addItem("CalAParm",      &CAL_a_Parm);
-      addItem("CalBParm",      &CAL_b_Parm);
+      //addItem("CalAParm",      &CAL_a_Parm);
+      //addItem("CalBParm",      &CAL_b_Parm);
       addItem("CalTPred",      &CAL_t_Pred);
       addItem("CalDeltaT",     &CAL_deltaT);
       
       addItem("CalTwrEdge",    &CAL_TwrEdge);
+	  addItem("CalLATEdge",    &CAL_LATEdge);
       addItem("CalTENrm",      &CAL_TE_Nrm);
       addItem("CalTrackSep",   &CAL_Track_Sep);
       addItem("CalTrackDoca",  &CAL_Track_DOCA);
 	  addItem("CalTwrGap",     &CAL_TwrGap);
-      addItem("CalXtalRatio",  &CAL_Xtal_Ratio);
+
 	  addItem("CalELayer0",    &CAL_eLayer[0]);
       addItem("CalELayer1",    &CAL_eLayer[1]);
 	  addItem("CalELayer2",    &CAL_eLayer[2]);
@@ -357,13 +371,22 @@ namespace {
 	  addItem("CalELayer5",    &CAL_eLayer[5]);
 	  addItem("CalELayer6",    &CAL_eLayer[6]);
 	  addItem("CalELayer7",    &CAL_eLayer[7]);
+	  addItem("CalLyr0Ratio",  &CAL_Lyr0_Ratio);
+	  addItem("CalLyr7Ratio",  &CAL_Lyr7_Ratio);
+	  addItem("CalBkHalfRatio",  &CAL_BkHalf_Ratio);
+
 	  addItem("CalXtalsTrunc", &CAL_No_Xtals_Trunc);
+	  addItem("CalXtalRatio",  &CAL_Xtal_Ratio);
+
 	  addItem("CalLongRms",    &CAL_Long_Rms);
+	  addItem("CalLRmsRatio",  &CAL_LRms_Ratio);
 	  addItem("CalTransRms",   &CAL_Trans_Rms);
 
-      addItem("CalXEcntr",      &CAL_xEcntr);
-      addItem("CalYEcntr",      &CAL_yEcntr);
-      addItem("CalZEcntr",      &CAL_zEcntr);
+	  addItem("CalMIPDiff",   &CAL_MIP_Diff);
+
+      addItem("CalXEcntr",     &CAL_xEcntr);
+      addItem("CalYEcntr",     &CAL_yEcntr);
+      addItem("CalZEcntr",     &CAL_zEcntr);
       addItem("CalXDir",       &CAL_xdir);
       addItem("CalYDir",       &CAL_ydir);
       addItem("CalZDir",       &CAL_zdir);
@@ -404,10 +427,15 @@ StatusCode CalValsTool::calculate()
     
     CAL_EnergySum   = calCluster->getEnergySum();
 	for(int i = 0; i<8; i++) CAL_eLayer[i] = calCluster->getEneLayer(i);
+	CAL_Lyr0_Ratio  = CAL_eLayer[0]/CAL_EnergySum;
+	CAL_Lyr7_Ratio  = CAL_eLayer[7]/CAL_EnergySum;
+	CAL_BkHalf_Ratio = (CAL_eLayer[4]+CAL_eLayer[5]+CAL_eLayer[6]+CAL_eLayer[7])/CAL_EnergySum;
 
 	CAL_Long_Rms      = calCluster->getRmsLong();
 	CAL_Trans_Rms     = calCluster->getRmsTrans();
-	CAL_Energy_LLCorr = calCluster->getEnergyCorrected();
+	CAL_LRms_Ratio    = CAL_Long_Rms / CAL_EnergySum;
+	
+	//CAL_Energy_LLCorr = calCluster->getEnergyCorrected();
 
 	//Code from meritAlg
 	int no_xtals=0;
@@ -440,7 +468,8 @@ StatusCode CalValsTool::calculate()
     double twr_pitch = m_towerPitch;
     int iView = 0;
     int outside = 0;
-    CAL_TwrEdge = twrEdgeC(CAL_xEcntr, CAL_yEcntr, twr_pitch, iView, outside);
+    CAL_TwrEdge = activeDist(CAL_xEcntr, CAL_yEcntr, twr_pitch, twr_pitch, 
+		                     m_xNum, m_yNum, iView, outside);
     
     if(iView==1) CAL_TE_Nrm  = cal_dir.x();
     else         CAL_TE_Nrm  = cal_dir.y();
@@ -452,8 +481,7 @@ StatusCode CalValsTool::calculate()
     
     // Get the first track
     Event::TkrFitConPtr pTrack1 = pTracks->begin();
-    Event::TkrKalFitTrack* track_1  
-        = dynamic_cast<Event::TkrKalFitTrack*>(*pTrack1);
+    Event::TkrKalFitTrack* track_1 = dynamic_cast<Event::TkrKalFitTrack*>(*pTrack1);
     
     // Get the start and direction 
     Point  x0 = track_1->getPosition();
@@ -508,16 +536,21 @@ StatusCode CalValsTool::calculate()
     
     // Reset shower area circle when multiple tracks are present
     // This increasingly matters below 1000 MeV.
+	Event::TkrFitTrackBase::TrackEnd end = Event::TkrFitTrackBase::End;
+	Ray trj_1 = Ray(track_1->getPosition(end), track_1->getDirection(end));
+	double delta_z = trj_1.position().z() - m_calZTop;
+    arc_len = delta_z/fabs(trj_1.direction().z());
+    Point cal_1 = trj_1.position(arc_len); 
+	CAL_LATEdge = activeDist(cal_1.x(),cal_1.y(), m_calXWidth, m_calYWidth, 
+		                     1, 1, iView, outside);
     if(num_tracks > 1) {
         pTrack1++;
         Event::TkrKalFitTrack* track_2  
             = dynamic_cast<Event::TkrKalFitTrack*>(*pTrack1);
-        Event::TkrFitTrackBase::TrackEnd end = Event::TkrFitTrackBase::End; 
-        Ray trj_1 = Ray(track_1->getPosition(end), track_1->getDirection(end)); 
+ 
+ 
         Ray trj_2 = Ray(track_2->getPosition(end), track_2->getDirection(end));
-        double delta_z = trj_1.position().z() - m_calZTop;
-        double arc_len = delta_z/fabs(trj_1.direction().z());
-        Point cal_1 = trj_1.position(arc_len); 
+ 
         delta_z = trj_2.position().z() - m_calZTop;
         arc_len = delta_z/fabs(trj_2.direction().z());
         Point cal_2 = trj_2.position(arc_len);
@@ -554,13 +587,13 @@ StatusCode CalValsTool::calculate()
         Point xyz_layer = axis.position(-arc_len);
         
         double in_frac_soft = contained_frac(xyz_layer.x(), xyz_layer.y(), 
-            twr_pitch, gap, rm_soft, costh, phi_90);
+            m_xNum, m_yNum, twr_pitch, gap, rm_soft, costh, phi_90);
         
         // Cut off correction upon leaving (through a side)
         if(in_frac_soft < .5) in_frac_soft = .5;
         
         double in_frac_hard = contained_frac(xyz_layer.x(), xyz_layer.y(), 
-            twr_pitch, gap, rm_hard, costh, phi_90);
+            m_xNum, m_yNum, twr_pitch, gap, rm_hard, costh, phi_90);
         
         double corr_factor 
             = 1./((1.-hard_frac)*in_frac_soft + hard_frac*in_frac_hard);
@@ -575,7 +608,7 @@ StatusCode CalValsTool::calculate()
     CAL_EdgeSum_Corr = ene_sum_corr/CAL_EnergySum;
 
     if (good_layers>0) edge_corr /= good_layers;
-    CAL_Edge_Corr = edge_corr; 
+   // CAL_Edge_Corr = edge_corr; 
     
     // Set some Cal constants-- now these come from TkrGeometrySvc
     //double cal_top_z = -45.7;      // Meas off 1 Evt Disp.(29-may-03 - was -26.5) z co-ord. of top of Cal
@@ -618,7 +651,8 @@ StatusCode CalValsTool::calculate()
     double s_ym   = ( cal_half_width + tkr_exit.y())/t_axis.y();
     double s_miny = (s_yp > s_ym) ? s_yp:s_ym; // Choose soln > 0. 
     
-    double s_minz = (m_calZTop - m_calZBot)/t_axis.z();
+//    double s_minz = (m_calZTop - m_calZBot)/t_axis.z();
+	double s_minz = (tkr_exit.z() - m_calZBot)/t_axis.z();
     // Now pick min. soln. of the x, y, and z sides 
     double s_min  = (s_minx < s_miny) ? s_minx:s_miny;  
     s_min         = (s_min  < s_minz) ? s_min :s_minz;
@@ -723,15 +757,17 @@ StatusCode CalValsTool::calculate()
     CAL_EneSum_Corr = ene_sum_corr * ad_hoc_factor;
     CAL_Energy_Corr = CAL_EnergySum*edge_corr * ad_hoc_factor/in_frac_2; 
     CAL_TotSum_Corr = CAL_EneSum_Corr/CAL_EnergySum;
-    CAL_Total_Corr  = CAL_Energy_Corr/CAL_EnergySum; 
+    //CAL_Total_Corr  = CAL_Energy_Corr/CAL_EnergySum; 
+	CAL_CsI_RLn     = radLen_CsI;
+	CAL_MIP_Diff    = CAL_EnergySum - 12.52*radLen_CsI;
     CAL_Tot_RLn     = t_total;
     CAL_Cnt_RLn     = t;
     CAL_DeadTot_Rat = radLen_Stuff/t_total;
     CAL_DeadCnt_Rat = radLen_CntrStuff/t;
-    CAL_a_Parm      = a2;
-    CAL_b_Parm      = b2; 
+    //CAL_a_Parm      = a2;
+    //CAL_b_Parm      = b2; 
     
-    CAL_Leak_Corr   = in_frac_1;
+    //CAL_Leak_Corr   = in_frac_1;
     CAL_Leak_Corr2  = in_frac_2;   
 	CAL_TwrGap      = arcLen_Stuff - arcLen_Gap;
 
