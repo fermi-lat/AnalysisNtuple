@@ -3,7 +3,7 @@
 @brief Calculates the "Event" analysis variables from the other ntuple variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.3 2003/05/08 21:54:25 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.4 2003/05/09 05:22:08 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -234,7 +234,7 @@ StatusCode EvtValsTool::calculate()
         }
     }
     
-    EvtLogESum = log10(std::min(std::max(EvtEnergySumOpt,40.),15000.));
+    EvtLogESum = log10(std::min(std::max(EvtEnergySumOpt,20.),50000.));
 
     double tkr1ConE;
     if (m_pTkrTool->getVal("Tkr1ConEne",tkr1ConE, nextCheck).isSuccess()) {
