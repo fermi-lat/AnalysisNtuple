@@ -3,7 +3,7 @@
 @brief Calculates the "Event" analysis variables from the other ntuple variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.10 2003/11/04 21:51:20 atwood Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.11 2003/11/13 20:32:25 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -57,27 +57,27 @@ private:
     double EvtVtxKin;
     double EvtVtxEAngle;
     double EvtTkrComptonRatio;
-	double EvtTkrEComptonRatio;
-	double EvtPSFModel; 
+    double EvtTkrEComptonRatio;
+    double EvtPSFModel; 
 
     double EvtTkr1EChisq;
     double EvtTkr1EFirstChisq;
     double EvtTkr1EQual;
-	double EvtTkr1ECovDet; 
-	double EvtTkr1PSFMdRat;
+    double EvtTkr1ECovDet; 
+    double EvtTkr1PSFMdRat;
 
     double EvtTkr2EChisq;
     double EvtTkr2EFirstChisq;
     double EvtTkr2EQual;
 
-	double EvtCalETLRatio;
-	double EvtCalEXtalRatio;
-	double EvtCalEXtalTrunc;
-	double EvtCalETrackDoca;
-	double EvtCalETrackSep;
-	double EvtVtxEEAngle;
-	double EvtVtxEDoca;
-	double EvtVtxEHeadSep;
+    double EvtCalETLRatio;
+    double EvtCalEXtalRatio;
+    double EvtCalEXtalTrunc;
+    double EvtCalETrackDoca;
+    double EvtCalETrackSep;
+    double EvtVtxEEAngle;
+    double EvtVtxEDoca;
+    double EvtVtxEHeadSep;
 
     IValsTool* m_pMcTool;
     IValsTool* m_pGltTool;
@@ -187,8 +187,8 @@ StatusCode EvtValsTool::initialize()
     addItem("EvtVtxKin",        &EvtVtxKin);
     addItem("EvtVtxEAngle",     &EvtVtxEAngle);
     addItem("EvtTkrComptonRatio", &EvtTkrComptonRatio);
-	addItem("EvtTkrEComptonRatio", &EvtTkrEComptonRatio);
-	addItem("EvtPSFModel",      &EvtPSFModel);
+    addItem("EvtTkrEComptonRatio", &EvtTkrEComptonRatio);
+    addItem("EvtPSFModel",      &EvtPSFModel);
 
     addItem("EvtTkr1EChisq",    &EvtTkr1EChisq);
     addItem("EvtTkr1EFirstChisq", &EvtTkr1EFirstChisq);
@@ -200,14 +200,14 @@ StatusCode EvtValsTool::initialize()
     addItem("EvtTkr2EFirstChisq", &EvtTkr2EFirstChisq);
     addItem("EvtTkr2EQual",     &EvtTkr2EQual);
 
-	addItem("EvtCalETLRatio",   &EvtCalETLRatio);
-	addItem("EvtCalEXtalRatio", &EvtCalEXtalRatio);
-	addItem("EvtCalEXtalTrunc", &EvtCalEXtalTrunc);
-	addItem("EvtCalETrackDoca", &EvtCalETrackDoca);
-	addItem("EvtCalETrackSep",  &EvtCalETrackSep);
-	addItem("EvtVtxEEAngle",    &EvtVtxEEAngle);
-	addItem("EvtVtxEDoca",      &EvtVtxEDoca);
-	addItem("EvtVtxEHeadSep",   &EvtVtxEHeadSep);
+    addItem("EvtCalETLRatio",   &EvtCalETLRatio);
+    addItem("EvtCalEXtalRatio", &EvtCalEXtalRatio);
+    addItem("EvtCalEXtalTrunc", &EvtCalEXtalTrunc);
+    addItem("EvtCalETrackDoca", &EvtCalETrackDoca);
+    addItem("EvtCalETrackSep",  &EvtCalETrackSep);
+    addItem("EvtVtxEEAngle",    &EvtVtxEEAngle);
+    addItem("EvtVtxEDoca",      &EvtVtxEDoca);
+    addItem("EvtVtxEHeadSep",   &EvtVtxEHeadSep);
 
     zeroVals();
 
@@ -230,35 +230,35 @@ StatusCode EvtValsTool::calculate()
     // and the rest with the no-calc value
     // so be careful when adding calls or moving stuff around!!!!
 
-	double eCalSum, eTkr;
+    double eCalSum, eTkr;
     if(    m_pCalTool->getVal("CalEnergySum", eCalSum, firstCheck).isSuccess()
-		&& m_pTkrTool->getVal("TkrEnergyCorr", eTkr, firstCheck).isSuccess()) {
+        && m_pTkrTool->getVal("TkrEnergyCorr", eTkr, firstCheck).isSuccess()) {
         EvtEnergyRaw = eTkr + eCalSum;
     }
 
     double eTkrKalEne, eCalRLn, eTkrBest; //, eCal
-	int CAL_Type;
+    int CAL_Type;
     if (  // m_pCalTool->getVal("CalEnergyCorr", eCal, firstCheck).isSuccess() &&
         m_pCalTool->getVal("CalTotRLn", eCalRLn, firstCheck).isSuccess()
         && m_pTkrTool->getVal("TkrSumKalEne", eTkrKalEne, firstCheck).isSuccess()) 
     {
         eTkrBest = std::max(eTkr+eCalSum, eTkrKalEne);
-		if(eCalSum < 100 || eCalRLn < 2) {
-			if(eCalSum < 5 || eCalRLn < 2) {
-				CAL_Type = 0;
-			}
-			else {CAL_Type = 1;}
-		}
-		else {CAL_Type = 2;} 
+        if(eCalSum < 100 || eCalRLn < 2) {
+            if(eCalSum < 5 || eCalRLn < 2) {
+                CAL_Type = 0;
+            }
+            else {CAL_Type = 1;}
+        }
+        else {CAL_Type = 2;} 
 
        // if(CAL_Type == 0) EvtEnergyOpt = eTkrBest;
-	   //	else              EvtEnergyOpt = eTkr + eCal;
+       //   else              EvtEnergyOpt = eTkr + eCal;
     }
    
     double eCalSumCorr;
     if(m_pCalTool->getVal("CalEneSumCorr", eCalSumCorr, nextCheck).isSuccess()) {
-		if(CAL_Type == 0) EvtEnergySumOpt = eTkrBest;
-		else              EvtEnergySumOpt = eTkr + eCalSumCorr;
+        if(CAL_Type == 0) EvtEnergySumOpt = eTkrBest;
+        else              EvtEnergySumOpt = eTkr + eCalSumCorr;
     }
     
     double mcEnergy;
@@ -268,7 +268,7 @@ StatusCode EvtValsTool::calculate()
 
     double tkrEdge, calEdge, tkr1ZDir = -1., tkr1ZDir2 = 1.; ;
     if(m_pTkrTool->getVal("Tkr1ZDir",tkr1ZDir, nextCheck).isSuccess()) {
-		tkr1ZDir2 = tkr1ZDir*tkr1ZDir; 
+        tkr1ZDir2 = tkr1ZDir*tkr1ZDir; 
         double sTkr = sqrt(1.-tkr1ZDir2);
         if (m_pTkrTool->getVal("TkrTwrEdge", tkrEdge, nextCheck).isSuccess()) {
             EvtTkrEdgeAngle = (30.-tkrEdge)/sTkr;
@@ -279,20 +279,20 @@ StatusCode EvtValsTool::calculate()
     }
     EvtPSFModel = sqrt(pow((.061/pow((std::max(EvtEnergySumOpt,1.)/100),.8)),2) + (.001745*.001745));
     EvtLogESum = log10(std::min(std::max(EvtEnergySumOpt,10.),1000000.));
-	double logE = std::min(std::max(EvtLogESum,1.3), 4.7);
+    double logE = std::min(std::max(EvtLogESum,1.3), 4.7);
     double logE2 = logE*logE; 
     
-	double tkr1CovDet;
-	if (m_pTkrTool->getVal("Tkr1CovDet",tkr1CovDet, nextCheck).isSuccess()) {
+    double tkr1CovDet;
+    if (m_pTkrTool->getVal("Tkr1CovDet",tkr1CovDet, nextCheck).isSuccess()) {
         EvtTkr1ECovDet = tkr1CovDet/pow(std::max(EvtEnergySumOpt,1.0), 1.3);
     }
 
-	double tkr1ThetaErr, tkr1PhiErr;
-	if (m_pTkrTool->getVal("Tkr1ThetaErr",tkr1ThetaErr, nextCheck).isSuccess() &&
-		m_pTkrTool->getVal("Tkr1PhiErr",tkr1PhiErr, nextCheck).isSuccess()) {
-		EvtTkr1PSFMdRat = sqrt(tkr1ThetaErr*tkr1ThetaErr + tkr1PhiErr*tkr1PhiErr)/ 
-			              EvtPSFModel;
-	}
+    double tkr1ThetaErr, tkr1PhiErr;
+    if (m_pTkrTool->getVal("Tkr1ThetaErr",tkr1ThetaErr, nextCheck).isSuccess() &&
+        m_pTkrTool->getVal("Tkr1PhiErr",tkr1PhiErr, nextCheck).isSuccess()) {
+        EvtTkr1PSFMdRat = sqrt(tkr1ThetaErr*tkr1ThetaErr + tkr1PhiErr*tkr1PhiErr)/ 
+                          EvtPSFModel;
+    }
 
     double tkr1ConE;
     if (m_pTkrTool->getVal("Tkr1ConEne",tkr1ConE, nextCheck).isSuccess()) {
@@ -310,7 +310,7 @@ StatusCode EvtValsTool::calculate()
     if (m_pTkrTool->getVal("TkrTotalHits", totHits, nextCheck).isSuccess()) {
         if (m_pTkrTool->getVal("Tkr1FirstLayer", tkr1First, nextCheck).isSuccess()){
             EvtTkrComptonRatio = totHits/(2.*(pTkrGeoSvc->numLayers()-tkr1First));
-			EvtTkrEComptonRatio = EvtTkrComptonRatio/(-3.77 + 3.57*logE - .547*logE2)
+            EvtTkrEComptonRatio = EvtTkrComptonRatio/(-3.77 + 3.57*logE - .547*logE2)
                                   /(1.69 + 1.74*tkr1ZDir + .987*tkr1ZDir2);
         }
     }
@@ -342,57 +342,57 @@ StatusCode EvtValsTool::calculate()
     }
     double tkr2Qual;
     if (m_pTkrTool->getVal("Tkr2Qual", tkr2Qual, nextCheck).isSuccess()) {
-		double minLogE = std::min(logE, 2.77);
-		double minLogE2 = minLogE*minLogE; 
+        double minLogE = std::min(logE, 2.77);
+        double minLogE2 = minLogE*minLogE; 
         EvtTkr2EQual = tkr2Qual/ (-6.53 +42.1*minLogE - 7.63*minLogE2)
                                 /(1.18 + .541*tkr1ZDir + .368*tkr1ZDir2);
     }
 
-	double calTrms, calLrms;
-	if(m_pCalTool->getVal("CalTransRms", calTrms, nextCheck).isSuccess()&
-	   m_pCalTool->getVal("CalLongRms", calLrms, nextCheck).isSuccess()){
-		   if(calLrms > 0.) {
+    double calTrms, calLrms;
+    if(m_pCalTool->getVal("CalTransRms", calTrms, nextCheck).isSuccess()&
+       m_pCalTool->getVal("CalLongRms", calLrms, nextCheck).isSuccess()){
+           if(calLrms > 0.) {
              EvtCalETLRatio = (calTrms/calLrms)/ (9 - 4.01*logE + .481*logE2)
                                 /(1.47 + .907*tkr1ZDir + .338*tkr1ZDir2);
-		   }
+           }
     }
 
     double calXtalRatio;
-	if(m_pCalTool->getVal("CalXtalRatio", calXtalRatio, nextCheck).isSuccess()) {
-		EvtCalEXtalRatio = calXtalRatio/(3.47-1.40*logE  + .146*logE2)
-			                   /(.960 + .0933*tkr1ZDir + .167*tkr1ZDir2);
-	}
+    if(m_pCalTool->getVal("CalXtalRatio", calXtalRatio, nextCheck).isSuccess()) {
+        EvtCalEXtalRatio = calXtalRatio/(3.47-1.40*logE  + .146*logE2)
+                               /(.960 + .0933*tkr1ZDir + .167*tkr1ZDir2);
+    }
 
-	double calXtalsTrunc;
-	if(m_pCalTool->getVal("CalXtalsTrunc", calXtalsTrunc, nextCheck).isSuccess()) {
-		double term1 = std::max(1., (-85.4 + 65.2*logE - 10.4*logE2));
-		double logE33 = logE-3.3; 
-		double term2 = (logE33 > 0.) ? std::min(14., 12.*logE33*logE33): 0.;
-		EvtCalEXtalTrunc = calXtalsTrunc/(term1 + term2)/(.935 - .382*tkr1ZDir - .343*tkr1ZDir2);
-	}
+    double calXtalsTrunc;
+    if(m_pCalTool->getVal("CalXtalsTrunc", calXtalsTrunc, nextCheck).isSuccess()) {
+        double term1 = std::max(1., (-85.4 + 65.2*logE - 10.4*logE2));
+        double logE33 = logE-3.3; 
+        double term2 = (logE33 > 0.) ? std::min(14., 12.*logE33*logE33): 0.;
+        EvtCalEXtalTrunc = calXtalsTrunc/(term1 + term2)/(.935 - .382*tkr1ZDir - .343*tkr1ZDir2);
+    }
 
-	double calTrackDoca;
-	if(m_pCalTool->getVal("CalTrackDoca", calTrackDoca, nextCheck).isSuccess()) {
-		EvtCalETrackDoca = calTrackDoca*sqrt(EvtEnergySumOpt)/(3100 - 1500*logE + 239*logE2)
+    double calTrackDoca;
+    if(m_pCalTool->getVal("CalTrackDoca", calTrackDoca, nextCheck).isSuccess()) {
+        EvtCalETrackDoca = calTrackDoca*sqrt(EvtEnergySumOpt)/(3100 - 1500*logE + 239*logE2)
                                 /(5.06 + 10.5*tkr1ZDir +6.17*tkr1ZDir2);
-	}
+    }
 
-	double calTrackSep;
-	if(m_pCalTool->getVal("CalTrackSep", calTrackSep, nextCheck).isSuccess()) {
-		double logEmin = std::min(logE, 3.6); 
-		EvtCalETrackSep = calTrackSep/(1380 - 692*logEmin + 91.3*logEmin*logEmin)
+    double calTrackSep;
+    if(m_pCalTool->getVal("CalTrackSep", calTrackSep, nextCheck).isSuccess()) {
+        double logEmin = std::min(logE, 3.6); 
+        EvtCalETrackSep = calTrackSep/(1380 - 692*logEmin + 91.3*logEmin*logEmin)
                                 /(3.85 + 5.98*tkr1ZDir +2.53*tkr1ZDir2);
-	}
+    }
 
     EvtVtxEEAngle = EvtVtxEAngle/ (96.0 -  70.7*logE + 17.6*logE2) 
                                 / (1.54 + 1.46*tkr1ZDir + .889*tkr1ZDir2);
-	double vtxDoca;
+    double vtxDoca;
     if (m_pVtxTool->getVal("VtxDOCA", vtxDoca, firstCheck).isSuccess()) {
         EvtVtxEDoca = vtxDoca/(1.55 - .685*logE+ .0851*logE2) 
                                 / (2.21 + 3.01*tkr1ZDir + 1.59*tkr1ZDir2);
     }
 
-	double vtxHeadSep;
+    double vtxHeadSep;
     if (m_pVtxTool->getVal("VtxHeadSep", vtxHeadSep, firstCheck).isSuccess()) {
         EvtVtxEHeadSep = vtxHeadSep/ (2.83 - .94*logE + .108*logE2) 
                                 / (2.45 + 3.34*tkr1ZDir + 1.58*tkr1ZDir2);

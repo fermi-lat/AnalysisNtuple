@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.7 2003/09/16 16:27:59 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.8 2003/10/21 00:27:16 heather Exp $
 */
 
 #include "ValBase.h"
@@ -52,12 +52,12 @@ private:
     double ACD_ActiveDist;
     double ACD_GammaDOCA; 
     double ACD_ActDistTop;
-	double ACD_ActDistR0;
+    double ACD_ActDistR0;
     double ACD_ActDistR1;
-	double ACD_ActDistR2;
-	double ACD_tileCount0;
+    double ACD_ActDistR2;
+    double ACD_tileCount0;
     double ACD_tileCount1;
-	double ACD_tileCount2;
+    double ACD_tileCount2;
     double ACD_ribbon_ActiveDist;
 
     
@@ -125,7 +125,7 @@ StatusCode AcdValsTool::initialize()
 
     addItem("AcdActDistTop",&ACD_ActDistTop);
     addItem("AcdActDistSideRow0",&ACD_ActDistR0);
-	addItem("AcdActDistSideRow1",&ACD_ActDistR1);
+    addItem("AcdActDistSideRow1",&ACD_ActDistR1);
     addItem("AcdActDistSideRow2",&ACD_ActDistR2);
 
     addItem("AcdNoSideRow0",   &ACD_tileCount0);
@@ -161,15 +161,15 @@ StatusCode AcdValsTool::calculate()
         ACD_GammaDOCA     = pACD->getGammaDoca();
         ACD_ribbon_ActiveDist = pACD->getRibbonActiveDist();
 
-		const std::vector<double> & adist = pACD->getRowActDistCol();
- 	    ACD_ActDistTop = adist[0];
- 	    ACD_ActDistR0 = adist[1];
+        const std::vector<double> & adist = pACD->getRowActDistCol();
+        ACD_ActDistTop = adist[0];
+        ACD_ActDistR0 = adist[1];
         ACD_ActDistR1 = adist[2];
-	    ACD_ActDistR2 = adist[3];
+        ACD_ActDistR2 = adist[3];
 
-		//Code from meritAlg.... 
-	    // get the map of energy vs tile id: have to construct from two parallel vectors
-	   float m_acd_tileCount[4];
+        //Code from meritAlg.... 
+        // get the map of energy vs tile id: have to construct from two parallel vectors
+       float m_acd_tileCount[4];
        const std::vector<double> energies = pACD->getEnergyCol();
        const std::vector<idents::AcdId>& ids = pACD->getIdCol();
        std::vector<double>::const_iterator eit = energies.begin();
@@ -184,9 +184,9 @@ StatusCode AcdValsTool::calculate()
       if(true)for( int row = 0; row<3; ++row){ 
           m_acd_tileCount[row+1] = std::count_if(emap.begin(), emap.end(), acd_row(row) );
       }
-	  ACD_tileCount0 = m_acd_tileCount[1];
+      ACD_tileCount0 = m_acd_tileCount[1];
       ACD_tileCount1 = m_acd_tileCount[2];
-	  ACD_tileCount2 = m_acd_tileCount[3];       
+      ACD_tileCount2 = m_acd_tileCount[3];       
 
     } else {
         return StatusCode::FAILURE;

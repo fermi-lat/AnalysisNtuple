@@ -3,7 +3,7 @@
 @brief Calculates the Vtx analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.10 2003/09/30 23:54:02 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.11 2003/10/03 23:53:42 lsrea Exp $
 */
 
 // Include files
@@ -68,7 +68,7 @@ private:
     double VTX_ydir;
     double VTX_zdir;
     double VTX_Phi;
-	double VTX_Theta;
+    double VTX_Theta;
     double VTX_x0;
     double VTX_y0;
     double VTX_z0;
@@ -123,7 +123,7 @@ StatusCode VtxValsTool::initialize()
     addItem("VtxYDir",      &VTX_ydir);     
     addItem("VtxZDir",      &VTX_zdir);     
     addItem("VtxPhi",       &VTX_Phi);  
-	addItem("VtxTheta",     &VTX_Theta);  
+    addItem("VtxTheta",     &VTX_Theta);  
     addItem("VtxX0",        &VTX_x0);       
     addItem("VtxY0",        &VTX_y0);       
     addItem("VtxZ0",        &VTX_z0);       

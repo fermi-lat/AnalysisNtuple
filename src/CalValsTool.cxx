@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.34 2003/10/12 07:06:43 lsrea Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.35 2003/12/16 21:07:44 atwood Exp $
 */
 
 // Include files
@@ -46,7 +46,7 @@ namespace {
     
     double signC(double x) { return (x<0.) ? -1.:1.;} 
  
-	double activeDist(double x, double y, double xpitch, double ypitch, int nx, int ny, int &XY, int &outer) {
+    double activeDist(double x, double y, double xpitch, double ypitch, int nx, int ny, int &XY, int &outer) {
         double edge = 0.; 
         double x_twr = signC(x)*(fmod(fabs(x),xpitch) - xpitch/2.);
         double y_twr = signC(y)*(fmod(fabs(y),ypitch) - ypitch/2.);
@@ -128,7 +128,7 @@ namespace {
         // double beta      = exp(0.031*log(CAL_EnergySum/1000.))/2.29;
         // The above expression gives too small values
         double b      = 1.2*exp(0.031*log(E/1000.))/2.3;   //July 16, 2003 * 1.2
-		//double b      = .51*exp(0.02*log(E/1000.));  // 17-July
+        //double b      = .51*exp(0.02*log(E/1000.));  // 17-July
         return b;
     }
     
@@ -137,11 +137,11 @@ namespace {
         // double alpha      = 2.65*exp(0.15*log(E/1000.));
         // The above expression gives too large values
         //double a = 2.50*exp(0.19*log(E/1000.));    //RR182
-		// Found that these power law models diverge as E increases.  
-		//double a = .98*log10(E) - .23; 
-		double a = .9*log10(E); 
+        // Found that these power law models diverge as E increases.  
+        //double a = .98*log10(E) - .23; 
+        double a = .9*log10(E); 
         return a;
-	}
+    }
     
     double erf_cal(double x) {
         double t = 1./(1.+.47047*x);
@@ -197,7 +197,7 @@ namespace {
       double m_calZBot;
 
       IPropagatorSvc* m_propSvc;
-	  IPropagator * m_G4PropTool; 
+      IPropagator * m_G4PropTool; 
 
 
       
@@ -209,9 +209,9 @@ namespace {
       double CAL_EdgeSum_Corr;     
       //double CAL_Total_Corr; 
       double CAL_TotSum_Corr; 
-	  double CAL_Energy_LLCorr; 
+      double CAL_Energy_LLCorr; 
 
-	  double CAL_CsI_RLn;
+      double CAL_CsI_RLn;
       double CAL_Tot_RLn;
       double CAL_Cnt_RLn; 
       double CAL_DeadTot_Rat;
@@ -231,30 +231,30 @@ namespace {
       double CAL_zdir;
 
       double CAL_TwrEdge;
-	  double CAL_LATEdge; 
-	  double CAL_CalTkrAngle;
+      double CAL_LATEdge; 
+      double CAL_CalTkrAngle;
 
       double CAL_TE_Nrm;
       double CAL_Track_Sep;
 
-	  double CAL_Lyr0_Ratio;
-	  double CAL_Lyr7_Ratio;
-	  double CAL_BkHalf_Ratio;
+      double CAL_Lyr0_Ratio;
+      double CAL_Lyr7_Ratio;
+      double CAL_BkHalf_Ratio;
 
-	  double CAL_Xtal_Ratio;
-	  double CAL_eLayer[8];
-	  double CAL_No_Xtals_Trunc;
-	  double CAL_Long_Rms;
-	  double CAL_Trans_Rms;
-	  double CAL_LRms_Ratio;
+      double CAL_Xtal_Ratio;
+      double CAL_eLayer[8];
+      double CAL_No_Xtals_Trunc;
+      double CAL_Long_Rms;
+      double CAL_Trans_Rms;
+      double CAL_LRms_Ratio;
 
-	  double CAL_MIP_Diff; 
-	  double CAL_MIP_Ratio;
+      double CAL_MIP_Diff; 
+      double CAL_MIP_Ratio;
       
       //Calimeter items with Recon - Tracks
       double CAL_Track_DOCA;
       double CAL_Track_Angle;
-	  double CAL_TwrGap; 
+      double CAL_TwrGap; 
       double CAL_x0;
       double CAL_y0;
       double CAL_z0;
@@ -316,15 +316,15 @@ namespace {
               return StatusCode::FAILURE;
           }
 
-		  IToolSvc* toolSvc = 0;
-		  if(service("ToolSvc", toolSvc, true).isFailure()) {
-			  log << MSG::ERROR << "Couldn't find the ToolSvc!" << endreq;
+          IToolSvc* toolSvc = 0;
+          if(service("ToolSvc", toolSvc, true).isFailure()) {
+              log << MSG::ERROR << "Couldn't find the ToolSvc!" << endreq;
               return StatusCode::FAILURE;
           }
-		  if(!toolSvc->retrieveTool("G4PropagationTool", m_G4PropTool)) {
-			  log << MSG::ERROR << "Couldn't find the ToolSvc!" << endreq;
+          if(!toolSvc->retrieveTool("G4PropagationTool", m_G4PropTool)) {
+              log << MSG::ERROR << "Couldn't find the ToolSvc!" << endreq;
               return StatusCode::FAILURE;
-		  }
+          }
           
       } else {
           return StatusCode::FAILURE;
@@ -335,7 +335,7 @@ namespace {
       addItem("CalEnergySum",  &CAL_EnergySum);
       addItem("CalEnergyCorr", &CAL_Energy_Corr);
       addItem("CalEneSumCorr", &CAL_EneSum_Corr);
-	  addItem("Cal_Energy_LLCorr", &CAL_Energy_LLCorr);
+      addItem("Cal_Energy_LLCorr", &CAL_Energy_LLCorr);
    
       //addItem("CalLeakCorr",   &CAL_Leak_Corr);
       addItem("CalLeakCorr2",  &CAL_Leak_Corr2);
@@ -345,7 +345,7 @@ namespace {
       //addItem("CalTotalCorr",  &CAL_Total_Corr);
       addItem("CalTotSumCorr", &CAL_TotSum_Corr);
  
-	  addItem("CalCsIRLn",     &CAL_CsI_RLn);
+      addItem("CalCsIRLn",     &CAL_CsI_RLn);
       addItem("CalTotRLn",     &CAL_Tot_RLn);
       addItem("CalCntRLn",     &CAL_Cnt_RLn);
       addItem("CalDeadTotRat", &CAL_DeadTot_Rat);
@@ -356,34 +356,34 @@ namespace {
       addItem("CalDeltaT",     &CAL_deltaT);
       
       addItem("CalTwrEdge",    &CAL_TwrEdge);
-	  addItem("CalLATEdge",    &CAL_LATEdge);
+      addItem("CalLATEdge",    &CAL_LATEdge);
       addItem("CalTENrm",      &CAL_TE_Nrm);
       addItem("CalTrackSep",   &CAL_Track_Sep);
       addItem("CalTrackDoca",  &CAL_Track_DOCA);
-	  addItem("CalTwrGap",     &CAL_TwrGap);
-	  addItem("CalTkrAngle",   &CAL_CalTkrAngle);
+      addItem("CalTwrGap",     &CAL_TwrGap);
+      addItem("CalTkrAngle",   &CAL_CalTkrAngle);
 
-	  addItem("CalELayer0",    &CAL_eLayer[0]);
+      addItem("CalELayer0",    &CAL_eLayer[0]);
       addItem("CalELayer1",    &CAL_eLayer[1]);
-	  addItem("CalELayer2",    &CAL_eLayer[2]);
-	  addItem("CalELayer3",    &CAL_eLayer[3]);
-	  addItem("CalELayer4",    &CAL_eLayer[4]);
-	  addItem("CalELayer5",    &CAL_eLayer[5]);
-	  addItem("CalELayer6",    &CAL_eLayer[6]);
-	  addItem("CalELayer7",    &CAL_eLayer[7]);
-	  addItem("CalLyr0Ratio",  &CAL_Lyr0_Ratio);
-	  addItem("CalLyr7Ratio",  &CAL_Lyr7_Ratio);
-	  addItem("CalBkHalfRatio",  &CAL_BkHalf_Ratio);
+      addItem("CalELayer2",    &CAL_eLayer[2]);
+      addItem("CalELayer3",    &CAL_eLayer[3]);
+      addItem("CalELayer4",    &CAL_eLayer[4]);
+      addItem("CalELayer5",    &CAL_eLayer[5]);
+      addItem("CalELayer6",    &CAL_eLayer[6]);
+      addItem("CalELayer7",    &CAL_eLayer[7]);
+      addItem("CalLyr0Ratio",  &CAL_Lyr0_Ratio);
+      addItem("CalLyr7Ratio",  &CAL_Lyr7_Ratio);
+      addItem("CalBkHalfRatio",  &CAL_BkHalf_Ratio);
 
-	  addItem("CalXtalsTrunc", &CAL_No_Xtals_Trunc);
-	  addItem("CalXtalRatio",  &CAL_Xtal_Ratio);
+      addItem("CalXtalsTrunc", &CAL_No_Xtals_Trunc);
+      addItem("CalXtalRatio",  &CAL_Xtal_Ratio);
 
-	  addItem("CalLongRms",    &CAL_Long_Rms);
-	  addItem("CalLRmsRatio",  &CAL_LRms_Ratio);
-	  addItem("CalTransRms",   &CAL_Trans_Rms);
+      addItem("CalLongRms",    &CAL_Long_Rms);
+      addItem("CalLRmsRatio",  &CAL_LRms_Ratio);
+      addItem("CalTransRms",   &CAL_Trans_Rms);
 
-	  addItem("CalMIPDiff",   &CAL_MIP_Diff);
-	  addItem("CalMIPRatio",  &CAL_MIP_Ratio);
+      addItem("CalMIPDiff",   &CAL_MIP_Diff);
+      addItem("CalMIPRatio",  &CAL_MIP_Ratio);
 
       addItem("CalXEcntr",     &CAL_xEcntr);
       addItem("CalYEcntr",     &CAL_yEcntr);
@@ -418,8 +418,8 @@ StatusCode CalValsTool::calculate()
     //    pClusters(m_pEventSvc,EventModel::TkrRecon::TkrClusterCol);
     SmartDataPtr<Event::CalClusterCol>     
         pCals(m_pEventSvc,EventModel::CalRecon::CalClusterCol);
-	SmartDataPtr<Event::CalXtalRecCol> 
-		pxtalrecs(m_pEventSvc,EventModel::CalRecon::CalXtalRecCol);
+    SmartDataPtr<Event::CalXtalRecCol> 
+        pxtalrecs(m_pEventSvc,EventModel::CalRecon::CalXtalRecCol);
         
     //Make sure we have valid cluster data
     if (!pCals) return sc;
@@ -429,9 +429,9 @@ StatusCode CalValsTool::calculate()
     Event::CalCluster* calCluster = pCals->front();
     
     CAL_EnergySum   = calCluster->getEnergySum();
-	for(int i = 0; i<8; i++) CAL_eLayer[i] = calCluster->getEneLayer(i);
+    for(int i = 0; i<8; i++) CAL_eLayer[i] = calCluster->getEneLayer(i);
     CAL_Long_Rms      = calCluster->getRmsLong();
-	CAL_Trans_Rms     = calCluster->getRmsTrans();
+    CAL_Trans_Rms     = calCluster->getRmsTrans();
 
     if(CAL_EnergySum>0.0) {
         CAL_Lyr0_Ratio  = CAL_eLayer[0]/CAL_EnergySum;
@@ -440,11 +440,11 @@ StatusCode CalValsTool::calculate()
             CAL_eLayer[6]+CAL_eLayer[7])/CAL_EnergySum;
         CAL_LRms_Ratio    = CAL_Long_Rms / CAL_EnergySum;
     }
-	
-	CAL_Energy_LLCorr = calCluster->getEnergyLeak();
+    
+    CAL_Energy_LLCorr = calCluster->getEnergyLeak();
 
-	//Code from meritAlg
-	int no_xtals=0;
+    //Code from meritAlg
+    int no_xtals=0;
     int no_xtals_trunc=0;
     for( Event::CalXtalRecCol::const_iterator jlog=pxtalrecs->begin(); jlog != pxtalrecs->end(); ++jlog){
 
@@ -455,7 +455,7 @@ StatusCode CalValsTool::calculate()
         if(eneLog>0.01*CAL_EnergySum)no_xtals_trunc++;
     }
     CAL_Xtal_Ratio= (no_xtals>0) ? float(no_xtals_trunc)/no_xtals : 0;
-	CAL_No_Xtals_Trunc = float(no_xtals_trunc); 
+    CAL_No_Xtals_Trunc = float(no_xtals_trunc); 
 
     //Overwritten below, if there are tracks
     CAL_Energy_Corr = calCluster->getEnergyCorrected(); 
@@ -475,7 +475,7 @@ StatusCode CalValsTool::calculate()
     int iView = 0;
     int outside = 0;
     CAL_TwrEdge = activeDist(CAL_xEcntr, CAL_yEcntr, twr_pitch, twr_pitch, 
-		                     m_xNum, m_yNum, iView, outside);
+                             m_xNum, m_yNum, iView, outside);
     
     if(iView==1) CAL_TE_Nrm  = cal_dir.x();
     else         CAL_TE_Nrm  = cal_dir.y();
@@ -500,10 +500,10 @@ StatusCode CalValsTool::calculate()
         x0 = gamma->getPosition();
         t0 = gamma->getDirection();
     }
-	if(fabs(cal_dir.x()) < 1.) {
-		CAL_CalTkrAngle = acos(t0*cal_dir);
-	}
-	else CAL_CalTkrAngle = -.1; 
+    if(fabs(cal_dir.x()) < 1.) {
+        CAL_CalTkrAngle = acos(t0*cal_dir);
+    }
+    else CAL_CalTkrAngle = -.1; 
     // this "cos(theta)" doesn't distinguish between up and down
     double costh  = fabs(t0.z()); 
     // This "phi" is restricted to the range 0 to pi/2
@@ -548,12 +548,12 @@ StatusCode CalValsTool::calculate()
     
     // Reset shower area circle when multiple tracks are present
     // This increasingly matters below 1000 MeV.
-	Event::TkrFitTrackBase::TrackEnd end = Event::TkrFitTrackBase::End;
-	Ray trj_1 = Ray(track_1->getPosition(end), track_1->getDirection(end));
-	double delta_z = trj_1.position().z() - m_calZTop;
+    Event::TkrFitTrackBase::TrackEnd end = Event::TkrFitTrackBase::End;
+    Ray trj_1 = Ray(track_1->getPosition(end), track_1->getDirection(end));
+    double delta_z = trj_1.position().z() - m_calZTop;
     arc_len = delta_z/fabs(trj_1.direction().z());
     Point cal_1 = trj_1.position(arc_len); 
-	if(fabs(cal_1.x()) > fabs(cal_1.y())) CAL_LATEdge = m_calXWidth/2. - fabs(cal_1.x());
+    if(fabs(cal_1.x()) > fabs(cal_1.y())) CAL_LATEdge = m_calXWidth/2. - fabs(cal_1.x());
     else                                  CAL_LATEdge = m_calYWidth/2. - fabs(cal_1.y());
 
     if(num_tracks > 1) {
@@ -644,16 +644,16 @@ StatusCode CalValsTool::calculate()
     //       Need to check sides as well as back
     Vector t_axis = axis.direction();     // This points in +z direction
     double s_top  = -(axis.position().z() - m_calZTop)/t_axis.z();
-	double s_exit = -(axis.position().z() - z0)/t_axis.z(); 
+    double s_exit = -(axis.position().z() - z0)/t_axis.z(); 
     Point cal_top = axis.position(s_top); // Entry point into calorimeter
-	Point tkr_exit= axis.position(s_exit);// Exit point from tracker
+    Point tkr_exit= axis.position(s_exit);// Exit point from tracker
 
     CAL_z0    = cal_top.z();
     CAL_x0    = cal_top.x();
     CAL_y0    = cal_top.y();   
 
-	// Only do leakage correction for tracks which "hit" the Calorimeter
-	if(fabs(CAL_x0) > cal_half_width || fabs(CAL_y0) > cal_half_width) return sc; 
+    // Only do leakage correction for tracks which "hit" the Calorimeter
+    if(fabs(CAL_x0) > cal_half_width || fabs(CAL_y0) > cal_half_width) return sc; 
 
 
     double s_xp   = (-cal_half_width + tkr_exit.x())/t_axis.x();
@@ -665,54 +665,54 @@ StatusCode CalValsTool::calculate()
     double s_miny = (s_yp > s_ym) ? s_yp:s_ym; // Choose soln > 0. 
     
 //    double s_minz = (m_calZTop - m_calZBot)/t_axis.z();
-	double s_minz = (tkr_exit.z() - m_calZBot)/t_axis.z();
+    double s_minz = (tkr_exit.z() - m_calZBot)/t_axis.z();
     // Now pick min. soln. of the x, y, and z sides 
     double s_min  = (s_minx < s_miny) ? s_minx:s_miny;  
     s_min         = (s_min  < s_minz) ? s_min :s_minz;
     
     // Set up a propagator to calc. rad. lens. 
-	m_G4PropTool->setStepStart(tkr_exit, -t_axis);
-	m_G4PropTool->step(s_min);  
+    m_G4PropTool->setStepStart(tkr_exit, -t_axis);
+    m_G4PropTool->step(s_min);  
 
-	// Now loop over the steps to extract the materials
-	int numSteps = m_G4PropTool->getNumberSteps();
-	int istep  = 0;
-	idents::VolumeIdentifier volId;
-	idents::VolumeIdentifier prefix = m_detSvc->getIDPrefix();
-	double radLen_CsI  = 0.;
-	double radLen_Stuff = 0.;
-	double radLen_Gap  = 0.; 
-	double radLen_Cntr = 0.; 
-	double radLen_CntrStuff = 0.; 
-	double arcLen_CsI  = 0.; 
-	double arcLen_Gap  = 0.; 
-	double arcLen_Stuff = 0.; 
-	double arcLen_Cntr = 0.; 
-	for(; istep < numSteps; ++istep) {
-		volId = m_G4PropTool->getStepVolumeId(istep);
-		volId.prepend(prefix);
-		double radLen_step = m_G4PropTool->getStepRadLength(istep);
-		double arcLen_step = m_G4PropTool->getStepArcLen(istep); 
-		Point x_step       = m_G4PropTool->getStepPosition(istep);
-		if(volId.size() > 8) { //This indicates being inside a CsI Xtal 
-			radLen_CsI  += radLen_step;
-			arcLen_CsI  += arcLen_step;
-		}
-		else {
-			radLen_Stuff += radLen_step;
-			arcLen_Stuff += arcLen_step;
-			if(x_step.z() >= m_calZTop) {
-				radLen_Gap += radLen_step;
-				arcLen_Gap += arcLen_step;
-			}
-		}
-		if(x_step.z() >= CAL_zEcntr) {
-			radLen_Cntr += radLen_step;
-			arcLen_Cntr += arcLen_step;
-			if(volId.size() < 8) 
-				radLen_CntrStuff += radLen_step;
-		}
-	}
+    // Now loop over the steps to extract the materials
+    int numSteps = m_G4PropTool->getNumberSteps();
+    int istep  = 0;
+    idents::VolumeIdentifier volId;
+    idents::VolumeIdentifier prefix = m_detSvc->getIDPrefix();
+    double radLen_CsI  = 0.;
+    double radLen_Stuff = 0.;
+    double radLen_Gap  = 0.; 
+    double radLen_Cntr = 0.; 
+    double radLen_CntrStuff = 0.; 
+    double arcLen_CsI  = 0.; 
+    double arcLen_Gap  = 0.; 
+    double arcLen_Stuff = 0.; 
+    double arcLen_Cntr = 0.; 
+    for(; istep < numSteps; ++istep) {
+        volId = m_G4PropTool->getStepVolumeId(istep);
+        volId.prepend(prefix);
+        double radLen_step = m_G4PropTool->getStepRadLength(istep);
+        double arcLen_step = m_G4PropTool->getStepArcLen(istep); 
+        Point x_step       = m_G4PropTool->getStepPosition(istep);
+        if(volId.size() > 8) { //This indicates being inside a CsI Xtal 
+            radLen_CsI  += radLen_step;
+            arcLen_CsI  += arcLen_step;
+        }
+        else {
+            radLen_Stuff += radLen_step;
+            arcLen_Stuff += arcLen_step;
+            if(x_step.z() >= m_calZTop) {
+                radLen_Gap += radLen_step;
+                arcLen_Gap += arcLen_step;
+            }
+        }
+        if(x_step.z() >= CAL_zEcntr) {
+            radLen_Cntr += radLen_step;
+            arcLen_Cntr += arcLen_step;
+            if(volId.size() < 8) 
+                radLen_CntrStuff += radLen_step;
+        }
+    }
     double t_cal_tot = radLen_CsI + radLen_Stuff; 
     double t_total   = t_tracker  + t_cal_tot;
     
@@ -721,31 +721,31 @@ StatusCode CalValsTool::calculate()
 
     // 2 Iterations to find energy
     // Note: the TMath incomplete gamma functions is really the fractional inner incomplete
-	//       gamma function - i.e. its just what we need to do shower models.  
-	//Leon: this is the algorithm that gave the best results for estimating
-	//      leakage:
-	//        a) In the shower model (wallet card) the ratio of the a & b paremters
-	//           is the energy centroid (check it for yourself).  Also b is all but
-	//           energy independent (not ours ... problem here -see below ... but the wallet cards)
-	//           So given our event centroid and b - > make first guess for a.  But the ratio of 
-	//           a/b = <t> only in an infinitely deep cal.  
-	//        b) This gives first approx. for energy leakage fraction from model.
-	//        c) Now find a & b from parametric  models parametric models using "corrected energy".
-	//      I don't think is great. The reality is that first estimation correction raises
-	//      the energy by ~ 10% at 10 GeV.  The second iteration using the a & b models gives
-	//      a total correction of ~ + 33%. 
-	//      The powerlaw parameterization of b and a are funny. Particularly b - our b for 
-	//      CsI is ~ .46 and raising with E (i.e. too small - like smaller then uranium!  - and 
-	//      changing too fast).  These are vistiges from the code in CalRecon. 
-	//      Overall it seems to work albeit for heuristic methodology. Note however we may get strange
-	//      results when used outside the energy range 50 MeV - 18 GeV.  I hope here that 
-	//      the stuff Giebells is doing will come to the rescue - transistion from one to the other??
-	//   
+    //       gamma function - i.e. its just what we need to do shower models.  
+    //Leon: this is the algorithm that gave the best results for estimating
+    //      leakage:
+    //        a) In the shower model (wallet card) the ratio of the a & b paremters
+    //           is the energy centroid (check it for yourself).  Also b is all but
+    //           energy independent (not ours ... problem here -see below ... but the wallet cards)
+    //           So given our event centroid and b - > make first guess for a.  But the ratio of 
+    //           a/b = <t> only in an infinitely deep cal.  
+    //        b) This gives first approx. for energy leakage fraction from model.
+    //        c) Now find a & b from parametric  models parametric models using "corrected energy".
+    //      I don't think is great. The reality is that first estimation correction raises
+    //      the energy by ~ 10% at 10 GeV.  The second iteration using the a & b models gives
+    //      a total correction of ~ + 33%. 
+    //      The powerlaw parameterization of b and a are funny. Particularly b - our b for 
+    //      CsI is ~ .46 and raising with E (i.e. too small - like smaller then uranium!  - and 
+    //      changing too fast).  These are vistiges from the code in CalRecon. 
+    //      Overall it seems to work albeit for heuristic methodology. Note however we may get strange
+    //      results when used outside the energy range 50 MeV - 18 GeV.  I hope here that 
+    //      the stuff Giebells is doing will come to the rescue - transistion from one to the other??
+    //   
 //  double a1 = alpha(ene_sum_corr);
     double b1 =  beta(ene_sum_corr); 
-	double a1 = b1*t + 1.; //  + 1 is to compensates for finite cal effect.  This would better 
-	                       // match it  to the final answer.  In reality it has a minor effect since all this 
-	                       // typically affects things as log(E). 
+    double a1 = b1*t + 1.; //  + 1 is to compensates for finite cal effect.  This would better 
+                           // match it  to the final answer.  In reality it has a minor effect since all this 
+                           // typically affects things as log(E). 
     double in_frac_1 = TMath::Gamma(a1, b1*t_total);
     double a2 = alpha(ene_sum_corr/in_frac_1);
     double b2 =  beta(ene_sum_corr/in_frac_1); 
@@ -754,26 +754,26 @@ StatusCode CalValsTool::calculate()
     ene_sum_corr /= in_frac_2; //Using 2nd order solution
     
     // Final Delta t factor (?).  Again - present in sumlated data - Needs to be understood 
-	// Perhaps this is the event to event compensation for variations in the initiation of showers. 
+    // Perhaps this is the event to event compensation for variations in the initiation of showers. 
     CAL_t_Pred      = a2/b2*(TMath::Gamma(a2+1.,b2*t_total)/
                              TMath::Gamma(a2,b2*t_total)); 
     CAL_deltaT      = t - CAL_t_Pred;
     
-	// The "final" correction derived empirically from analyizing and flattening the 
-	// resultant energy in cos(theta) and log10(E) 
-	double logEsum = log10(ene_sum_corr); 
+    // The "final" correction derived empirically from analyizing and flattening the 
+    // resultant energy in cos(theta) and log10(E) 
+    double logEsum = log10(ene_sum_corr); 
     //double ad_hoc_factor = (1.35-.15*logEsum )/(1.+.9*(.6 - costh)*(.6 - costh))/
-		                       // (1.-.125*logEsum + (.125*logEsum)*costh);  
-	//double ad_hoc_factor = (1.23 - .065*logEsum)/(1.+.14*(logEsum-1.)*(costh-.74));  
+                               // (1.-.125*logEsum + (.125*logEsum)*costh);  
+    //double ad_hoc_factor = (1.23 - .065*logEsum)/(1.+.14*(logEsum-1.)*(costh-.74));  
     double ad_hoc_factor = (1.08 + .02*logEsum);  
     // Store the results away 
     CAL_EneSum_Corr = ene_sum_corr * ad_hoc_factor;
     CAL_Energy_Corr = CAL_EnergySum*edge_corr * ad_hoc_factor/in_frac_2; 
     CAL_TotSum_Corr = CAL_EneSum_Corr/CAL_EnergySum;
     //CAL_Total_Corr  = CAL_Energy_Corr/CAL_EnergySum; 
-	CAL_CsI_RLn     = radLen_CsI;
-	CAL_MIP_Diff    = CAL_EnergySum - 12.07*radLen_CsI;
-	CAL_MIP_Ratio   = CAL_EnergySum /(12.07*radLen_CsI);
+    CAL_CsI_RLn     = radLen_CsI;
+    CAL_MIP_Diff    = CAL_EnergySum - 12.07*radLen_CsI;
+    CAL_MIP_Ratio   = CAL_EnergySum /(12.07*radLen_CsI);
     CAL_Tot_RLn     = t_total;
     CAL_Cnt_RLn     = t;
     CAL_DeadTot_Rat = radLen_Stuff/t_total;
@@ -783,7 +783,7 @@ StatusCode CalValsTool::calculate()
     
     //CAL_Leak_Corr   = in_frac_1;
     CAL_Leak_Corr2  = in_frac_2;   
-	CAL_TwrGap      = arcLen_Stuff - arcLen_Gap;
+    CAL_TwrGap      = arcLen_Stuff - arcLen_Gap;
 
     return sc;
 }
@@ -791,9 +791,9 @@ StatusCode CalValsTool::calculate()
 StatusCode CalValsTool::getCalInfo()
 {
     m_calZTop = m_geoSvc->calZTop();
-	m_calZBot = m_geoSvc->calZBot();
-	m_calXWidth = m_geoSvc->calXWidth();
-	m_calYWidth = m_geoSvc->calYWidth();
+    m_calZBot = m_geoSvc->calZBot();
+    m_calXWidth = m_geoSvc->calXWidth();
+    m_calYWidth = m_geoSvc->calYWidth();
 
     return StatusCode::SUCCESS;
 }
