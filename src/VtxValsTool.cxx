@@ -3,7 +3,7 @@
 @brief Calculates the Vtx analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.12 2003/12/16 23:18:29 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.13 2004/06/16 00:34:00 lsrea Exp $
 */
 
 // Include files
@@ -23,7 +23,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.12 
 
 #include "GlastSvc/GlastDetSvc/IGlastDetSvc.h"
 
-#include "Event/Recon/TkrRecon/TkrKalFitTrack.h"
+#include "Event/Recon/TkrRecon/TkrTrack.h"
 #include "Event/Recon/TkrRecon/TkrVertex.h"
 
 #include "Doca.h"
@@ -154,32 +154,29 @@ StatusCode VtxValsTool::calculate()
     StatusCode sc = StatusCode::SUCCESS;
 
     // Recover Track associated info. 
-    SmartDataPtr<Event::TkrFitTrackCol>  
-        pTracks(m_pEventSvc,EventModel::TkrRecon::TkrFitTrackCol);
+    SmartDataPtr<Event::TkrTrackCol>  
+        pTracks(m_pEventSvc,EventModel::TkrRecon::TkrTrackCol);
     SmartDataPtr<Event::TkrVertexCol>     
         pVerts(m_pEventSvc,EventModel::TkrRecon::TkrVertexCol);
    
     if(!pVerts) return sc; 
     
     // Recover total constrained energy
+    if (!pTracks) return sc;
     int nParticles = pTracks->size();
     
     if(nParticles < 1) return sc;
     
-    Event::TkrFitConPtr pTrack1 = pTracks->begin();
-    const Event::TkrFitTrackBase* trackBase = *pTrack1;
-    const Event::TkrKalFitTrack* track_1 
-        = dynamic_cast<const Event::TkrKalFitTrack*>(trackBase);
+    Event::TkrTrackColConPtr pTrack1 = pTracks->begin();
+    const Event::TkrTrack* track_1 = *pTrack1;
     
-    double gamEne = track_1->getEnergy(); 
+    double gamEne = track_1->getInitialEnergy(); 
     
     if(nParticles > 2) {
         pTrack1++;
-        trackBase = *pTrack1;
-        const Event::TkrKalFitTrack* track_2 
-            = dynamic_cast<const Event::TkrKalFitTrack*>(trackBase);
+        const Event::TkrTrack* track_2 = *pTrack1;
         
-        gamEne += track_2->getEnergy();
+        gamEne += track_2->getInitialEnergy();
     }
     
     //Make sure we have valid reconstructed data
@@ -188,11 +185,8 @@ StatusCode VtxValsTool::calculate()
         // Get the first Vertex - First track of first vertex = Best Track
         Event::TkrVertexConPtr pVtxr = pVerts->begin(); 
         Event::TkrVertex*   gamma = *pVtxr++; 
-        SmartRefVector<Event::TkrFitTrackBase>::const_iterator 
-            pTrack1 = gamma->getTrackIterBegin();  
-        trackBase = *pTrack1;
-        SmartRef<Event::TkrKalFitTrack> track_1  
-            = dynamic_cast<const Event::TkrKalFitTrack*>(trackBase); 
+        SmartRefVector<Event::TkrTrack>::const_iterator pTrack1 = gamma->getTrackIterBegin(); 
+        const Event::TkrTrack* track_1 = *pTrack1;
         
         nParticles = gamma->getNumTracks(); 
         Point  x0 = gamma->getPosition();
@@ -210,18 +204,17 @@ StatusCode VtxValsTool::calculate()
         VTX_y0        = x0.y();
         VTX_z0        = x0.z();
         
-        Point  x1 = track_1->getPosition();
-        Vector t1 = track_1->getDirection();
-        double gamEne = track_1->getEnergy();
+        Point  x1 = track_1->front()->getPoint(Event::TkrTrackHit::SMOOTHED);
+        Vector t1 = track_1->front()->getDirection(Event::TkrTrackHit::SMOOTHED);
+
+        double gamEne = track_1->getInitialEnergy();
         
         if(nParticles > 1) {
             pTrack1++;
-            trackBase = *pTrack1;
-            SmartRef<Event::TkrKalFitTrack> track_2 
-                = dynamic_cast<const Event::TkrKalFitTrack*>(trackBase);
+            const Event::TkrTrack* track_2 = *pTrack1;
             
-            Point  x2 = track_2->getPosition();
-            Vector t2 = track_2->getDirection();
+            Point  x2 = track_2->front()->getPoint(Event::TkrTrackHit::SMOOTHED);
+            Vector t2 = track_2->front()->getDirection(Event::TkrTrackHit::SMOOTHED);
             
             // Put in a re-calc. of vertex quantities left out 
             Doca docaObj = Doca(Ray(x1,t1), Ray(x2,t2)); 

@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.40 2004/08/09 17:58:44 atwood Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.41 2004/09/10 04:59:02 lsrea Exp $
 */
 
 // To Do:
@@ -26,13 +26,8 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.40 
 #include "Event/TopLevel/Event.h"
 
 #include "Event/Recon/TkrRecon/TkrCluster.h"
-#include "Event/Recon/TkrRecon/TkrClusterCol.h"
-#include "Event/Recon/TkrRecon/TkrFitPlane.h"
-#include "Event/Recon/TkrRecon/TkrFitTrack.h"
-#include "Event/Recon/TkrRecon/TkrKalFitTrack.h"
-#include "Event/Recon/TkrRecon/TkrFitPar.h"
+#include "Event/Recon/TkrRecon/TkrTrack.h"
 #include "Event/Recon/TkrRecon/TkrVertex.h"
-#include "Event/Recon/TkrRecon/TkrFitMatrix.h"
 
 #include "GlastSvc/GlastDetSvc/IGlastDetSvc.h"
 #include "TkrUtil/ITkrGeometrySvc.h"
@@ -183,10 +178,6 @@ private:
 
     double Tkr_2TkrAngle;
     double Tkr_2TkrHDoca;
-
-    // here's some test stuff... if it works for a couple it will work for all
-    float Tkr_float;
-    int   Tkr_int;
 };
 
 // Static factory for instantiation of algtool objects
@@ -411,8 +402,8 @@ StatusCode TkrValsTool::calculate()
     //SmartDataPtr<Event::EventHeader> pEvent(m_pEventSvc, EventModel::EventHeader);
 
     // Recover Track associated info. 
-    SmartDataPtr<Event::TkrFitTrackCol>  pTracks(m_pEventSvc,EventModel::TkrRecon::TkrFitTrackCol);
-    //SmartDataPtr<Event::TkrVertexCol>     pVerts(m_pEventSvc,EventModel::TkrRecon::TkrVertexCol);
+    SmartDataPtr<Event::TkrTrackCol>   pTracks(m_pEventSvc,EventModel::TkrRecon::TkrTrackCol);
+    SmartDataPtr<Event::TkrVertexCol>  pVerts(m_pEventSvc,EventModel::TkrRecon::TkrVertexCol);
     SmartDataPtr<Event::TkrClusterCol> pClusters(m_pEventSvc,EventModel::TkrRecon::TkrClusterCol);
 
     if(!pTracks) return StatusCode::FAILURE;
@@ -439,28 +430,27 @@ StatusCode TkrValsTool::calculate()
         if(nParticles < 1) return sc;
 
         // Get the first Track - it should be the "Best Track"
-        Event::TkrFitConPtr pTrack1 = pTracks->begin();
+        Event::TkrTrackColConPtr pTrack1 = pTracks->begin();
 
-        const Event::TkrFitTrackBase* trackBase = *pTrack1;
-        const Event::TkrKalFitTrack* track_1 = dynamic_cast<const Event::TkrKalFitTrack*>(trackBase);
+        const Event::TkrTrack* track_1 = *pTrack1;
 
-        Tkr_1_Chisq        = track_1->getChiSquare();
+        Tkr_1_Chisq        = track_1->getChiSquareSmooth();
         Tkr_1_FirstChisq   = track_1->chiSquareSegment();
         Tkr_1_FirstGaps    = track_1->getNumXFirstGaps() + track_1->getNumYFirstGaps();
         Tkr_1_Qual         = track_1->getQuality();
-        Tkr_1_Type         = track_1->getType();
+        Tkr_1_Type         = track_1->getStatusBits();
         Tkr_1_Hits         = track_1->getNumHits();
         Tkr_1_FirstHits    = track_1->getNumSegmentPoints();
-        Tkr_1_FirstLayer   = track_1->getLayer();
-        Tkr_1_LastLayer    = track_1->getLayer(Event::TkrFitTrackBase::End);
+        Tkr_1_FirstLayer   = track_1->front()->getTkrId().getLayer();
+        Tkr_1_LastLayer    = track_1->back()->getTkrId().getLayer();
         Tkr_1_Gaps         = track_1->getNumGaps();
         Tkr_1_KalEne       = track_1->getKalEnergy(); 
-        Tkr_1_ConEne       = track_1->getEnergy(); 
+        Tkr_1_ConEne       = track_1->getInitialEnergy(); 
         Tkr_1_KalThetaMS   = track_1->getKalThetaMS(); 
         Tkr_1_DifHits      = track_1->getNumXHits()-track_1->getNumYHits();
 
-        Point  x1 = track_1->getPosition();
-        Vector t1 = track_1->getDirection();
+        Point  x1 = track_1->getInitialPosition();
+        Vector t1 = track_1->getInitialDirection();
 
         Tkr_1_xdir        = t1.x();
         Tkr_1_ydir        = t1.y();
@@ -477,10 +467,10 @@ StatusCode TkrValsTool::calculate()
         if (Tkr_1_Phi<0.0) Tkr_1_Phi += 2*M_PI;
         Tkr_1_Theta       = (-t1).theta();
 
-        Event::TkrFitMatrix  Tkr_1_Cov = track_1->getTrackCov();
-        Tkr_1_Sxx         = Tkr_1_Cov.getcovSxSx();
-        Tkr_1_Sxy         = Tkr_1_Cov.getcovSxSy();
-        Tkr_1_Syy         = Tkr_1_Cov.getcovSySy();
+        const Event::TkrTrackParams& Tkr_1_Cov = track_1->front()->getTrackParams(Event::TkrTrackHit::SMOOTHED);
+        Tkr_1_Sxx         = Tkr_1_Cov.getxSlpxSlp();
+        Tkr_1_Sxy         = Tkr_1_Cov.getxSlpySlp();
+        Tkr_1_Syy         = Tkr_1_Cov.getySlpySlp();
         double sinPhi     = sin(Tkr_1_Phi);
         double cosPhi     = cos(Tkr_1_Phi);
         Tkr_1_ThetaErr      = t1.z()*t1.z()*sqrt(cosPhi*cosPhi*Tkr_1_Sxx + 
@@ -493,8 +483,8 @@ StatusCode TkrValsTool::calculate()
         Tkr_TrackLength = -(Tkr_1_z0-z0)/Tkr_1_zdir;
 
         double z_dist    = fabs((pTkrGeoSvc->trayHeight()+3.)/t1.z()); 
-        //double x_twr = sign(x1.x())*(fmod(fabs(x1.x()),m_towerPitch) - m_towerPitch/2.);
-        //double y_twr = sign(x1.y())*(fmod(fabs(x1.y()),m_towerPitch) - m_towerPitch/2.);
+        //double x_twr = sign(x1.x())*(fmod(fabs(x1.x()),towerPitch) - towerPitch/2.);
+        //double y_twr = sign(x1.y())*(fmod(fabs(x1.y()),towerPitch) - towerPitch/2.);
         double x_twr = globalToLocal(x1.x(), m_towerPitch, m_xNum);
         double y_twr = globalToLocal(x1.y(), m_towerPitch, m_yNum);
 
@@ -546,7 +536,7 @@ StatusCode TkrValsTool::calculate()
         int    hit_counter = 0; 
         double chisq_first = 0.;
         double chisq_last  = 0.; 
-        Event::TkrFitPlaneConPtr pln_pointer = track_1->begin();
+        Event::TkrTrackHitVecConItr pln_pointer = track_1->begin();
         //for the ToT path correction; use the directions of each hit
         double slopeX; // = fabs(t1.x()/t1.z());
         double slopeY; // = fabs(t1.y()/t1.z());
@@ -554,53 +544,55 @@ StatusCode TkrValsTool::calculate()
         //double pathFactorY; // = 1./sqrt(1. + slopeY*slopeY);
 
 		int gapId = -1; 
-		int lastLayer = -1; 
+		int lastPlane = -1; 
         while(pln_pointer != track_1->end()) {
-            Event::TkrFitPlane plane = *pln_pointer;
+            const Event::TkrTrackHit* plane = *pln_pointer;
+// this needs a bunch of work, from here...
+// for the moment, just kill this
+/*
 
-			int thisPlane = plane.getIDPlane();
-			int thisIview = Event::TkrCluster::viewToInt(plane.getProjection());
-			int thisLayer = 0;
-			if(thisPlane%2 != 0) thisLayer = 2.*thisPlane+thisIview;
-			else                 thisLayer = 2.*thisPlane+((thisIview+1)%2);
+// here we get the plane number of the hit
+// should be able to pass the TkrId to geomSvc and return the plane
+            int thisPlane = pTkrGeoSvc->getPlane(plane.getTkrId());
+			//int thisPlane = plane.getIDPlane();
+			//int thisIview = Event::TkrCluster::viewToInt(plane.getProjection());
+			//int thisLayer = 0;
+			//if(thisPlane%2 != 0) thisLayer = 2.*thisPlane+thisIview;
+			//else                 thisLayer = 2.*thisPlane+((thisIview+1)%2);
 
-			if(lastLayer < 0) { //First Hit
-				lastLayer = thisLayer;
+			if(lastPlane < 0) { //First Hit
+				lastPlane = thisPlane;
 			}
 			else {
-				if(gapId < 0 && lastLayer+1 != thisLayer){
-					gapId = lastLayer+1;
-					Event::TkrFitPlane lastPlane = *(--pln_pointer);
+				if(gapId < 0 && lastPlane+1 != thisPlane){
+					gapId = lastPlane+1;
+					Event::TkrTrackHit lastPlane = *(--pln_pointer);
 					pln_pointer++;
-					Point lastPoint = lastPlane.getPoint(Event::TkrFitHit::FIT);
-					Event::TkrFitHit lastHit = lastPlane.getHit(Event::TkrFitHit::FIT);
-					double xSlope = lastHit.getPar().getXSlope();
-					double ySlope = lastHit.getPar().getYSlope();
-					Vector localDir = Vector(-xSlope,-ySlope,-1.).unit();
+					Point lastPoint = lastPlane.getPoint(Event::TkrTrackHit::FIT);
+					Event::TkrTrackHit lastHit = lastPlane.getHit(Event::TkrTrackHit::FIT);
+					Vector localDir = lastHit.getDirection(Event::TkrTrackHit::FIT);
 					Ray localSeg(lastPoint, localDir);
-					int view; 
-					int layer; 
-					pTkrGeoSvc->planeToLayer (gapId, layer, view);
-					double gapZ = pTkrGeoSvc->getReconLayerZ(layer,view);
+					//int view; 
+					//int layer; 
+					//pTkrGeoSvc->planeToLayer (gapId, layer, view);
+					//double gapZ = pTkrGeoSvc->getReconLayerZ(layer,view);
+                    // or maybe
+                    double gapZ = pTkrGeoSvc->getPlaneZ(gapId);
 					double arcLen = (gapZ-lastPoint.z())/localDir.z();
 					Point gapPoint = localSeg.position(arcLen);
 					Tkr_1_GapX = gapPoint.x();
 					Tkr_1_GapY = gapPoint.y();
 				}
 			}
-			lastLayer = thisLayer;
+			lastPlane = thisPlane;
+// to here...
+*/
 
-            int hit_Id = plane.getIDHit();
-            Event::TkrCluster* cluster = pClusters->getHit(hit_Id);
-            Event::TkrCluster::view v = cluster->v();
-            int size =  (int) cluster->size();
-
+            const Event::TkrCluster* cluster = plane->getClusterPtr();
+            int size =  const_cast<Event::TkrCluster*>(cluster)->size();
             // get the local slopes
-            Event::TkrFitPar par = (plane.getHit(Event::TkrFitHit::SMOOTH )).getPar();
-            slopeX = fabs(par.getXSlope());
-            slopeY = fabs(par.getYSlope());
-            double slope        = (v==Event::TkrCluster::X) ? slopeY : slopeX;
-            double slope1       = (v==Event::TkrCluster::X) ? slopeX : slopeY;
+            double slope  = fabs(plane->getMeasuredSlope(Event::TkrTrackHit::SMOOTHED));
+            double slope1 = fabs(plane->getNonMeasuredSlope(Event::TkrTrackHit::SMOOTHED));
 
             // theta is the projected angle along the strip
             //double theta        = atan(slope);
@@ -663,11 +655,11 @@ StatusCode TkrValsTool::calculate()
             Tkr_1_ToTAve += tot;
             if(hit_counter < 3) {
                 first_ToT += tot;
-                chisq_first += plane.getDeltaChiSq(Event::TkrFitHit::SMOOTH);
+                chisq_first += plane->getChiSquareSmooth();
             }
             if(hit_counter > Tkr_1_Hits - 2){
                 last_ToT += tot;
-                chisq_last += plane.getDeltaChiSq(Event::TkrFitHit::SMOOTH);
+                chisq_last += plane->getChiSquareSmooth();
             }
             pln_pointer++;
 
@@ -675,9 +667,10 @@ StatusCode TkrValsTool::calculate()
         Tkr_1_ToTTrAve = (Tkr_1_ToTAve - max_ToT - min_ToT)/(Tkr_1_Hits-2.);
         Tkr_1_ToTAve /= Tkr_1_Hits;
         Tkr_1_ToTAsym = (last_ToT - first_ToT)/(first_ToT + last_ToT);
+// Should be Tkr_1_FirstGapPlane!!
 		Tkr_1_FirstGapLayer = gapId; 
 
-        // Chisq Asymetry - Front vs Back ends of tracks
+        // Chisq Asymmetry - Front vs Back ends of tracks
         Tkr_1_ChisqAsym = (chisq_last - chisq_first)/(chisq_last + chisq_first);
 
         m_G4PropTool->setStepStart(x1, -t1); //Note minus sign - swim backwards towards ACD
@@ -711,26 +704,25 @@ StatusCode TkrValsTool::calculate()
 
         if(nParticles > 1) {
             pTrack1++;
-            trackBase = *pTrack1;
-            const Event::TkrKalFitTrack* track_2 = dynamic_cast<const Event::TkrKalFitTrack*>(trackBase);
+            const Event::TkrTrack* track_2 = *pTrack1;
 
-            Tkr_2_Chisq        = track_2->getChiSquare();
+            Tkr_2_Chisq        = track_2->getChiSquareSmooth();
             Tkr_2_FirstChisq     = track_2->chiSquareSegment();
             Tkr_2_FirstGaps      = track_2->getNumXFirstGaps() + track_2->getNumYFirstGaps();
             Tkr_2_Qual         = track_2->getQuality();
-            Tkr_2_Type         = track_2->getType();
+            Tkr_2_Type         = track_2->getStatusBits();
             Tkr_2_Hits         = track_2->getNumHits();
             Tkr_2_FirstHits    = track_2->getNumSegmentPoints();
-            Tkr_2_FirstLayer   = track_2->getLayer();
+            Tkr_2_FirstLayer   = track_2->front()->getTkrId().getLayer();
             Tkr_2_LastLayer    = track_2->getLayer(Event::TkrFitTrackBase::End);
             Tkr_2_Gaps         = track_2->getNumGaps();
             Tkr_2_KalEne       = track_2->getKalEnergy(); 
-            Tkr_2_ConEne       = track_2->getEnergy(); 
+            Tkr_2_ConEne       = track_2->getInitialEnergy(); 
             Tkr_2_KalThetaMS   = track_2->getKalThetaMS(); 
             Tkr_2_DifHits      = track_2->getNumXHits()-track_2->getNumYHits();
 
-            Point  x2 = track_2->getPosition();
-            Vector t2 = track_2->getDirection();
+            Point  x2 = track_2->getInitialPosition();
+            Vector t2 = track_2->getInitialDirection();
             Tkr_2_xdir       = t2.x();
             Tkr_2_ydir       = t2.y();
             Tkr_2_zdir       = t2.z();
@@ -793,7 +785,7 @@ StatusCode TkrValsTool::calculate()
         int    blank_hits   = 0; 
         double ave_edge     = 0.; 
 
-        int top_plane     = track_1->getLayer(); 
+        int top_plane     = track_1->front()->getTkrId().getLayer(); 
 
         int max_planes = pTkrGeoSvc->numLayers();
 
@@ -890,8 +882,6 @@ StatusCode TkrValsTool::calculate()
         Tkr_RadLength  = rad_len_sum;
     }         
 
-   // std::cout << "Tkr_KalEne: " << Tkr_1_KalEne << " " << Tkr_2_KalEne << std::endl 
-   //              <<" Tkr_KalThetaMS " <<  Tkr_1_KalThetaMS << " " << Tkr_2_KalThetaMS << std::endl;
 
     return sc;
 }

@@ -2,7 +2,7 @@
 @brief Calculates the Tkr hit analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header$
+$Header: /nfs/slac/g/glast/ground/cvs/users/TkrGroup/AnalysisNtuple/src/TkrHitValsTool.cxx,v 1.2 2004/09/11 06:39:19 lsrea Exp $
 */
 
 // Include files
@@ -16,12 +16,12 @@ $Header$
 #include "GaudiKernel/AlgTool.h"
 #include "GaudiKernel/ToolFactory.h"
 #include "GaudiKernel/IToolSvc.h"
+#include "GaudiKernel/GaudiException.h" 
 
 #include "Event/TopLevel/EventModel.h"
 #include "Event/TopLevel/Event.h"
 
-#include "Event/Recon/TkrRecon/TkrClusterCol.h"
-#include "Event/Recon/TkrRecon/TkrFitTrack.h"
+#include "TkrUtil/ITkrQueryClustersTool.h"
 
 namespace {
     const int _nLayers = 18;
@@ -56,6 +56,8 @@ private:
     double Tkr_NCnv_Lyrs_Hit;
     
     double Tkr_HitsPerLyr[_nLayers];
+
+    ITkrQueryClustersTool* m_clusTool;
 };
 
 // Static factory for instantiation of algtool objects
@@ -86,6 +88,11 @@ StatusCode TkrHitValsTool::initialize()
         
     } else {
         return StatusCode::FAILURE;
+    }
+
+    if ((sc = toolSvc()->retrieveTool("TkrQueryClustersTool", m_clusTool)).isFailure())
+    {
+        throw GaudiException("Service [TkrQueryClustersTool] not found", name(), sc);
     }
     
     // load up the map
@@ -127,8 +134,6 @@ StatusCode TkrHitValsTool::calculate()
     // Recover Track associated info. 
     SmartDataPtr<Event::TkrClusterCol>   
         pClusters(m_pEventSvc,EventModel::TkrRecon::TkrClusterCol);
-    //SmartDataPtr<Event::TkrFitTrackCol>    
-    //    pTracks(m_pEventSvc,EventModel::TkrRecon::TkrFitTrackCol);
 
     if (!pClusters) return StatusCode::FAILURE;
 
@@ -138,8 +143,8 @@ StatusCode TkrHitValsTool::calculate()
         int layerIdx = _nLayers;
         while(layerIdx--)
         {
-            int hitCount = pClusters->nHits(Event::TkrCluster::X, layerIdx) 
-                + pClusters->nHits(Event::TkrCluster::Y, layerIdx);
+            int hitCount = m_clusTool->getClustersReverseLayer(Event::TkrCluster::X,layerIdx).size()
+                         + m_clusTool->getClustersReverseLayer(Event::TkrCluster::Y,layerIdx).size();
             
             if (hitCount > 0)
             {
@@ -150,7 +155,7 @@ StatusCode TkrHitValsTool::calculate()
             Tkr_HitsPerLyr[layerIdx] = hitCount;
         }
         
-        Tkr_Cnv_Lyr_Hits = pClusters->nHits();
+        Tkr_Cnv_Lyr_Hits = pClusters->size();
     }
     
     return sc;

@@ -3,7 +3,7 @@
 @brief Calculates the "Event" analysis variables from the other ntuple variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.15 2004/08/09 17:56:06 atwood Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.16 2004/09/01 05:05:03 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -19,10 +19,6 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.15 
 #include "Event/TopLevel/Event.h"
 
 #include "TkrUtil/ITkrGeometrySvc.h"
-
-//#include "Event/Recon/TkrRecon/TkrVertex.h"
-//#include "Event/Recon/TkrRecon/TkrFitTrack.h"
-//#include "Event/Recon/AcdRecon/AcdRecon.h"
 
 #include <algorithm>
 /** @class EvtValsTool

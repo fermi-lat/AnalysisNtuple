@@ -2,7 +2,7 @@
 @brief Calculates the Mc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.17 2004/06/17 19:44:00 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.18 2004/09/01 05:05:03 lsrea Exp $
 */
 // Include files
 
@@ -28,7 +28,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.17 2
 #include "Event/MonteCarlo/McPositionHit.h"
 
 // Reconstructed Tracks.... 
-#include "Event/Recon/TkrRecon/TkrKalFitTrack.h"
+#include "Event/Recon/TkrRecon/TkrTrack.h"
 #include "Event/Recon/TkrRecon/TkrVertex.h"
 
 /*! @class McValsTool
@@ -53,6 +53,9 @@ public:
     
 private:
     
+    //Attempt to calculate the energy exiting the tracker
+    double getEnergyExitingTkr(Event::McParticle* mcPart);
+    
     //Pure MC Tuple Items
     double MC_SourceId;
     double MC_Id;
@@ -61,6 +64,7 @@ private:
     double MC_LogEnergy;
     double MC_EFrac;
     double MC_OpenAngle; 
+    double MC_TkrExitEne;
 
     
     double MC_x0;
@@ -122,13 +126,13 @@ StatusCode McValsTool::initialize()
     
     // load up the map
 
-    addItem("McSourceId",     &MC_SourceId);
     addItem("McId",           &MC_Id);  
     addItem("McCharge",       &MC_Charge);
     addItem("McEnergy",       &MC_Energy);  
     addItem("McLogEnergy",    &MC_LogEnergy);
     addItem("McEFrac",        &MC_EFrac);
     addItem("McOpenAngle",    &MC_OpenAngle);
+    addItem("McTkrExitEne",   &MC_TkrExitEne);
     addItem("McX0",           &MC_x0);           
     addItem("McY0",           &MC_y0);           
     addItem("McZ0",           &MC_z0);           
@@ -160,7 +164,7 @@ StatusCode McValsTool::calculate()
     StatusCode sc = StatusCode::SUCCESS;
     
     // Recover Track associated info. 
-    SmartDataPtr<Event::TkrFitTrackCol>    pTracks(m_pEventSvc,EventModel::TkrRecon::TkrFitTrackCol);
+    SmartDataPtr<Event::TkrTrackCol>  pTracks(m_pEventSvc,EventModel::TkrRecon::TkrTrackCol); 
     SmartDataPtr<Event::TkrVertexCol>       pVerts(m_pEventSvc,EventModel::TkrRecon::TkrVertexCol);
     // Recover MC Pointer
     SmartDataPtr<Event::McParticleCol> pMcParticle(m_pEventSvc, EventModel::MC::McParticleCol);
@@ -206,6 +210,9 @@ StatusCode McValsTool::calculate()
         MC_ydir   = Mc_t0.y();
         MC_zdir   = Mc_t0.z();
 
+        //Attempt to estimate energy exiting the tracker
+        MC_TkrExitEne = getEnergyExitingTkr(*pMCPrimary);
+
         if((*pMCPrimary)->daughterList().size() > 0) {
             SmartRefVector<Event::McParticle> daughters = (*pMCPrimary)->daughterList();
             SmartRef<Event::McParticle> pp1 = daughters[0]; 
@@ -225,23 +232,25 @@ StatusCode McValsTool::calculate()
                 MC_OpenAngle = acos(dot_prod);
             }  
         }
+
+        // This should really be a test on vertices, not tracks
         if(!pTracks) return sc; 
         int num_tracks = pTracks->size(); 
         if(num_tracks <= 0 ) return sc;
         
         // Get track energies and event energy
-        Event::TkrFitConPtr pTrack1 = pTracks->begin();
-        const Event::TkrFitTrackBase* trackBase = *pTrack1;
-        const Event::TkrKalFitTrack* track_1 = dynamic_cast<const Event::TkrKalFitTrack*>(trackBase);
+        Event::TkrTrackColConPtr pTrack1 = pTracks->begin();
+        const Event::TkrTrack*   track_1 = *pTrack1;
+ //       const Event::TkrKalFitTrack* track_1 = dynamic_cast<const Event::TkrKalFitTrack*>(trackBase);
         
-        double e1 = track_1->getEnergy();
+        double e1 = track_1->getInitialEnergy();
         double gamEne = e1; 
         double e2 = 0.; 
         if(num_tracks > 2) {
             pTrack1++;
-            trackBase = *pTrack1;
-            const Event::TkrKalFitTrack* track_2 = dynamic_cast<const Event::TkrKalFitTrack*>(trackBase);
-            e2 = track_2->getEnergy();
+            const Event::TkrTrack* track_2 = *pTrack1;
+            e2 = track_2->getInitialEnergy();
+//            e2 = track_2->getEnergy();
             gamEne += e2;
         }
         
@@ -272,22 +281,20 @@ StatusCode McValsTool::calculate()
             
             int nParticles = gamma->getNumTracks(); 
             
-            SmartRefVector<Event::TkrFitTrackBase>::const_iterator pTrack1 = gamma->getTrackIterBegin();  
-            trackBase = *pTrack1;
-            SmartRef<Event::TkrKalFitTrack> track_1  = dynamic_cast<const Event::TkrKalFitTrack*>(trackBase); 
+            SmartRefVector<Event::TkrTrack>::const_iterator pTrack1 = gamma->getTrackIterBegin();  
+            const Event::TkrTrack* track_1 = *pTrack1;
             
-            Point  x1 = track_1->getPosition();
-            Vector t1 = track_1->getDirection();
+            Point  x1 = track_1->front()->getPoint(Event::TkrTrackHit::SMOOTHED);
+            Vector t1 = track_1->front()->getDirection(Event::TkrTrackHit::SMOOTHED);
             double cost1tMC = t1*Mc_t0;
             
             MC_TKR1_dir_err  = acos(cost1tMC);
             
             if(nParticles > 1) {
                 pTrack1++;
-                trackBase = *pTrack1;
-                SmartRef<Event::TkrKalFitTrack> track_2 = dynamic_cast<const Event::TkrKalFitTrack*>(trackBase);
-                Point  x2 = track_2->getPosition();
-                Vector t2 = track_2->getDirection();
+                const Event::TkrTrack* track_2 = *pTrack1;
+                Point  x2 = track_2->front()->getPoint(Event::TkrTrackHit::SMOOTHED);
+                Vector t2 = track_2->front()->getDirection(Event::TkrTrackHit::SMOOTHED);
                 double cost2tMC = t2*Mc_t0;
                 
                 MC_TKR2_dir_err  = acos(cost2tMC);
@@ -296,4 +303,70 @@ StatusCode McValsTool::calculate()
     }
     
     return sc;
+}
+
+double McValsTool::getEnergyExitingTkr(Event::McParticle* mcPart)
+{
+    //This function attempts to estimate the energy which exist the tracker during 
+    //an event. The idea is to recursively traverse the McParticle tree and look for
+    //particles which start in the tracker (so, for example, the electron and positron
+    //from a gamma conversion) and then exit, keep track of the energy of these particles.
+    //Due to the vagaries of our simulation, several interesting problems can arise and
+    //an attempt is made to deal with these (see notes below).
+    //A flaw here is that NO attempt is made to account for continuous energy loss of 
+    //charged particles in the tracker. Hopefully, a more sophisticated routine will 
+    //appear soon.
+    double tkrExitEne = 0.;
+    double partEnergy = 0.;
+    double partLostE  = 0.;
+
+    idents::VolumeIdentifier initial = mcPart->getInitialId();
+    idents::VolumeIdentifier final   = mcPart->getFinalId();
+
+    //This should check that the initial point of the particle is in the tracker
+    //and that its final point is outside. So, it started in the tracker and 
+    //carried its energy outside (could be anywhere)
+    ////if (initial.size() == 9 && initial[0] == 0 && initial[3] == 1 &&
+    ////    final.size() == 9 && (final[0] != 0 || final[3] != 1)       )
+    if (final.size() == 9 && (final[0] != 0 || final[3] != 1) )
+    {
+        //Set total initial energy of this particle...
+        partEnergy = mcPart->initialFourMomentum().t();
+    }
+
+    //Next step is to go through the daughter list to find the tracker exiting
+    //energy due to them
+    SmartRefVector<Event::McParticle> daughters = mcPart->daughterList();
+
+    for(SmartRefVector<Event::McParticle>::iterator partIter = daughters.begin(); 
+                                                    partIter < daughters.end(); 
+                                                    partIter++)
+    {
+        Event::McParticle* daughter = *partIter;
+
+        //First we check to see if the daughter was created in the tracker. 
+        idents::VolumeIdentifier daughterInitial = daughter->getInitialId();
+
+        if (daughterInitial.size() == 9 && daughterInitial[0] == 0 && daughterInitial[3] ==1)
+        {
+            //Keep track of the energy this daughter takes from its parent
+            partLostE += daughter->initialFourMomentum().t();
+
+            //Now get the energy exiting the tracker due to this particle
+            tkrExitEne += getEnergyExitingTkr(daughter);
+        }
+    }
+
+    //Ok, now correct the mcPart energy for that it lost traversing the tracker by 
+    //creating daughter particles
+    partEnergy -= partLostE;
+
+    if (partEnergy < 0.) partEnergy = 0.;
+
+    //Finally, add this to the energy exiting the tracker
+    tkrExitEne += partEnergy;
+
+    //This should now be the energy exiting the tracker due to those particles created 
+    //in the tracker. 
+    return tkrExitEne;
 }

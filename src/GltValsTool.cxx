@@ -2,7 +2,7 @@
 @brief Calculates the Trigger analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.11 2004/09/16 23:57:09 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.12 2004/09/17 14:33:30 lsrea Exp $
 */
 
 // Include files
@@ -16,16 +16,14 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.11 
 #include "GaudiKernel/AlgTool.h"
 #include "GaudiKernel/ToolFactory.h"
 #include "GaudiKernel/IToolSvc.h"
+#include "GaudiKernel/GaudiException.h" 
 
 #include "TkrUtil/ITkrGeometrySvc.h"
+#include "TkrUtil/ITkrQueryClustersTool.h"
 #include "idents/TowerId.h"
 
 #include "Event/TopLevel/EventModel.h"
 #include "Event/TopLevel/Event.h"
-
-#include "Event/Recon/TkrRecon/TkrClusterCol.h"
-#include "Event/Recon/TkrRecon/TkrFitTrack.h"
-
 #include "CLHEP/Matrix/Matrix.h"
 #include "CLHEP/Matrix/SymMatrix.h"
 
@@ -82,6 +80,8 @@ private:
     double Trig_type; // was: 1= corner, 2 = side, 3 = core, now number of exposed sides (0-4)
     double Trig_moment; 
     double Trig_zDir; 
+
+    ITkrQueryClustersTool* m_clusTool;
 };
 
 // Static factory for instantiation of algtool objects
@@ -115,6 +115,11 @@ StatusCode GltValsTool::initialize()
         }
     } else {
         return fail;
+    }
+
+    if ((sc = toolSvc()->retrieveTool("TkrQueryClustersTool", m_clusTool)).isFailure())
+    {
+        throw GaudiException("Service [TkrQueryClustersTool] not found", name(), sc);
     }
 
     // load up the map
@@ -194,8 +199,11 @@ StatusCode GltValsTool::calculate()
         layer = nLayers;
         while(layer--)
         {
-            int x_hitCount = pClusters->nHits(Event::TkrCluster::X, layer); 
-            int y_hitCount = pClusters->nHits(Event::TkrCluster::Y, layer);
+            Event::TkrClusterVec xHitList = m_clusTool->getClustersReverseLayer(Event::TkrCluster::X,layer);
+            Event::TkrClusterVec yHitList = m_clusTool->getClustersReverseLayer(Event::TkrCluster::Y,layer);
+
+            int x_hitCount = xHitList.size(); 
+            int y_hitCount = yHitList.size();
             if(x_hitCount > 0 && y_hitCount > 0) {
                 std::vector<Event::TkrCluster*> xHitList;
                 std::vector<Event::TkrCluster*> yHitList;
