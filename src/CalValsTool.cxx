@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.2 2003/02/24 17:55:45 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.3 2003/02/24 22:12:36 burnett Exp $
 
 // Include files
 
@@ -25,14 +25,13 @@
 #include "TkrUtil/ITkrQueryClustersTool.h"
 
 #include "GlastSvc/Reco/IKalmanParticle.h"
-//#include "GlastSvc/Reco/IPropagatorSvc.h"
 #include "GlastSvc/Reco/IPropagatorTool.h"
+//#include "GlastSvc/Reco/IPropagatorSvc.h"
 
 #include "GlastSvc/GlastDetSvc/IGlastDetSvc.h"
 
+#include "TMath.h"
 
-#include "TMAth.h"
- 
 #ifndef M_PI
 #define M_PI = 3.14159265358979323846
 #endif
@@ -110,7 +109,7 @@ double contained_frac(double x, double y, double pitch, double gap,
     if(in_frac_x > .999) in_frac = in_frac_y;
     else if(in_frac_y > .999) in_frac = in_frac_x; 
     else in_frac = 1. - (1.-in_frac_x) - (1.-in_frac_y) + 
-                   (1.-in_frac_x)*(1.-in_frac_y);  //Cross Term Correction?  
+        (1.-in_frac_x)*(1.-in_frac_y);  //Cross Term Correction?  
     if(in_frac < .01) in_frac = .01;
     
     return in_frac;
@@ -132,9 +131,9 @@ double alpha(double E) {
     // The above expression gives too large values
     
     //  double a = 2.75*exp(0.14*log(E/1000.));  //RR175
-    //   double a = 2.90*exp(0.115*log(E/1000.)); //RR176
-    //   double a = 2.70*exp(0.15*log(E/1000.));  //RR179
-    //   double a = 2.50*exp(0.18*log(E/1000.));  //RR180
+    //  double a = 2.90*exp(0.115*log(E/1000.)); //RR176
+    //  double a = 2.70*exp(0.15*log(E/1000.));  //RR179
+    //  double a = 2.50*exp(0.18*log(E/1000.));  //RR180
     double a = 2.50*exp(0.19*log(E/1000.));    //RR182
     return a;
 }
@@ -172,27 +171,16 @@ public:
 private:
     
     // some pointers to services
-
-                                         
+    
+    
     /// pointer to tracker geometry
     ITkrGeometrySvc*       pTkrGeoSvc;
-    /// pointer to event data service
-    IDataProviderSvc*      m_pEventSvc;
-    // / pointer to queryclusterstool
-    //ITkrQueryClustersTool* pQueryClusters;
-
-    Event::CalClusterCol* pCals; 
-     
-    Event::TkrClusterCol*  m_Clusters; 
-    Event::TkrFitTrackCol* pTracks;
-    Event::TkrVertexCol*   pVerts;
     
-    IKalmanParticle*       pKalParticle;
-
+    IKalmanParticle*       pKalParticle;   
     /// the GlastDetSvc used for access to detector info
-    IGlastDetSvc*    m_detSvc;
-
-    
+    IGlastDetSvc*    m_detSvc; 
+    /// 
+    //IPropagatorSvc* m_propSvc;
     
     //Global Calorimeter Tuple Items
     double CAL_EnergySum;
@@ -209,7 +197,7 @@ private:
     double CAL_a_Parm;
     double CAL_b_Parm; 
     double CAL_t_Pred; 
-
+    
     double CAL_EneSum_Corr;
     double CAL_Energy_Corr;
     double CAL_x0;
@@ -221,7 +209,7 @@ private:
     double CAL_TwrEdge;
     double CAL_TE_Nrm;
     double CAL_Track_Sep;
-
+    
     //Calimeter items with Recon - Tracks
     double CAL_Track_DOCA;
     double CAL_Track_Angle;
@@ -250,32 +238,32 @@ StatusCode CalValsTool::initialize()
     StatusCode sc = StatusCode::SUCCESS;
     
     MsgStream log(msgSvc(), name());
-    if( ValBase::initialize().isFailure()) return StatusCode::FAILURE;
 
+    if( ValBase::initialize().isFailure()) return StatusCode::FAILURE;
 
     // get the services
     
     if( serviceLocator() ) {
 
-        sc = serviceLocator()->service( "EventDataSvc", m_pEventSvc, true );
-        if(sc.isFailure()){
-            log << MSG::ERROR << "Could not find EventSvc" << endreq;
-            return sc;
-        }
-
-        sc = serviceLocator()->service( "TkrGeometrySvc", pTkrGeoSvc, true );
+         sc = serviceLocator()->service( "TkrGeometrySvc", pTkrGeoSvc, true );
         if(sc.isFailure()) {
             log << MSG::ERROR << "Could not find TkrGeometrySvc" << endreq;
             return sc;
-        }
-        
-        log << MSG::DEBUG << "EventSvc pointer " << m_pEventSvc << endreq;
-
+        }                
         // now try to find the GlastDevSvc service
         if (service("GlastDetSvc", m_detSvc).isFailure()){
             log << MSG::ERROR << "Couldn't find the GlastDetSvc!" << endreq;
             return StatusCode::FAILURE;
         }
+        
+        /*
+        if (service("GlastPropagatorSvc", m_propSvc).isFailure()) {
+            log << MSG::ERROR << "Couldn't find the GlastPropagatorSvc!" << endreq;
+            return StatusCode::FAILURE;
+        }
+
+        pKalParticle = m_propSvc->getPropagator();
+        */
 
         // Which propagator to use?
         int m_PropagatorType = 1; 
@@ -289,7 +277,6 @@ StatusCode CalValsTool::initialize()
                 log << MSG::ERROR <<"Couldn't retrieve G4PropagatorTool" << endreq;
                 return sc;
             }
-
             log << MSG::INFO << "Using Geant4 Particle Propagator" << endreq;
         }
         else
@@ -300,54 +287,56 @@ StatusCode CalValsTool::initialize()
                 log << MSG::ERROR <<"Couldn't retrieve RecoTool" << endreq;
                 return sc;
             }
-
-
             log << MSG::INFO << "Using Gismo Particle Propagator" << endreq;
         }
-        pKalParticle = propTool->getPropagator();      
+        pKalParticle = propTool->getPropagator(); 
+    
+    } else {
+        return StatusCode::FAILURE;
     }
     
-        zeroVals();
-
     // load up the map
-        m_ntupleMap["CAL_EnergySum"] =   &CAL_EnergySum;
-        m_ntupleMap["CAL_Energy_Corr"] = &CAL_Energy_Corr;
-        m_ntupleMap["CAL_EneSum_Corr"] = &CAL_EneSum_Corr;
-        
-        m_ntupleMap["CAL_Leak_Corr"] =   &CAL_Leak_Corr;
-        m_ntupleMap["CAL_Leak_Corr2"] =  &CAL_Leak_Corr2;
-        
-        m_ntupleMap["CAL_Edge_Corr"] =   &CAL_Edge_Corr;
-        m_ntupleMap["CAL_EdgeSum_Corr"] = &CAL_EdgeSum_Corr;
-        m_ntupleMap["CAL_Total_Corr"] =  &CAL_Total_Corr;
-        m_ntupleMap["CAL_TotSum_Corr"] = &CAL_TotSum_Corr;
-        
-        m_ntupleMap["CAL_Tot_RLn"] =     &CAL_Tot_RLn;
-        m_ntupleMap["CAL_Cnt_RLn"] =     &CAL_Cnt_RLn;
-        m_ntupleMap["CAL_DeadTot_Rat"] = &CAL_DeadTot_Rat;
-        m_ntupleMap["CAL_DeadCnt_Rat"] = &CAL_DeadCnt_Rat;
-        m_ntupleMap["CAL_a_Parm"] =      &CAL_a_Parm;
-        m_ntupleMap["CAL_b_Parm"] =      &CAL_b_Parm;
-        m_ntupleMap["CAL_t_Pred"] =      &CAL_t_Pred;
-        
-        m_ntupleMap["CAL_TwrEdge"] =     &CAL_TwrEdge;
-        m_ntupleMap["CAL_TE_Nrm"] =      &CAL_TE_Nrm;
-        m_ntupleMap["CAL_Track_Sep"] =   &CAL_Track_Sep;
-        m_ntupleMap["CAL_Track_DOCA"] =  &CAL_Track_DOCA;
-        m_ntupleMap["CAL_Track_Angle"] = &CAL_Track_Angle;
-        
-        m_ntupleMap["CAL_x0"] =          &CAL_x0;
-        m_ntupleMap["CAL_y0"] =          &CAL_y0;
-        m_ntupleMap["CAL_z0"] =          &CAL_z0;
-        m_ntupleMap["CAL_xdir"] =        &CAL_xdir;
-        m_ntupleMap["CAL_ydir"] =        &CAL_ydir;
-        m_ntupleMap["CAL_zdir"] =        &CAL_zdir;
-        
-        m_ntupleMap["CAL_x0_corr"] =      &CAL_x0_corr;
-        m_ntupleMap["CAL_y0_corr"] =      &CAL_y0_corr;
-        m_ntupleMap["CAL_z0_corr"] =      &CAL_z0_corr;
-        m_ntupleMap["CAL_TwrEdge_corr"] =  &CAL_TwrEdge_corr; 
 
+    m_ntupleMap["CAL_EnergySum"] =   &CAL_EnergySum;
+    m_ntupleMap["CAL_Energy_Corr"] = &CAL_Energy_Corr;
+    m_ntupleMap["CAL_EneSum_Corr"] = &CAL_EneSum_Corr;
+    
+    m_ntupleMap["CAL_Leak_Corr"] =   &CAL_Leak_Corr;
+    m_ntupleMap["CAL_Leak_Corr2"] =  &CAL_Leak_Corr2;
+    
+    m_ntupleMap["CAL_Edge_Corr"] =   &CAL_Edge_Corr;
+    m_ntupleMap["CAL_EdgeSum_Corr"] = &CAL_EdgeSum_Corr;
+    m_ntupleMap["CAL_Total_Corr"] =  &CAL_Total_Corr;
+    m_ntupleMap["CAL_TotSum_Corr"] = &CAL_TotSum_Corr;
+    
+    m_ntupleMap["CAL_Tot_RLn"] =     &CAL_Tot_RLn;
+    m_ntupleMap["CAL_Cnt_RLn"] =     &CAL_Cnt_RLn;
+    m_ntupleMap["CAL_DeadTot_Rat"] = &CAL_DeadTot_Rat;
+    m_ntupleMap["CAL_DeadCnt_Rat"] = &CAL_DeadCnt_Rat;
+    m_ntupleMap["CAL_a_Parm"] =      &CAL_a_Parm;
+    m_ntupleMap["CAL_b_Parm"] =      &CAL_b_Parm;
+    m_ntupleMap["CAL_t_Pred"] =      &CAL_t_Pred;
+    
+    m_ntupleMap["CAL_TwrEdge"] =     &CAL_TwrEdge;
+    m_ntupleMap["CAL_TE_Nrm"] =      &CAL_TE_Nrm;
+    m_ntupleMap["CAL_Track_Sep"] =   &CAL_Track_Sep;
+    m_ntupleMap["CAL_Track_DOCA"] =  &CAL_Track_DOCA;
+    m_ntupleMap["CAL_Track_Angle"] = &CAL_Track_Angle;
+    
+    m_ntupleMap["CAL_x0"] =          &CAL_x0;
+    m_ntupleMap["CAL_y0"] =          &CAL_y0;
+    m_ntupleMap["CAL_z0"] =          &CAL_z0;
+    m_ntupleMap["CAL_xdir"] =        &CAL_xdir;
+    m_ntupleMap["CAL_ydir"] =        &CAL_ydir;
+    m_ntupleMap["CAL_zdir"] =        &CAL_zdir;
+    
+    m_ntupleMap["CAL_x0_corr"] =      &CAL_x0_corr;
+    m_ntupleMap["CAL_y0_corr"] =      &CAL_y0_corr;
+    m_ntupleMap["CAL_z0_corr"] =      &CAL_z0_corr;
+    m_ntupleMap["CAL_TwrEdge_corr"] =  &CAL_TwrEdge_corr; 
+    
+    zeroVals();
+    
     return sc;
 }
 
@@ -361,8 +350,8 @@ StatusCode CalValsTool::calculate()
     SmartDataPtr<Event::TkrVertexCol>     pVerts(m_pEventSvc,EventModel::TkrRecon::TkrVertexCol);
     SmartDataPtr<Event::TkrClusterCol> pClusters(m_pEventSvc,EventModel::TkrRecon::TkrClusterCol);
     SmartDataPtr<Event::CalClusterCol>     pCals(m_pEventSvc,EventModel::CalRecon::CalClusterCol);
-
-
+    
+    
     
     //Make sure we have valid cluster data
     if (pCals)
@@ -410,7 +399,7 @@ StatusCode CalValsTool::calculate()
             x0 = gamma->getPosition();
             t0 = gamma->getDirection();
         }
-
+        
         double costh  = fabs(t0.z()); 
         double phi    = atan(-t0.y()/t0.x());
         double phi_90 = fabs(phi); 

@@ -1,4 +1,4 @@
-// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.2 2003/02/24 17:55:45 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.3 2003/02/24 22:12:36 burnett Exp $
 
 // Include files
 
@@ -25,12 +25,10 @@
 #include "TkrUtil/ITkrQueryClustersTool.h"
 #include "GlastSvc/Reco/IKalmanParticle.h"
 
-#include "GlastSvc/Reco/IPropagatorSvc.h"
+//#include "GlastSvc/Reco/IPropagatorSvc.h"
 #include "GlastSvc/Reco/IPropagatorTool.h"
 #include "GaudiKernel/IToolSvc.h"
 
-//#include "TMAth.h"
- 
 #ifndef M_PI
 #define M_PI = 3.14159265358979323846
 #endif
@@ -66,7 +64,8 @@ double circle_fracT(double r) {
 }    
 
 
-class TkrValsTool :  public ValBase {
+class TkrValsTool :  public ValBase 
+{
 public:
     
     TkrValsTool( const std::string& type, 
@@ -85,14 +84,11 @@ private:
     
     /// pointer to tracker geometry
     ITkrGeometrySvc*       pTkrGeoSvc;
-    /// pointer to event data service
-    IDataProviderSvc*      m_pEventSvc;
     /// pointer to queryclusterstool
     ITkrQueryClustersTool* pQueryClusters;
-    
-    Event::TkrClusterCol*  m_Clusters; 
-    Event::TkrFitTrackCol* m_Tracks;
-    
+    /// 
+    //IPropagatorSvc* m_propSvc;
+ 
     IKalmanParticle*       pKalParticle;
     
     
@@ -185,35 +181,36 @@ StatusCode TkrValsTool::initialize()
     
     MsgStream log(msgSvc(), name());
 
-    ValBase::initialize();
+    if((ValBase::initialize()).isFailure()) return StatusCode::FAILURE;
     
     // get the services
     
     if( serviceLocator() ) {
-
-
-        sc = serviceLocator()->service( "EventDataSvc", m_pEventSvc, true );
-        if(sc.isFailure()){
-            log << MSG::ERROR << "Could not find EventSvc" << endreq;
-            return sc;
-        }
-
+        
         sc = serviceLocator()->service( "TkrGeometrySvc", pTkrGeoSvc, true );
         if(sc.isFailure()) {
             log << MSG::ERROR << "Could not find TkrGeometrySvc" << endreq;
             return sc;
         }
-        
-        log << MSG::DEBUG << "EventSvc pointer " << m_pEventSvc << endreq;
- 
+                
         sc = toolSvc()->retrieveTool("TkrQueryClustersTool", pQueryClusters);
         if (sc.isFailure()) {
             log << MSG::ERROR << "Couldn't retrieve TkrQueryClusterTool" << endreq;
             return StatusCode::FAILURE;
         }
-                
+        
+        /*
+        // this doesn't seem quite ready, or I don't know how to use it
+        if (service("GlastPropagatorSvc", m_propSvc).isFailure()) {
+            log << MSG::ERROR << "Couldn't find the GlastPropagatorSvc!" << endreq;
+            return StatusCode::FAILURE;
+        }
+
+        pKalParticle = m_propSvc->getPropagator();
+        */
+        
         // Which propagator to use?
-        int m_PropagatorType = 0; 
+        int m_PropagatorType = 1; 
         IPropagatorTool* propTool = 0;
         if (m_PropagatorType == 0)
         {
@@ -227,13 +224,14 @@ StatusCode TkrValsTool::initialize()
             sc = toolSvc()->retrieveTool("RecoTool", propTool);
             log << MSG::INFO << "Using Gismo Particle Propagator" << endreq;
         }
-        pKalParticle = propTool->getPropagator();      
+        pKalParticle = propTool->getPropagator();     
+
+    } else {
+        return StatusCode::FAILURE;
     }
- 
-    zeroVals();
 
     // load up the map
-
+    
     m_ntupleMap["TKR_No_Tracks"]    = &Tkr_No_Tracks;
     m_ntupleMap["TKR_Sum_KalEne"]   = &Tkr_Sum_KalEne;
     m_ntupleMap["TKR_Sum_ConEne"]   = &Tkr_Sum_ConEne;
@@ -307,31 +305,32 @@ StatusCode TkrValsTool::initialize()
     m_ntupleMap["TKR_2_y0"]         = &Tkr_2_y0;
     m_ntupleMap["TKR_2_z0"]         = &Tkr_2_z0;    
     
+    zeroVals();
     
     return sc;
 }
 
 namespace {
-
+    
     double radThin   = .03; 
     double radThick  = .18; 
     double radTray   = .015;
-
+    
     // coefs from Miner
     double cfThin    = 0.722;
     double cfThick   = 1.864;
     double cfNoConv  = 0.117;
     double cfRadLen  = 13.07;
     double cfZ       = -0.021;
-
+    
     double cfNoConv1 = 2.5;
-
+    
     double max_corr  = 3.0; 
     double rm_hard   = 30.; 
     double rm_soft   = 130;
     double gap       = 18.; 
     double hard_frac = .6; 
-
+    
     double minHeight = 26.5;
 }
 
@@ -340,29 +339,29 @@ StatusCode TkrValsTool::calculate()
     StatusCode sc = StatusCode::SUCCESS;
     
     MsgStream log(msgSvc(), name());
-            
+    
     //Recover EventHeader Pointer
     //SmartDataPtr<Event::EventHeader> pEvent(m_pEventSvc, EventModel::EventHeader);
-        
+    
     // Recover Track associated info. 
     SmartDataPtr<Event::TkrFitTrackCol>  pTracks(m_pEventSvc,EventModel::TkrRecon::TkrFitTrackCol);
     SmartDataPtr<Event::TkrVertexCol>     pVerts(m_pEventSvc,EventModel::TkrRecon::TkrVertexCol);
     SmartDataPtr<Event::TkrClusterCol> pClusters(m_pEventSvc,EventModel::TkrRecon::TkrClusterCol);
-
+    
     // all variable values are preset to zero. Be sure to re-initialize the ones you care about  
-
+    
     //Make sure we have valid reconstructed data
-
+    
     // used to be 89.61; should have been 89.7 // This is the SSD die pitch (width + gap) 
     double die_width = pTkrGeoSvc->ladderNStrips()*pTkrGeoSvc->siStripPitch() +
         + 2.*pTkrGeoSvc->siDeadDistance() + pTkrGeoSvc->ladderGap();
-
+    
     int nNoConv = pTkrGeoSvc->numNoConverter();
     int nThick  = pTkrGeoSvc->numSuperGlast();
     int nThin   = pTkrGeoSvc->numLayers() - nThick - nNoConv;
-
+    
     double towerPitch = pTkrGeoSvc->towerPitch(); 
-
+    
     if (pTracks)
     {   
         // Count number of tracks
@@ -498,7 +497,7 @@ StatusCode TkrValsTool::calculate()
         gap     *= angle_factor_G;
         rm_hard *= angle_factor_R;
         rm_soft *= angle_factor_R;
-
+        
         // take care of conversion 1/2 way through first radiator
         radlen = radThin/2.;
         if(top_plane >= nThin) {
@@ -510,7 +509,7 @@ StatusCode TkrValsTool::calculate()
             
             double xms = 0.;
             double yms = 0.;
-                        
+            
             if(iplane > top_plane) {
                 Event::TkrFitMatrix Q = pKalParticle->mScat_Covr(Tkr_Sum_ConEne/2., arc_len);
                 xms = Q.getcovX0X0();

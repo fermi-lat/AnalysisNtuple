@@ -26,14 +26,14 @@ typedef valMap::iterator mapIter;
             const IInterface* parent);
     
     ~ValBase() {return;}
-
+    
     /// clear map values
     virtual void zeroVals();
     /// fill ntuple values into tupleSvc
     virtual StatusCode fillNtuple(INTupleWriterSvc* pSvc, std::string tupleName);
     /// put one value into the ntuple
-    virtual StatusCode addNtupleValue(std::string valName, INTupleWriterSvc* pSvc,
-        std::string tupleName);
+    virtual StatusCode fillNtuple(INTupleWriterSvc* pSvc,
+        std::string tupleName, std::string varName);
     /// check if calculation is already done for this event
     virtual StatusCode doCalcIfNotDone();
     /// get a particular value, using ntuple name
@@ -44,7 +44,7 @@ typedef valMap::iterator mapIter;
     virtual void browseValues(std::string varName = "");
     /// this is called by the incident service at the beginning of an event
     virtual void handle(const Incident& inc);
-
+    
     /// calculate all values, over-ridden by XxxValsTool
     virtual StatusCode calculate();
 
@@ -52,9 +52,13 @@ typedef valMap::iterator mapIter;
     virtual StatusCode initialize();
 
 protected:
-
+    
     /// map containing ntuple names, and pointers to the ntuple variables
     valMap m_ntupleMap;
+    /// pointer to incident service
+    IIncidentSvc* m_incSvc;
+    /// let ValBase handle the pointer to the data service, everyone uses it
+    IDataProviderSvc* m_pEventSvc;
     /// flag to signal new event
     bool m_newEvent;
     /// flag to signal that handle is set

@@ -27,15 +27,29 @@ StatusCode ValBase::initialize()
 {
     // use the incident service to register begin, end events
     IIncidentSvc* incsvc = 0;
+    IDataProviderSvc* eventsvc = 0;
+
     MsgStream log(msgSvc(), name());
 
+    StatusCode sc = StatusCode::FAILURE;
 
-    StatusCode sc = serviceLocator()->service( "IncidentSvc", incsvc, true );
-    if(sc.isFailure()){
-        log << MSG::ERROR << "Could not find IncidentSvc" << endreq;
-        return sc;
+    if (serviceLocator()) {
+        sc = serviceLocator()->service( "IncidentSvc", incsvc, true );
+        if(sc.isFailure()){
+            log << MSG::ERROR << "Could not find IncidentSvc" << std::endl;
+            return sc;
+        }
+        m_incSvc = incsvc;
+        
+        sc = serviceLocator()->service( "EventDataSvc", eventsvc, true );
+        if(sc.isFailure()){
+            log << MSG::ERROR << "Could not find EventDataSvc" << std::endl;
+            return sc;
+        }
+        m_pEventSvc = eventsvc;
     }
-    incsvc->addListener(this, "BeginEvent", 100);
+    
+    //incsvc->addListener(this, "BeginEvent", 100);
     return sc;
 }
 
@@ -49,7 +63,9 @@ void ValBase::zeroVals()
     }
 }
 
-StatusCode ValBase::addNtupleValue(std::string varName, INTupleWriterSvc* pSvc, std::string tupleName) 
+StatusCode ValBase::fillNtuple(INTupleWriterSvc* pSvc, 
+                               std::string tupleName,
+                               std::string varName) 
 {
     StatusCode sc = StatusCode::SUCCESS;
     
@@ -67,6 +83,8 @@ StatusCode ValBase::addNtupleValue(std::string varName, INTupleWriterSvc* pSvc, 
 
 void ValBase::browseValues(std::string varName) 
 {
+    MsgStream log(msgSvc(), name());
+
     std::string delim     = "\"";
     std::string separator = " ";
     std::string indent    = "    ";
@@ -74,7 +92,7 @@ void ValBase::browseValues(std::string varName)
     if (varName!="") {
         std::cout  << " Variable " ;
     } else {
-        std::cout  << " Values of the variables:" << std::endl;
+        std::cout   << " Values of the variables:" << std::endl << indent;
     }
     int length = indent.size();
     mapIter it = m_ntupleMap.begin();
@@ -85,7 +103,7 @@ void ValBase::browseValues(std::string varName)
             std::cout <<std::endl << indent ;
             length = indent.size();
         }
-        std::cout << delim << it->first << delim << ": " << *(it->second) << " ";
+        std::cout  << delim << it->first << delim << ": " << *(it->second) << " ";
     }
     std::cout << std::endl;
 }
@@ -106,8 +124,11 @@ StatusCode ValBase::fillNtuple (INTupleWriterSvc* pSvc, std::string tupleName)
 
 StatusCode ValBase::doCalcIfNotDone()
 {
-    StatusCode sc = StatusCode::SUCCESS;    
-#if 0  
+    StatusCode sc = StatusCode::SUCCESS; 
+
+    MsgStream log(msgSvc(), name());
+   
+#if 1  
     // kludge to get around multiple initializations of tool
     // too many calls to addListener otherwise!
     if(!m_handleSet) {
@@ -115,10 +136,11 @@ StatusCode ValBase::doCalcIfNotDone()
         m_handleSet = true;
     }
 #endif
+
     if(m_newEvent) {
         zeroVals();
         sc = calculate();
-        //std::cout << "calc done for this event" << std::endl;
+        std::cout << "calculation done for this event" << std::endl;
         m_newEvent = false;
     }
     return sc;
@@ -142,13 +164,16 @@ StatusCode ValBase::getVal(std::string varName, double& value) {
 }
 
 void ValBase::announceBadName(std::string varName) {
+
+    MsgStream log(msgSvc(), name());
+
     mapIter it = m_ntupleMap.begin();
     
     std::string delim     = "\"";
     std::string separator = " ";
     std::string indent    = "    ";
     
-    std::cout  << " ValsTool called with unknown name: " << delim << varName << delim << std::endl;
+    std::cout << " ValsTool called with unknown name: " << delim << varName << delim << std::endl;
     std::cout << " Known names are: " ;
     int count;
     int length = indent.size();
@@ -156,7 +181,7 @@ void ValBase::announceBadName(std::string varName) {
     for (it, count=0; it!=m_ntupleMap.end(); it++, count++) {
         length += ((it->first).size() + 2*delim.size() + separator.size());
         if(length>78) {
-            std::cout <<std::endl << indent ;
+            std::cout << std::endl << indent ;
             length = indent.size();
         }
         std::cout << delim << it->first << delim << " ";
@@ -165,14 +190,20 @@ void ValBase::announceBadName(std::string varName) {
 }
 
 StatusCode ValBase::calculate() {
+
+    MsgStream log(msgSvc(), name());
+
     std::cout << "No specific calc routine defined!" << std::endl;
     return StatusCode::SUCCESS;
 }
 
 void ValBase::handle(const Incident & inc) 
 {
+    
+    MsgStream log(msgSvc(), name());
+
     if(inc.type()=="BeginEvent") {
-        //std::cout << "handle called at BeginEvent" << std::endl;
+        std::cout << "handle called at BeginEvent" << std::endl;
         m_newEvent = true;
     }
 }
