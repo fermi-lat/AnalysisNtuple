@@ -3,7 +3,7 @@
 @brief Calculates the "Event" analysis variables from the other ntuple variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.14 2004/06/16 00:34:00 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.15 2004/08/09 17:56:06 atwood Exp $
 */
 
 #include "ValBase.h"
@@ -47,6 +47,10 @@ private:
 
     //Global ACDTuple Items
     //double EvtEnergyOpt;
+    double EvtRun;
+    double EvtEventId;
+    double EvtElapsedTime;
+
     double EvtEnergySumOpt;
     double EvtEnergyRaw;
     double EvtMcEnergySigma;
@@ -175,6 +179,9 @@ StatusCode EvtValsTool::initialize()
 
 
     // load up the map
+    addItem("EvtRun",           &EvtRun);
+    addItem("EvtEventId",       &EvtEventId);
+    addItem("EvtElapsedTime",   &EvtElapsedTime);
 
     //addItem("EvtEnergyOpt",     &EvtEnergyOpt);
     addItem("EvtEnergySumOpt",  &EvtEnergySumOpt);
@@ -229,6 +236,14 @@ StatusCode EvtValsTool::calculate()
     // the idea is to call the first check of each tool with the called check value,
     // and the rest with the no-calc value
     // so be careful when adding calls or moving stuff around!!!!
+
+    SmartDataPtr<Event::EventHeader> header(m_pEventSvc, EventModel::EventHeader);
+
+    if(header) {
+        EvtRun         = header->run();
+        EvtEventId     = header->event();
+        EvtElapsedTime = header->time();
+    }
 
     double eCalSum, eTkr;
     if(    m_pCalTool->getVal("CalEnergySum", eCalSum, firstCheck).isSuccess()

@@ -2,7 +2,7 @@
 @brief Calculates the Mc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.16 2003/12/16 23:18:29 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.17 2004/06/17 19:44:00 lsrea Exp $
 */
 // Include files
 
@@ -20,6 +20,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.16 2
 
 #include "Event/TopLevel/EventModel.h"
 #include "Event/TopLevel/Event.h"
+#include "Event/TopLevel/MCEvent.h"
 
 // TDS class declarations: input data, and McParticle tree
 #include "Event/MonteCarlo/McParticle.h"
@@ -53,6 +54,7 @@ public:
 private:
     
     //Pure MC Tuple Items
+    double MC_SourceId;
     double MC_Id;
     double MC_Charge;
     double MC_Energy;
@@ -120,6 +122,7 @@ StatusCode McValsTool::initialize()
     
     // load up the map
 
+    addItem("McSourceId",     &MC_SourceId);
     addItem("McId",           &MC_Id);  
     addItem("McCharge",       &MC_Charge);
     addItem("McEnergy",       &MC_Energy);  
@@ -161,6 +164,11 @@ StatusCode McValsTool::calculate()
     SmartDataPtr<Event::TkrVertexCol>       pVerts(m_pEventSvc,EventModel::TkrRecon::TkrVertexCol);
     // Recover MC Pointer
     SmartDataPtr<Event::McParticleCol> pMcParticle(m_pEventSvc, EventModel::MC::McParticleCol);
+    SmartDataPtr<Event::MCEvent> pMcEvent(m_pEventSvc, EventModel::MC::Event);
+    
+    if(pMcEvent) {
+        MC_SourceId = pMcEvent->getSourceId();
+    }
     
     if (pMcParticle) {
         

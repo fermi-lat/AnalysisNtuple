@@ -2,6 +2,9 @@
   @brief Package AnalysisNtule
   @verbatim
 
+ v1r9p6  31-Aug-04   LSR  Add new variables -- To Mc: McSourceId
+                            To Evt: EvtRun, EvtEventId, EvtElapsedTime
+                            These will replace merit vars at some point 
  v1r9p5  25-Aug-04   LSR  update workbook doc
  v1r9p4  25-Aug-04   LSR  add html from workbook to doc/
  v1r9p3  25-Aug-04   LSR  Fix jobOptions for test program
