@@ -1,7 +1,7 @@
 /** @file McAnalValsTool.cxx
     @brief declartion, implementaion of the class UserAlg
 
-    $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McAnalValsTool.cxx,v 1.3 2004/01/13 01:34:18 lsrea Exp $
+    $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McAnalValsTool.cxx,v 1.4 2004/02/13 06:22:38 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -23,7 +23,8 @@
 #include "Event/MonteCarlo/McParticle.h"
 #include "Event/MonteCarlo/McIntegratingHit.h"
 #include "Event/MonteCarlo/McPositionHit.h"
-#include "TkrUtil/ITkrMcTracksTool.h"
+#include "GlastSvc/MonteCarlo/IMcGetEventInfoTool.h"
+#include "GlastSvc/MonteCarlo/IMcGetTrackInfoTool.h"
 
 #include <algorithm>
 
@@ -140,10 +141,11 @@ private:
     double       m_scd2MaxRange;
 
     // to decode the particle charge
-    IParticlePropertySvc* m_ppsvc;
+    IParticlePropertySvc*  m_ppsvc;
 
     // Keep track of tool for mc tracks
-    ITkrMcTracksTool* m_mcTracks;
+    IMcGetEventInfoTool*   m_mcEvent;
+    IMcGetTrackInfoTool*   m_mcTracks;
 };
 
 // Static factory for instantiation of algtool objects
@@ -177,9 +179,16 @@ StatusCode McAnalValsTool::initialize()
         return StatusCode::FAILURE;
     }
 
-    sc = toolSvc()->retrieveTool("TkrMcTracksTool", m_mcTracks);
+    // TO DO here: gracefully return if tools not located, set up to NOT run the tool
+    sc = toolSvc()->retrieveTool("McGetEventInfoTool", m_mcEvent);
     if (sc.isFailure()) {
-        log << MSG::ERROR << " TkrMcTracksTool not found!" << endreq;
+        log << MSG::ERROR << " McGetEventInfoTool not found!" << endreq;
+        return sc;
+    }
+
+    sc = toolSvc()->retrieveTool("McGetTrackInfoTool", m_mcTracks);
+    if (sc.isFailure()) {
+        log << MSG::ERROR << " McGetTrackInfoTool not found!" << endreq;
         return sc;
     }
     
@@ -271,7 +280,6 @@ StatusCode McAnalValsTool::calculate()
 {
     StatusCode sc = StatusCode::SUCCESS;
     MsgStream  log( msgSvc(), name() );
-    log << MSG::DEBUG << "executing " << ++m_numCalls << " time" << endreq;
 
     // Retrieving pointers from the TDS 
     SmartDataPtr<Event::EventHeader>   header(m_pEventSvc,    EventModel::EventHeader);
@@ -281,13 +289,13 @@ StatusCode McAnalValsTool::calculate()
     double t = header->time();
     log << MSG::DEBUG << "Event time: " << t << endreq;;
 
-    if (m_mcTracks)
+    if (m_mcEvent)
     {
-        //int numTracksTotal = m_mcTracks->getNumMcTracks();
-        int classifyBits   = m_mcTracks->getClassificationBits();
+        //int numTracksTotal = m_mcEvent->getNumMcTracks();
+        int classifyBits   = m_mcEvent->getClassificationBits();
 
         // Pointers to the primary particle and (eventually) its secondaries
-        const Event::McParticle* mcPart   = m_mcTracks->getPrimaryParticle();
+        const Event::McParticle* mcPart   = m_mcEvent->getPrimaryParticle();
         const Event::McParticle* mcMain   = 0;
         const Event::McParticle* mcSecond = 0;
 
@@ -311,8 +319,8 @@ StatusCode McAnalValsTool::calculate()
         m_prmDecCosZ    = mcPart->finalFourMomentum().vect().unit().z();
         m_prmDecCode    = classifyBits;
         m_prmNDghtrs    = mcPart->daughterList().size();
-        m_prmNumSecndry = m_mcTracks->getNumSecondaries();
-        m_prmNumAsscted = m_mcTracks->getNumAssociated();
+        m_prmNumSecndry = m_mcEvent->getNumSecondaries();
+        m_prmNumAsscted = m_mcEvent->getNumAssociated();
 
         // If charged particle then get base information from this path...
         if (classifyBits & Event::McEventStructure::CHARGED)
@@ -339,7 +347,7 @@ StatusCode McAnalValsTool::calculate()
                 // Secondary = lower energy of pair
                 for(int idx = 0; idx < m_prmNumSecndry; idx++)
                 {
-                    const Event::McParticle* mcPart1 = m_mcTracks->getSecondary(idx);
+                    const Event::McParticle* mcPart1 = m_mcEvent->getSecondary(idx);
 
                     // We are only interested in the tracks resulting from gamma conversion
                     // Note, however, that if process was purely compton, etc., then we will pass this
@@ -363,7 +371,7 @@ StatusCode McAnalValsTool::calculate()
                     }
                     else
                     {
-                        mcMain = mcPart1;
+                        mcMain  = mcPart1;
                         mcMainE = mcPart1->initialFourMomentum().e();
                     }
                 }
@@ -389,7 +397,7 @@ StatusCode McAnalValsTool::calculate()
         if (mcMain)
         {
             // To get the sum of the angles
-            Hep3Vector       mainVec    = m_mcTracks->getTrackDirection(mcMain);
+            Hep3Vector       mainVec    = m_mcEvent->getTrackDirection(mcMain);
             HepLorentzVector main4mom   = mcMain->initialFourMomentum();
             double           mainMom    = main4mom.vect().mag();
             HepLorentzVector main4cls(mainMom*mainVec,main4mom.e());
@@ -408,36 +416,44 @@ StatusCode McAnalValsTool::calculate()
 
             //typeWords[0] = partType;
             //typeWords[1] = 0; //unused
-            //typeWords[2] = m_mcTracks->getTrackHitLayer(mcMain,   0);
-            //typeWords[3] = m_mcTracks->getTrackHitLayer(mcMain, 100);
-            m_scd1FirstLyr = m_mcTracks->getTrackHitLayer(mcMain,   0);
-            m_scd1LastLyr  = m_mcTracks->getTrackHitLayer(mcMain, 100);
+            //typeWords[2] = m_mcEvent->getTrackHitLayer(mcMain,   0);
+            //typeWords[3] = m_mcEvent->getTrackHitLayer(mcMain, 100);
+            m_scd1FirstLyr = m_mcEvent->getTrackHitLayer(mcMain,   0);
+            m_scd1LastLyr  = m_mcEvent->getTrackHitLayer(mcMain, 100);
 
             if (m_scd1RadELoss > m_scd1Energy - m_scd1ELastHit)
             {
                 //int jj=0;
             }
 
+            // Testing at this point
+            const Event::TkrPatCand* patCand = m_mcTracks->getBestTkrPatCand(mcMain);
+            if (patCand)
+            {
+                int numHits = m_mcTracks->getNumMcHits(patCand,mcMain);
+                int jjj=0;
+            }
+
             // If there are two gamma conversion tracks then do this part
             if (mcSecond)
             {
-                Hep3Vector       secondVec = m_mcTracks->getTrackDirection(mcSecond);
+                Hep3Vector       secondVec = m_mcEvent->getTrackDirection(mcSecond);
                 HepLorentzVector scnd4mom  = mcSecond->initialFourMomentum();
                 double           scndMom   = scnd4mom.vect().mag();
                 HepLorentzVector scnd4cls(scndMom*secondVec,scnd4mom.e());
-
+                
                 calcMcAngleInfo(mcSecond, mcPart, m_scd2Ang2Gam, m_scd2Cls2Gam, m_scd2McTrkRms, m_scd2Type,
                                 m_scd2Energy, m_scd2CosDirX, m_scd2CosDirY, m_scd2CosDirZ, m_scd2NHits, m_scd2NClstrs,
                                 m_scd2NGaps, m_scd21stGapSz, m_scd2NHits2Gp);
-
+                
                 calcMcEnergyInfo(mcSecond, m_scd2ELastHit, m_scd2RadELoss, m_scd2DeltaRay,
                                  m_scd2NBrems, m_scd2NDeltas, m_scd2NDeltaHt, m_scd2AveRange, m_scd2MaxRange);
-
-                m_scd2FirstLyr = m_mcTracks->getTrackHitLayer(mcSecond,   0);
-                m_scd2LastLyr  = m_mcTracks->getTrackHitLayer(mcSecond, 100);
+                
+                m_scd2FirstLyr = m_mcEvent->getTrackHitLayer(mcSecond,   0);
+                m_scd2LastLyr  = m_mcEvent->getTrackHitLayer(mcSecond, 100);
 
                 // Check information on shared hits with other secondary tracks
-                unsigned int sharedInfo = m_mcTracks->getSharedHitInfo(mcMain,mcSecond);
+                unsigned int sharedInfo = m_mcEvent->getSharedHitInfo(mcMain,mcSecond);
                 //int          nShared    = sharedInfo & 0x7;
 
                 m_prmTrkPattern = sharedInfo >> 4;
@@ -467,7 +483,9 @@ StatusCode McAnalValsTool::calculate()
             //int ijk = 0;
         }
     }
-  
+    
+    log << MSG::DEBUG << " returning. " << endreq;
+
     return sc;
 }
 
@@ -478,18 +496,26 @@ void McAnalValsTool::calcMcAngleInfo(const Event::McParticle* mcPart, const Even
                                      double& prtNHits, double& prtNClstrs, double& prtNGaps, double& prt1stGapSz,
                                      double& prtNHits2Gp)
 {
-    Hep3Vector       mainVec    = m_mcTracks->getTrackDirection(mcPart);
+    Hep3Vector       mainVec    = m_mcEvent->getTrackDirection(mcPart);
     HepLorentzVector main4mom   = mcPart->initialFourMomentum();
     double           mainMom    = main4mom.vect().mag();
     HepLorentzVector main4cls(mainMom*mainVec,main4mom.e());
     double           cosAng2Gam = main4mom.vect().unit().dot(mcGamma->initialFourMomentum().vect().unit());
 
+    if (ang2Gam < -1.) 
+    {
+        ang2Gam = -1.;
+    }
+    if (ang2Gam >  1.)
+    {
+        ang2Gam = 1.;
+    }
     ang2Gam     = acos(cosAng2Gam);
 
     cosAng2Gam  = main4cls.vect().unit().dot(mcPart->initialFourMomentum().vect().unit());
     cls2Gam     = acos(cosAng2Gam);
 
-    mcTrkRms    = m_mcTracks->getTrackStraightness(mcPart);
+    mcTrkRms    = m_mcEvent->getTrackStraightness(mcPart);
 
     prtType     = mcPart->particleProperty();
     prtEnergy   = main4mom.e();
@@ -497,15 +523,15 @@ void McAnalValsTool::calcMcAngleInfo(const Event::McParticle* mcPart, const Even
     prtCosDirY  = main4mom.vect().unit().y();
     prtCosDirZ  = main4mom.vect().unit().z();
 
-    prtNHits    = (m_mcTracks->getMcPartTrack(mcPart)).size();
-    prtNClstrs  = m_mcTracks->getNumClusterHits(mcPart);
-    prtNGaps    = m_mcTracks->getNumGaps(mcPart);
+    prtNHits    = (m_mcEvent->getMcPartTrack(mcPart)).size();
+    prtNClstrs  = m_mcEvent->getNumClusterHits(mcPart);
+    prtNGaps    = m_mcEvent->getNumGaps(mcPart);
 
     //If track gaps, find size and check to see if first one shortens the track
     if (prtNGaps > 0)
     {
-        prt1stGapSz = m_mcTracks->getGapSize(mcPart, 0);
-        prtNHits2Gp = m_mcTracks->getGapStartHitNo(mcPart, 0) - 1;
+        prt1stGapSz = m_mcEvent->getGapSize(mcPart, 0);
+        prtNHits2Gp = m_mcEvent->getGapStartHitNo(mcPart, 0) - 1;
     }
 
     return;
@@ -517,10 +543,10 @@ void McAnalValsTool::calcMcEnergyInfo(const Event::McParticle* mcPart,
 {
     int nBremsInt,nDeltasInt,nDeltaHtInt;
 
-    lastHitE = m_mcTracks->getTrackELastHit(mcPart);
-    radLossE = m_mcTracks->getTrackBremELoss(mcPart, nBremsInt);
-    dltaRayE = m_mcTracks->getTrackDeltaELoss(mcPart, nDeltasInt, nDeltaHtInt);
-    nDeltas  = m_mcTracks->getTrackDeltaRange(mcPart, aveRange, maxRange);
+    lastHitE = m_mcEvent->getTrackELastHit(mcPart);
+    radLossE = m_mcEvent->getTrackBremELoss(mcPart, nBremsInt);
+    dltaRayE = m_mcEvent->getTrackDeltaELoss(mcPart, nDeltasInt, nDeltaHtInt);
+    nDeltas  = m_mcEvent->getTrackDeltaRange(mcPart, aveRange, maxRange);
 
     nBrems   = nBremsInt;
     nDeltas  = nDeltasInt;
