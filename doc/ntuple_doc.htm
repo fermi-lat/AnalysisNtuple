@@ -2,7 +2,7 @@
 
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
-<meta name="GENERATOR" content="Microsoft FrontPage 4.0">
+<meta name="GENERATOR" content="Microsoft FrontPage 5.0">
 <meta name="ProgId" content="FrontPage.Editor.Document">
 <title>Merit</title>
 </head>
@@ -81,12 +81,22 @@ added, maybe &quot;IM&quot; changed to &quot;Event&quot;...</font></p>
         event is likely to have the nominal PSF; a lower number means that the
         PSF is likely to be better than nominal.</font></td>
     </tr>
+    <tr>
+      <td width="184" height="92"><font face="Comic Sans MS">IMgammaProb</font></td>
+      <td width="541" height="92"><font face="Comic Sans MS">Classification tree 
+      prediction of the probability that this event is a gamma rather than a 
+      background event.</font></td>
+    </tr>
   </tbody>
 </table>
 <p><font face="Comic Sans MS"><i><font color="#0000ff">* </font>See <a href="http://www-glast.slac.stanford.edu/software/core/tempstuff/filter.htm">http://www-glast.slac.stanford.edu/software/core/tempstuff/filter.htm</a>
 for definitions of the bits in these words.</i></font></p>
 <p><font face="Comic Sans MS" size="3">Then the variables from the Analysis
-Ntuple, arranged by tool, and by sequential order within each tool</font></p>
+Ntuple, arranged by tool, and by sequential order within each tool. Unless 
+otherwise noted, energy is in MeV, length is in mm, and angle is in radians. 
+Also, unless otherwised noted, the null value, that is, the value in the ntuple 
+when there is no calculated value for a given variable, is zero. (I'll fix these 
+as I find them.)</font></p>
 <h2><font face="Comic Sans MS" size="3">MC Variables</font></h2>
 <table width="738" border="1">
   <tbody>
@@ -104,6 +114,11 @@ Ntuple, arranged by tool, and by sequential order within each tool</font></p>
       <td width="538"><font face="Comic Sans MS" size="3">&nbsp;</font> <font face="Comic Sans MS" size="3"><i><b>Kinetic</b></i>
         energy of the generated primary particle </font><font face="Comic Sans MS" color="#0000ff" size="3"><i><b>NEW
         definition!!</b></i></font></td>
+    </tr>
+    <tr>
+      <td width="184"><font face="Comic Sans MS">McEFrac</font></td>
+      <td width="538"><font face="Comic Sans MS" color="#0000FF"><b><i>&nbsp;</i></b>fraction 
+      of incident energy in highest-energy daughter</font></td>
     </tr>
     <tr>
       <td width="184"><font face="Comic Sans MS" size="3">McLogEnergy</font></td>
@@ -186,20 +201,22 @@ Ntuple, arranged by tool, and by sequential order within each tool</font></p>
     <tr>
       <td width="183"><font face="Comic Sans MS" size="3">GltWord</font></td>
       <td width="539"><font face="Comic Sans MS">&nbsp;trigger word from the
-        event header</font></td>
+        event header (null value is -1)</font></td>
     </tr>
     <tr>
       <td width="183"><font face="Comic Sans MS" size="3">GltTower</font></td>
       <td width="539"><font face="Comic Sans MS">&nbsp;Id of tower that
-        triggered; if more than one, choose the lowest</font></td>
+        triggered; if more than one, choose the lowest (null value is 18)</font></td>
     </tr>
     <tr>
       <td width="183"><font face="Comic Sans MS" size="3">GltXTower</font></td>
-      <td width="539"><font face="Comic Sans MS">&nbsp;x index of GltTower</font></td>
+      <td width="539"><font face="Comic Sans MS">&nbsp;x index of GltTower (null 
+      value = -1)</font></td>
     </tr>
     <tr>
       <td width="183"><font face="Comic Sans MS" size="3">GltYTower</font></td>
-      <td width="539"><font face="Comic Sans MS">&nbsp;y index of GltTower</font></td>
+      <td width="539"><font face="Comic Sans MS">&nbsp;y index of GltTower (null 
+      value = -1)</font></td>
     </tr>
     <tr>
       <td width="183"><font face="Comic Sans MS" size="3">GltLayer</font></td>
@@ -241,7 +258,7 @@ Ntuple, arranged by tool, and by sequential order within each tool</font></p>
     <tr>
       <td width="181" height="23"><font face="Comic Sans MS" size="3">TkrNumTracks</font></td>
       <td width="541" height="23"><font face="Comic Sans MS" size="3">&nbsp;number
-        of tracks found</font></td>
+        of tracks found (Maximum is set by TkrRecon, currently 10)</font></td>
     </tr>
     <tr>
       <td width="181" height="23"><font face="Comic Sans MS" size="3">TkrSumKalEne</font></td>
@@ -285,8 +302,8 @@ Ntuple, arranged by tool, and by sequential order within each tool</font></p>
     <tr>
       <td width="181" height="23"><font face="Comic Sans MS" size="3">TkrTotalHits</font></td>
       <td width="541" height="23"><font face="Comic Sans MS">&nbsp;number of
-        clusters &quot;near&quot; the best track.&nbsp;<font color="#ff0000">&nbsp;&nbsp;&nbsp;
-        </font><font color="#0000ff">ditto!</font></font></td>
+        clusters &quot;near&quot; the best track.&nbsp;<font color="#0000ff">This may go away; it's an intermediate
+        quantity</font></font></td>
     </tr>
     <tr>
       <td width="181" height="23"><font face="Comic Sans MS" size="3">TkrThinHits</font></td>
@@ -368,7 +385,8 @@ Ntuple, arranged by tool, and by sequential order within each tool</font></p>
     <tr>
       <td width="181" height="23"><font face="Comic Sans MS" size="3">Tkr1Qual</font></td>
       <td width="541" height="23"><font face="Comic Sans MS">&nbsp;Track 1
-        quality</font></td>
+        quality: depends on the length and chisquared of the track. Maximum is 
+      currently 64, can be negative if chisqared gets large.u</font></td>
     </tr>
     <tr>
       <td width="181" height="92"><font face="Comic Sans MS" size="3">Tkr1Type</font></td>
@@ -407,7 +425,9 @@ Ntuple, arranged by tool, and by sequential order within each tool</font></p>
     <tr>
       <td width="181" height="23"><font face="Comic Sans MS" size="3">Tkr1KalEne&nbsp;</font></td>
       <td width="541" height="23"><font face="Comic Sans MS">&nbsp;Kalman energy
-        of track 1</font></td>
+        of track 1; this is the energy determined from the multiple scattering 
+      along the track (goes like 1/E). Since a track with no scattering is 
+      possible, this energy is artificially limited to 100 GeV.</font></td>
     </tr>
     <tr>
       <td width="181" height="69"><font face="Comic Sans MS" size="3">Tkr1ConEne</font></td>
@@ -492,7 +512,7 @@ Ntuple, arranged by tool, and by sequential order within each tool</font></p>
         of the covariance matrix; covariance</font></td>
     </tr>
     <tr>
-      <td width="181" height="23"><font face="Comic Sans MS">Tkr1XYY</font></td>
+      <td width="181" height="23"><font face="Comic Sans MS">Tkr1SYY</font></td>
       <td width="541" height="23"><font face="Comic Sans MS">&nbsp;y-y element
         of the covariance matrix; square of the error on y</font></td>
     </tr>
@@ -519,10 +539,12 @@ Ntuple, arranged by tool, and by sequential order within each tool</font></p>
     </tr>
     <tr>
       <td width="181" height="23"><font face="Comic Sans MS">Tkr1ChisqAsym</font></td>
-      <td width="541" height="23"><font face="Comic Sans MS">&nbsp;Asymmetry
-        between last two and first two track-segment delta-<b><span style="mso-char-type: symbol; mso-symbol-font-family: Mathematica1; font-size: 12.0pt; font-family: Mathematica1; mso-ascii-font-family: Times New Roman; mso-fareast-font-family: Times New Roman; mso-hansi-font-family: Times New Roman; mso-bidi-font-family: Times New Roman; mso-ansi-language: EN-US; mso-fareast-language: EN-US; mso-bidi-language: AR-SA">c</span></b><b><span style="font-size:12.0pt;font-family:&quot;Times New Roman&quot;;mso-fareast-font-family:
+      <td width="541" height="23"><font face="Comic Sans MS">&nbsp;Asymmetry between 
+      last two and first two track-segment delta<span style="font-size:12.0pt;mso-fareast-font-family:
 &quot;Times New Roman&quot;;mso-ansi-language:EN-US;mso-fareast-language:EN-US;
-mso-bidi-language:AR-SA"><sup>2</sup>'s </span></b><i><b><font color="#0000FF">NEW!!</font></b></i></font></td>
+mso-bidi-language:AR-SA">-chisquared's</span><b><span style="font-size:12.0pt;font-family:&quot;Times New Roman&quot;;mso-fareast-font-family:
+&quot;Times New Roman&quot;;mso-ansi-language:EN-US;mso-fareast-language:EN-US;
+mso-bidi-language:AR-SA"> </span></b><i><b><font color="#0000FF">NEW!!</font></b></i></font></td>
     </tr>
     <tr>
       <td width="181" height="23"><font face="Comic Sans MS">Tkr1SSDVeto</font></td>
@@ -574,7 +596,7 @@ mso-bidi-language:AR-SA"><sup>2</sup>'s </span></b><i><b><font color="#0000FF">N
     <tr>
       <td width="181" height="23"><font face="Comic Sans MS" size="3">Tkr2Qual</font></td>
       <td width="541" height="23"><font face="Comic Sans MS">&nbsp;Track 2
-        quality</font></td>
+        quality <font color="#0000FF">(See Tkr1Qual)</font></font></td>
     </tr>
     <tr>
       <td width="181" height="23"><font face="Comic Sans MS" size="3">Tkr2Type</font></td>
@@ -607,7 +629,7 @@ mso-bidi-language:AR-SA"><sup>2</sup>'s </span></b><i><b><font color="#0000FF">N
     <tr>
       <td width="181" height="23"><font face="Comic Sans MS" size="3">Tkr2KalEne</font></td>
       <td width="541" height="23"><font face="Comic Sans MS">&nbsp;Kalman energy
-        of track 2</font></td>
+        of track 2 <font color="#0000FF">(See Tkr1KalEne)</font></font></td>
     </tr>
     <tr>
       <td width="181" height="23"><font face="Comic Sans MS" size="3">Tkr2ConEne</font></td>
@@ -687,7 +709,8 @@ mso-bidi-language:AR-SA"><sup>2</sup>'s </span></b><i><b><font color="#0000FF">N
     <tr>
       <td width="183"><font face="Comic Sans MS" size="3">VtxX0</font></td>
       <td width="539"><font face="Comic Sans MS" size="3">&nbsp;x coordinate of
-        vertex</font></td>
+        vertex;&nbsp; if the two tracks making up the vertex are nearly 
+      parallel, the coordinates of the vertex may become very large.</font></td>
     </tr>
     <tr>
       <td width="183"><font face="Comic Sans MS" size="3">VtxY0</font></td>
@@ -726,13 +749,14 @@ mso-bidi-language:AR-SA"><sup>2</sup>'s </span></b><i><b><font color="#0000FF">N
     <tr>
       <td width="183"><font face="Comic Sans MS" size="3">VtxDocaWgt</font></td>
       <td width="539"><font face="Comic Sans MS">&nbsp;empirical weight factor
-        for VtxDoca, goes from zero to one. <font color="#ff0000">The width
+        for VtxDoca, goes from zero to one. Docas large compared to expectation 
+      generate low weights. <font color="#ff0000">The width
         seems to be constant with E... shouldn't it decrease with E? </font><font color="#008000">(being
         checked)</font></font></td>
     </tr>
     <tr>
       <td width="183"><font face="Comic Sans MS" size="3">VtxHSWgt</font></td>
-      <td width="539"><font face="Comic Sans MS">&nbsp;ditto VtxHeadSep</font></td>
+      <td width="539"><font face="Comic Sans MS">&nbsp;ditto VtxHeadSep.</font></td>
     </tr>
     <tr>
       <td width="183"><font face="Comic Sans MS" size="3">VtxS1Wgt</font></td>
@@ -745,12 +769,12 @@ mso-bidi-language:AR-SA"><sup>2</sup>'s </span></b><i><b><font color="#0000FF">N
     <tr>
       <td width="183"><font face="Comic Sans MS" size="3">VtxT2QWgt</font></td>
       <td width="539"><font face="Comic Sans MS">&nbsp;ditto quality factor for
-        2nd track</font></td>
+        2nd track. High quality yields high weight.</font></td>
     </tr>
     <tr>
       <td width="183"><font face="Comic Sans MS" size="3">VtxTotalWgt</font></td>
-      <td width="539"><font face="Comic Sans MS">&nbsp;product of VtxT12Wgt,
-        VtxT2QWgt and VtxHSWgt</font></td>
+      <td width="539"><font face="Comic Sans MS">&nbsp;Logarithm of the product of VtxT12Wgt,
+        VtxT2QWgt and VtxHSWgt. Is always negative (log of a number less than 1)</font></td>
     </tr>
   </tbody>
 </table>
@@ -773,25 +797,26 @@ mso-bidi-language:AR-SA"><sup>2</sup>'s </span></b><i><b><font color="#0000FF">N
         corrected layer-by-layer for edges and leakage</font></td>
     </tr>
     <tr>
+      <td width="182" height="23"><font face="Comic Sans MS">CalEnergy_LL_Corr</font></td>
+      <td width="540" height="23"><font face="Comic Sans MS">&nbsp;Last-layer-corrected
+        energy. Currently valid between 0 and 26 degrees, and between 1 and 50
+        Gev.&nbsp; Returns a negative number when out of range
+      <font color="#FF0000">Remove underscores at some agreed-upon time!</font></font></td>
+    </tr>
+    <tr>
       <td width="182" height="23"><font face="Comic Sans MS" size="3">CalLeakCorr2</font></td>
       <td width="540" height="23"><font face="Comic Sans MS">&nbsp;Approximation
         for leakage correction.</font></td>
     </tr>
     <tr>
       <td width="182" height="23"><font face="Comic Sans MS" size="3">CalEdgeSumCorr</font></td>
-      <td width="540" height="23"><font face="Comic Sans MS">&nbsp;Layer-by-layer
-        edge correction; used to compute CalEneEnergyCorr</font></td>
+      <td width="540" height="23"><font face="Comic Sans MS">&nbsp;Effective 
+      layer-by-layer edge correction; multiplicative</font></td>
     </tr>
     <tr>
       <td width="182" height="23"><font face="Comic Sans MS" size="3">CalTotSumCorr</font></td>
-      <td width="540" height="23"><font face="Comic Sans MS">&nbsp;Total
-        layer-by-layer energy correction factor; used in CalEneSumCorr</font></td>
-    </tr>
-    <tr>
-      <td width="182" height="23"><font face="Comic Sans MS">CalEnergyLLCorr</font></td>
-      <td width="540" height="23"><font face="Comic Sans MS">&nbsp;Last-layer-corrected
-        energy. Currently valid between 0 and 26 degrees, and between 1 and 50
-        Gev.&nbsp; Returns a negative number when out of range</font></td>
+      <td width="540" height="23"><font face="Comic Sans MS">&nbsp;Effective global 
+      correction; multiplicative</font></td>
     </tr>
     <tr>
       <td width="182" height="23"><font face="Comic Sans MS">CalCsiRLn</font></td>
@@ -857,20 +882,14 @@ mso-bidi-language:AR-SA"><sup>2</sup>'s </span></b><i><b><font color="#0000FF">N
     </tr>
     <tr>
       <td width="182" height="23"><font face="Comic Sans MS" size="3">CalTrackDoca</font></td>
-      <td width="540" height="23"><font face="Comic Sans MS">&nbsp;Distance
-        between event trajectory and energy centroid, evaluated at the z of the
+      <td width="540" height="23"><font face="Comic Sans MS">&nbsp;Distance between 
+      the projected vertex (or track if only one track) and the energy centroid, evaluated at the z of the
         centroid.</font></td>
     </tr>
     <tr>
       <td width="182" height="23"><font face="Comic Sans MS" size="3">CalTwrGap</font></td>
       <td width="540" height="23"><font face="Comic Sans MS">&nbsp;length of
         track in intertower gaps</font></td>
-    </tr>
-    <tr>
-      <td width="182" height="23"><font face="Comic Sans MS">CalXtalRatio</font></td>
-      <td width="540" height="23"><font face="Comic Sans MS">&nbsp;Ratio of
-        number of Xtals with energy &gt; 1% of CalEnergySum to total number of
-        struck Xtals in the event.</font></td>
     </tr>
     <tr>
       <td width="182" height="23"><font face="Comic Sans MS">CalELayer0</font></td>
@@ -933,9 +952,20 @@ mso-bidi-language:AR-SA"><sup>2</sup>'s </span></b><i><b><font color="#0000FF">N
         Xtals with &gt; %1 of CalEnergySum (see CalXtalRatio)</font></td>
     </tr>
     <tr>
+      <td width="182" height="23"><font face="Comic Sans MS">CalXtalRatio</font></td>
+      <td width="540" height="23"><font face="Comic Sans MS">&nbsp;Ratio of number of 
+      Xtals with energy &gt; 1% of CalEnergySum to total number of struck Xtals in 
+      the event.</font></td>
+    </tr>
+    <tr>
       <td width="182" height="23"><font face="Comic Sans MS">CalLongRms</font></td>
       <td width="540" height="23"><font face="Comic Sans MS">&nbsp;rms of
         longitudinal position measurements</font></td>
+    </tr>
+    <tr>
+      <td width="182" height="23"><font face="Comic Sans MS">CalLRmsRatio</font></td>
+      <td width="540" height="23"><font face="Comic Sans MS">&nbsp;CalLongRms 
+      divided by the raw calorimeter energy</font></td>
     </tr>
     <tr>
       <td width="182" height="23"><font face="Comic Sans MS">CalTransRms</font></td>
@@ -995,9 +1025,8 @@ mso-bidi-language:AR-SA"><sup>2</sup>'s </span></b><i><b><font color="#0000FF">N
     </tr>
   </tbody>
 </table>
-<h2><font face="Comic Sans MS" size="3">ACD Variables&nbsp;</font></h2>
-<p><font face="Comic Sans MS" color="#0000ff">When ribbons appear, new variables
-will be added</font></p>
+<h2><font face="Comic Sans MS" size="3">ACD Variables: <font color="#0000FF">
+Default Doca/ActiveDistance is -2000</font>&nbsp;</font></h2>
 <table width="738" border="1">
   <tbody>
     <tr>
@@ -1054,6 +1083,11 @@ will be added</font></p>
     <tr>
       <td width="182"><font face="Comic Sans MS">AcdNoSideRow2</font></td>
       <td width="540"><font face="Comic Sans MS">&nbsp;ditto side row 2</font></td>
+    </tr>
+    <tr>
+      <td width="182"><font face="Comic Sans MS">AcdRibbonActDist</font></td>
+      <td width="540"><font face="Comic Sans MS">smallest active distance to any 
+      ribbon (considered as a straight line of no thickness)</font></td>
     </tr>
   </tbody>
 </table>
@@ -1171,8 +1205,9 @@ the quantity roughly independent of energy (to logE) and angle</font></p>
         layer-by-layer corrected cal. energy CalEneSumCorr.</font></td>
     </tr>
     <tr>
-      <td width="182" height="23"><font face="Comic Sans MS">EnergyTracker</font></td>
-      <td width="540" height="23"></td>
+      <td width="182" height="23"><font face="Comic Sans MS">EvtEnergyTracker</font></td>
+      <td width="540" height="23"><font face="Comic Sans MS">&nbsp;Not 
+      calculated yet</font></td>
     </tr>
     <tr>
       <td width="182" height="23"><font face="Comic Sans MS">EvtEnergyRaw</font></td>

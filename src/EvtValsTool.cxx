@@ -3,7 +3,7 @@
 @brief Calculates the "Event" analysis variables from the other ntuple variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.9 2003/10/12 07:06:43 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.10 2003/11/04 21:51:20 atwood Exp $
 */
 
 #include "ValBase.h"
@@ -49,7 +49,6 @@ private:
     //double EvtEnergyOpt;
     double EvtEnergySumOpt;
     double EvtEnergyRaw;
-	double EvtEnergyTracker;
     double EvtMcEnergySigma;
     double EvtCalEdgeAngle;
     double EvtTkrEdgeAngle;
@@ -179,7 +178,6 @@ StatusCode EvtValsTool::initialize()
 
     //addItem("EvtEnergyOpt",     &EvtEnergyOpt);
     addItem("EvtEnergySumOpt",  &EvtEnergySumOpt);
-	addItem("EvtEnergyTracker", &EvtEnergyTracker);
     addItem("EvtEnergyRaw",     &EvtEnergyRaw);
     addItem("EvtMcEnergySigma", &EvtMcEnergySigma);
     addItem("EvtCalEdgeAngle",  &EvtCalEdgeAngle);
@@ -233,7 +231,7 @@ StatusCode EvtValsTool::calculate()
     // so be careful when adding calls or moving stuff around!!!!
 
 	double eCalSum, eTkr;
-    if(    m_pCalTool->getVal("CalEnergySum", eCalSum, nextCheck).isSuccess()
+    if(    m_pCalTool->getVal("CalEnergySum", eCalSum, firstCheck).isSuccess()
 		&& m_pTkrTool->getVal("TkrEnergyCorr", eTkr, firstCheck).isSuccess()) {
         EvtEnergyRaw = eTkr + eCalSum;
     }
@@ -241,10 +239,10 @@ StatusCode EvtValsTool::calculate()
     double eTkrKalEne, eCalRLn, eTkrBest; //, eCal
 	int CAL_Type;
     if (  // m_pCalTool->getVal("CalEnergyCorr", eCal, firstCheck).isSuccess() &&
-		   m_pCalTool->getVal("CalTotRLn", eCalRLn, firstCheck).isSuccess()
-		&& m_pTkrTool->getVal("TkrSumKalEne", eTkrKalEne, firstCheck).isSuccess()) 
+        m_pCalTool->getVal("CalTotRLn", eCalRLn, firstCheck).isSuccess()
+        && m_pTkrTool->getVal("TkrSumKalEne", eTkrKalEne, firstCheck).isSuccess()) 
     {
-		eTkrBest = std::max(eTkr+eCalSum, eTkrKalEne);
+        eTkrBest = std::max(eTkr+eCalSum, eTkrKalEne);
 		if(eCalSum < 100 || eCalRLn < 2) {
 			if(eCalSum < 5 || eCalRLn < 2) {
 				CAL_Type = 0;
@@ -262,9 +260,6 @@ StatusCode EvtValsTool::calculate()
 		if(CAL_Type == 0) EvtEnergySumOpt = eTkrBest;
 		else              EvtEnergySumOpt = eTkr + eCalSumCorr;
     }
-
-
-
     
     double mcEnergy;
     if(m_pMcTool->getVal("McEnergy", mcEnergy, firstCheck).isSuccess()){
