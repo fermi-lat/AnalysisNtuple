@@ -60,7 +60,7 @@ AnalysisNtupleAlg.toolList = {"Mc", "Glt", "TkrHit", "Tkr", "Vtx",  "Cal", "Acd"
 MessageSvc.OutputLevel = 3;
 AnalysisNtupleAlg.OutputLevel = 2;
 ToolSvc.OutputLevel = 4;
-ApplicationMgr.EvtMax = 3;
+ApplicationMgr.EvtMax = 3000;
 
 
 //==============================================================

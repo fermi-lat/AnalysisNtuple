@@ -2,7 +2,7 @@
 @brief Uses the XxxValsTools to produce a comprehensive ntuple
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.15 2003/04/17 18:27:12 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.16 2003/05/07 14:57:40 lsrea Exp $
 */
 
 // Gaudi system includes
@@ -209,6 +209,8 @@ StatusCode AnalysisNtupleAlg::execute()
     
     MsgStream   log( msgSvc(), name() );
 
+    bool countCalc = false;
+
     /* test for missing first event
     if (m_count==0) {
         m_ntupleSvc->storeRowFlag(false);
@@ -234,6 +236,7 @@ StatusCode AnalysisNtupleAlg::execute()
             }
         }
     }
+
     
     bool debugStuff = false;
     log << MSG::DEBUG;
@@ -242,6 +245,10 @@ StatusCode AnalysisNtupleAlg::execute()
         log << "Debug display: ";
     }
     log << endreq;
+
+    if (countCalc || debugStuff) log << MSG::INFO << "number of calcs for standard call: " 
+        << m_toolvec[0]->getCalcCount()<< endreq;
+
     
     if(debugStuff) {
         double answer;
@@ -281,7 +288,7 @@ StatusCode AnalysisNtupleAlg::execute()
             varname = varnames[i];
             if (varname=="") continue;
             m_toolvec[i]->browse(varnames[i]);
-            sc = m_toolvec[i]->getVal(varname, answer);
+            sc = m_toolvec[i]->getValCheck(varname, answer);
             log << MSG::DEBUG;
             if (log.isActive()) {
                 log << "  compared to: " << answer;
@@ -289,6 +296,11 @@ StatusCode AnalysisNtupleAlg::execute()
             log << endreq;    
         }        
     }     
+    log << MSG::DEBUG;
+    if (log.isActive()) {
+        log << "calculations done " << m_toolvec[0]->getCalcCount() << " times in this event.";
+    }
+    log << endreq;
     return sc;
 }
 

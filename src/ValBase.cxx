@@ -2,7 +2,7 @@
 @brief implements all the methods of the XxxValsTools
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.cxx,v 1.16 2003/03/10 19:02:42 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.cxx,v 1.17 2003/05/07 15:05:20 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -18,6 +18,8 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.cxx,v 1.16 2003
 #include <algorithm>
 #include <cmath>
 
+int ValBase::m_calcCount = 0;
+
 ValBase::ValBase(const std::string& type, 
                          const std::string& name, 
                          const IInterface* parent)
@@ -31,7 +33,8 @@ StatusCode ValBase::initialize()
     IDataProviderSvc* eventsvc = 0;
 
     m_newEvent = true;
-    //m_handleSet = false;
+    m_check = true;
+
     m_ntupleMap.clear();
 
     MsgStream log(msgSvc(), name());
@@ -88,7 +91,10 @@ void ValBase::addItem(std::string varName, double* pValue)
 
 StatusCode ValBase::browse(std::string varName) 
 {
+    // browse always triggers a calculation, which doesn't reset the m_newEvent flag
     MsgStream log(msgSvc(), name());
+
+    m_check = false;
 
     log << MSG::INFO << "ValBase::browse called" << endreq;
 
@@ -96,7 +102,11 @@ StatusCode ValBase::browse(std::string varName)
     std::string separator = " ";
     std::string indent    = "    ";
     
-    if(doCalcIfNotDone().isFailure()) return StatusCode::FAILURE;
+    if(doCalcIfNotDone().isFailure()) {
+        m_check = true;
+        return StatusCode::FAILURE;
+    }
+    m_check = true;
     
     if (varName!="") {
         std::cout  << " Variable " ;
@@ -128,32 +138,33 @@ StatusCode ValBase::doCalcIfNotDone()
 
     MsgStream log(msgSvc(), name());
 
-    bool force = true;
-   
-#if 0  
-    // kludge to get around multiple initializations of tool
-    // too many calls to addListener otherwise!
-    // I don't think it's needed anymore
-    if(!m_handleSet) {
-        m_incSvc->addListener(this, "BeginEvent", 100);
-        m_handleSet = true;
-    }
-#endif
+    // do the calculation if the first time through, or m_check is false
 
-    if(m_newEvent || force) {
+    if(m_newEvent || !m_check) {
         if (!m_pEventSvc)  return StatusCode::FAILURE;
         zeroVals();
+        ++m_calcCount;
         sc = calculate();
-        //std::cout << "calculation done for this event" << std::endl;
-        m_newEvent = false;
+        //std::cout << "calculation done for this event, total = " << m_calcCount << std::endl;
+        // only reset the newEvent flag if we're called with the check flag on.
+        if(m_check) m_newEvent = false;
     }
     return sc;
 }       
 
-
-StatusCode ValBase::getVal(std::string varName, double& value)
+StatusCode ValBase::getValCheck(std::string varName, double& value)
 {
+    // a simple way to force the check
+    return getVal(varName, value, true);
+}
+
+StatusCode ValBase::getVal(std::string varName, double& value, bool check)
+{
+    // optional check flag, if true, do check (default is false)
+
     StatusCode sc = StatusCode::SUCCESS;
+
+    m_check = check;
     
     constMapIter it = m_ntupleMap.begin();
     for ( ; it!=m_ntupleMap.end(); ++it) {
@@ -162,11 +173,16 @@ StatusCode ValBase::getVal(std::string varName, double& value)
     
     if (it==m_ntupleMap.end()) { 
         announceBadName(varName); 
+        m_check = true;
         return StatusCode::FAILURE;
     } else {
-        if(doCalcIfNotDone().isFailure()) return StatusCode::FAILURE;
+        if(doCalcIfNotDone().isFailure()) {
+            m_check = true;
+            return StatusCode::FAILURE;
+        }
         value = *(*it)->second;
     }
+    m_check = true;
     return sc;
 }
 
@@ -212,6 +228,7 @@ void ValBase::handle(const Incident & inc)
     if(inc.type()=="BeginEvent") {
         //std::cout << "handle called at BeginEvent" << std::endl;
         m_newEvent = true;
+        m_calcCount = 0;
     }
 }
 
@@ -232,7 +249,3 @@ IValsTool::Visitor::eVisitorRet ValBase::traverse(IValsTool::Visitor* v,
     }
     return IValsTool::Visitor::DONE;
 }
-
-
-
-

@@ -3,7 +3,7 @@
 @brief Calculates the "Event" analysis variables from the other ntuple variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.1 2003/05/07 15:01:48 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.2 2003/05/08 15:51:30 atwood Exp $
 */
 
 #include "ValBase.h"
@@ -204,33 +204,35 @@ StatusCode EvtValsTool::calculate()
 
 
     double eTkr, eCal;
-    if (m_pTkrTool->getVal("TkrEnergyCorr", eTkr).isSuccess() && m_pCalTool->getVal("CalEnergyCorr", eCal).isSuccess()) {
+    if (m_pTkrTool->getValCheck("TkrEnergyCorr", eTkr).isSuccess() 
+        && m_pCalTool->getValCheck("CalEnergyCorr", eCal).isSuccess()) 
+    {
         EvtEnergyOpt = eTkr + eCal;
     }
 
     double eCalSumCorr;
-    if(m_pCalTool->getVal("CalEneSumCorr", eCalSumCorr).isSuccess()) {
+    if(m_pCalTool->getValCheck("CalEneSumCorr", eCalSumCorr).isSuccess()) {
         EvtEnergySumOpt = eTkr + eCalSumCorr;
     }
 
     double eCalSum;
-    if(m_pCalTool->getVal("CalEnergySum", eCalSum).isSuccess()) {
+    if(m_pCalTool->getValCheck("CalEnergySum", eCalSum).isSuccess()) {
         EvtEnergyRaw = eTkr + eCalSum;
     }
 
     
     double mcEnergy;
-    if(m_pMcTool->getVal("McEnergy", mcEnergy).isSuccess()){
+    if(m_pMcTool->getValCheck("McEnergy", mcEnergy).isSuccess()){
         EvtMcEnergySigma = (EvtEnergySumOpt - mcEnergy)/(.1*mcEnergy);
     }
 
     double tkrEdge, calEdge, tkr1ZDir;
-    if(m_pTkrTool->getVal("Tkr1ZDir",tkr1ZDir).isSuccess()) {
+    if(m_pTkrTool->getValCheck("Tkr1ZDir",tkr1ZDir).isSuccess()) {
         double sTkr = sqrt(1.-tkr1ZDir*tkr1ZDir);
-        if (m_pTkrTool->getVal("TkrTwrEdge", tkrEdge).isSuccess()) {
+        if (m_pTkrTool->getValCheck("TkrTwrEdge", tkrEdge).isSuccess()) {
             EvtTkrEdgeAngle = (30.-tkrEdge)/sTkr;
         }
-        if (m_pCalTool->getVal("CalTwrEdge", calEdge).isSuccess()) {
+        if (m_pCalTool->getValCheck("CalTwrEdge", calEdge).isSuccess()) {
             EvtCalEdgeAngle = (30. -calEdge)/sTkr;
         }
     }
@@ -238,48 +240,48 @@ StatusCode EvtValsTool::calculate()
     EvtLogESum = log10(std::min(std::max(EvtEnergySumOpt,40.),15000.));
 
     double tkr1ConE;
-    if (m_pTkrTool->getVal("Tkr1ConEne",tkr1ConE).isSuccess()) {
+    if (m_pTkrTool->getValCheck("Tkr1ConEne",tkr1ConE).isSuccess()) {
         EvtTkr1EFrac = tkr1ConE/EvtEnergySumOpt;
     }
 
     double vtxAngle;
-    if (m_pVtxTool->getVal("VtxAngle", vtxAngle).isSuccess()) {
+    if (m_pVtxTool->getValCheck("VtxAngle", vtxAngle).isSuccess()) {
         EvtVtxKin = vtxAngle*EvtEnergySumOpt*EvtEnergySumOpt/tkr1ConE;
     }
 
     EvtVtxEAngle = vtxAngle*EvtEnergySumOpt;
     
     double totHits, tkr1First;
-    if (m_pTkrTool->getVal("TkrTotalHits", totHits).isSuccess()) {
-        if (m_pTkrTool->getVal("Tkr1FirstLayer", tkr1First).isSuccess()){
+    if (m_pTkrTool->getValCheck("TkrTotalHits", totHits).isSuccess()) {
+        if (m_pTkrTool->getValCheck("Tkr1FirstLayer", tkr1First).isSuccess()){
             EvtTkrComptonRatio = totHits/(2.*(pTkrGeoSvc->numLayers()-tkr1First));
         }
     }
     double logE = EvtLogESum;
     double logE2 = logE*logE;
     double tkr1Chisq;
-    if (m_pTkrTool->getVal("Tkr1Chisq", tkr1Chisq).isSuccess()) {
+    if (m_pTkrTool->getValCheck("Tkr1Chisq", tkr1Chisq).isSuccess()) {
         EvtTkr1EChisq = tkr1Chisq/(9.22 - 3.7*logE + .412*logE2);
     }
     double tkr1_1stChisq;
-    if (m_pTkrTool->getVal("Tkr1FirstChisq", tkr1_1stChisq).isSuccess()) {
+    if (m_pTkrTool->getValCheck("Tkr1FirstChisq", tkr1_1stChisq).isSuccess()) {
         EvtTkr1EFirstChisq = tkr1_1stChisq/(4.51 - 1.8*logE + .23*logE2);
     }
     double tkr1Qual;
-    if (m_pTkrTool->getVal("Tkr1Qual", tkr1Qual).isSuccess()) {
+    if (m_pTkrTool->getValCheck("Tkr1Qual", tkr1Qual).isSuccess()) {
         EvtTkr1EQual = tkr1Qual/(58. + 8.39*sqrt(logE-1.6)
             - 2.46*logE);
     }
     double tkr2Chisq;
-    if (m_pTkrTool->getVal("Tkr2Chisq", tkr2Chisq).isSuccess()) {
+    if (m_pTkrTool->getValCheck("Tkr2Chisq", tkr2Chisq).isSuccess()) {
         EvtTkr2EChisq = tkr2Chisq/(8.95 - 4.77*logE + .948*logE2);
     }
     double tkr2_1stChisq;
-    if (m_pTkrTool->getVal("Tkr2FirstChisq", tkr2_1stChisq).isSuccess()) {
+    if (m_pTkrTool->getValCheck("Tkr2FirstChisq", tkr2_1stChisq).isSuccess()) {
         EvtTkr2EFirstChisq = tkr2_1stChisq/(6.3 - 4.09*logE + .971*logE2);
     }
     double tkr2Qual;
-    if (m_pTkrTool->getVal("Tkr2Qual", tkr2Qual).isSuccess()) {
+    if (m_pTkrTool->getValCheck("Tkr2Qual", tkr2Qual).isSuccess()) {
         EvtTkr2EQual = tkr2Qual/(61.3 + 34.8*sqrt(logE-1.6)
             - 16.4*logE);
     }
