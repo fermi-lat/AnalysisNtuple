@@ -3,7 +3,7 @@
 @brief Calculates the Vtx analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.7 2003/03/05 02:03:29 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.8 2003/06/12 00:01:55 atwood Exp $
 */
 
 // Include files
@@ -200,8 +200,14 @@ StatusCode VtxValsTool::calculate()
         VTX_xdir      = t0.x();
         VTX_ydir      = t0.y();
         VTX_zdir      = t0.z();
-        VTX_Phi       = atan(-t0.y()/t0.x()); 
-		VTX_Theta     = acos(t0.z()); 
+
+        VTX_Phi       = (fabs(t0.x())<1.e-7) ? 0.5*M_PI : atan(-t0.y()/t0.x());
+        // maybe should be: ??
+        //VTX_Phi       = (-t0).phi();
+        //if (VTX_Phi<0.0) VTX_Phi += 2*M_PI;
+		VTX_Theta     = acos(t0.z());
+        //VTX_Theta     = (-t0).theta();
+
         VTX_x0        = x0.x();
         VTX_y0        = x0.y();
         VTX_z0        = x0.z();

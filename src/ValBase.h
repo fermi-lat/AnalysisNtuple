@@ -2,7 +2,7 @@
 @brief header file for ValBase.cxx
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.h,v 1.16 2003/05/08 21:54:25 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.h,v 1.17 2003/05/09 05:22:08 lsrea Exp $
 */
 
 #ifndef ValBase_h
@@ -25,6 +25,11 @@ class IDataProviderSvc;
 @author Leon Rochester
 
 */
+
+namespace {
+    // for general use among the ValsTools
+    double M_PI = 3.14159265358979323846;
+}
 
 class ValBase : public IValsTool,  public AlgTool,  virtual public IIncidentListener
 {

@@ -2,7 +2,7 @@
 @brief Calculates the Mc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.10 2003/09/03 22:11:54 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.11 2003/09/09 16:52:40 lsrea Exp $
 */
 // Include files
 
@@ -167,9 +167,11 @@ StatusCode McValsTool::calculate()
         Event::McParticle::StdHepId hepid= (*pMCPrimary)->particleProperty();
         MC_Id = (double)hepid;
         ParticleProperty* ppty = m_ppsvc->findByStdHepID( hepid );
+        double mass = 0;
         if (ppty) {
             std::string name = ppty->particle(); 
             MC_Charge = ppty->charge();
+            mass = ppty->mass();           
         }
         
         HepPoint3D Mc_x0;
@@ -180,7 +182,7 @@ StatusCode McValsTool::calculate()
         Vector Mc_t0 = Vector(Mc_p0.x(),Mc_p0.y(), Mc_p0.z()).unit();
         
         //Pure MC Tuple Items
-        MC_Energy = Mc_p0.t();
+        MC_Energy = std::max(Mc_p0.t() - mass, 0.0);
         MC_LogEnergy = log10(MC_Energy);
         
         MC_x0     = Mc_x0.x();

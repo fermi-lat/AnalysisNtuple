@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.30 2003/08/30 13:52:49 lsrea Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.31 2003/09/09 20:39:18 lsrea Exp $
 */
 
 // Include files
@@ -40,11 +40,9 @@
 
 #include "TMath.h"
 
-#ifndef M_PI
-#define M_PI = 3.14159265358979323846
-#endif
-
 namespace {
+
+    // M_PI defined in ValBase.h
     
     double signC(double x) { return (x<0.) ? -1.:1.;} 
  
@@ -497,13 +495,16 @@ StatusCode CalValsTool::calculate()
         t0 = gamma->getDirection();
     }
     
+    // this "cos(theta)" doesn't distinguish between up and down
     double costh  = fabs(t0.z()); 
-    double phi    = atan(-t0.y()/t0.x());
-    double phi_90 = fabs(phi); 
+    // This "phi" is restricted to the range 0 to pi/2
+    // protect against zero denominator
+    double phi_90    = (fabs(t0.x())<1.e-7) ? 0.5*M_PI : fabs(atan(-t0.y()/t0.x()));
     
-    double phi_45 = fabs(t0.y()/t0.x());
-    if(phi_45 > 1.) phi_45 = 1./phi_45;
-    phi_45 = atan(phi_45); 
+    // not used now
+    //double phi_45 = fabs(t0.y()/t0.x());
+    //if(phi_45 > 1.) phi_45 = 1./phi_45;
+    //phi_45 = atan(phi_45); 
     
     Vector x_diff = x0 - cal_pos;
     double x_diff_sq = x_diff*x_diff;
