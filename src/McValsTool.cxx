@@ -2,7 +2,7 @@
 @brief Calculates the Mc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.11 2003/09/09 16:52:40 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.12 2003/09/30 19:01:20 lsrea Exp $
 */
 // Include files
 
@@ -167,17 +167,17 @@ StatusCode McValsTool::calculate()
         Event::McParticle::StdHepId hepid= (*pMCPrimary)->particleProperty();
         MC_Id = (double)hepid;
         ParticleProperty* ppty = m_ppsvc->findByStdHepID( hepid );
-        double mass = 0;
         if (ppty) {
             std::string name = ppty->particle(); 
-            MC_Charge = ppty->charge();
-            mass = ppty->mass();           
+            MC_Charge = ppty->charge();          
         }
         
         HepPoint3D Mc_x0;
         // launch point for charged particle; conversion point for neutral
         Mc_x0 = (MC_Charge==0 ? (*pMCPrimary)->finalPosition() : (*pMCPrimary)->initialPosition());
         HepLorentzVector Mc_p0 = (*pMCPrimary)->initialFourMomentum();
+        // there's a method v.m(), but it does something tricky if m2<0
+        double mass = sqrt(std::max(Mc_p0.m2(),0.0));
         
         Vector Mc_t0 = Vector(Mc_p0.x(),Mc_p0.y(), Mc_p0.z()).unit();
         

@@ -2,7 +2,8 @@
   @brief Package AnalysisNtule
   @verbatim
 
- v1r8p1  16-Oct-03   LSR  1st iteration of ToT correction
+ v1r8p3  17-Oct-03   LSR  safer calculation of mc particle mass, given that ions seem to be problematical
+ v1r8p2  16-Oct-03   LSR  1st iteration of ToT correction
  v1r8p1  12-Oct-03   LSR  fix divide-by-zero's; get M_PI from <cmath> and remove local def.
  v1r8    03-Oct-03   LSR  New CalMIPRatio, Tkr1ChisqAsym, Tkr1SSDVeto, several ToT variables
  v1r7p6  30-Sep-03   LSR  McEnergy now kinetic energy; fix theta and phi; put documentation into cvs
