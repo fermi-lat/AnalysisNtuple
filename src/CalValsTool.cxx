@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.11 2003/03/09 02:02:45 lsrea Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.12 2003/03/10 19:02:42 lsrea Exp $
 */
 
 // Include files
@@ -335,12 +335,7 @@ StatusCode CalValsTool::calculate()
     //    pClusters(m_pEventSvc,EventModel::TkrRecon::TkrClusterCol);
     SmartDataPtr<Event::CalClusterCol>     
         pCals(m_pEventSvc,EventModel::CalRecon::CalClusterCol);
-    
-    //if(!pCals || !pTracks || !pVerts) return StatusCode::FAILURE;
-
-    std::cout  << " smartptrs: tracks, verts, clusters "
-        << pTracks << " " << pVerts << " " << pCals << std::endl;
-    
+        
     //Make sure we have valid cluster data
     if (!pCals) return sc;
     
