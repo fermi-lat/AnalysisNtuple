@@ -2,7 +2,7 @@
 @brief implements all the methods of the XxxValsTools
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.cxx,v 1.19 2003/05/09 05:22:08 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.cxx,v 1.20 2003/05/09 05:29:18 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -16,7 +16,6 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.cxx,v 1.19 2003
 #include "Event/TopLevel/Event.h"
 
 #include <algorithm>
-#include <cmath>
 
 int ValBase::m_calcCount = 0;
 

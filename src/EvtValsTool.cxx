@@ -3,7 +3,7 @@
 @brief Calculates the "Event" analysis variables from the other ntuple variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.7 2003/08/22 22:17:31 atwood Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.8 2003/09/08 20:14:32 atwood Exp $
 */
 
 #include "ValBase.h"
@@ -282,15 +282,15 @@ StatusCode EvtValsTool::calculate()
             EvtCalEdgeAngle = (30. -calEdge)/sTkr;
         }
     }
-    
-	EvtPSFModel = sqrt(pow((.061/pow((EvtEnergySumOpt/100),.8)),2) + (.001745*.001745));
+
+    EvtPSFModel = sqrt(pow((.061/pow((std::max(EvtEnergySumOpt,1.)/100),.8)),2) + (.001745*.001745));
     EvtLogESum = log10(std::min(std::max(EvtEnergySumOpt,20.),50000.));
 	double logE = EvtLogESum;
     double logE2 = logE*logE; 
     
 	double tkr1CovDet;
 	if (m_pTkrTool->getVal("Tkr1CovDet",tkr1CovDet, nextCheck).isSuccess()) {
-        EvtTkr1ECovDet = tkr1CovDet/pow(EvtEnergySumOpt, 1.3);
+        EvtTkr1ECovDet = tkr1CovDet/pow(std::max(EvtEnergySumOpt,1.0), 1.3);
     }
 
 	double tkr1ThetaErr, tkr1PhiErr;
@@ -302,12 +302,12 @@ StatusCode EvtValsTool::calculate()
 
     double tkr1ConE;
     if (m_pTkrTool->getVal("Tkr1ConEne",tkr1ConE, nextCheck).isSuccess()) {
-        EvtTkr1EFrac = tkr1ConE/EvtEnergySumOpt;
+        if(EvtEnergySumOpt>0.0) EvtTkr1EFrac = tkr1ConE/EvtEnergySumOpt;
     }
 
     double vtxAngle;
     if (m_pVtxTool->getVal("VtxAngle", vtxAngle, firstCheck).isSuccess()) {
-        EvtVtxKin = vtxAngle*EvtEnergySumOpt*EvtEnergySumOpt/tkr1ConE;
+        if (tkr1ConE>0.0) EvtVtxKin = vtxAngle*EvtEnergySumOpt*EvtEnergySumOpt/tkr1ConE;
     }
 
     EvtVtxEAngle = vtxAngle*EvtEnergySumOpt;
