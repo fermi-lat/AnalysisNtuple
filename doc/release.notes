@@ -2,6 +2,7 @@
   @brief Package AnalysisNtule
   @verbatim
  
+ v2r2    24-Feb-05   LSR  put McSourceId back in... missing since last October!
  v2r2    17-Feb-05   LSR  use enums package for trigger bit definitions
  v2r1p7  10-Feb-05   LSR  fix some unix warnings
  v2r1p6  07-Feb-05   LSR  fix for new TkrCluster
