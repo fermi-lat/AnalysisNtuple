@@ -2,6 +2,7 @@
   @brief Package AnalysisNtule
   @verbatum
 
+ v1r1    26-Feb-03   LSR  Retain order of ntuple variables; general cleanup and (unix) bug fixes
  v1r0    25-Feb-03   LSR  Add AnalysisNtupleAlg, VtxValsTool, visitor; rearrange methods
                           fix up test
  v0r2    24-Feb-03   LSR/THB rearrange inheritance; (almost) complete set of tools
