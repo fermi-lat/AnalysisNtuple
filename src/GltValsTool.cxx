@@ -2,7 +2,7 @@
 @brief Calculates the Trigger analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header$
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.8 2003/03/05 02:03:29 lsrea Exp $
 */
 
 // Include files
@@ -17,6 +17,9 @@ $Header$
 #include "GaudiKernel/ToolFactory.h"
 #include "GaudiKernel/IToolSvc.h"
 
+#include "TkrUtil/ITkrGeometrySvc.h"
+#include "idents/TowerId.h"
+
 #include "Event/TopLevel/EventModel.h"
 #include "Event/TopLevel/Event.h"
 
@@ -26,33 +29,35 @@ $Header$
 #include "CLHEP/Matrix/Matrix.h"
 #include "CLHEP/Matrix/SymMatrix.h"
 
-namespace {
-    const int _nLayers = 18;
-    const int _nTowers = 16;
-}
-
 /*! @class GltValsTool
 @brief calculates trigger values
 
 @authors Bill Atwood, Leon Rochester
 */
 
+namespace {
+    const int _nTowers = 16; // maximum possible number of towers
+    const int _nLayers = 18; // maximum possible number of layers
+}
+
 class GltValsTool : public ValBase
 {
 public:
-    
+
     GltValsTool( const std::string& type, 
         const std::string& name, 
         const IInterface* parent);
-    
+
     virtual ~GltValsTool() { }
-    
+
     StatusCode initialize();
-    
+
     StatusCode calculate();
-    
+
 private:
-    
+    /// pointer to tracker geometry
+    ITkrGeometrySvc*       pTkrGeoSvc;
+
     //TkrClusters Tuple Items
     double Trig_word;
     double Trig_tower;
@@ -60,7 +65,8 @@ private:
     double Trig_yTower; 
     double Trig_layer;
     double Trig_total; 
-    double Trig_type; // 1= corner, 2 = side, 3 = core
+    double Trig_numTowers;
+    double Trig_type; // was: 1= corner, 2 = side, 3 = core, now number of exposed sides
     double Trig_moment; 
     double Trig_zDir; 
 };
@@ -82,16 +88,20 @@ GltValsTool::GltValsTool(const std::string& type,
 StatusCode GltValsTool::initialize()
 {
     StatusCode sc = StatusCode::SUCCESS;
-    
+
     MsgStream log(msgSvc(), name());
 
     if( ValBase::initialize().isFailure()) return StatusCode::FAILURE;
-    
+
     // get the services
-    
-    if( serviceLocator() ) {      
+    StatusCode fail = StatusCode::FAILURE;
+    if( serviceLocator() ) {       
+        if(service( "TkrGeometrySvc", pTkrGeoSvc, true ).isFailure()) {
+            log << MSG::ERROR << "Could not find TkrGeometrySvc" << endreq;
+            return fail;
+        }
     } else {
-        return StatusCode::FAILURE;
+        return fail;
     }
 
     // load up the map
@@ -101,13 +111,14 @@ StatusCode GltValsTool::initialize()
     addItem("GltXTower",    &Trig_xTower);
     addItem("GltYTower",    &Trig_yTower);
     addItem("GltLayer",     &Trig_layer); 
-    addItem("GltTotal",     &Trig_total); 
+    addItem("GltTotal",     &Trig_total);
+    addItem("GltNumTowers", &Trig_numTowers);
     addItem("GltType",      &Trig_type);  
     addItem("GltMoment",    &Trig_moment);
     addItem("GltZDir",      &Trig_zDir);  
-    
+
     zeroVals();
-    
+
     return sc;
 }
 
@@ -115,14 +126,14 @@ StatusCode GltValsTool::initialize()
 StatusCode GltValsTool::calculate()
 {
     StatusCode sc = StatusCode::SUCCESS;
-    
+
     // m_pEventSvc alreay checked by doCalcIfNotDone, no need to repeat
 
     // Recover EventHeader Pointer
     SmartDataPtr<Event::EventHeader> 
         pEvent(m_pEventSvc, EventModel::EventHeader);
     // Recover Track associated info.
-    
+
     SmartDataPtr<Event::TkrClusterCol>   
         pClusters(m_pEventSvc,EventModel::TkrRecon::TkrClusterCol);
 
@@ -130,33 +141,40 @@ StatusCode GltValsTool::calculate()
     //SmartDataPtr<Event::TkrFitTrackCol>    
     //    pTracks(m_pEventSvc,EventModel::TkrRecon::TkrFitTrackCol);
 
-    Trig_tower  = -1;
-    Trig_layer  = 18;
-    Trig_xTower = -1;
-    Trig_yTower = -1; 
-   
+    int iTrig_tower  = -1;
+    int iTrig_layer  = 18;
+    int xTower = -1;
+    int yTower = -1; 
+    int iTrig_type = 0;
+
+    int nLayers  = pTkrGeoSvc->numLayers();
+    int nXTowers = pTkrGeoSvc->numXTowers();
+    int nYTowers = pTkrGeoSvc->numYTowers();
+    int nTowers  = nXTowers*nYTowers;
+
     if(!pEvent || !pClusters) return StatusCode::FAILURE;
-    
+
     unsigned int word = pEvent->trigger();
     if(word > 1024) return sc; 
     bool three_in_a_row = (word/4)%2 == 1; 
     Trig_word = word;
-    
+
     int tower, layer;
-    
-    int lat_hits[_nTowers][_nLayers]; 
-    for(tower=0; tower<_nTowers; tower++) {
-        for(layer=0; layer<_nLayers; layer++){
-            lat_hits[tower][layer]=0;
+
+    short x_hits[_nTowers][_nLayers]; 
+    short y_hits[_nTowers][_nLayers]; 
+    for(tower=0; tower<_nTowers; ++tower) {
+        for(layer=0; layer<_nLayers; ++layer){
+            x_hits[tower][layer]=0;
+            y_hits[tower][layer]=0;
         }
     }
-    
+
     //Search for x-y paired layer.... 
     if (pClusters && three_in_a_row)
     {
         // Make a hit count per plane, per tower.  
-        //    X hits 0 - 999 and Y hits 1000 -...
-        layer = _nLayers;
+        layer = nLayers;
         while(layer--)
         {
             int x_hitCount = pClusters->nHits(Event::TkrCluster::X, layer); 
@@ -166,62 +184,77 @@ StatusCode GltValsTool::calculate()
                 std::vector<Event::TkrCluster*> yHitList;
                 xHitList = pClusters->getHits(Event::TkrCluster::X,layer);
                 yHitList = pClusters->getHits(Event::TkrCluster::Y,layer);
-                
-                for(int ix=0; ix<x_hitCount; ix++){
-                    int x_tower = xHitList[ix]->tower();
-                    lat_hits[x_tower][layer] += 1; 
+
+                int hit;
+                // x hits
+                for(hit=0; hit<x_hitCount; ++hit){
+                    tower = xHitList[hit]->tower();
+                    x_hits[tower][layer]++; 
                 }
-                
-                for(int iy=0; iy<y_hitCount; iy++){
-                    int y_tower = yHitList[iy]->tower();
-                    lat_hits[y_tower][layer] += 1000;
+                // y hits
+                for(hit=0; hit<y_hitCount; ++hit){
+                    tower = yHitList[hit]->tower();
+                    y_hits[tower][layer]++;
                 }
             }
         }
-        
+
         // Now search for the 3-in-a-rows (need to look for x & y hits in each...)
-        for(tower = 0; tower<_nTowers; tower++) {
-            for(layer=0; layer<_nLayers-2; layer++){
-                if((lat_hits[tower][layer]%1000   > 0 && lat_hits[tower][layer]/1000   > 0 ) &&
-                    (lat_hits[tower][layer+1]%1000 > 0 && lat_hits[tower][layer+1]/1000 > 0 ) &&
-                    (lat_hits[tower][layer+2]%1000 > 0 && lat_hits[tower][layer+2]/1000 > 0 )) {
-                    Trig_total += 1;
-                    if(Trig_layer > layer) {
-                        Trig_layer = layer;
-                        Trig_tower = tower;
+        // If more than one tower triggers, use the one with the lowest recon layer number
+        int nTotTrigs = 0;   // total number of possible triggers
+        int nTowerTrigs = 0; // total number of towers that could trigger
+        for(tower = 0; tower<nTowers; ++tower) {
+            int nTrigsThis = 0;
+            for(layer=0; layer<nLayers-2; ++layer){
+                if( (x_hits[tower][layer]   > 0 && y_hits[tower][layer]   > 0 ) &&
+                    (x_hits[tower][layer+1] > 0 && y_hits[tower][layer+1] > 0 ) &&
+                    (x_hits[tower][layer+2] > 0 && y_hits[tower][layer+2] > 0 )) 
+                {
+                    nTrigsThis++;
+                    if(layer < iTrig_layer) {
+                        iTrig_layer = layer;
+                        iTrig_tower = tower;
                     }
                 }
             }
+            nTotTrigs += nTrigsThis;
+            if(nTrigsThis>0) nTowerTrigs++;
         }
-        
+        Trig_total  = nTotTrigs;
+        Trig_numTowers = nTowerTrigs;
+
         // Now classify according to tower type
-        if(Trig_tower >= 0) {
-            int towerId = (int) Trig_tower;
-            Trig_xTower = towerId%4;
-            Trig_yTower = towerId/4; 
-            if(Trig_tower==0  || Trig_tower==3 || 
-                Trig_tower==12 || Trig_tower==15) Trig_type = 1;
-            else if(Trig_tower==5 || Trig_tower==6 || 
-                Trig_tower==9 || Trig_tower==10) Trig_type = 3;
-            else Trig_type = 2;
+        // new classification is number of exposed sides
+        if(iTrig_tower >= 0) {
+            idents::TowerId towerId = idents::TowerId(iTrig_tower);
+            xTower = towerId.ix();
+            yTower = towerId.iy();
+            iTrig_type = 0;
+            if (xTower==0)          iTrig_type++;
+            if (xTower==nXTowers-1) iTrig_type++;
+            if (yTower==0)          iTrig_type++;
+            if (yTower==nYTowers-1) iTrig_type++;
         }
-        
+
         // Now find the average location of all hits
+        // This is probably too coarse to be useful
         double x_sum, y_sum, z_sum, wts, g1, g2, L11, L12, L22, zmax, zmin;
         x_sum = y_sum = z_sum = wts = g1 = g2 = L11 = L12 = L22 = 0.;
         zmax = 0.;
         zmin = 20.; 
         HepSymMatrix moments(3,0); 
-        
-        if(Trig_tower >= 0) {
-            for(tower = 0; tower<_nTowers; tower++) {
-                int ix = tower%4;
-                int iy = tower/4;
-                for(layer=0; layer<_nLayers; layer++){
-                    int x_counts = lat_hits[tower][layer]%1000;
-                    int y_counts = lat_hits[tower][layer]/1000;
+
+        if(iTrig_tower >= 0) {
+            for(tower = 0; tower<_nTowers; ++tower) {
+                idents::TowerId towerId = idents::TowerId(tower);
+                int ix = towerId.ix();
+                int iy = towerId.iy();
+                if (ix+1==nXTowers || iy+1==nYTowers) continue;
+                for(layer=0; layer<nLayers; ++layer){
+                    int x_counts = x_hits[tower][layer];
+                    int y_counts = y_hits[tower][layer];
                     double weight = x_counts+y_counts;
-                    if(weight > 1) { // Don't count random noise hits
+                    if(x_counts>0 && y_counts>0) { // Don't count random noise hits
                         wts += weight;
                         double x = (ix+1)*5.;
                         double y = (iy+1)*5.;
@@ -236,24 +269,26 @@ StatusCode GltValsTool::calculate()
                         L22   += z*z/weight; 
                         if(zmax < z ) zmax = z;
                         if(zmin > z ) zmin = z; 
-                        
+
                     }
                 }
             }
-            
+
             // Now form moment tensor, etc..... 
             if(wts > 0) {
                 x_sum /= wts;
                 y_sum /= wts;
                 z_sum /= wts;
-                for(tower = 0; tower<_nTowers; tower++) {
-                    int ix = tower%4;
-                    int iy = tower/4;
-                    for(layer=0; layer<_nLayers-2; layer++){
-                        int x_counts = lat_hits[tower][layer]%1000;
-                        int y_counts = lat_hits[tower][layer]/1000;
+                for(tower = 0; tower<_nTowers; ++tower) {
+                    idents::TowerId towerId = idents::TowerId(tower);
+                    int ix = towerId.ix();
+                    int iy = towerId.iy();
+                    if (ix+1==nXTowers || iy+1==nYTowers) continue;
+                    for(layer=0; layer<nLayers-2; ++layer){
+                        int x_counts = x_hits[tower][layer];
+                        int y_counts = y_hits[tower][layer];
                         double weight = x_counts+y_counts;
-                        if(weight > 1) { // Don't count random noise hits
+                        if(x_counts>0 && y_counts>0) { // Don't count random noise hits
                             double xres = (ix+1)*5.  - x_sum;
                             double yres = (iy+1)*5.  - y_sum;
                             double zres = (layer+1)  - z_sum;
@@ -267,11 +302,11 @@ StatusCode GltValsTool::calculate()
                     }
                 }
                 moments /= wts;
-                
+
                 // Now find transformation to diagonalize
                 HepMatrix U(3,3);
                 U = diagonalize(&moments);
-                
+
                 // Now get directions, etc. 
                 double Det = L11*L22 - L12*L12;
                 if(fabs(Det) > 0) {
@@ -281,14 +316,18 @@ StatusCode GltValsTool::calculate()
                 int sm = 1;
                 if(moments(2,2) > moments(1,1))   sm = 2;
                 if(moments(3,3) > moments(sm,sm)) sm = 3;
-                
+
                 Trig_moment = moments(sm,sm);
                 //            Vector t_moment(U(1,sm),U(2,sm),U(3,sm));
-                
-                
             }
         }
-    } 
-    
+    }
+
+    Trig_layer  = iTrig_layer;
+    Trig_tower  = iTrig_tower;
+    Trig_xTower = xTower;
+    Trig_yTower = yTower;
+    Trig_type   = iTrig_type;
+
     return sc;
 }
