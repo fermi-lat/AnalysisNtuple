@@ -2,7 +2,7 @@
 @brief Calculates the Mc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.7 2003/05/07 15:05:20 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.8 2003/08/22 16:17:16 atwood Exp $
 */
 // Include files
 
@@ -15,6 +15,8 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.7 20
 #include "GaudiKernel/AlgTool.h"
 #include "GaudiKernel/ToolFactory.h"
 #include "GaudiKernel/IToolSvc.h"
+#include "GaudiKernel/IParticlePropertySvc.h"
+#include "GaudiKernel/ParticleProperty.h"
 
 #include "Event/TopLevel/EventModel.h"
 #include "Event/TopLevel/Event.h"
@@ -74,7 +76,9 @@ private:
     double MC_dir_err;
     double MC_TKR1_dir_err;
     double MC_TKR2_dir_err;
-    
+
+    // to decode the particle charge
+    IParticlePropertySvc* m_ppsvc;    
 };
 
 // Static factory for instantiation of algtool objects
@@ -101,7 +105,10 @@ StatusCode McValsTool::initialize()
   
     // get the services    
     
-    if( serviceLocator() ) {               
+    if( serviceLocator() ) {
+        if( service("ParticlePropertySvc", m_ppsvc, true).isFailure() ) {
+            log << MSG::ERROR << "Service [ParticlePropertySvc] not found" << endreq;
+        }
     } else {
         return StatusCode::FAILURE;
     }
@@ -148,11 +155,20 @@ StatusCode McValsTool::calculate()
     
     if (pMcParticle) {
         
-        // Get the first Track - it should be the "Best Track"
-        Event::McParticleCol::const_iterator pMCTrack1 = pMcParticle->begin();
+        Event::McParticleCol::const_iterator pMCPrimary = pMcParticle->begin();
+        // Skip the first particle... it's for bookkeeping.
+        // The second particle is the first real propagating particle.
+        pMCPrimary++;
+
+        Event::McParticle::StdHepId hepid= (*pMCPrimary)->particleProperty();
+        ParticleProperty* ppty = m_ppsvc->findByStdHepID( hepid );
+        std::string name = ppty->particle(); 
+        double charge = ppty->charge();
         
-        HepPoint3D Mc_x0       = (*pMCTrack1)->finalPosition();
-        HepLorentzVector Mc_p0 = (*pMCTrack1)->initialFourMomentum();
+        HepPoint3D Mc_x0;
+        // launch point for charged particle; conversion point for neutral
+        Mc_x0 = (charge==0 ? (*pMCPrimary)->finalPosition() : (*pMCPrimary)->initialPosition());
+        HepLorentzVector Mc_p0 = (*pMCPrimary)->initialFourMomentum();
         
         Vector Mc_t0 = Vector(Mc_p0.x(),Mc_p0.y(), Mc_p0.z()).unit();
         
