@@ -1,7 +1,7 @@
-/** @file UserAlg.cxx
+/** @file McAnalValsTool.cxx
     @brief declartion, implementaion of the class UserAlg
 
-    $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McAnalValsTool.cxx,v 1.2 2004/01/12 22:38:21 lsrea Exp $
+    $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McAnalValsTool.cxx,v 1.3 2004/01/13 01:34:18 lsrea Exp $
 */
 
 #include "ValBase.h"

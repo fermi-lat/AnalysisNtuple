@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.8 2003/10/21 00:27:16 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.9 2003/12/16 23:18:29 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -25,7 +25,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.8 2
 #include <algorithm>
 #include <numeric>
 
-/** @class AcdValsTool.cxx 
+/** @class AcdValsTool
 @brief Calculates Acd Values
 */
 

@@ -3,7 +3,7 @@
 @brief Calculates the "Event" analysis variables from the other ntuple variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.11 2003/11/13 20:32:25 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.12 2003/12/16 23:18:29 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -25,7 +25,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.11 
 //#include "Event/Recon/AcdRecon/AcdRecon.h"
 
 #include <algorithm>
-/** @class EvtValsTool.cxx 
+/** @class EvtValsTool
 @brief Calculates Event Values from the other ntuple variables
 */
 
