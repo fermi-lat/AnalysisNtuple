@@ -1,6 +1,7 @@
 /** @file release.notes
   @brief Package AnalysisNtule
   @verbatim
+ v1r8p16 21-Jun-04   LSR  Remove debug printout
  v1r8p15 17-Jun-04   LSR  Clean up unix warnings
  v1r8p14 15-Jun-04   LSR  Bullet-proof several more variables
  v1r8p13 04-Jun-04   LSR  Lots of changes:

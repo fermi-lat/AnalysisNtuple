@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.37 2004/06/16 00:34:00 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.38 2004/06/17 19:44:00 lsrea Exp $
 */
 
 // To Do:
@@ -842,14 +842,7 @@ StatusCode TkrValsTool::calculate()
             rad_len_sum += radThin/2.;
         }
         Tkr_RadLength  = rad_len_sum;
-
-
     }          
-
-    std::cout << "Tkr_KalEne: " << Tkr_1_KalEne << " " << Tkr_2_KalEne << std::endl 
-                 <<" Tkr_KalThetaMS " <<  Tkr_1_KalThetaMS << " " << Tkr_2_KalThetaMS << std::endl;
-
-
     return sc;
 }
 
