@@ -2,7 +2,7 @@
 @brief implements all the methods of the XxxValsTools
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.cxx,v 1.21 2003/10/12 07:06:43 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.cxx,v 1.22 2004/09/10 04:59:02 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -67,6 +67,8 @@ ValBase::~ValBase()
 {
     mapIter it = m_ntupleMap.begin();
     for ( ; it!=m_ntupleMap.end(); ++it) {
+        TypedPointer* ptr = (*it)->second;
+        delete ptr;
         delete (*it);
     }
 }
