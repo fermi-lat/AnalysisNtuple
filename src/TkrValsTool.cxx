@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.44 2004/10/09 04:36:25 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.45 2004/10/12 19:00:02 lsrea Exp $
 */
 
 // To Do:
@@ -539,7 +539,8 @@ StatusCode TkrValsTool::calculate()
         bool firstHit = true;
         bool gapFound = false;
         while(pln_pointer != track_1->end()) {
-            const Event::TkrTrackHit* plane = *pln_pointer;
+            const Event::TkrTrackHit* plane = *pln_pointer++;
+            if (!(plane->getStatusBits() & Event::TkrTrackHit::HITONFIT)) continue;
             idents::TkrId idPlane = plane->getTkrId();
             int thisPlane = idPlane.getPlane();
             if(firstHit) {
@@ -636,8 +637,6 @@ StatusCode TkrValsTool::calculate()
                 last_ToT += tot;
                 chisq_last += plane->getChiSquareSmooth();
             }
-            pln_pointer++;
-
         }
         Tkr_1_ToTTrAve = (Tkr_1_ToTAve - max_ToT - min_ToT)/(Tkr_1_Hits-2.);
         Tkr_1_ToTAve /= Tkr_1_Hits;
