@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.24 2003/09/03 22:11:54 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.25 2003/09/30 19:01:20 lsrea Exp $
 */
 
 // Include files
@@ -477,12 +477,13 @@ StatusCode TkrValsTool::calculate()
         Tkr_1_z0          = x1.z();
 
         // range of "phi" is estricted to (-pi/2, pi/2)
-        Tkr_1_Phi         = (fabs(t1.x())<1.e-7) ? 0.5*M_PI : atan(-t1.y()/t1.x()); 
-        // maybe should be: ??
-		//Tkr_1_Phi         = (-t1).phi();
-        //if (Tkr_1_Phi<0.0) Tkr_1_Phi += 2*M_PI;
-		Tkr_1_Theta       = acos(-t1.z());
-        //Tkr_1_Theta       = (-t1).theta();
+        //Tkr_1_Phi         = (fabs(t1.x())<1.e-7) ? 0.5*M_PI : atan(-t1.y()/t1.x());
+        // now it isn't!
+        // theta and phi are of direction of source, hence the minus sign
+		Tkr_1_Phi         = (-t1).phi();
+        if (Tkr_1_Phi<0.0) Tkr_1_Phi += 2*M_PI;
+		//Tkr_1_Theta       = acos(-t1.z());
+        Tkr_1_Theta       = (-t1).theta();
 
 		Event::TkrFitMatrix  Tkr_1_Cov = track_1->getTrackCov();
 		Tkr_1_Sxx         = Tkr_1_Cov.getcovSxSx();
@@ -564,10 +565,10 @@ StatusCode TkrValsTool::calculate()
             Tkr_2_ydir       = t2.y();
             Tkr_2_zdir       = t2.z();
 
-            Tkr_2_Phi        = (fabs(t2.x())<1.e-7) ? 0.5*M_PI : atan(-t2.y()/t2.x());
-            // should be: ??
-            //Tkr_2_Phi         = (-t2).phi();
-            //if (Tkr_2_Phi<0.0) Tkr_2_Phi += 2*M_PI;
+            //Tkr_2_Phi        = (fabs(t2.x())<1.e-7) ? 0.5*M_PI : atan(-t2.y()/t2.x());
+            // better!
+            Tkr_2_Phi         = (-t2).phi();
+            if (Tkr_2_Phi<0.0) Tkr_2_Phi += 2*M_PI;
 
             Tkr_2_x0         = x2.x();
             Tkr_2_y0         = x2.y();
