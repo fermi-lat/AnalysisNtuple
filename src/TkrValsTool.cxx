@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.33 2003/12/17 17:17:38 atwood Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.34 2004/01/12 22:38:21 lsrea Exp $
 */
 
 // Include files
@@ -51,9 +51,10 @@ namespace {
             double x_twr = sign(x)*(fmod(fabs(x),pitch) - pitch/2.);
             double y_twr = sign(y)*(fmod(fabs(y),pitch) - pitch/2.);
 
-            outer = 0; 
-            int outerX = 0;
-            int outerY = 0;
+            outer = 0;
+            // no longer used, keep it around to remind us
+            //int outerX = 0;
+            //int outerY = 0;
 
             if(fabs(x_twr) > fabs(y_twr)) {
                 edge = pitch/2. - fabs(x_twr);
@@ -601,7 +602,7 @@ StatusCode TkrValsTool::calculate()
             int hit_Id = plane.getIDHit();
             Event::TkrCluster* cluster = pClusters->getHit(hit_Id);
             Event::TkrCluster::view v = cluster->v();
-            int size = cluster->size();
+            int size =  (int) cluster->size();
 
             // get the local slopes
             Event::TkrFitPar par = (plane.getHit(Event::TkrFitHit::SMOOTH )).getPar();
@@ -611,7 +612,7 @@ StatusCode TkrValsTool::calculate()
             double slope1       = (v==Event::TkrCluster::X) ? slopeX : slopeY;
             
             // theta is the projected angle along the strip
-            double theta        = atan(slope);
+            //double theta        = atan(slope);
             // theta1 is the projected angle across the strip
             double theta1       = atan(slope1);
 
@@ -856,7 +857,7 @@ StatusCode TkrValsTool::calculate()
             else if(iplane < max_planes-nNoConv) thick_hits += numHits;
             else                                 blank_hits += numHits;
 
-            double ene      = delta_rad*numHits*10.;
+            //double ene      = delta_rad*numHits*10.;
             double ene_corr = corr_factor*delta_rad; //*ene;
             //tracker_ene_sum  += ene; 
             tracker_ene_corr += ene_corr;

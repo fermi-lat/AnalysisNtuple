@@ -1,7 +1,7 @@
 /** @file UserAlg.cxx
     @brief declartion, implementaion of the class UserAlg
 
-    $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McAnalValsTool.cxx,v 1.1 2004/01/09 20:40:22 usher Exp $
+    $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McAnalValsTool.cxx,v 1.2 2004/01/12 22:38:21 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -283,7 +283,7 @@ StatusCode McAnalValsTool::calculate()
 
     if (m_mcTracks)
     {
-        int numTracksTotal = m_mcTracks->getNumMcTracks();
+        //int numTracksTotal = m_mcTracks->getNumMcTracks();
         int classifyBits   = m_mcTracks->getClassificationBits();
 
         // Pointers to the primary particle and (eventually) its secondaries
@@ -404,7 +404,7 @@ StatusCode McAnalValsTool::calculate()
                              m_scd1NBrems, m_scd1NDeltas, m_scd1NDeltaHt, m_scd1AveRange, m_scd1MaxRange);
 
             // Want to compress into the double scdType
-            short int* typeWords  = reinterpret_cast<short int*>(&m_scd1Type);
+            //short int* typeWords  = reinterpret_cast<short int*>(&m_scd1Type);
 
             //typeWords[0] = partType;
             //typeWords[1] = 0; //unused
@@ -415,7 +415,7 @@ StatusCode McAnalValsTool::calculate()
 
             if (m_scd1RadELoss > m_scd1Energy - m_scd1ELastHit)
             {
-                int jj=0;
+                //int jj=0;
             }
 
             // If there are two gamma conversion tracks then do this part
@@ -438,7 +438,7 @@ StatusCode McAnalValsTool::calculate()
 
                 // Check information on shared hits with other secondary tracks
                 unsigned int sharedInfo = m_mcTracks->getSharedHitInfo(mcMain,mcSecond);
-                int          nShared    = sharedInfo & 0x7;
+                //int          nShared    = sharedInfo & 0x7;
 
                 m_prmTrkPattern = sharedInfo >> 4;
 
@@ -459,12 +459,12 @@ StatusCode McAnalValsTool::calculate()
 
             if (m_prmMcAngle > 0.0001) 
             {
-                int checkithere = 0;
+                //int checkithere = 0;
             }
         }
         else
         {
-            int ijk = 0;
+            //int ijk = 0;
         }
     }
   

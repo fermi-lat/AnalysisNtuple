@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.36 2003/12/16 23:18:29 lsrea Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.37 2003/12/19 05:38:12 atwood Exp $
 */
 
 // Include files
@@ -630,7 +630,7 @@ StatusCode CalValsTool::calculate()
 
     // Cal constants, from detModel
     //double cal_top_z = m_calZTop;
-    double cal_depth = -m_calZBot;
+    //double cal_depth = -m_calZBot;
     double cal_half_width = 0.5*std::max(m_calXWidth, m_calYWidth);
     
     // Now do the leakage correction  
