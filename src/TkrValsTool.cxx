@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.26 2003/09/30 23:54:02 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.27 2003/10/03 17:04:40 atwood Exp $
 */
 
 // Include files
@@ -39,6 +39,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.26 
 
 // M_PI defined in ValBase.h
 namespace {
+
     const int _nTowers = 4;
     
     double sign(double x) { return (x<0.) ? -1.:1.;} 
@@ -213,6 +214,7 @@ private:
 	double Tkr_1_PhiErr;
 	double Tkr_1_ErrAsym;
 	double Tkr_1_CovDet;
+    double Tkr_1_ToTFirst;
 	double Tkr_1_ToTAve;
 	double Tkr_1_ToTTrAve;
 	double Tkr_1_ToTAsym;
@@ -367,7 +369,8 @@ StatusCode TkrValsTool::initialize()
     addItem("Tkr1SXY",        &Tkr_1_Sxy);
     addItem("Tkr1SYY",        &Tkr_1_Syy);
 
-	addItem("Tkr1ToTAve",     &Tkr_1_ToTAve);
+	addItem("Tkr1ToTFirst",   &Tkr_1_ToTFirst);
+    addItem("Tkr1ToTAve",     &Tkr_1_ToTAve);
     addItem("Tkr1ToTTrAve",   &Tkr_1_ToTTrAve);
     addItem("Tkr1ToTAsym",    &Tkr_1_ToTAsym);
     addItem("Tkr1ChisqAsym",  &Tkr_1_ChisqAsym);
@@ -423,6 +426,9 @@ namespace {
     double rm_soft   = 130;
     double gap       = 18.; 
     double hard_frac = .7; 
+
+    double maxToTVal = 250.;  // won't be needed after new tag of TkrDigi
+    double maxPath = 2500.; // limit the upward propagator
 }
 
 StatusCode TkrValsTool::calculate()
@@ -457,14 +463,13 @@ StatusCode TkrValsTool::calculate()
     
     //Make sure we have valid reconstructed data
     
-    // used to be 89.61; should have been 89.7 // This is the SSD die pitch (width + gap) 
-    double die_width = pTkrGeoSvc->ladderNStrips()*pTkrGeoSvc->siStripPitch() +
-        + 2.*pTkrGeoSvc->siDeadDistance() + pTkrGeoSvc->ladderGap();
     
     int nNoConv = pTkrGeoSvc->numNoConverter();
     int nThick  = pTkrGeoSvc->numSuperGlast();
     int nThin   = pTkrGeoSvc->numLayers() - nThick - nNoConv;
-    
+
+    double die_width = pTkrGeoSvc->ladderNStrips()*pTkrGeoSvc->siStripPitch() +
+        + 2.*pTkrGeoSvc->siDeadDistance() + pTkrGeoSvc->ladderGap();
     double towerPitch = pTkrGeoSvc->towerPitch(); 
     
     if (pTracks)
@@ -506,13 +511,11 @@ StatusCode TkrValsTool::calculate()
         Tkr_1_y0          = x1.y();
         Tkr_1_z0          = x1.z();
 
-        // range of "phi" is estricted to (-pi/2, pi/2)
-        //Tkr_1_Phi         = (fabs(t1.x())<1.e-7) ? 0.5*M_PI : atan(-t1.y()/t1.x());
-        // now it isn't!
+
         // theta and phi are of direction of source, hence the minus sign
+        // this code replaces atan and acos used before
 		Tkr_1_Phi         = (-t1).phi();
         if (Tkr_1_Phi<0.0) Tkr_1_Phi += 2*M_PI;
-		//Tkr_1_Theta       = acos(-t1.z());
         Tkr_1_Theta       = (-t1).theta();
 
 		Event::TkrFitMatrix  Tkr_1_Cov = track_1->getTrackCov();
@@ -573,22 +576,40 @@ StatusCode TkrValsTool::calculate()
         // Section to dig out the TOT information
 		double first_ToT = 0.; 
 		double last_ToT  = 0.; 
-		double min_ToT   = 251.; 
+		double min_ToT   = maxToTVal; 
 		double max_ToT   = 0.;  
 		int    hit_counter = 0; 
 		double chisq_first = 0.;
 		double chisq_last  = 0.; 
-		Event::TkrFitPlaneConPtr pln_pointer = track_1->begin();       
+		Event::TkrFitPlaneConPtr pln_pointer = track_1->begin();
+        //for the ToT path correction
+        // start with track direction, can move to hit direction later, if warranted
+        double slopeX = fabs(t1.x()/t1.z());
+        double slopeY = fabs(t1.y()/t1.z());
+        double pathFactorX = 1./sqrt(1. + slopeX*slopeX);
+        double pathFactorY = 1./sqrt(1. + slopeY*slopeY);
+
         while(pln_pointer != track_1->end()) {
 			Event::TkrFitPlane plane = *pln_pointer;
 
             int hit_Id = plane.getIDHit();
-			Event::TkrCluster* cluster = pClusters->getHit(hit_Id); 
+			Event::TkrCluster* cluster = pClusters->getHit(hit_Id);
             double tot = cluster->ToT(); 
-			if(tot > 251.) tot = 251.; 
+            tot = std::min(tot, maxToTVal);
+            // do the path correction
+            if (tot<maxToTVal && true) { //set "true" to "false" to kill correction
+                Event::TkrCluster::view v = cluster->v();
+                //look at the non-measuring direction. This is the simplest one to start with,
+                // has the biggest effect.  In the measuring view, path length interacts with
+                // charge sharing, at least for moderately normal particles.
+                double pathFactor = (v==Event::TkrCluster::X) ? pathFactorY : pathFactorX;
+                tot *= pathFactor;
+            }
+
 			if(tot > max_ToT) max_ToT = tot; 
 			if(tot < min_ToT) min_ToT = tot; 
 			hit_counter++; 
+            if (hit_counter==1) Tkr_1_ToTFirst = tot;
 			Tkr_1_ToTAve += tot;
 			if(hit_counter < 3) {
 				first_ToT += tot;
@@ -610,8 +631,11 @@ StatusCode TkrValsTool::calculate()
 
 	    m_G4PropTool->setStepStart(x1, -t1); //Note minus sign - swim backwards towards ACD
 
-        double arc_min = fabs((610.-x1.z())/t1.z());
-		arc_min = (arc_min < 2500.) ? arc_min:2500.; 
+        double topOfTkr = pTkrGeoSvc->getReconLayerZ(0) + 2.0; // higher than first silicon layer
+        double xEdge = 0.5*pTkrGeoSvc->numXTowers()*towerPitch;
+        double yEdge = 0.5*pTkrGeoSvc->numYTowers()*towerPitch;
+        double arc_min = fabs((topOfTkr-x1.z())/t1.z());
+        arc_min = std::min( arc_min, maxPath); 
 	    m_G4PropTool->step(arc_min);  
         int numSteps = m_G4PropTool->getNumberSteps();
 	    
@@ -623,7 +647,7 @@ StatusCode TkrValsTool::calculate()
 		    volId.prepend(prefix);
 		    Point x_step       = m_G4PropTool->getStepPosition(istep); 
 			if((x_step.z()-x1.z()) < 10.0) continue; 
-			if(x_step.z() > 610. || fabs(x_step.x()) > 755. || fabs(x_step.y()) > 755.) break; 
+			if(x_step.z() > topOfTkr || fabs(x_step.x()) > xEdge || fabs(x_step.y()) > yEdge) break; 
 
         // check that it's really a TKR hit (probably overkill)
 		    if(volId.size() != 9) continue; 
@@ -658,8 +682,7 @@ StatusCode TkrValsTool::calculate()
             Tkr_2_ydir       = t2.y();
             Tkr_2_zdir       = t2.z();
 
-            //Tkr_2_Phi        = (fabs(t2.x())<1.e-7) ? 0.5*M_PI : atan(-t2.y()/t2.x());
-            // better!
+            // this replaces atan used before
             Tkr_2_Phi         = (-t2).phi();
             if (Tkr_2_Phi<0.0) Tkr_2_Phi += 2*M_PI;
 
