@@ -19,10 +19,11 @@ EventSelector.Input = "NONE";
 //  Geometry definition
 //
 
-ApplicationMgr.DLLs+= {"RootIo", "GlastSvc", "G4Propagator", "Recon", "TkrUtil"};
-ApplicationMgr.DLLs+= {"AnalysisNtuple", "ntupleWriterSvc", "RootHistCnv"};
+ApplicationMgr.DLLs+= {"RootIo", "GlastSvc", "G4Propagator","G4Generator", 
+                       "Recon", "TkrUtil"};
+ApplicationMgr.DLLs+= {"AnalysisNtuple", "RootHistCnv"};
 
-
+ApplicationMgr.ExtSvc += { "GlastPropagatorSvc", "G4GeometrySvc" };
 
 // ----------------------------
 //  topalg
