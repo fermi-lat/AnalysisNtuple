@@ -3,7 +3,7 @@
 @brief Calculates the "Event" analysis variables from the other ntuple variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.16 2004/09/01 05:05:03 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.17 2004/09/30 17:12:21 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -46,6 +46,7 @@ private:
     double EvtRun;
     double EvtEventId;
     double EvtElapsedTime;
+    double EvtLiveTime;
 
     double EvtEnergySumOpt;
     double EvtEnergyRaw;
@@ -87,7 +88,7 @@ private:
     IValsTool* m_pCalTool;
     IValsTool* m_pAcdTool;
 
-    ITkrGeometrySvc* pTkrGeoSvc;
+    ITkrGeometrySvc* m_tkrGeom;
 
 };
 
@@ -118,7 +119,7 @@ StatusCode EvtValsTool::initialize()
 
     // try using one tool from another
 
-    if(service( "TkrGeometrySvc", pTkrGeoSvc, true ).isFailure()) {
+    if(service( "TkrGeometrySvc", m_tkrGeom, true ).isFailure()) {
         log << MSG::ERROR << "Could not find TkrGeometrySvc" << endreq;
         return fail;
     }
@@ -178,6 +179,7 @@ StatusCode EvtValsTool::initialize()
     addItem("EvtRun",           &EvtRun);
     addItem("EvtEventId",       &EvtEventId);
     addItem("EvtElapsedTime",   &EvtElapsedTime);
+    addItem("EvtLiveTime",      &EvtLiveTime);
 
     //addItem("EvtEnergyOpt",     &EvtEnergyOpt);
     addItem("EvtEnergySumOpt",  &EvtEnergySumOpt);
@@ -239,6 +241,7 @@ StatusCode EvtValsTool::calculate()
         EvtRun         = header->run();
         EvtEventId     = header->event();
         EvtElapsedTime = header->time();
+        EvtLiveTime    = header->livetime();
     }
 
     double eCalSum, eTkr;
@@ -337,7 +340,7 @@ StatusCode EvtValsTool::calculate()
     double totHits, tkr1First;
     if (m_pTkrTool->getVal("TkrTotalHits", totHits, nextCheck).isSuccess()) {
         if (m_pTkrTool->getVal("Tkr1FirstLayer", tkr1First, nextCheck).isSuccess()){
-            EvtTkrComptonRatio = totHits/(2.*(pTkrGeoSvc->numLayers()-tkr1First));
+            EvtTkrComptonRatio = totHits/(2.*(m_tkrGeom->numLayers()-tkr1First));
             EvtTkrEComptonRatio = EvtTkrComptonRatio/(-3.77 + 3.57*logE - .547*logE2)
                                   /(1.69 + 1.74*tkr1ZDir + .987*tkr1ZDir2);
         }

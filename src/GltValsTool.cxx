@@ -2,7 +2,7 @@
 @brief Calculates the Trigger analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.14 2004/10/01 19:43:58 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.15 2004/10/09 04:36:25 lsrea Exp $
 */
 
 // Include files
@@ -24,6 +24,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.14 
 
 #include "Event/TopLevel/EventModel.h"
 #include "Event/TopLevel/Event.h"
+#include "LdfEvent/EventSummaryData.h"
 #include "CLHEP/Matrix/Matrix.h"
 #include "CLHEP/Matrix/SymMatrix.h"
 
@@ -66,11 +67,12 @@ public:
 
 private:
     /// pointer to tracker geometry
-    ITkrGeometrySvc*       pTkrGeoSvc;
+    ITkrGeometrySvc*       m_tkrGeom;
 
     //TkrClusters Tuple Items
     double Trig_word;
-    double Trig_GemSummary; // new
+    double Trig_GemSummary;
+    double Trig_evtFlags;
     double Trig_tower;
     double Trig_xTower;
     double Trig_yTower; 
@@ -109,7 +111,7 @@ StatusCode GltValsTool::initialize()
     // get the services
     StatusCode fail = StatusCode::FAILURE;
     if( serviceLocator() ) {       
-        if(service( "TkrGeometrySvc", pTkrGeoSvc, true ).isFailure()) {
+        if(service( "TkrGeometrySvc", m_tkrGeom, true ).isFailure()) {
             log << MSG::ERROR << "Could not find TkrGeometrySvc" << endreq;
             return fail;
         }
@@ -125,7 +127,8 @@ StatusCode GltValsTool::initialize()
     // load up the map
 
     addItem("GltWord",       &Trig_word);
-    addItem("GltGemSummary", &Trig_GemSummary); // new
+    addItem("GltGemSummary", &Trig_GemSummary);
+    addItem("GltEventFlags", &Trig_evtFlags);    // new
     addItem("GltTower",      &Trig_tower); 
     addItem("GltXTower",     &Trig_xTower);
     addItem("GltYTower",     &Trig_yTower);
@@ -166,9 +169,9 @@ StatusCode GltValsTool::calculate()
     int yTower = -1; 
     int iTrig_type = 0;
 
-    int nLayers  = pTkrGeoSvc->numLayers();
-    int nXTowers = pTkrGeoSvc->numXTowers();
-    int nYTowers = pTkrGeoSvc->numYTowers();
+    int nLayers  = m_tkrGeom->numLayers();
+    int nXTowers = m_tkrGeom->numXTowers();
+    int nYTowers = m_tkrGeom->numYTowers();
     int nTowers  = nXTowers*nYTowers;
 
     if(!pEvent || !pClusters) return StatusCode::FAILURE;
@@ -179,6 +182,13 @@ StatusCode GltValsTool::calculate()
     // This is the same as the old GltWord
     Trig_word = word & MASKGlt;
     Trig_GemSummary = (word >> SHIFTGem) & MASKGem;
+
+    SmartDataPtr<LdfEvent::EventSummaryData> eventSummary(m_pEventSvc, "/Event/Gem"); 
+
+    Trig_evtFlags = eventSummary==0 ? 0 : eventSummary->eventFlags();
+
+ 
+
 
     bool three_in_a_row = ((word & (1<<TRACK))!=0);
 
@@ -249,7 +259,7 @@ StatusCode GltValsTool::calculate()
         // Now classify according to tower type
         // new classification is number of exposed sides
         if(iTrig_tower >= 0) {
-            iTrig_type = pTkrGeoSvc->getTowerType(iTrig_tower);
+            iTrig_type = m_tkrGeom->getTowerType(iTrig_tower);
         }
 
         // Now find the average location of all hits

@@ -3,7 +3,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.44 2004/09/30 17:12:21 lsrea Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.45 2004/10/01 19:43:58 usher Exp $
 */
 
 // Include files
@@ -108,7 +108,7 @@ namespace {
       /// GlastDetSvc used for access to detector info
       IGlastDetSvc*    m_detSvc; 
       /// TkrGeometrySvc used for access to tracker geometry info
-      ITkrGeometrySvc* m_geoSvc;
+      ITkrGeometrySvc* m_tkrGeom;
 
       /// some Geometry
       double m_towerPitch;
@@ -240,14 +240,14 @@ namespace {
           */
 
           // find TkrGeometrySvc service
-          if (service("TkrGeometrySvc", m_geoSvc, true).isFailure()){
+          if (service("TkrGeometrySvc", m_tkrGeom, true).isFailure()){
               log << MSG::ERROR << "Couldn't find the TkrGeometrySvc!" << endreq;
               return StatusCode::FAILURE;
           }
 
-          m_towerPitch = m_geoSvc->towerPitch();
-          m_xNum = m_geoSvc->numXTowers();
-          m_yNum = m_geoSvc->numYTowers();
+          m_towerPitch = m_tkrGeom->towerPitch();
+          m_xNum = m_tkrGeom->numXTowers();
+          m_yNum = m_tkrGeom->numYTowers();
 
           if (getCalInfo().isFailure()) {
                log << MSG::ERROR << "Couldn't initialize the CAL constants" << endreq;
@@ -509,10 +509,10 @@ StatusCode CalValsTool::calculate()
     // Get the lower and upper limits for the CAL in the installed towers
     double deltaX = 0.5*(m_xNum*m_towerPitch - m_calXWidth);
     double deltaY = 0.5*(m_yNum*m_towerPitch - m_calYWidth);
-    double calXLo = m_geoSvc->getLATLimit(0,LOW)  + deltaX;
-    double calXHi = m_geoSvc->getLATLimit(0,HIGH) - deltaX;
-    double calYLo = m_geoSvc->getLATLimit(1,LOW)  + deltaY;
-    double calYHi = m_geoSvc->getLATLimit(1,HIGH) - deltaY;
+    double calXLo = m_tkrGeom->getLATLimit(0,LOW)  + deltaX;
+    double calXHi = m_tkrGeom->getLATLimit(0,HIGH) - deltaX;
+    double calYLo = m_tkrGeom->getLATLimit(1,LOW)  + deltaY;
+    double calYHi = m_tkrGeom->getLATLimit(1,HIGH) - deltaY;
 
     // Find the distance closest to an edge
     double calX = cal_1.x(); double calY = cal_1.y();
@@ -564,7 +564,7 @@ StatusCode CalValsTool::calculate()
     double t_tracker = track_1->getTkrCalRadlen();
     // Patch for error in KalFitTrack: 1/2 of first radiator left out
     int layer = track_1->front()->getTkrId().getLayer();
-    t_tracker += 0.5*m_geoSvc->getReconRadLenConv(layer)/costh;
+    t_tracker += 0.5*m_tkrGeom->getReconRadLenConv(layer)/costh;
 	// Need to fix a problem here.  There can be large fluctuations on single
 	// trajectories.  This should be fixed in TkrValsTool probably by averaging
 	// over a cylinder as we do in CalValsTool.
@@ -667,10 +667,10 @@ StatusCode CalValsTool::calculate()
 
 StatusCode CalValsTool::getCalInfo()
 {
-    m_calZTop = m_geoSvc->calZTop();
-    m_calZBot = m_geoSvc->calZBot();
-    m_calXWidth = m_geoSvc->calXWidth();
-    m_calYWidth = m_geoSvc->calYWidth();
+    m_calZTop = m_tkrGeom->calZTop();
+    m_calZBot = m_tkrGeom->calZBot();
+    m_calXWidth = m_tkrGeom->calXWidth();
+    m_calYWidth = m_tkrGeom->calYWidth();
 
     return StatusCode::SUCCESS;
 }
@@ -714,8 +714,8 @@ double CalValsTool::containedFraction(Point pos, double gap,
     double in_frac_x  =  circleFractionSimpson(r_frac_plus, angle_factor);
     // This should work even for missing towers, 
     // because the radlens, etc., come from the propagator
-    if (x>m_geoSvc->getLATLimit(0,LOW)+0.5*m_towerPitch
-        && x<m_geoSvc->getLATLimit(0,HIGH)-0.5*m_towerPitch) 
+    if (x>m_tkrGeom->getLATLimit(0,LOW)+0.5*m_towerPitch
+        && x<m_tkrGeom->getLATLimit(0,HIGH)-0.5*m_towerPitch) 
     {
 
         double r_frac_minus = (edge + gap_x/2.)/r;
@@ -728,8 +728,8 @@ double CalValsTool::containedFraction(Point pos, double gap,
     r_frac_plus = (edge-gap_y/2.)/r; 
     angle_factor = cos(phi)*(1./costh - 1.);
     double in_frac_y  =  circleFractionSimpson(r_frac_plus, angle_factor);
-    if (y>m_geoSvc->getLATLimit(1,LOW)+0.5*m_towerPitch
-        && y<m_geoSvc->getLATLimit(1,HIGH)-0.5*m_towerPitch) 
+    if (y>m_tkrGeom->getLATLimit(1,LOW)+0.5*m_towerPitch
+        && y<m_tkrGeom->getLATLimit(1,HIGH)-0.5*m_towerPitch) 
     {// X edge is not outside limit of LAT
         double r_frac_minus = (edge + gap_y/2.)/r;
         in_frac_y += circleFractionSimpson(-r_frac_minus, angle_factor);
@@ -769,10 +769,10 @@ StatusCode CalValsTool::aveRadLens(Point x0, Vector t0, double radius, int numSa
     m_arcLen_Cntr  = 0.;  
 
 	
-    double xLo = m_geoSvc->getLATLimit(0, LOW);
-    double xHi = m_geoSvc->getLATLimit(0, HIGH);
-    double yLo = m_geoSvc->getLATLimit(1, LOW);
-    double yHi = m_geoSvc->getLATLimit(1, HIGH);
+    double xLo = m_tkrGeom->getLATLimit(0, LOW);
+    double xHi = m_tkrGeom->getLATLimit(0, HIGH);
+    double yLo = m_tkrGeom->getLATLimit(1, LOW);
+    double yHi = m_tkrGeom->getLATLimit(1, HIGH);
 
     // Only do leakage correction for tracks which "hit" the Calorimeter
 	if (CAL_x0<xLo || CAL_x0>xHi || CAL_y0<yLo || CAL_y0>yHi) return StatusCode::FAILURE;
