@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.19 2003/06/12 00:00:06 atwood Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.20 2003/07/18 22:17:59 lsrea Exp $
 */
 
 // Include files
@@ -468,20 +468,18 @@ StatusCode TkrValsTool::calculate()
         Tkr_1_z0          = x1.z();
 
 		Tkr_1_Phi         = atan(-t1.y()/t1.x()); 
-		Tkr_1_Theta       = acos(t1.z());
+		Tkr_1_Theta       = acos(-t1.z());
 
 		Event::TkrFitMatrix  Tkr_1_Cov = track_1->getTrackCov();
 		Tkr_1_Sxx         = Tkr_1_Cov.getcovSxSx();
 		Tkr_1_Sxy         = Tkr_1_Cov.getcovSxSy();
 		Tkr_1_Syy         = Tkr_1_Cov.getcovSySy();
-		double tzmax      = (fabs(t1.z()) > .999999)? fabs(t1.z()) : .999999;
-		double tzTerm     = tzmax/(1.-tzmax*tzmax);
-		Tkr_1_DTheta      = sqrt((t1.x()*t1.z()*t1.z())*(t1.x()*t1.z()*t1.z())*Tkr_1_Sxx +
-                                 (t1.y()*t1.z()*t1.z())*(t1.y()*t1.z()*t1.z())*Tkr_1_Syy);
-                               //  + (t1.x()*t1.z()*t1.z())*(t1.y()*t1.z()*t1.z())*Tkr1_1_Sxy);
-		Tkr_1_DPhi        = sqrt((t1.x()*tzTerm)*(t1.x()*tzTerm)*Tkr_1_Sxx +
-                                 (t1.y()*tzTerm)*(t1.y()*tzTerm)*Tkr_1_Syy);
-		                      //  + (t1.x()*sxsyTerm)*(t1.y()*sxsyTerm)*Tkr1_1_Sxx); 
+		double sinPhi     = sin(Tkr_1_Phi);
+		double cosPhi     = cos(Tkr_1_Phi);
+		Tkr_1_DTheta      = t1.z()*t1.z()*sqrt(cosPhi*cosPhi*Tkr_1_Sxx + 
+			                      2.*sinPhi*cosPhi*Tkr_1_Sxy + sinPhi*sinPhi*Tkr_1_Syy); 
+		Tkr_1_DPhi        = (-t1.z())*sqrt(sinPhi*sinPhi*Tkr_1_Sxx + 
+			                      2.*sinPhi*cosPhi*Tkr_1_Sxy + cosPhi*cosPhi*Tkr_1_Syy);  
 
         Tkr_TrackLength = -Tkr_1_z0/Tkr_1_zdir;
         
