@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.9 2003/12/16 23:18:29 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.10 2004/02/13 06:22:38 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -55,9 +55,11 @@ private:
     double ACD_ActDistR0;
     double ACD_ActDistR1;
     double ACD_ActDistR2;
+    double ACD_tileTopCount;
     double ACD_tileCount0;
     double ACD_tileCount1;
     double ACD_tileCount2;
+    double ACD_tileCount3;
     double ACD_ribbon_ActiveDist;
 
     
@@ -128,9 +130,11 @@ StatusCode AcdValsTool::initialize()
     addItem("AcdActDistSideRow1",&ACD_ActDistR1);
     addItem("AcdActDistSideRow2",&ACD_ActDistR2);
 
+    addItem("AcdNoTop",        &ACD_tileTopCount);
     addItem("AcdNoSideRow0",   &ACD_tileCount0);
     addItem("AcdNoSideRow1",   &ACD_tileCount1);
     addItem("AcdNoSideRow2",   &ACD_tileCount2);   
+    addItem("AcdNoSideRow3",   &ACD_tileCount3);   
     addItem("AcdRibbonActDist", &ACD_ribbon_ActiveDist);
 
     zeroVals();
@@ -169,7 +173,7 @@ StatusCode AcdValsTool::calculate()
 
         //Code from meritAlg.... 
         // get the map of energy vs tile id: have to construct from two parallel vectors
-       float m_acd_tileCount[4];
+       float m_acd_tileCount[5];
        const std::vector<double> energies = pACD->getEnergyCol();
        const std::vector<idents::AcdId>& ids = pACD->getIdCol();
        std::vector<double>::const_iterator eit = energies.begin();
@@ -179,14 +183,19 @@ StatusCode AcdValsTool::calculate()
            idit != ids.end() && eit !=energies.end(); ++idit, ++ eit){
            emap[*idit]=*eit;
        }
+     
+      // use acd_row predicate to count number of top tiles
+      m_acd_tileCount[0] = std::count_if(emap.begin(), emap.end(), acd_row(-1) );
 
       // use acd_row predicate to count number of tiles per side row
-      if(true)for( int row = 0; row<3; ++row){ 
+      if(true)for( int row = 0; row<=3; ++row){ 
           m_acd_tileCount[row+1] = std::count_if(emap.begin(), emap.end(), acd_row(row) );
       }
+      ACD_tileTopCount = m_acd_tileCount[0];
       ACD_tileCount0 = m_acd_tileCount[1];
       ACD_tileCount1 = m_acd_tileCount[2];
       ACD_tileCount2 = m_acd_tileCount[3];       
+      ACD_tileCount3 = m_acd_tileCount[4];       
 
     } else {
         return StatusCode::FAILURE;
