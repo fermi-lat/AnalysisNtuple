@@ -1,7 +1,8 @@
 /** @file release.notes
   @brief Package AnalysisNtule
   @verbatim
-
+ v1r8p8  12-Jan-04   LSR  Fix McAnalValsTool to compile
+ v1r8p7  09-Jan-04   LSR  Add McAnalValsTool
  v1r8p6  13-Nov-03   LSR  Add McEFrac, fix a little bug, remove EvtEnergy Tracker, update doc
  v1r8p5  22-Oct-03   LSR  2nd iteration of ToT correction: mip now comes out at 1
  v1r8p4  20-Oct-03   HMK  add AcdRecon ribbon doca
