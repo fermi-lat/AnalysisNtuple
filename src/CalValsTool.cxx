@@ -3,7 +3,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.45 2004/10/01 19:43:58 usher Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.46 2004/10/12 19:00:02 lsrea Exp $
 */
 
 // Include files
@@ -26,7 +26,6 @@
 #include "Event/Recon/CalRecon/CalCluster.h"
 #include "Event/Recon/CalRecon/CalXtalRecData.h"
 
-#include "GlastSvc/Reco/IKalmanParticle.h"
 #include "GlastSvc/Reco/IPropagatorTool.h"
 #include "GlastSvc/Reco/IPropagatorSvc.h"
 #include "GlastSvc/Reco/IPropagator.h" 
@@ -37,6 +36,8 @@
 #include "idents/VolumeIdentifier.h"
 #include "CLHEP/Geometry/Transform3D.h"
 #include "CLHEP/Vector/Rotation.h"
+
+#include "geometry/Ray.h"
 
 #include "TMath.h"
 
