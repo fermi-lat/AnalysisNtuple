@@ -2,7 +2,7 @@
 @brief Calculates the Mc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.20 2005/01/04 23:49:33 atwood Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.21 2005/01/25 23:06:25 lsrea Exp $
 */
 // Include files
 
@@ -126,6 +126,7 @@ StatusCode McValsTool::initialize()
     
     // load up the map
 
+    addItem("McSourceId",     &MC_SourceId);
     addItem("McId",           &MC_Id);  
     addItem("McCharge",       &MC_Charge);
     addItem("McEnergy",       &MC_Energy);  
