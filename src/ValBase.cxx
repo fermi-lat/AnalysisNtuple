@@ -2,7 +2,7 @@
 @brief implements all the methods of the XxxValsTools
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.cxx,v 1.18 2003/05/08 21:54:25 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.cxx,v 1.19 2003/05/09 05:22:08 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -159,12 +159,12 @@ StatusCode ValBase::doCalcIfNotDone()
 StatusCode ValBase::getValCheck(std::string varName, double& value)
 {
     // a simple way to force the check
-    return getVal(varName, value, true);
+    return getVal(varName, value, CHECK);
 }
 
 StatusCode ValBase::getVal(std::string varName, double& value, int check)
 {
-    // optional check flag, if true, do check (default is false)
+    // optional check flag
 
     StatusCode sc = StatusCode::SUCCESS;
 
