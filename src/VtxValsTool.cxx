@@ -3,7 +3,7 @@
 @brief Calculates the Vtx analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header$
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.7 2003/03/05 02:03:29 lsrea Exp $
 */
 
 // Include files
@@ -68,6 +68,7 @@ private:
     double VTX_ydir;
     double VTX_zdir;
     double VTX_Phi;
+	double VTX_Theta;
     double VTX_x0;
     double VTX_y0;
     double VTX_z0;
@@ -121,13 +122,14 @@ StatusCode VtxValsTool::initialize()
     addItem("VtxXDir",      &VTX_xdir);     
     addItem("VtxYDir",      &VTX_ydir);     
     addItem("VtxZDir",      &VTX_zdir);     
-    addItem("VtxPhi",       &VTX_Phi);      
+    addItem("VtxPhi",       &VTX_Phi);  
+	addItem("VtxTheta",     &VTX_Theta);  
     addItem("VtxX0",        &VTX_x0);       
     addItem("VtxY0",        &VTX_y0);       
     addItem("VtxZ0",        &VTX_z0);       
     addItem("VtxAngle",     &VTX_Angle);    
     addItem("VtxDOCA",      &VTX_DOCA);     
-    addItem("VtxHeadSep",  &VTX_Head_Sep); 
+    addItem("VtxHeadSep",   &VTX_Head_Sep); 
     
     addItem("VtxS1",        &VTX_S1);       
     addItem("VtxS2",        &VTX_S2);       
@@ -199,6 +201,7 @@ StatusCode VtxValsTool::calculate()
         VTX_ydir      = t0.y();
         VTX_zdir      = t0.z();
         VTX_Phi       = atan(-t0.y()/t0.x()); 
+		VTX_Theta     = acos(t0.z()); 
         VTX_x0        = x0.x();
         VTX_y0        = x0.y();
         VTX_z0        = x0.z();
