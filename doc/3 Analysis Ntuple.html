@@ -1,515 +1,1319 @@
 <html>
-    <head>
-        <title>Workbook : 3 Analysis Ntuple</title>
-	    <link rel="stylesheet" href="styles/site.css" type="text/css" />
-        <META http-equiv="Content-Type" content="text/html; charset=UTF-8">	    
-    </head>
-
-    <body>
-	    <table class="pagecontent" border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="#ffffff">
-		    <tr>
-			    <td valign="top" class="pagebody">
-				    <div class="pageheader">
-					    <span class="pagetitle">
+	<head>
+		<title>Workbook : 3 Analysis Ntuple</title>
+		<link rel="stylesheet" href="styles/site.css" type="text/css">
+			<META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	</head>
+	<body>
+		<table class="pagecontent" border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="#ffffff">
+			<tr>
+				<td valign="top" class="pagebody">
+					<div class="pageheader">
+						<span class="pagetitle">
                             Workbook : 3 Analysis Ntuple
                                                     </span>
-				    </div>
-				    <div class="pagesubheading">
-					    This page last changed on Aug 12, 2004 by <font color="#0050B2">chuckp</font>.
-				    </div>
-
-				    <p class="paragraph">Variables from the Analysis Ntuple are presented here arranged by tool, and by sequential order within each tool. Unless otherwise noted, energy is in MeV, length is in mm, and angle is in radians. Also, unless otherwised noted, the null value, that is, the value in the ntuple when there is no calculated value for a given variable, is zero. (I&#039;ll fix these as I find them.)</p><ul type="square" class="minus">
-<li> Text in <font color="red">RED</font> or <font color="green">GREEN</font> = queries or comments between the perpetrators; users should ignore these.</li>
-</ul>
-<ul type="square" class="minus">
-<li> Text in <font color="blue">BLUE</font> = notes to the user.</li>
-</ul><br/>
-<p class="paragraph"><h3 style="margin: 4px 0px 4px 0px;" class="heading3"><a name="3+Analysis+Ntuple-MC+Variables"> MC Variables</a></h3></p><table class="wikitable">
-<tr>
-<th>Variable            </th><th>Description</th>
-</tr><tr>
-<td>McSourceId        </td><td>Unique integer associated with each MC source type; from McEvent header <font color="blue"> replaces Mc_src_Id in merit ntuple</font></td>
-</tr><tr>
-<td>McId                  </td><td>StdHepId of primary (-13 = mu+, 22 = gamma, etc.)</td>
-</tr><tr>
-<td>McCharge           </td><td>Charge of primary</td>
-</tr><tr>
-<td>McEnergy           </td><td>Kinetic energy of the generated primary particle</td>
-</tr><tr>
-<td>McLogEnergy      </td><td>log10(McEnergy)</td>
-</tr><tr>
-<td>McEFrac              </td><td>Fraction of incident energy in highest-energy daughter</td>
-</tr><tr>
-<td>McOpeningAngle  </td><td>Actual opening angle between the first and second daughters of the promary as generated, (For a primary photon, these will ordinarily be the electron and positron.)</td>
-</tr><tr>
-<td>McX0                  </td><td>x coordinate of photon conversion or charged particle origin</td>
-</tr><tr>
-<td>McY0                  </td><td>ditto y</td>
-</tr><tr>
-<td>McZ0                  </td><td>ditto z</td>
-</tr><tr>
-<td>McXDir               </td><td>x direction cosine of primary particle</td>
-</tr><tr>
-<td>McYDir                </td><td>ditto y</td>
-</tr><tr>
-<td>McZDir               </td><td>ditto z</td>
-</tr><tr>
-<td>McXErr               </td><td>x (found) - x (Mc) <font color="blue">(Mc position taken at the z of the found vertex or first hit)</font>&#160;<font color="red"> In this and the variables below, &quot;XxxErr&quot; should probably be &quot;XxxDiff&quot; or &quot;DeltaXxx.&quot; &quot;Err&quot; is used elsewhere to mean the expected error of the measurement</font></td>
-</tr><tr>
-<td>McYErr               </td><td>ditto y</td>
-</tr><tr>
-<td>McZErr               </td><td>z(<font color="blue">actual</font> vertex or first hit) - McZ0</td>
-</tr><tr>
-<td>McXDirErr           </td><td>xdir (found) - xdir (Mc)</td>
-</tr><tr>
-<td>McYDirErr           </td><td>ditto y</td>
-</tr><tr>
-<td>McZDirErr           </td><td>ditto z</td>
-</tr><tr>
-<td>McDirErr             </td><td>Angle between found direction and Mc direction (radians)</td>
-</tr><tr>
-<td>McTkr1DirErr      </td><td>Angle between direction of best track and Mc direction (radians)</td>
-</tr><tr>
-<td>McTkr2DirErr      </td><td>Angle between direction of second track and Mc direction (radians)</td>
-</tr>
-</table><br/>
-<p class="paragraph"><h3 style="margin: 4px 0px 4px 0px;" class="heading3"><a name="3+Analysis+Ntuple-Trigger+Variables+%28Glt+%3D+Glast+Trigger%29"> Trigger Variables (Glt = Glast Trigger)</a></h3></p><table class="wikitable">
-<tr>
-<th>Variable          </th><th>Description</th>
-</tr><tr>
-<td>GltWord            </td><td>Trigger word from the event header (null value is -1)</td>
-</tr><tr>
-<td>GltTower           </td><td>Id of tower that triggered; if more than one, choose the lowest (null value is 18)</td>
-</tr><tr>
-<td>GltXTower         </td><td>x index of GltTower (null value = -1)</td>
-</tr><tr>
-<td>GltYTower         </td><td>y layer of trigger in GltTower (this is recon layer; 0 is at the top!)</td>
-</tr><tr>
-<td>GltTotal            </td><td>Number of possible triggers (a straight-through track in a single tower produces 13 potential triggers</td>
-</tr><tr>
-<td>GltNumTowers   </td><td>Number of towers which trigger (crossing track)</td>
-</tr><tr>
-<td>GltType            </td><td>Number of exposed sides for the triggered tower, i.e. 0 = central tower, 1 = side tower, 2 = edge edge tower. This number is 4 for the EM.</td>
-</tr><tr>
-<td>GltMoment        </td><td><font color="blue">Please ignore for now</font></td>
-</tr><tr>
-<td>GltZDir             </td><td><font color="blue">ditto</font></td>
-</tr>
-</table><br/>
-<p class="paragraph"><h3 style="margin: 4px 0px 4px 0px;" class="heading3"><a name="3+Analysis+Ntuple-TKR+Variables"> TKR Variables</a></h3></p><table class="wikitable">
-<tr>
-<th>Variable             </th><th>Description</th>
-</tr><tr>
-<td>TkrNumTracks     </td><td>Number of tracks found (Maximum is set by TkrRecon, currently 10)</td>
-</tr><tr>
-<td>TkrSumKalEne     </td><td>Sum of Kalman energies (see Tkr<font color="brown">N</font>KalEne, below) for the two best tracks</td>
-</tr><tr>
-<td>TkrSumConEne    </td><td>Sum of the energies for the two best tracks, as assigned by the patrec energy tool</td>
-</tr><tr>
-<td>TkrEnergy           </td><td>Energy in tracker, as determined from linear regression analysis of number of clusters</td>
-</tr><tr>
-<td>TkrEnergySum    </td><td>Energy in tracker, as determined by counting up clusters and associated radiation lengths. <font color="blue">This is historical; it will probably go away, so don&#039;t use it!</font></td>
-</tr><tr>
-<td>TkrEnergyCorr    </td><td>TkrEnergy corrected by TkrEdgeCorr</td>
-</tr><tr>
-<td>TkrEdgeCorr       </td><td>Tracker edge correction. <font color="blue">This may go away; it&#039;s an intermediate quantity</font></td>
-</tr><tr>
-<td>TkrHDCount        </td><td>Number of unused clusters in top x-y layer of track <font color="red">Should probably be something like Tkr1HeadCount</font></td>
-</tr><tr>
-<td>TkrTotalHits        </td><td>Number of clusters &quot;near&quot; the best track. <font color="blue">For experts only! Do not use!</font>&#160;<font color="red">Should probably be Tkr1TotalHits</font> </td>
-</tr><tr>
-<td>TkrThinHits         </td><td>Number of clusters in the thin converter layers.  <font color="blue">ditto!</font>&#160;<font color="red">Should probably be Tkr1ThinHits</font> </td>
-</tr><tr>
-<td>TkrThickHits        </td><td>Number of clusters in the thick converter layers. <font color="blue">ditto!</font>&#160;<font color="red">Should probably be Tkr1ThickHits</font></td>
-</tr><tr>
-<td>TkrBlankHits       </td><td>Number of clusters in the no-converter layers. <font color="blue">ditto!</font>&#160;<font color="red">Should probably be Tkr1BlankHits</font></td>
-</tr><tr>
-<td>TkrRadLength      </td><td>Radiation lengths traversed by the best track. This is from half-way thru the initial converter to the lowest bi-plane in the tracker, whether or not the track actually gets to the end.  <font color="red">Should probably be Tkr1RadLength</font></td>
-</tr><tr>
-<td>TkrTwrEdge        </td><td>The average distance of the track from the &quot;edge&quot; of each tray, weighted by radiation lengths traversed.  (The edge is a plane halfway between the towers. <font color="red">Should probably be Tkr1AverageTwrEdge</font></td>
-</tr><tr>
-<td>TkrTrackLength   </td><td>Distance between the start of the track and the grid, along the track axis.  <font color="red">Should probably be Tkr1TrackLength</font></td>
-</tr>
-</table><br/>
-<font color="blue"> Note: Variables called Tkr1Xxx refer to the &quot;best&quot; track; those called Tkr2Xxx refer to the second track. For variables like Tkr</font><font color="brown">N</font><font color="blue">Xxx  there are two versions in the ntuple, one for the best and one for the second track.<br/>
- 
-And note: The variables associated with the second track are undefined if there is only one track! Check TkrNumTracks before using these variables! In fact check TkrNumTracks before using track-1 variables, for the same reason.</font><br/>
-
-<table class="wikitable">
-<tr>
-<td> Tkr<font color="brown">N</font>Chisq       </td><td>Track chisquared</td>
-</tr><tr>
-<td> Tkr<font color="brown">N</font>FirstChisq </td><td>Track chisquared for first Tkr1FirstHits layers</td>
-</tr><tr>
-<td> Tkr<font color="brown">N</font>Hits          </td><td>Number of clusters in track</td>
-</tr><tr>
-<td> Tkr<font color="brown">N</font>FirstHits    </td><td>Number of initial track hits used to determine the starting direction</td>
-</tr><tr>
-<td> Tkr<font color="brown">N</font>FirstLayer </td><td>First recon layer in track</td>
-</tr><tr>
-<td> Tkr<font color="brown">N</font>DifHits     </td><td>Difference between the number of x and y clusters associated with track</td>
-</tr><tr>
-<td> Tkr<font color="brown">N</font>Gaps       </td><td>Total number of gaps in track</td>
-</tr><tr>
-<td> Tkr1FirstGapLayer                          </td><td>(Recon) layer number of first gap on track 1 <font color="blue">New!</font></td>
-</tr><tr>
-<td> Tkr1XGap                                      </td><td>x location of first gap on track 1 <font color="blue">New!</font></td>
-</tr><tr>
-<td> Tkr1YGap                                      </td><td>y location of first gap on track 1 <font color="blue">New!</font></td>
-</tr><tr>
-<td> Tkr<font color="brown">N</font>FirstGaps </td><td>Number of gaps in first Tkr1FirstHits layers on track</td>
-</tr><tr>
-<td> Tkr<font color="brown">N</font>Qual        </td><td>Track &quot;quality&quot;: depends on the length and chisquared of the track. Maximum is currently 64, can be negative if chisqared gets large. <font color="blue">This is used primarily to order the tracks during patrec. It&#039;s not a good idea to cut on this variable!</font></td>
-</tr><tr>
-<td> Tkr<font color="brown">N</font>Type        </td><td>PatRec type for track 1: integer with digits abc (i.e. 231)<br/>
-a: 1 = blind, 2 = cal-seeded<br/>
-b: 1 = patrec minimun energy, 2 = Kalman energy, 3 = constrained energy<br/>
-c: number of leading hits upstream of first x-y pair<br/>
-<font color="blue">This is useful mainly for visual inspection; not so good for use in a program or for plotting!</font> </td>
-</tr><tr>
-<td> Tkr<font color="brown">N</font>TwrEdge  </td><td>Distance from tower edge of initial point (0 is halfway between the towers, increases towards center of tower)</td>
-</tr><tr>
-<td> Tkr<font color="brown">N</font>PrjTwrEdge </td><td>Distance from tower edge of track extrapolated to the layer upstream of the first layer (See Tkr1TwrEdge.)</td>
-</tr><tr>
-<td> Tkr<font color="brown">N</font>DieEdge      </td><td>Distance from die (wafer) edge of initial point (0 is halfway between the dies, increases toward center of die)</td>
-</tr><tr>
-<td>Tkr1TwrGap                                      </td><td>Length of track in nominal intertower gap, currently set to 18 mm. Can be a small as zero if track exits through bottom of tracker, and as large as the intertower gap, if track crosses to adjacent tower.</td>
-</tr><tr>
-<td>Tkr<font color="brown">N</font>KalEne       </td><td>Kalman energy of track 1; this is the energy determined from the multiple scattering along the track (goes like 1/E). Since a track with no scattering is possible, this energy is artificially limited to 100 GeV.</td>
-</tr><tr>
-<td>Tkr<font color="brown">N</font>ConEne      </td><td>Energy from PatRec energy tool for track 1. This tool computes the total event energy and then partitions it between the first 2 tracks according the their Kalman energies and energy errors</td>
-</tr><tr>
-<td>Tkr<font color="brown">N</font>KalThetaMS </td><td>Multiple scattering angle (radians) referenced to first layer. The contributions from all the layers in the track are adjusted for the predicted energy in each layer, and weighted accordingly.</td>
-</tr><tr>
-<td>Tkr<font color="brown">N</font>XDir     </td><td>Track x direction cosine</td>
-</tr><tr>
-<td>Tkr<font color="brown">N</font>YDir      </td><td>ditto y</td>
-</tr><tr>
-<td>Tkr<font color="brown">N</font>ZDir     </td><td>ditto z</td>
-</tr><tr>
-<td>Tkr<font color="brown">N</font>Phi       </td><td>Track phi, radians (direction from which particle comes, not particle direction!) range: (0, 2pi)</td>
-</tr><tr>
-<td>Tkr<font color="brown">N</font>Theta    </td><td>Track theta, radians (direction ditto)</td>
-</tr><tr>
-<td>Tkr<font color="brown">N</font>X0        </td><td>Track x position at first hit</td>
-</tr><tr>
-<td>Tkr<font color="brown">N</font>Y0        </td><td>ditto y</td>
-</tr><tr>
-<td>Tkr<font color="brown">N</font>Z0        </td><td>ditto z</td>
-</tr><tr>
-<td>Tkr1ThetaErr            </td><td>Error on the measurement of theta</td>
-</tr><tr>
-<td>Tkr1PhiErr                 </td><td>Error on the measurement of phi.</td>
-</tr><tr>
-<td>TkrErrAsym               </td><td>Tkr1SXY/(Tkr1SXX + Tkr1SYY)</td>
-</tr><tr>
-<td>Tkr1CovDet               </td><td>Determinant of the error matrix, but normalized to remove the dependence on cos(theta)</td>
-</tr><tr>
-<td>Tkr1SXX        </td><td>x-x element of the covariance matrix; square of error on x</td>
-</tr><tr>
-<td>Tkr1SXY        </td><td>x-y element of the covariance matrix; covariance</td>
-</tr><tr>
-<td>Tkr1SYY         </td><td>y-y element of the covariance matrix; square of the error on y</td>
-</tr><tr>
-<td>Tkr1ToTFirst   </td><td>ToT of first hit on best track (all ToT&#039;s are adjusted for pathlength in the non-measuring direction in the strip) <font color="blue">NEW!!</font></td>
-</tr><tr>
-<td>Tkr1ToTAve</td><td>Average ToT for the hits on the best track</td>
-</tr><tr>
-<td>Tkr1ToTTrAve    </td><td>Average ToT for the hits on the best track, excluding the largest and smallest</td>
-</tr><tr>
-<td>Tkr1ToTAsym     </td><td>Asymmetry between last two and first two ToT&#039;s for the best track</td>
-</tr><tr>
-<td>Tkr1ChisqAsym  </td><td>Asymmetry between last two and first two track-segment delta-chisquared&#039;s</td>
-</tr><tr>
-<td>Tkr1SSDVeto     </td><td>Number of hit layers before start of track <font color="blue">NEW!!</font></td>
-</tr><tr>
-<td>Tkr2TkrAngle     </td><td>Angle between first and second reconstructed tracks <font color="blue">New!</font>  <font color="red"> Should probably be TkrTrackAngleDiff or TkrDeltaTrackAngle</font></td>
-</tr><tr>
-<td>Tkr2TkrHDoca    </td><td>Distance between first and second track inthe plane of the first hit on the first track. This is most useful if the two tracks are almost parallel, in which case the usual DOCA is poorly measured. <font color="blue">New!</font>&#160;<font color="red"> Should probably be TkrHeadDoca</font></td>
-</tr>
-</table><br/>
-<p class="paragraph"><h3 style="margin: 4px 0px 4px 0px;" class="heading3"><a name="3+Analysis+Ntuple-Vertexing+Variables"> Vertexing Variables</a></h3></p><table class="wikitable">
-<tr>
-<th>Variable          </th><th>Description</th>
-</tr><tr>
-<td>VtxXDir            </td><td>x direction cosine of the (1st) vertex</td>
-</tr><tr>
-<td>VtxYDir            </td><td>ditto y</td>
-</tr><tr>
-<td>VtxZDir            </td><td>ditto z</td>
-</tr><tr>
-<td>VtxPhi              </td><td>Azimuthal angle of vertex, radians (direction of source, not flight direction!) Range: (0,2pi)</td>
-</tr><tr>
-<td>VtxTheta          </td><td>Polar angle of vertex, radians (ditto direction)</td>
-</tr><tr>
-<td>VtxX0              </td><td>x coordinate of vertex;  if the two tracks making up the vertex are nearly parallel, the coordinates of the vertex may become very large.</td>
-</tr><tr>
-<td>VtxY0              </td><td>ditto y</td>
-</tr><tr>
-<td>VtxZ0              </td><td>ditto z</td>
-</tr><tr>
-<td>VtxAngle          </td><td>Angle between the two tracks of the vertex (radians)</td>
-</tr><tr>
-<td>VtxDOCA         </td><td>Distance of closest approach between the two tracks  <font color="red">Maybe this should be &quot;VtxDoca&quot; </font></td>
-</tr><tr>
-<td>VtxHeadSep     </td><td>Distance between the heads of the two tracks</td>
-</tr><tr>
-<td>VtxS1              </td><td>Distance of DOCA point from head of track 1</td>
-</tr><tr>
-<td>VtxS2              </td><td>Ditto track 2</td>
-</tr><tr>
-<td>VtxDocaWgt     </td><td>Empirical weight factor for Vtx. Doca, goes from zero to one. Docas large compared to expectation generate low weights.  <font color="red">The width seems to be constant with E&#8230; shouldn&#039;t it decrease with E?</font>&#160;<font color="green">(being checked)</font></td>
-</tr><tr>
-<td>VtxHSWgt        </td><td>ditto VtxHeadSep.</td>
-</tr><tr>
-<td>VtxS1Wgt        </td><td>ditto VtxS1</td>
-</tr><tr>
-<td>VtxT12Wgt      </td><td>ditto VtxAngle</td>
-</tr><tr>
-<td>VtxT2QWgt      </td><td>ditto quality factor for 2nd track. High quality yields high weight.</td>
-</tr><tr>
-<td>VtxTotalWgt     </td><td>Logarithm of the product of VtxT12Wgt, VtxT2QWgt and VtxHSWgt. Is always negative (log of a number less than 1)</td>
-</tr>
-</table><br/>
-<p class="paragraph"><h3 style="margin: 4px 0px 4px 0px;" class="heading3"><a name="3+Analysis+Ntuple-CAL+Variables"> CAL Variables</a></h3></p><table class="wikitable">
-<tr>
-<th>Variable                </th><th>Description</th>
-</tr><tr>
-<td>CalEnergySum        </td><td>Sum of the raw energies in all the crystals</td>
-</tr><tr>
-<td>CalEnergyCorr        </td><td>Cal Energy corrected globally for edge and leakage</td>
-</tr><tr>
-<td>CalEneSumCorr      </td><td>Cal Energy corrected layer-by-layer for edges and leakage</td>
-</tr><tr>
-<td>CalEnergyLLCorr     </td><td>Last-layer-corrected energy. Currently valid between 0 and 26 degrees, and between 1 and 50 Gev.  Returns a negative number when out of range <font color="blue">Note name change (underscores removed!</font></td>
-</tr><tr>
-<td>CalLeakCorr         </td><td>Approximation for leakage correction. <font color="blue">Note name change!</font></td>
-</tr><tr>
-<td>CalEdgeSumCorr    </td><td>Effective layer-by-layer edge correction; multiplicative</td>
-</tr><tr>
-<td>CalTotSumCorr       </td><td>Effective global correction; multiplicative</td>
-</tr><tr>
-<td>CalCsIRLn              </td><td>Total radiation lengths in crystals, integrated along the event axis (line connecting the first hit in the tracker to the CAL energy centroid)</td>
-</tr><tr>
-<td>CalTotRLn               </td><td>Total radiation lengths in the CAL, integrated along the event axis <font color="blue">New definition!</font></td>
-</tr><tr>
-<td>CalCntRLn              </td><td>Radiation lengths integrated along the event axis, up to energy centroid</td>
-</tr><tr>
-<td>CalLATRLn              </td><td>Total radiation lengths integrated along the event axis (including the tracker) <font color="blue">New! was CalToTRln!</font></td>
-</tr><tr>
-<td>CalDeadTotRat       </td><td>Ratio of radiation lengths in dead material to CalTotRLn</td>
-</tr><tr>
-<td>CalDeadCntRat       </td><td>Ratio of radiation lengths in dead material up to energy centroid, to CalCntRat</td>
-</tr><tr>
-<td>CalTPred               </td><td>Model-predicted energy centroid in radiation lengths</td>
-</tr><tr>
-<td>CalDeltaT              </td><td>Difference between measured and predicted energy centroids</td>
-</tr><tr>
-<td>CalTwrEdge           </td><td>Distance of the entry point of the best track from the tower boundary, measured at the top of the CAL <font color="blue">New definition!</font></td>
-</tr><tr>
-<td>CalLATEdge           </td><td>Closest distance of track 1, projected to the top of the CAL, to the edge of the CAL layer, taking non-square shape into account. This is essentially the old merit skirt variable.</td>
-</tr><tr>
-<td>CalTENrm              </td><td>Cosine of angle between event trajectory and normal to nearest side of the CAL module (evaluated at the energy centroid).  Used to characterize the effect of the calorimeter gaps on the energy deposit</td>
-</tr><tr>
-<td>CalTrackSep          </td><td>Distance between impact points of two best tracks at CAL front face; zero if only one track</td>
-</tr><tr>
-<td>CalTrackDoca        </td><td>Distance between the projected vertex (or track if only one track) and the energy centroid, evaluated at the z of the centroid.</td>
-</tr><tr>
-<td>CalTrackAngle       </td><td>Angle between &quot;gamma&quot; direction and direction of the CAL &quot;track&quot; <font color="red">Maybe should be CalTrackAngleDiff?</font></td>
-</tr><tr>
-<td>CalTwrGap            </td><td>length of track in intertower gaps, starting at the the top of the CAL</td>
-</tr><tr>
-<td>CalELayer<font color="brown">N</font>, <font color="brown">N</font>=0,7</td><td> Energy deposited in layer <font color="brown">N</font> of the CAL</td>
-</tr><tr>
-<td>CalLyr0Ratio          </td><td>Ratio of CalELayer0 to CalEnergySum</td>
-</tr><tr>
-<td>CalLyr7Ratio          </td><td>Ratio of CalELayer7 to CalEnergySum</td>
-</tr><tr>
-<td>CalBkHalfRatio       </td><td>Ratio of total energy in back half of CAL (layers 4-7) to CalEnergySum</td>
-</tr><tr>
-<td>CalXtalsTrunc         </td><td>Number of CAL Xtals with &gt; %1 of CalEnergySum (see CalXtalRatio)</td>
-</tr><tr>
-<td>CalXtalRatio           </td><td>Ratio of number of Xtals with energy &gt; 1% of CalEnergySum to total number of struck Xtals in the event.</td>
-</tr><tr>
-<td>CalXtalMaxEne       </td><td>Maximum energy found in a single Xtal <font color="blue">New!</font></td>
-</tr><tr>
-<td>CalLongRms          </td><td>rms of longitudinal position measurements</td>
-</tr><tr>
-<td>CalLRmsRatio        </td><td>CalLongRms divided by the raw calorimeter energy</td>
-</tr><tr>
-<td>CalTransRms         </td><td>rms of transverse position measurements</td>
-</tr><tr>
-<td>CalMIPDiff             </td><td>Difference between measured energy and that expected from a minimum-ionizing particle</td>
-</tr><tr>
-<td>CalMIPRatio          </td><td>Ratio of measured energy to that expected from a minimum-ionizing particle <font color="blue">NEW!!</font></td>
-</tr><tr>
-<td>CalXEcentr            </td><td>Energy centroid in x <font color="red">Maybe CalXCentr or CalXCenter?</font></td>
-</tr><tr>
-<td>CalYEcentr            </td><td>ditto y</td>
-</tr><tr>
-<td>CalZEcentr            </td><td>ditto z</td>
-</tr><tr>
-<td>CalXDir                 </td><td>x direction cosine of CAL &quot;track&quot;</td>
-</tr><tr>
-<td>CalYDir                 </td><td>ditto y</td>
-</tr><tr>
-<td>CalZdir                 </td><td>ditto z</td>
-</tr><tr>
-<td>CalX0                   </td><td>x position of CAL &quot;track&quot;</td>
-</tr><tr>
-<td>CalY0                   </td><td>ditto y</td>
-</tr><tr>
-<td>CalZ0                   </td><td>ditto z</td>
-</tr>
-</table><br/>
-<p class="paragraph"><h3 style="margin: 4px 0px 4px 0px;" class="heading3"><a name="3+Analysis+Ntuple-ACD+Variables"> ACD Variables</a></h3>
-<font color="blue">Note: Default Doca/ActiveDistance is -2000</font></p><table class="wikitable">
-<tr>
-<th>Variable                  </th><th>Description</th>
-</tr><tr>
-<td>AcdTotalEnergy         </td><td>Total energy deposited in ACD</td>
-</tr><tr>
-<td>AcdTileCount            </td><td>Number of tiles fired</td>
-</tr><tr>
-<td>AcdDoca                  </td><td>Nearest distance of any track from the center of any tile</td>
-</tr><tr>
-<td>AcdActiveDist           </td><td>Nearest distance of any track to the edge of any tile</td>
-</tr><tr>
-<td>AcdGammaDoca       </td><td>Distance of Gamma to the center of the nearest tile</td>
-</tr><tr>
-<td>AcdActDistTop          </td><td>Smallest active distance of any track to top tiles</td>
-</tr><tr>
-<td>AcdActDistSideRow0 </td><td>Smallest active distance of any track to tiles in side row 0 (topmost)</td>
-</tr><tr>
-<td>AcdActDistSideRow1 </td><td>ditto side row 1</td>
-</tr><tr>
-<td>AcdActDistSideRow2 </td><td>ditto side row 2</td>
-</tr><tr>
-<td>AcdNoTop                </td><td>hit tile count for top <font color="red">Shouldn&#039;t these be AcdNumTop, etc? really confusing otherwise...</font></td>
-</tr><tr>
-<td>AcdNoSideRow0       </td><td>Hit Tile count for side row 0</td>
-</tr><tr>
-<td>AcdNoSideRow1       </td><td>ditto side row 1</td>
-</tr><tr>
-<td>AcdNoSideRow2       </td><td>ditto side row 2</td>
-</tr><tr>
-<td>AcdNoSideRow3       </td><td>ditto side row 3</td>
-</tr><tr>
-<td>AcdRibbonActDist     </td><td>Smallest active distance to any ribbon (considered as a straight line of no thickness)</td>
-</tr><tr>
-<td>AcdTkrHitsCountTop  </td><td>Count of the number of TkrClusters within a pre-defined distance (default is 250 mm)  of the center of the hit top ACD tiles.</td>
-</tr><tr>
-<td>AcdTkrHitsCountR0    </td><td>ditto for ACD tiles in side row 0</td>
-</tr><tr>
-<td>AcdTkrHitsCountR1    </td><td>ditto side row 1</td>
-</tr><tr>
-<td>AcdTkrHitsCountR2    </td><td>ditto side row 2</td>
-</tr><tr>
-<td>AcdTkrHitsCountR3    </td><td>ditto side row 3</td>
-</tr>
-</table><br/>
-<p class="paragraph"><h3 style="margin: 4px 0px 4px 0px;" class="heading3"><a name="3+Analysis+Ntuple-TKR+Hit+Variables"> TKR Hit Variables</a></h3>
-(not normally written out, but the tool exists)</p><table class="wikitable">
-<tr>
-<th>Variable</th><th>Description</th>
-</tr><tr>
-<td>TkrNumHits</td><td>Total number of TKR clusters</td>
-</tr><tr>
-<td>TkrMaxControllerHits</td><td>NOT FILLED</td>
-</tr><tr>
-<td>Tkr1stLayer</td><td>First layer containing a cluster <font color="red">probably should be TkrFirstLayer </font></td>
-</tr><tr>
-<td>TkrNumLayersHit</td><td>Total number of hit layers</td>
-</tr><tr>
-<td>TkrHitsInLyr<font color="brown">NN</font>, <font color="brown">NN</font>=(00,17)</td><td>Number of clusters in (bi)layer <font color="brown">NN</font> (recon layer; Lyr00 is at the top, Lyr17 is at the bottom, next to the CAL!)</td>
-</tr>
-</table><br/>
-<p class="paragraph"><h3 style="margin: 4px 0px 4px 0px;" class="heading3"><a name="3+Analysis+Ntuple-Overall+Event+Variables"> Overall Event Variables</a></h3></p>These are calculated from combinations of the variables from different tools. &quot;Flattened&quot; means correct to make the quantity roughly independent of energy (to logE) and angle.<br/>
-
-<table class="wikitable">
-<tr>
-<th>Variable                   </th><th>Description</th>
-</tr><tr>
-<td>EvtRun                      </td><td>Run number, copied from the event header <font color="blue"> NEW: replaces Run in the merit ntuple </font></td>
-</tr><tr>
-<td>EvtEventId                 </td><td>Sequence number of event in the run (as generated)<font color="blue"> NEW: replaces Event_ID in the merit ntuple</font></td>
-</tr><tr>
-<td>EvtElapsedTime          </td><td>Elapsed time in seconds since t0 (for DC1: 18-July-2005, for the future: mission start 1-Jan-2001)  <font color="blue">NEW: replaces elapsed_time in the merit ntuple </font></td>
-</tr><tr>
-<td>EvtEnergySumOpt      </td><td>Event energy formed by adding the corrected tracker energy (TkrEnergyCorr) to the layer-by-layer corrected cal. energy CalEneSumCorr.</td>
-</tr><tr>
-<td>EvtEnergyTracker      </td><td>Not calculated yet</td>
-</tr><tr>
-<td>EvtEnergyRaw           </td><td>TkrEnergyCorr + CalEnergySum</td>
-</tr><tr>
-<td>EvtMcEnergySigma    </td><td>Difference between EvtEnerySumOpt and McEnergy, as a fraction of McEnergy</td>
-</tr><tr>
-<td>EvtCalEdgeAngle       </td><td>Obsolete; replaced by CalTwrGap</td>
-</tr><tr>
-<td>EvtTkrEdgeAngle       </td><td>Obsolete; replaced by Tkr1TwrGap</td>
-</tr><tr>
-<td>EvtLogESum              </td><td>log10 of EvtEnergySumOpt, pegged between log10(20) and log10(50,000)</td>
-</tr><tr>
-<td>EvtTkr1EFrac             </td><td>Tkr1ConE/EvtEnergySumOpt, roughly, fraction of energy carried by best track</td>
-</tr><tr>
-<td>EvtVtxKin                  </td><td>Bill opines that this variable is less useful than EvtVtxEAngle</td>
-</tr><tr>
-<td>EvtVtxEAngle             </td><td>VtxAngle*EvtEnergySumOpt, (most of energy dependence removed)</td>
-</tr><tr>
-<td>EvtTkrComptonRatio  </td><td>Ratio of TkrTotalHits to twice the number of layers from the head of the best track to the bottom of the TKR</td>
-</tr><tr>
-<td>EvtTkrEComptonRatio  </td><td>EvtTkrComptonRatio, flattened</td>
-</tr><tr>
-<td>EvtPSFModel             </td><td>PSF expected from simple model; depends only on energy  <font color="blue">Formula in the process of being corrected!</font></td>
-</tr><tr>
-<td>EvtTkr1EChisq          </td><td>Tkr1Chisq, flattened</td>
-</tr><tr>
-<td>EvtTkr1EFirstChisq    </td><td>Tkr1FirstChisq, flattened</td>
-</tr><tr>
-<td>EvtTkr1EQual            </td><td>Tkr1Qual, flattened</td>
-</tr><tr>
-<td>EvtTkr1PSFMdRat      </td><td>Ratio of errors from covariance matrix to EvtPSFModel</td>
-</tr><tr>
-<td>EvtTkr1ECovDet        </td><td>Tkr1CovDet, flattened in energy</td>
-</tr><tr>
-<td>EvtTkr2EChisq           </td><td>Tkr2Chisq, flattened</td>
-</tr><tr>
-<td>EvtTkr2EFirstChisq     </td><td>Tkr2FirstChisq, flattened</td>
-</tr><tr>
-<td>EvtTkr2EQual            </td><td>Tkr2Qual, flattened</td>
-</tr><tr>
-<td>EvtCalETLRatio          </td><td>Ratio of CalTransRms to CalLongRms, flattened</td>
-</tr><tr>
-<td>EvtCalEXtalRatio        </td><td>CalXtalRatio, flattened</td>
-</tr><tr>
-<td>EvtCalEXtalTrunc       </td><td>CalXtalsTrunc, flattened <font color="blue">(Spelling may change to EvtCalXtalsTrunc, to match original CalXtalsTrunc)</font></td>
-</tr><tr>
-<td>EvtCalETrackDoca     </td><td>CalTrackDoca, flattened</td>
-</tr><tr>
-<td>EvtCalETrackSep       </td><td>CalTrackSep, flattened</td>
-</tr><tr>
-<td>EvtVtxEEAngle          </td><td>EvtVtxEAngle, further flattened</td>
-</tr><tr>
-<td>EvtVtxEDoca             </td><td>VtxDOCA, flattened</td>
-</tr><tr>
-<td>EvtVtxEHeadSep       </td><td>VtxHeadSep, flattened</td>
-</tr>
-</table>
-<p class="paragraph"><a href="http://confluence.slac.stanford.edu//display/~burnett" title="View profile for Toby Burnett">Toby Burnett</a><br/>
-<a href="http://confluence.slac.stanford.edu//display/~lsrea" title="View profile for Leon Rochester">Leon Rochester</a><br/>
-<a href="http://confluence.slac.stanford.edu//display/~atwood" title="View profile for William Atwood">William Atwood</a></p>
-
-				    
-                    			    </td>
-		    </tr>
-	    </table>
-	    <table border="0" cellpadding="0" cellspacing="0" width="100%">
-			<tr>
-				<td height="12" background="border/border_bottom.gif"><img src="border/spacer.gif" width="1" height="1" border="0"/></td>
+					</div>
+					<div class="pagesubheading">
+						This page last changed on Sep 17, 2004 by <font color="#0050b2">Leon Rochester</font>.
+					</div>
+					<p class="paragraph">Variables from the Analysis Ntuple are presented here arranged 
+						by tool, and by sequential order within each tool. Unless otherwise noted, 
+						energy is in MeV, length is in mm, and angle is in radians. Also, unless 
+						otherwised noted, the null value, that is, the value in the ntuple when there 
+						is no calculated value for a given variable, is zero. (I'll fix these as I find 
+						them.)</p>
+					<ul type="square" class="minus">
+						<li>
+							Text in <font color="red">RED</font> or <font color="green">GREEN</font> = 
+							queries or comments between the perpetrators; users should ignore these.</li>
+					</ul>
+					<ul type="square" class="minus">
+						<li>
+							Text in <font color="blue">BLUE</font> = notes to the user.</li>
+					</ul>
+					<br>
+					<p class="paragraph"><h3 style="MARGIN: 4px 0px" class="heading3"><a name="3+Analysis+Ntuple-MC+Variables">
+								MC Variables</a></h3>
+					<P></P>
+					<table class="wikitable">
+						<tr>
+							<th>
+								Variable
+							</th>
+							<th>
+								Description</th>
+						</tr>
+						<tr>
+							<td>McSourceId
+							</td>
+							<td>Unique integer associated with each MC source type; from McEvent header <font color="blue">
+									replaces Mc_src_Id in merit ntuple</font></td>
+						</tr>
+						<tr>
+							<td>McId
+							</td>
+							<td>StdHepId of primary (-13 = mu+, 22 = gamma, etc.)</td>
+						</tr>
+						<tr>
+							<td>McCharge
+							</td>
+							<td>Charge of primary</td>
+						</tr>
+						<tr>
+							<td>McEnergy
+							</td>
+							<td>Kinetic energy of the generated primary particle</td>
+						</tr>
+						<tr>
+							<td>McLogEnergy
+							</td>
+							<td>log10(McEnergy)</td>
+						</tr>
+						<tr>
+							<td>McEFrac
+							</td>
+							<td>Fraction of incident energy in highest-energy daughter</td>
+						</tr>
+						<tr>
+							<td>McOpeningAngle
+							</td>
+							<td>Actual opening angle between the first and second daughters of the promary as 
+								generated, (For a primary photon, these will ordinarily be the electron and 
+								positron.)</td>
+						</tr>
+						<tr>
+							<td>McX0
+							</td>
+							<td>x coordinate of photon conversion or charged particle origin</td>
+						</tr>
+						<tr>
+							<td>McY0
+							</td>
+							<td>ditto y</td>
+						</tr>
+						<tr>
+							<td>McZ0
+							</td>
+							<td>ditto z</td>
+						</tr>
+						<tr>
+							<td>McXDir
+							</td>
+							<td>x direction cosine of primary particle</td>
+						</tr>
+						<tr>
+							<td>McYDir
+							</td>
+							<td>ditto y</td>
+						</tr>
+						<tr>
+							<td>McZDir
+							</td>
+							<td>ditto z</td>
+						</tr>
+						<tr>
+							<td>McXErr
+							</td>
+							<td>x (found) - x (Mc) <font color="blue">(Mc position taken at the z of the found 
+									vertex or first hit)</font>&nbsp;<font color="red"> In this and the variables 
+									below, "XxxErr" should probably be "XxxDiff" or "DeltaXxx." "Err" is used 
+									elsewhere to mean the expected error of the measurement</font></td>
+						</tr>
+						<tr>
+							<td>McYErr
+							</td>
+							<td>ditto y</td>
+						</tr>
+						<tr>
+							<td>McZErr
+							</td>
+							<td>z(<font color="blue">actual</font> vertex or first hit) - McZ0</td>
+						</tr>
+						<tr>
+							<td>McXDirErr
+							</td>
+							<td>xdir (found) - xdir (Mc)</td>
+						</tr>
+						<tr>
+							<td>McYDirErr
+							</td>
+							<td>ditto y</td>
+						</tr>
+						<tr>
+							<td>McZDirErr
+							</td>
+							<td>ditto z</td>
+						</tr>
+						<tr>
+							<td>McDirErr
+							</td>
+							<td>Angle between found direction and Mc direction (radians)</td>
+						</tr>
+						<tr>
+							<td>McTkr1DirErr
+							</td>
+							<td>Angle between direction of best track and Mc direction (radians)</td>
+						</tr>
+						<tr>
+							<td>McTkr2DirErr
+							</td>
+							<td>Angle between direction of second track and Mc direction (radians)</td>
+						</tr>
+					</table>
+					<br>
+					<p class="paragraph"><h3 style="MARGIN: 4px 0px" class="heading3"><a name="3+Analysis+Ntuple-Trigger+Variables+%28Glt+%3D+Glast+Trigger%29">
+								Trigger Variables (Glt = Glast Trigger)</a></h3>
+					<P></P>
+					<table class="wikitable">
+						<tr>
+							<th>
+								Variable
+							</th>
+							<th>
+								Description</th>
+						</tr>
+						<tr>
+							<td>GltWord
+							</td>
+							<td>Trigger word from the event header (null value is -1)</td>
+						</tr>
+						<TR>
+							<TD>GltGemSummary</TD>
+							<TD></TD>
+							<TD></TD>
+							<TD>For Data, a copy of the GEM condtion summary; for MC, the same as calculated 
+								from the trigger information (null value is -1) <FONT color="blue">New!</FONT></TD>
+						</TR>
+						<tr>
+							<td>GltTower
+							</td>
+							<td>Id of tower that triggered; if more than one, choose the lowest (null value is 
+								18)</td>
+						</tr>
+						<tr>
+							<td>GltXTower
+							</td>
+							<td>x index of GltTower (null value = -1)</td>
+						</tr>
+						<tr>
+							<td>GltYTower
+							</td>
+							<td>y layer of trigger in GltTower (this is recon layer; 0 is at the top!)</td>
+						</tr>
+						<tr>
+							<td>GltTotal
+							</td>
+							<td>Number of possible triggers (a straight-through track in a single tower 
+								produces 13 potential triggers</td>
+						</tr>
+						<tr>
+							<td>GltNumTowers
+							</td>
+							<td>Number of towers which trigger (crossing track)</td>
+						</tr>
+						<tr>
+							<td>GltType
+							</td>
+							<td>Number of exposed sides for the triggered tower, i.e. 0 = central tower, 1 = 
+								side tower, 2 = edge edge tower. This number is 4 for the EM.</td>
+						</tr>
+						<tr>
+							<td>GltMoment
+							</td>
+							<td><font color="blue">Please ignore for now</font></td>
+						</tr>
+						<tr>
+							<td>GltZDir
+							</td>
+							<td><font color="blue">ditto</font></td>
+						</tr>
+					</table>
+					<br>
+					<p class="paragraph"><h3 style="MARGIN: 4px 0px" class="heading3"><a name="3+Analysis+Ntuple-TKR+Variables">
+								TKR Variables</a></h3>
+					<P></P>
+					<table class="wikitable">
+						<tr>
+							<th>
+								Variable
+							</th>
+							<th>
+								Description</th>
+						</tr>
+						<tr>
+							<td>TkrNumTracks
+							</td>
+							<td>Number of tracks found (Maximum is set by TkrRecon, currently 10)</td>
+						</tr>
+						<tr>
+							<td>TkrSumKalEne
+							</td>
+							<td>Sum of Kalman energies (see Tkr<font color="brown">N</font>KalEne, below) for 
+								the two best tracks</td>
+						</tr>
+						<tr>
+							<td>TkrSumConEne
+							</td>
+							<td>Sum of the energies for the two best tracks, as assigned by the patrec energy 
+								tool</td>
+						</tr>
+						<tr>
+							<td>TkrEnergy
+							</td>
+							<td>Energy in tracker, as determined from linear regression analysis of number of 
+								clusters</td>
+						</tr>
+						<tr>
+							<td>TkrEnergySum
+							</td>
+							<td>Energy in tracker, as determined by counting up clusters and associated 
+								radiation lengths. <font color="blue">This is historical; it will probably go away, 
+									so don't use it!</font></td>
+						</tr>
+						<tr>
+							<td>TkrEnergyCorr
+							</td>
+							<td>TkrEnergy corrected by TkrEdgeCorr</td>
+						</tr>
+						<tr>
+							<td>TkrEdgeCorr
+							</td>
+							<td>Tracker edge correction. <font color="blue">This may go away; it's an intermediate 
+									quantity</font></td>
+						</tr>
+						<tr>
+							<td>TkrHDCount
+							</td>
+							<td>Number of unused clusters in top x-y layer of track <font color="red">Should 
+									probably be something like Tkr1HeadCount</font></td>
+						</tr>
+						<tr>
+							<td>TkrTotalHits
+							</td>
+							<td>Number of clusters "near" the best track. <font color="blue">For experts only! Do 
+									not use!</font>&nbsp;<font color="red">Should probably be Tkr1TotalHits</font>
+							</td>
+						</tr>
+						<tr>
+							<td>TkrThinHits
+							</td>
+							<td>Number of clusters in the thin converter layers. <font color="blue">ditto!</font>&nbsp;<font color="red">Should 
+									probably be Tkr1ThinHits</font>
+							</td>
+						</tr>
+						<tr>
+							<td>TkrThickHits
+							</td>
+							<td>Number of clusters in the thick converter layers. <font color="blue">ditto!</font>&nbsp;<font color="red">Should 
+									probably be Tkr1ThickHits</font></td>
+						</tr>
+						<tr>
+							<td>TkrBlankHits
+							</td>
+							<td>Number of clusters in the no-converter layers. <font color="blue">ditto!</font>&nbsp;<font color="red">Should 
+									probably be Tkr1BlankHits</font></td>
+						</tr>
+						<tr>
+							<td>TkrRadLength
+							</td>
+							<td>Radiation lengths traversed by the best track. This is from half-way thru the 
+								initial converter to the lowest bi-plane in the tracker, whether or not the 
+								track actually gets to the end. <font color="red">Should probably be Tkr1RadLength</font></td>
+						</tr>
+						<tr>
+							<td>TkrTwrEdge
+							</td>
+							<td>The average distance of the track from the "edge" of each tray, weighted by 
+								radiation lengths traversed. (The edge is a plane halfway between the towers. <font color="red">
+									Should probably be Tkr1AverageTwrEdge</font></td>
+						</tr>
+						<tr>
+							<td>TkrTrackLength
+							</td>
+							<td>Distance between the start of the track and the grid, along the track axis. <font color="red">
+									Should probably be Tkr1TrackLength</font></td>
+						</tr>
+					</table>
+					<br>
+					<font color="blue">Note: Variables called Tkr1Xxx refer to the "best" track; those 
+						called Tkr2Xxx refer to the second track. For variables like Tkr</font><font color="brown">N</font><font color="blue">Xxx 
+						there are two versions in the ntuple, one for the best and one for the second 
+						track.<br>
+						And note: The variables associated with the second track are undefined if there 
+						is only one track! Check TkrNumTracks before using these variables! In fact 
+						check TkrNumTracks before using track-1 variables, for the same reason.</font><br>
+					<table class="wikitable">
+						<tr>
+							<td>
+								Tkr<font color="brown">N</font>Chisq
+							</td>
+							<td>Track chisquared</td>
+						</tr>
+						<tr>
+							<td>
+								Tkr<font color="brown">N</font>FirstChisq
+							</td>
+							<td>Track chisquared for first Tkr1FirstHits layers</td>
+						</tr>
+						<tr>
+							<td>
+								Tkr<font color="brown">N</font>Hits
+							</td>
+							<td>Number of clusters in track</td>
+						</tr>
+						<tr>
+							<td>
+								Tkr<font color="brown">N</font>FirstHits
+							</td>
+							<td>Number of initial track hits used to determine the starting direction</td>
+						</tr>
+						<tr>
+							<td>
+								Tkr<font color="brown">N</font>FirstLayer
+							</td>
+							<td>First recon layer in track</td>
+						</tr>
+						<tr>
+							<td>
+								Tkr<font color="brown">N</font>DifHits
+							</td>
+							<td>Difference between the number of x and y clusters associated with track</td>
+						</tr>
+						<tr>
+							<td>
+								Tkr<font color="brown">N</font>Gaps
+							</td>
+							<td>Total number of gaps in track</td>
+						</tr>
+						<tr>
+							<td>
+								Tkr1FirstGapLayer
+							</td>
+							<td>(Recon) layer number of first gap on track 1 <font color="blue">New!</font></td>
+						</tr>
+						<tr>
+							<td>
+								Tkr1XGap
+							</td>
+							<td>x location of first gap on track 1 <font color="blue">New!</font></td>
+						</tr>
+						<tr>
+							<td>
+								Tkr1YGap
+							</td>
+							<td>y location of first gap on track 1 <font color="blue">New!</font></td>
+						</tr>
+						<tr>
+							<td>
+								Tkr<font color="brown">N</font>FirstGaps
+							</td>
+							<td>Number of gaps in first Tkr1FirstHits layers on track</td>
+						</tr>
+						<tr>
+							<td>
+								Tkr<font color="brown">N</font>Qual
+							</td>
+							<td>Track "quality": depends on the length and chisquared of the track. Maximum is 
+								currently 64, can be negative if chisqared gets large. <font color="blue">This is 
+									used primarily to order the tracks during patrec. It's not a good idea to cut 
+									on this variable!</font></td>
+						</tr>
+						<tr>
+							<td>
+								Tkr<font color="brown">N</font>Type
+							</td>
+							<td>PatRec type for track 1: integer with digits abc (i.e. 231)<br>
+								a: 1 = blind, 2 = cal-seeded<br>
+								b: 1 = patrec minimun energy, 2 = Kalman energy, 3 = constrained energy<br>
+								c: number of leading hits upstream of first x-y pair<br>
+								<font color="blue">This is useful mainly for visual inspection; not so good for use 
+									in a program or for plotting!</font>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								Tkr<font color="brown">N</font>TwrEdge
+							</td>
+							<td>Distance from tower edge of initial point (0 is halfway between the towers, 
+								increases towards center of tower)</td>
+						</tr>
+						<tr>
+							<td>
+								Tkr<font color="brown">N</font>PrjTwrEdge
+							</td>
+							<td>Distance from tower edge of track extrapolated to the layer upstream of the 
+								first layer (See Tkr1TwrEdge.)</td>
+						</tr>
+						<tr>
+							<td>
+								Tkr<font color="brown">N</font>DieEdge
+							</td>
+							<td>Distance from die (wafer) edge of initial point (0 is halfway between the dies, 
+								increases toward center of die)</td>
+						</tr>
+						<tr>
+							<td>Tkr1TwrGap
+							</td>
+							<td>Length of track in nominal intertower gap, currently set to 18 mm. Can be a 
+								small as zero if track exits through bottom of tracker, and as large as the 
+								intertower gap, if track crosses to adjacent tower.</td>
+						</tr>
+						<tr>
+							<td>Tkr<font color="brown">N</font>KalEne
+							</td>
+							<td>Kalman energy of track 1; this is the energy determined from the multiple 
+								scattering along the track (goes like 1/E). Since a track with no scattering is 
+								possible, this energy is artificially limited to 100 GeV.</td>
+						</tr>
+						<tr>
+							<td>Tkr<font color="brown">N</font>ConEne
+							</td>
+							<td>Energy from PatRec energy tool for track 1. This tool computes the total event 
+								energy and then partitions it between the first 2 tracks according the their 
+								Kalman energies and energy errors</td>
+						</tr>
+						<tr>
+							<td>Tkr<font color="brown">N</font>KalThetaMS
+							</td>
+							<td>Multiple scattering angle (radians) referenced to first layer. The 
+								contributions from all the layers in the track are adjusted for the predicted 
+								energy in each layer, and weighted accordingly.</td>
+						</tr>
+						<tr>
+							<td>Tkr<font color="brown">N</font>XDir
+							</td>
+							<td>Track x direction cosine</td>
+						</tr>
+						<tr>
+							<td>Tkr<font color="brown">N</font>YDir
+							</td>
+							<td>ditto y</td>
+						</tr>
+						<tr>
+							<td>Tkr<font color="brown">N</font>ZDir
+							</td>
+							<td>ditto z</td>
+						</tr>
+						<tr>
+							<td>Tkr<font color="brown">N</font>Phi
+							</td>
+							<td>Track phi, radians (direction from which particle comes, not particle 
+								direction!) range: (0, 2pi)</td>
+						</tr>
+						<tr>
+							<td>Tkr<font color="brown">N</font>Theta
+							</td>
+							<td>Track theta, radians (direction ditto)</td>
+						</tr>
+						<tr>
+							<td>Tkr<font color="brown">N</font>X0
+							</td>
+							<td>Track x position at first hit</td>
+						</tr>
+						<tr>
+							<td>Tkr<font color="brown">N</font>Y0
+							</td>
+							<td>ditto y</td>
+						</tr>
+						<tr>
+							<td>Tkr<font color="brown">N</font>Z0
+							</td>
+							<td>ditto z</td>
+						</tr>
+						<tr>
+							<td>Tkr1ThetaErr
+							</td>
+							<td>Error on the measurement of theta</td>
+						</tr>
+						<tr>
+							<td>Tkr1PhiErr
+							</td>
+							<td>Error on the measurement of phi.</td>
+						</tr>
+						<tr>
+							<td>TkrErrAsym
+							</td>
+							<td>Tkr1SXY/(Tkr1SXX + Tkr1SYY)</td>
+						</tr>
+						<tr>
+							<td>Tkr1CovDet
+							</td>
+							<td>Determinant of the error matrix, but normalized to remove the dependence on 
+								cos(theta)</td>
+						</tr>
+						<tr>
+							<td>Tkr1SXX
+							</td>
+							<td>x-x element of the covariance matrix; square of error on x</td>
+						</tr>
+						<tr>
+							<td>Tkr1SXY
+							</td>
+							<td>x-y element of the covariance matrix; covariance</td>
+						</tr>
+						<tr>
+							<td>Tkr1SYY
+							</td>
+							<td>y-y element of the covariance matrix; square of the error on y</td>
+						</tr>
+						<tr>
+							<td>Tkr1ToTFirst
+							</td>
+							<td>ToT of first hit on best track (all ToT's are adjusted for pathlength in the 
+								non-measuring direction in the strip) <font color="blue">NEW!!</font></td>
+						</tr>
+						<tr>
+							<td>Tkr1ToTAve</td>
+							<td>Average ToT for the hits on the best track</td>
+						</tr>
+						<tr>
+							<td>Tkr1ToTTrAve
+							</td>
+							<td>Average ToT for the hits on the best track, excluding the largest and smallest</td>
+						</tr>
+						<tr>
+							<td>Tkr1ToTAsym
+							</td>
+							<td>Asymmetry between last two and first two ToT's for the best track</td>
+						</tr>
+						<tr>
+							<td>Tkr1ChisqAsym
+							</td>
+							<td>Asymmetry between last two and first two track-segment delta-chisquared's</td>
+						</tr>
+						<tr>
+							<td>Tkr1SSDVeto
+							</td>
+							<td>Number of hit layers before start of track <font color="blue">NEW!!</font></td>
+						</tr>
+						<tr>
+							<td>Tkr2TkrAngle
+							</td>
+							<td>Angle between first and second reconstructed tracks <font color="blue">New!</font>
+								<font color="red">Should probably be TkrTrackAngleDiff or TkrDeltaTrackAngle</font></td>
+						</tr>
+						<tr>
+							<td>Tkr2TkrHDoca
+							</td>
+							<td>Distance between first and second track inthe plane of the first hit on the 
+								first track. This is most useful if the two tracks are almost parallel, in 
+								which case the usual DOCA is poorly measured. <font color="blue">New!</font>&nbsp;<font color="red">
+									Should probably be TkrHeadDoca</font></td>
+						</tr>
+					</table>
+					<br>
+					<p class="paragraph"><h3 style="MARGIN: 4px 0px" class="heading3"><a name="3+Analysis+Ntuple-Vertexing+Variables">
+								Vertexing Variables</a></h3>
+					<P></P>
+					<table class="wikitable">
+						<tr>
+							<th>
+								Variable
+							</th>
+							<th>
+								Description</th>
+						</tr>
+						<tr>
+							<td>VtxXDir
+							</td>
+							<td>x direction cosine of the (1st) vertex</td>
+						</tr>
+						<tr>
+							<td>VtxYDir
+							</td>
+							<td>ditto y</td>
+						</tr>
+						<tr>
+							<td>VtxZDir
+							</td>
+							<td>ditto z</td>
+						</tr>
+						<tr>
+							<td>VtxPhi
+							</td>
+							<td>Azimuthal angle of vertex, radians (direction of source, not flight direction!) 
+								Range: (0,2pi)</td>
+						</tr>
+						<tr>
+							<td>VtxTheta
+							</td>
+							<td>Polar angle of vertex, radians (ditto direction)</td>
+						</tr>
+						<tr>
+							<td>VtxX0
+							</td>
+							<td>x coordinate of vertex; if the two tracks making up the vertex are nearly 
+								parallel, the coordinates of the vertex may become very large.</td>
+						</tr>
+						<tr>
+							<td>VtxY0
+							</td>
+							<td>ditto y</td>
+						</tr>
+						<tr>
+							<td>VtxZ0
+							</td>
+							<td>ditto z</td>
+						</tr>
+						<tr>
+							<td>VtxAngle
+							</td>
+							<td>Angle between the two tracks of the vertex (radians)</td>
+						</tr>
+						<tr>
+							<td>VtxDOCA
+							</td>
+							<td>Distance of closest approach between the two tracks <font color="red">Maybe this 
+									should be "VtxDoca" </font>
+							</td>
+						</tr>
+						<tr>
+							<td>VtxHeadSep
+							</td>
+							<td>Distance between the heads of the two tracks</td>
+						</tr>
+						<tr>
+							<td>VtxS1
+							</td>
+							<td>Distance of DOCA point from head of track 1</td>
+						</tr>
+						<tr>
+							<td>VtxS2
+							</td>
+							<td>Ditto track 2</td>
+						</tr>
+						<tr>
+							<td>VtxDocaWgt
+							</td>
+							<td>Empirical weight factor for Vtx. Doca, goes from zero to one. Docas large 
+								compared to expectation generate low weights. <font color="red">The width seems to 
+									be constant with E… shouldn't it decrease with E?</font>&nbsp;<font color="green">(being 
+									checked)</font></td>
+						</tr>
+						<tr>
+							<td>VtxHSWgt
+							</td>
+							<td>ditto VtxHeadSep.</td>
+						</tr>
+						<tr>
+							<td>VtxS1Wgt
+							</td>
+							<td>ditto VtxS1</td>
+						</tr>
+						<tr>
+							<td>VtxT12Wgt
+							</td>
+							<td>ditto VtxAngle</td>
+						</tr>
+						<tr>
+							<td>VtxT2QWgt
+							</td>
+							<td>ditto quality factor for 2nd track. High quality yields high weight.</td>
+						</tr>
+						<tr>
+							<td>VtxTotalWgt
+							</td>
+							<td>Logarithm of the product of VtxT12Wgt, VtxT2QWgt and VtxHSWgt. Is always 
+								negative (log of a number less than 1)</td>
+						</tr>
+					</table>
+					<br>
+					<p class="paragraph"><h3 style="MARGIN: 4px 0px" class="heading3"><a name="3+Analysis+Ntuple-CAL+Variables">
+								CAL Variables</a></h3>
+					<P></P>
+					<table class="wikitable">
+						<tr>
+							<th>
+								Variable
+							</th>
+							<th>
+								Description</th>
+						</tr>
+						<tr>
+							<td>CalEnergySum
+							</td>
+							<td>Sum of the raw energies in all the crystals</td>
+						</tr>
+						<tr>
+							<td>CalEnergyCorr
+							</td>
+							<td>Cal Energy corrected globally for edge and leakage</td>
+						</tr>
+						<tr>
+							<td>CalEneSumCorr
+							</td>
+							<td>Cal Energy corrected layer-by-layer for edges and leakage</td>
+						</tr>
+						<tr>
+							<td>CalEnergyLLCorr
+							</td>
+							<td>Last-layer-corrected energy. Currently valid between 0 and 26 degrees, and 
+								between 1 and 50 Gev. Returns a negative number when out of range <font color="blue">
+									Note name change (underscores removed!</font></td>
+						</tr>
+						<tr>
+							<td>CalLeakCorr
+							</td>
+							<td>Approximation for leakage correction. <font color="blue">Note name change!</font></td>
+						</tr>
+						<tr>
+							<td>CalEdgeSumCorr
+							</td>
+							<td>Effective layer-by-layer edge correction; multiplicative</td>
+						</tr>
+						<tr>
+							<td>CalTotSumCorr
+							</td>
+							<td>Effective global correction; multiplicative</td>
+						</tr>
+						<tr>
+							<td>CalCsIRLn
+							</td>
+							<td>Total radiation lengths in crystals, integrated along the event axis (line 
+								connecting the first hit in the tracker to the CAL energy centroid)</td>
+						</tr>
+						<tr>
+							<td>CalTotRLn
+							</td>
+							<td>Total radiation lengths in the CAL, integrated along the event axis <font color="blue">
+									New definition!</font></td>
+						</tr>
+						<tr>
+							<td>CalCntRLn
+							</td>
+							<td>Radiation lengths integrated along the event axis, up to energy centroid</td>
+						</tr>
+						<tr>
+							<td>CalLATRLn
+							</td>
+							<td>Total radiation lengths integrated along the event axis (including the tracker) <font color="blue">
+									New! was CalToTRln!</font></td>
+						</tr>
+						<tr>
+							<td>CalDeadTotRat
+							</td>
+							<td>Ratio of radiation lengths in dead material to CalTotRLn</td>
+						</tr>
+						<tr>
+							<td>CalDeadCntRat
+							</td>
+							<td>Ratio of radiation lengths in dead material up to energy centroid, to CalCntRat</td>
+						</tr>
+						<tr>
+							<td>CalTPred
+							</td>
+							<td>Model-predicted energy centroid in radiation lengths</td>
+						</tr>
+						<tr>
+							<td>CalDeltaT
+							</td>
+							<td>Difference between measured and predicted energy centroids</td>
+						</tr>
+						<tr>
+							<td>CalTwrEdge
+							</td>
+							<td>Distance of the entry point of the best track from the tower boundary, measured 
+								at the top of the CAL <font color="blue">New definition!</font></td>
+						</tr>
+						<tr>
+							<td>CalLATEdge
+							</td>
+							<td>Closest distance of track 1, projected to the top of the CAL, to the edge of 
+								the CAL layer, taking non-square shape into account. This is essentially the 
+								old merit skirt variable.</td>
+						</tr>
+						<tr>
+							<td>CalTENrm
+							</td>
+							<td>Cosine of angle between event trajectory and normal to nearest side of the CAL 
+								module (evaluated at the energy centroid). Used to characterize the effect of 
+								the calorimeter gaps on the energy deposit</td>
+						</tr>
+						<tr>
+							<td>CalTrackSep
+							</td>
+							<td>Distance between impact points of two best tracks at CAL front face; zero if 
+								only one track</td>
+						</tr>
+						<tr>
+							<td>CalTrackDoca
+							</td>
+							<td>Distance between the projected vertex (or track if only one track) and the 
+								energy centroid, evaluated at the z of the centroid.</td>
+						</tr>
+						<tr>
+							<td>CalTrackAngle
+							</td>
+							<td>Angle between "gamma" direction and direction of the CAL "track" <font color="red">Maybe 
+									should be CalTrackAngleDiff?</font></td>
+						</tr>
+						<tr>
+							<td>CalTwrGap
+							</td>
+							<td>length of track in intertower gaps, starting at the the top of the CAL</td>
+						</tr>
+						<tr>
+							<td>CalELayer<font color="brown">N</font>, <font color="brown">N</font>=0,7</td>
+							<td>
+								Energy deposited in layer <font color="brown">N</font> of the CAL</td>
+						</tr>
+						<tr>
+							<td>CalLyr0Ratio
+							</td>
+							<td>Ratio of CalELayer0 to CalEnergySum</td>
+						</tr>
+						<tr>
+							<td>CalLyr7Ratio
+							</td>
+							<td>Ratio of CalELayer7 to CalEnergySum</td>
+						</tr>
+						<tr>
+							<td>CalBkHalfRatio
+							</td>
+							<td>Ratio of total energy in back half of CAL (layers 4-7) to CalEnergySum</td>
+						</tr>
+						<tr>
+							<td>CalXtalsTrunc
+							</td>
+							<td>Number of CAL Xtals with &gt; %1 of CalEnergySum (see CalXtalRatio)</td>
+						</tr>
+						<tr>
+							<td>CalXtalRatio
+							</td>
+							<td>Ratio of number of Xtals with energy &gt; 1% of CalEnergySum to total number of 
+								struck Xtals in the event.</td>
+						</tr>
+						<tr>
+							<td>CalXtalMaxEne
+							</td>
+							<td>Maximum energy found in a single Xtal <font color="blue">New!</font></td>
+						</tr>
+						<tr>
+							<td>CalLongRms
+							</td>
+							<td>rms of longitudinal position measurements</td>
+						</tr>
+						<tr>
+							<td>CalLRmsRatio
+							</td>
+							<td>CalLongRms divided by the raw calorimeter energy</td>
+						</tr>
+						<tr>
+							<td>CalTransRms
+							</td>
+							<td>rms of transverse position measurements</td>
+						</tr>
+						<tr>
+							<td>CalMIPDiff
+							</td>
+							<td>Difference between measured energy and that expected from a minimum-ionizing 
+								particle</td>
+						</tr>
+						<tr>
+							<td>CalMIPRatio
+							</td>
+							<td>Ratio of measured energy to that expected from a minimum-ionizing particle <font color="blue">
+									NEW!!</font></td>
+						</tr>
+						<tr>
+							<td>CalXEcentr
+							</td>
+							<td>Energy centroid in x <font color="red">Maybe CalXCentr or CalXCenter?</font></td>
+						</tr>
+						<tr>
+							<td>CalYEcentr
+							</td>
+							<td>ditto y</td>
+						</tr>
+						<tr>
+							<td>CalZEcentr
+							</td>
+							<td>ditto z</td>
+						</tr>
+						<tr>
+							<td>CalXDir
+							</td>
+							<td>x direction cosine of CAL "track"</td>
+						</tr>
+						<tr>
+							<td>CalYDir
+							</td>
+							<td>ditto y</td>
+						</tr>
+						<tr>
+							<td>CalZdir
+							</td>
+							<td>ditto z</td>
+						</tr>
+						<tr>
+							<td>CalX0
+							</td>
+							<td>x position of CAL "track"</td>
+						</tr>
+						<tr>
+							<td>CalY0
+							</td>
+							<td>ditto y</td>
+						</tr>
+						<tr>
+							<td>CalZ0
+							</td>
+							<td>ditto z</td>
+						</tr>
+					</table>
+					<br>
+					<p class="paragraph"><h3 style="MARGIN: 4px 0px" class="heading3"><a name="3+Analysis+Ntuple-ACD+Variables">
+								ACD Variables</a></h3>
+						<font color="blue">Note: Default Doca/ActiveDistance is -2000</font>
+					<P></P>
+					<table class="wikitable">
+						<tr>
+							<th>
+								Variable
+							</th>
+							<th>
+								Description</th>
+						</tr>
+						<tr>
+							<td>AcdTotalEnergy
+							</td>
+							<td>Total energy deposited in ACD</td>
+						</tr>
+						<tr>
+							<td>AcdTileCount
+							</td>
+							<td>Number of tiles fired</td>
+						</tr>
+						<tr>
+							<td>AcdDoca
+							</td>
+							<td>Nearest distance of any track from the center of any tile</td>
+						</tr>
+						<tr>
+							<td>AcdActiveDist
+							</td>
+							<td>Nearest distance of any track to the edge of any tile</td>
+						</tr>
+						<tr>
+							<td>AcdGammaDoca
+							</td>
+							<td>Distance of Gamma to the center of the nearest tile</td>
+						</tr>
+						<tr>
+							<td>AcdActDistTop
+							</td>
+							<td>Smallest active distance of any track to top tiles</td>
+						</tr>
+						<tr>
+							<td>AcdActDistSideRow0
+							</td>
+							<td>Smallest active distance of any track to tiles in side row 0 (topmost)</td>
+						</tr>
+						<tr>
+							<td>AcdActDistSideRow1
+							</td>
+							<td>ditto side row 1</td>
+						</tr>
+						<tr>
+							<td>AcdActDistSideRow2
+							</td>
+							<td>ditto side row 2</td>
+						</tr>
+						<tr>
+							<td>AcdNoTop
+							</td>
+							<td>hit tile count for top <font color="red">Shouldn't these be AcdNumTop, etc? really 
+									confusing otherwise...</font></td>
+						</tr>
+						<tr>
+							<td>AcdNoSideRow0
+							</td>
+							<td>Hit Tile count for side row 0</td>
+						</tr>
+						<tr>
+							<td>AcdNoSideRow1
+							</td>
+							<td>ditto side row 1</td>
+						</tr>
+						<tr>
+							<td>AcdNoSideRow2
+							</td>
+							<td>ditto side row 2</td>
+						</tr>
+						<tr>
+							<td>AcdNoSideRow3
+							</td>
+							<td>ditto side row 3</td>
+						</tr>
+						<tr>
+							<td>AcdRibbonActDist
+							</td>
+							<td>Smallest active distance to any ribbon (considered as a straight line of no 
+								thickness)</td>
+						</tr>
+						<tr>
+							<td>AcdTkrHitsCountTop
+							</td>
+							<td>Count of the number of TkrClusters within a pre-defined distance (default is 
+								250 mm) of the center of the hit top ACD tiles.</td>
+						</tr>
+						<tr>
+							<td>AcdTkrHitsCountR0
+							</td>
+							<td>ditto for ACD tiles in side row 0</td>
+						</tr>
+						<tr>
+							<td>AcdTkrHitsCountR1
+							</td>
+							<td>ditto side row 1</td>
+						</tr>
+						<tr>
+							<td>AcdTkrHitsCountR2
+							</td>
+							<td>ditto side row 2</td>
+						</tr>
+						<tr>
+							<td>AcdTkrHitsCountR3
+							</td>
+							<td>ditto side row 3</td>
+						</tr>
+					</table>
+					<br>
+					<p class="paragraph"><h3 style="MARGIN: 4px 0px" class="heading3"><a name="3+Analysis+Ntuple-TKR+Hit+Variables">
+								TKR Hit Variables</a></h3>
+					(not normally written out, but the tool exists)
+					<P></P>
+					<table class="wikitable">
+						<tr>
+							<th>
+								Variable</th><th>Description</th>
+						</tr>
+						<tr>
+							<td>TkrNumHits</td>
+							<td>Total number of TKR clusters</td>
+						</tr>
+						<tr>
+							<td>TkrMaxControllerHits</td>
+							<td>NOT FILLED</td>
+						</tr>
+						<tr>
+							<td>Tkr1stLayer</td>
+							<td>First layer containing a cluster <font color="red">probably should be TkrFirstLayer </font>
+							</td>
+						</tr>
+						<tr>
+							<td>TkrNumLayersHit</td>
+							<td>Total number of hit layers</td>
+						</tr>
+						<tr>
+							<td>TkrHitsInLyr<font color="brown">NN</font>, <font color="brown">NN</font>=(00,17)</td>
+							<td>Number of clusters in (bi)layer <font color="brown">NN</font> (recon layer; 
+								Lyr00 is at the top, Lyr17 is at the bottom, next to the CAL!)</td>
+						</tr>
+					</table>
+					<br>
+					<p class="paragraph"><h3 style="MARGIN: 4px 0px" class="heading3"><a name="3+Analysis+Ntuple-Overall+Event+Variables">
+								Overall Event Variables</a></h3>
+					<P></P>
+					These are calculated from combinations of the variables from different tools. 
+					"Flattened" means correct to make the quantity roughly independent of energy 
+					(to logE) and angle.<br>
+					<table class="wikitable">
+						<tr>
+							<th>
+								Variable
+							</th>
+							<th>
+								Description</th>
+						</tr>
+						<tr>
+							<td>EvtRun
+							</td>
+							<td>Run number, copied from the event header <font color="blue">NEW: replaces Run in 
+									the merit ntuple </font>
+							</td>
+						</tr>
+						<tr>
+							<td>EvtEventId
+							</td>
+							<td>Sequence number of event in the run (as generated)<font color="blue"> NEW: replaces 
+									Event_ID in the merit ntuple</font></td>
+						</tr>
+						<tr>
+							<td>EvtElapsedTime
+							</td>
+							<td>Elapsed time in seconds since t0 (for DC1: 18-July-2005, for the future: 
+								mission start 1-Jan-2001) <font color="blue">NEW: replaces elapsed_time in the 
+									merit ntuple </font>
+							</td>
+						</tr>
+						<tr>
+							<td>EvtEnergySumOpt
+							</td>
+							<td>Event energy formed by adding the corrected tracker energy (TkrEnergyCorr) to 
+								the layer-by-layer corrected cal. energy CalEneSumCorr.</td>
+						</tr>
+						<tr>
+							<td>EvtEnergyTracker
+							</td>
+							<td>Not calculated yet</td>
+						</tr>
+						<tr>
+							<td>EvtEnergyRaw
+							</td>
+							<td>TkrEnergyCorr + CalEnergySum</td>
+						</tr>
+						<tr>
+							<td>EvtMcEnergySigma
+							</td>
+							<td>Difference between EvtEnerySumOpt and McEnergy, as a fraction of McEnergy</td>
+						</tr>
+						<tr>
+							<td>EvtCalEdgeAngle
+							</td>
+							<td>Obsolete; replaced by CalTwrGap</td>
+						</tr>
+						<tr>
+							<td>EvtTkrEdgeAngle
+							</td>
+							<td>Obsolete; replaced by Tkr1TwrGap</td>
+						</tr>
+						<tr>
+							<td>EvtLogESum
+							</td>
+							<td>log10 of EvtEnergySumOpt, pegged between log10(20) and log10(50,000)</td>
+						</tr>
+						<tr>
+							<td>EvtTkr1EFrac
+							</td>
+							<td>Tkr1ConE/EvtEnergySumOpt, roughly, fraction of energy carried by best track</td>
+						</tr>
+						<tr>
+							<td>EvtVtxKin
+							</td>
+							<td>Bill opines that this variable is less useful than EvtVtxEAngle</td>
+						</tr>
+						<tr>
+							<td>EvtVtxEAngle
+							</td>
+							<td>VtxAngle*EvtEnergySumOpt, (most of energy dependence removed)</td>
+						</tr>
+						<tr>
+							<td>EvtTkrComptonRatio
+							</td>
+							<td>Ratio of TkrTotalHits to twice the number of layers from the head of the best 
+								track to the bottom of the TKR</td>
+						</tr>
+						<tr>
+							<td>EvtTkrEComptonRatio
+							</td>
+							<td>EvtTkrComptonRatio, flattened</td>
+						</tr>
+						<tr>
+							<td>EvtPSFModel
+							</td>
+							<td>PSF expected from simple model; depends only on energy <font color="blue">Formula 
+									in the process of being corrected!</font></td>
+						</tr>
+						<tr>
+							<td>EvtTkr1EChisq
+							</td>
+							<td>Tkr1Chisq, flattened</td>
+						</tr>
+						<tr>
+							<td>EvtTkr1EFirstChisq
+							</td>
+							<td>Tkr1FirstChisq, flattened</td>
+						</tr>
+						<tr>
+							<td>EvtTkr1EQual
+							</td>
+							<td>Tkr1Qual, flattened</td>
+						</tr>
+						<tr>
+							<td>EvtTkr1PSFMdRat
+							</td>
+							<td>Ratio of errors from covariance matrix to EvtPSFModel</td>
+						</tr>
+						<tr>
+							<td>EvtTkr1ECovDet
+							</td>
+							<td>Tkr1CovDet, flattened in energy</td>
+						</tr>
+						<tr>
+							<td>EvtTkr2EChisq
+							</td>
+							<td>Tkr2Chisq, flattened</td>
+						</tr>
+						<tr>
+							<td>EvtTkr2EFirstChisq
+							</td>
+							<td>Tkr2FirstChisq, flattened</td>
+						</tr>
+						<tr>
+							<td>EvtTkr2EQual
+							</td>
+							<td>Tkr2Qual, flattened</td>
+						</tr>
+						<tr>
+							<td>EvtCalETLRatio
+							</td>
+							<td>Ratio of CalTransRms to CalLongRms, flattened</td>
+						</tr>
+						<tr>
+							<td>EvtCalEXtalRatio
+							</td>
+							<td>CalXtalRatio, flattened</td>
+						</tr>
+						<tr>
+							<td>EvtCalEXtalTrunc
+							</td>
+							<td>CalXtalsTrunc, flattened <font color="blue">(Spelling may change to 
+									EvtCalXtalsTrunc, to match original CalXtalsTrunc)</font></td>
+						</tr>
+						<tr>
+							<td>EvtCalETrackDoca
+							</td>
+							<td>CalTrackDoca, flattened</td>
+						</tr>
+						<tr>
+							<td>EvtCalETrackSep
+							</td>
+							<td>CalTrackSep, flattened</td>
+						</tr>
+						<tr>
+							<td>EvtVtxEEAngle
+							</td>
+							<td>EvtVtxEAngle, further flattened</td>
+						</tr>
+						<tr>
+							<td>EvtVtxEDoca
+							</td>
+							<td>VtxDOCA, flattened</td>
+						</tr>
+						<tr>
+							<td>EvtVtxEHeadSep
+							</td>
+							<td>VtxHeadSep, flattened</td>
+						</tr>
+					</table>
+					<p class="paragraph"><a href="http://confluence.slac.stanford.edu//display/~burnett" title="View profile for Toby Burnett">Toby 
+							Burnett</a><br>
+						<a href="http://confluence.slac.stanford.edu//display/~lsrea" title="View profile for Leon Rochester">
+							Leon Rochester</a><br>
+						<a href="http://confluence.slac.stanford.edu//display/~atwood" title="View profile for William Atwood">
+							William Atwood</a></p>
+				</td>
 			</tr>
-		    <tr>
-			    <td align="center"><font color="grey">Document generated by Confluence on Aug 31, 2004 22:00</font></td>
-		    </tr>
-	    </table>
-    </body>
+		</table>
+		<table border="0" cellpadding="0" cellspacing="0" width="100%">
+			<tr>
+				<td height="12" background="border/border_bottom.gif"><img src="border/spacer.gif" width="1" height="1" border="0"></td>
+			</tr>
+			<tr>
+				<td align="center"><font color="#00e0">Document generated by Confluence on Aug 31, 2004 
+						22:00</font></td>
+			</tr>
+		</table>
+	</body>
 </html>

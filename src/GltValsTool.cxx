@@ -2,7 +2,7 @@
 @brief Calculates the Trigger analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.10 2004/06/04 20:36:44 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.11 2004/09/16 23:57:09 lsrea Exp $
 */
 
 // Include files
@@ -38,6 +38,18 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.10 
 namespace {
     const int _nTowers = 16; // maximum possible number of towers
     const int _nLayers = 18; // maximum possible number of layers
+
+    //Replace these with official enum when it exists
+    enum { 
+        ACDLO = 0, 
+        ACDHI = 1, 
+        TRACK = 2, 
+        CALLO = 3, 
+        CALHI = 4, 
+        THROTTLE = 5
+    }; 
+    enum { SHIFTGem = 8 };
+    enum { MASKGlt = 0xff, MASKGem = 0xff } ;
 }
 
 class GltValsTool : public ValBase
@@ -60,6 +72,7 @@ private:
 
     //TkrClusters Tuple Items
     double Trig_word;
+    double Trig_GemSummary; // new
     double Trig_tower;
     double Trig_xTower;
     double Trig_yTower; 
@@ -106,16 +119,17 @@ StatusCode GltValsTool::initialize()
 
     // load up the map
 
-    addItem("GltWord",      &Trig_word);  
-    addItem("GltTower",     &Trig_tower); 
-    addItem("GltXTower",    &Trig_xTower);
-    addItem("GltYTower",    &Trig_yTower);
-    addItem("GltLayer",     &Trig_layer); 
-    addItem("GltTotal",     &Trig_total);
-    addItem("GltNumTowers", &Trig_numTowers);
-    addItem("GltType",      &Trig_type);  
-    addItem("GltMoment",    &Trig_moment);
-    addItem("GltZDir",      &Trig_zDir);  
+    addItem("GltWord",       &Trig_word);
+    addItem("GltGemSummary", &Trig_GemSummary); // new
+    addItem("GltTower",      &Trig_tower); 
+    addItem("GltXTower",     &Trig_xTower);
+    addItem("GltYTower",     &Trig_yTower);
+    addItem("GltLayer",      &Trig_layer); 
+    addItem("GltTotal",      &Trig_total);
+    addItem("GltNumTowers",  &Trig_numTowers);
+    addItem("GltType",       &Trig_type);  
+    addItem("GltMoment",     &Trig_moment);
+    addItem("GltZDir",       &Trig_zDir);  
 
     zeroVals();
 
@@ -155,16 +169,15 @@ StatusCode GltValsTool::calculate()
     if(!pEvent || !pClusters) return StatusCode::FAILURE;
 
     unsigned int word = pEvent->trigger();
-    // remove this test, GEM bits cause it to fail
-    //if(word > 1024) return sc; 
+    // Waiting for official Trigger enum list
 
-    //bool three_in_a_row = (word/4)%2 == 1;
-    // better, but should use an enum:
-    bool three_in_a_row = ((word & 4)!=0);
-    Trig_word = word;
+    // This is the same as the old GltWord
+    Trig_word = word & MASKGlt;
+    Trig_GemSummary = (word >> SHIFTGem) & MASKGem;
+
+    bool three_in_a_row = ((word & (1<<TRACK))!=0);
 
     int tower, layer;
-
     short x_hits[_nTowers][_nLayers]; 
     short y_hits[_nTowers][_nLayers]; 
     for(tower=0; tower<_nTowers; ++tower) {
@@ -231,16 +244,6 @@ StatusCode GltValsTool::calculate()
         // new classification is number of exposed sides
         if(iTrig_tower >= 0) {
             iTrig_type = pTkrGeoSvc->getTowerType(iTrig_tower);
-            /*
-            idents::TowerId towerId = idents::TowerId(iTrig_tower);
-            xTower = towerId.ix();
-            yTower = towerId.iy();
-            iTrig_type = 0;
-            if (xTower==0)          iTrig_type++;
-            if (xTower==nXTowers-1) iTrig_type++;
-            if (yTower==0)          iTrig_type++;
-            if (yTower==nYTowers-1) iTrig_type++;
-            */
         }
 
         // Now find the average location of all hits
