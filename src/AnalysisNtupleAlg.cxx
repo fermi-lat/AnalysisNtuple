@@ -1,5 +1,5 @@
 
-// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.6 2003/03/01 16:05:01 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.7 2003/03/03 07:23:08 lsrea Exp $
 
 // Gaudi system includes
 #include "GaudiKernel/MsgStream.h"
@@ -18,18 +18,14 @@
 // for access to geometry perhaps
 #include "GlastSvc/GlastDetSvc/IGlastDetSvc.h"
 
-/** @class NtupleVisitor
-@brief implementation of ValsVisitor (See IValsTool)
-*/
-
-class NtupleVisitor : virtual public ValsVisitor
+// visitor to do the ntuple (see IValsTool.h)
+class NtupleVisitor : virtual public IValsTool::Visitor
 {
 public:
     /// constructor can set ntuple service and ntupleName
     NtupleVisitor(INTupleWriterSvc* ntupleSvc=0, std::string ntupleName="") 
         : m_ntupleSvc(ntupleSvc), m_ntupleName(ntupleName) {}
-    /// returns names and values to the visitor
-    virtual ValsVisitor::eVisitorRet analysisValue(std::string varName, double& value) const;
+    virtual IValsTool::Visitor::eVisitorRet analysisValue(std::string varName, double& value) const;
     
 private:
     /// pointer to the ntuple servic
@@ -38,14 +34,14 @@ private:
     std::string m_ntupleName;
 };
 
-ValsVisitor::eVisitorRet NtupleVisitor::analysisValue(std::string varName, double& value) const
+IValsTool::Visitor::eVisitorRet NtupleVisitor::analysisValue(std::string varName, double& value) const
 { 
     StatusCode sc;
     if (m_ntupleSvc) {
         sc = m_ntupleSvc->addItem(m_ntupleName.c_str(), varName.c_str(), value );
-        if (sc.isFailure()) return ValsVisitor::ERROR;
+        if (sc.isFailure()) return IValsTool::Visitor::ERROR;
     }    
-    return ValsVisitor::CONT;
+    return IValsTool::Visitor::CONT;
 }
 
 /*! @class AnalysisNtupleAlg
@@ -53,7 +49,7 @@ ValsVisitor::eVisitorRet NtupleVisitor::analysisValue(std::string varName, doubl
 @author Leon Rochester
 */
 
-// $Header$
+// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.7 2003/03/03 07:23:08 lsrea Exp $
 
 class AnalysisNtupleAlg : public Algorithm {
 public:
@@ -76,8 +72,8 @@ private:
     
     /// Common interface to analysis tools
     std::vector<IValsTool*> m_toolvec;
-    /// pointer to visitor passed in the traverse method of the tools.
-    ValsVisitor* m_visitor;    
+    
+    IValsTool::Visitor* m_visitor;    
 };
 
 namespace {
@@ -176,7 +172,7 @@ StatusCode AnalysisNtupleAlg::execute()
 
         int size = m_toolvec.size();
         for( int i =0; i<size; ++i){
-            if(m_toolvec[i]->traverse(m_visitor)==ValsVisitor::ERROR) {
+            if(m_toolvec[i]->traverse(m_visitor)==IValsTool::Visitor::ERROR) {
                 log << MSG::ERROR << m_toolvec[i] << " traversal failed" << endreq;
                 return fail;
             }

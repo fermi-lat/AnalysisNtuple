@@ -200,20 +200,20 @@ void ValBase::handle(const Incident & inc)
     }
 }
 
-ValsVisitor::eVisitorRet ValBase::traverse(ValsVisitor* v)
+IValsTool::Visitor::eVisitorRet ValBase::traverse(IValsTool::Visitor* v)
 {
-    ValsVisitor::eVisitorRet ret = ValsVisitor::DONE;
+    IValsTool::Visitor::eVisitorRet ret = IValsTool::Visitor::DONE;
 
-    if(doCalcIfNotDone().isFailure()) return ValsVisitor::ERROR;
+ //THB for now   if(doCalcIfNotDone().isFailure()) return IValsTool::Visitor::ERROR;
 
     constMapIter it = m_ntupleMap.begin();
     for ( ; it!=m_ntupleMap.end(); ++it) {
         valPair* pair = *it;
         double value = *(pair->second);
         ret = v->analysisValue(pair->first, value);
-        if (ret!= ValsVisitor::CONT) return ret;
+        if (ret!= IValsTool::Visitor::CONT) return ret;
     }
-    return ValsVisitor::DONE;
+    return IValsTool::Visitor::DONE;
 }
 
 

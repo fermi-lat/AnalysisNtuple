@@ -2,14 +2,15 @@
 #define ValBase_h
 
 #include "GaudiKernel/AlgTool.h"
-
-#include "GaudiKernel/IDataProviderSvc.h"
 #include "GaudiKernel/IIncidentListener.h"
 
 #include "AnalysisNtuple/IValsTool.h"
 #include <string>
 #include <vector>
 #include <map>
+
+class IIncidentSvc;
+class IDataProviderSvc;
 
 /** @class ValBase
 @brief base class for the XxxValsTools
@@ -48,8 +49,8 @@ public:
     virtual StatusCode browse(std::string varName = "");
     /// this is called by the incident service at the beginning of an event
     virtual void handle(const Incident& inc);
-    /// called by visitor to initiate calls to analysisValues()
-    virtual ValsVisitor::eVisitorRet traverse(ValsVisitor* v);
+    /// callback for visitor
+    virtual IValsTool::Visitor::eVisitorRet traverse(IValsTool::Visitor * v);
     
     /// calculate all values; implemented by each XxxValsTool
     virtual StatusCode calculate();
