@@ -2,7 +2,7 @@
 @brief Calculates the Tkr hit analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrHitValsTool.cxx,v 1.7 2004/10/01 19:43:58 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrHitValsTool.cxx,v 1.8 2004/10/09 04:36:25 lsrea Exp $
 */
 
 // Include files
@@ -135,7 +135,7 @@ StatusCode TkrHitValsTool::calculate()
     SmartDataPtr<Event::TkrClusterCol>   
         pClusters(m_pEventSvc,EventModel::TkrRecon::TkrClusterCol);
 
-    if (!pClusters) return StatusCode::FAILURE;
+    if (!pClusters) return sc;
 
     //Make sure we have valid cluster data
     if (pClusters)

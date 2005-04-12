@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.56 2005/02/07 20:39:22 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.57 2005/02/11 07:15:30 lsrea Exp $
 */
 
 // To Do:
@@ -400,10 +400,11 @@ StatusCode TkrValsTool::calculate()
 
     // Recover Track associated info. 
     SmartDataPtr<Event::TkrTrackCol>   pTracks(m_pEventSvc,EventModel::TkrRecon::TkrTrackCol);
+    if(!pTracks) return sc;
+
     SmartDataPtr<Event::TkrVertexCol>  pVerts(m_pEventSvc,EventModel::TkrRecon::TkrVertexCol);
     SmartDataPtr<Event::TkrClusterCol> pClusters(m_pEventSvc,EventModel::TkrRecon::TkrClusterCol);
 
-    if(!pTracks) return StatusCode::FAILURE;
 
     // all variable values are preset to zero. Be sure to re-initialize the ones you care about  
 
