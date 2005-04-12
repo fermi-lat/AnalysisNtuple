@@ -2,6 +2,7 @@
   @brief Package AnalysisNtule
   @verbatim
  
+ v2r2p8  12-Apr-05   LSR  GltValsTool: Make sure event words get properly filled
  v2r2p7  06-Apr-05   LSR  GltValsTool: fix GltXTower and GltYTower
  v2r2p6  04-Apr-05   LSR  VtxValsTool: output status for each event
  v2r2p5  31-Mar-05   LSR  use new enums::GEM_mask

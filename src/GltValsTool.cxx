@@ -2,7 +2,7 @@
 @brief Calculates the Trigger analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.23 2005/03/31 19:05:19 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.24 2005/04/06 19:01:42 lsrea Exp $
 */
 
 // Include files
@@ -141,41 +141,44 @@ StatusCode GltValsTool::calculate()
 
     // m_pEventSvc alreay checked by doCalcIfNotDone, no need to repeat
 
-    // Recover EventHeader Pointer
-    SmartDataPtr<Event::EventHeader> 
-        pEvent(m_pEventSvc, EventModel::EventHeader);
-    // Recover Track associated info.
-
-    SmartDataPtr<Event::TkrClusterCol>   
-        pClusters(m_pEventSvc,EventModel::TkrRecon::TkrClusterCol);
-
-    //not currently used:
-    //SmartDataPtr<Event::TkrFitTrackCol>    
-    //    pTracks(m_pEventSvc,EventModel::TkrRecon::TkrFitTrackCol);
 
     int nLayers  = m_tkrGeom->numLayers();
     int nXTowers = m_tkrGeom->numXTowers();
     int nYTowers = m_tkrGeom->numYTowers();
     int nTowers  = nXTowers*nYTowers;
 
+
     int iTrig_tower  = -1;
     int iTrig_layer  = -1;
     int iTrig_xTower = -1;
     int iTrig_yTower = -1; 
-    int iTrig_type   = 0;
+    int iTrig_type   =  0;
 
+    Trig_layer  = iTrig_layer;
+    Trig_tower  = iTrig_tower;
+    Trig_xTower = iTrig_xTower;
+    Trig_yTower = iTrig_yTower;
+    Trig_type   = iTrig_type;
 
-    if(!pEvent || !pClusters) return StatusCode::FAILURE;
-
-    unsigned int word = pEvent->trigger();
+    // Recover EventHeader Pointer
+    SmartDataPtr<Event::EventHeader> 
+        pEvent(m_pEventSvc, EventModel::EventHeader);
+    unsigned int word = ( pEvent==0? 0 : pEvent->trigger());
 
     // This is the same as the old GltWord
-    Trig_word = word & enums::GEM_mask; // actually only 6 bits, but no harm (I think!)
+    // actually only 6 bits, but no harm (I think!)    
+    Trig_word = word & enums::GEM_mask; 
+
     Trig_GemSummary = (word >> enums::GEM_offset) & enums::GEM_mask;
 
-    SmartDataPtr<LdfEvent::EventSummaryData> eventSummary(m_pEventSvc, "/Event/EventSummary"); 
+    SmartDataPtr<LdfEvent::EventSummaryData> 
+        eventSummary(m_pEventSvc, "/Event/EventSummary"); 
+    Trig_evtFlags = ( eventSummary==0 ? 0 : eventSummary->eventFlags());
 
-    Trig_evtFlags = eventSummary==0 ? 0 : eventSummary->eventFlags();
+    SmartDataPtr<Event::TkrClusterCol>   
+        pClusters(m_pEventSvc,EventModel::TkrRecon::TkrClusterCol);
+    // everything from here on out uses Clusters
+    if(!pClusters) return sc;
 
     bool three_in_a_row = ((word & enums::b_Track)!=0);
 
