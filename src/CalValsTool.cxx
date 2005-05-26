@@ -3,7 +3,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.51 2005/01/25 19:30:04 lsrea Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.52 2005/02/11 07:15:30 lsrea Exp $
 */
 
 // Include files
@@ -381,8 +381,8 @@ StatusCode CalValsTool::calculate()
     
     Event::CalCluster* calCluster = pCals->front();
     
-    CAL_EnergySum   = calCluster->getEnergySum();
-    for(int i = 0; i<8; i++) CAL_eLayer[i] = calCluster->getEneLayer(i);
+    CAL_EnergySum   = calCluster->getCalParams().getEnergy();
+    for(int i = 0; i<8; i++) CAL_eLayer[i] = (*calCluster)[i].getEnergy();
     CAL_Long_Rms      = calCluster->getRmsLong();
     CAL_Trans_Rms     = calCluster->getRmsTrans();
 
@@ -394,7 +394,7 @@ StatusCode CalValsTool::calculate()
         CAL_LRms_Ratio    = CAL_Long_Rms / CAL_EnergySum;
     }
     
-    CAL_Energy_LLCorr = calCluster->getEnergyLeak();
+    //CAL_Energy_LLCorr = calCluster->getEnergyLeak();
 
     //Code from meritAlg
     int no_xtals=0;
@@ -414,7 +414,7 @@ StatusCode CalValsTool::calculate()
     CAL_Xtal_maxEne = max_log_energy; 
 
     //Overwritten below, if there are tracks
-    CAL_Energy_Corr = calCluster->getEnergyCorrected(); 
+    CAL_Energy_Corr = calCluster->getCalParams().getEnergy(); 
     if(CAL_EnergySum < 5.) return sc;  
     
     Point  cal_pos  = calCluster->getPosition();
@@ -483,8 +483,9 @@ StatusCode CalValsTool::calculate()
     CAL_y0    = cal_top.y();
 	CAL_z0    = cal_top.z();
 
-    std::vector<Vector> pos_Layer = calCluster->getPosLayer();
-    std::vector<double> ene_Layer = calCluster->getEneLayer();
+    Event::CalClusterLayerDataVec& lyrDataVec = *calCluster;
+    //std::vector<Vector> pos_Layer = calCluster->getPosLayer();
+    //std::vector<double> ene_Layer = calCluster->getEneLayer();
     
     double ene_sum_corr = 0.;
     
@@ -528,12 +529,12 @@ StatusCode CalValsTool::calculate()
     double edge_corr = 0.; 
     double good_layers = 0.; 
     for(int i=0; i<8; i++){
-        if(ene_Layer[i] < 5.) {
-            ene_sum_corr += ene_Layer[i];
+        if(lyrDataVec[i].getEnergy() < 5.) {
+            ene_sum_corr += lyrDataVec[i].getEnergy();
             continue; 
         }
-        Vector pos = cal_top;
-        double arc_len = (pos_Layer[i] - pos).magnitude();
+        Point pos = cal_top;
+        double arc_len = (lyrDataVec[i].getPosition() - pos).magnitude();
         Point xyz_layer = axis.position(-arc_len);
         
         double in_frac_soft = containedFraction(xyz_layer, gap, rm_soft, costh, phi_90);
@@ -546,7 +547,7 @@ StatusCode CalValsTool::calculate()
         double corr_factor 
             = 1./((1.-hard_frac)*in_frac_soft + hard_frac*in_frac_hard);
         if(corr_factor > max_corr) corr_factor = max_corr;  
-        double ene_corr = ene_Layer[i]*corr_factor;
+        double ene_corr = lyrDataVec[i].getEnergy()*corr_factor;
         ene_sum_corr += ene_corr;
         edge_corr    += corr_factor;
         good_layers  += 1.; 
