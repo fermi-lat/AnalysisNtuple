@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.57 2005/02/11 07:15:30 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.58 2005/04/12 19:06:05 lsrea Exp $
 */
 
 // To Do:
@@ -89,9 +89,7 @@ private:
     double Tkr_Sum_KalEne; 
     double Tkr_Sum_ConEne;
     double Tkr_Energy;
-    double Tkr_Energy_Sum;
     double Tkr_Energy_Corr;
-    double Tkr_Edge_Corr;
     double Tkr_HDCount; 
     double Tkr_Total_Hits;
     double Tkr_Thin_Hits;
@@ -250,9 +248,7 @@ StatusCode TkrValsTool::initialize()
     addItem("TkrSumKalEne",   &Tkr_Sum_KalEne);
     addItem("TkrSumConEne",   &Tkr_Sum_ConEne);
     addItem("TkrEnergy",      &Tkr_Energy);
-    addItem("TkrEnergySum",   &Tkr_Energy_Sum);
     addItem("TkrEnergyCorr",  &Tkr_Energy_Corr);
-    addItem("TkrEdgeCorr",    &Tkr_Edge_Corr);
     addItem("TkrHDCount",     &Tkr_HDCount); 
     addItem("TkrTotalHits",   &Tkr_Total_Hits);
     addItem("TkrThinHits",    &Tkr_Thin_Hits);
@@ -358,15 +354,9 @@ StatusCode TkrValsTool::initialize()
 namespace {
 
     // coefs from Miner
-    double cfThin    = 0.722;
-    double cfThick   = 1.864;
-    double cfNoConv  = 0.117;
-    double cfRadLen  = 13.07;
-    double cfZ       = -0.021;
-
-    double cfNoConv1 = 2.5;
-
-    double max_corr  = 3.0; 
+    double cfThin    = 0.68;  //Set overall value by slope at 1 GeV Verticle vs 1stLayerNumber
+    double cfThick   = 2.93; // Set relative value to ratio of radiation lenghts 1 : 4.33.
+	                         // cfThin is close to that derived via linear regression
     double rm_hard   = 30.; 
     double rm_soft   = 130;
     double gap       = 18.; 
@@ -407,13 +397,6 @@ StatusCode TkrValsTool::calculate()
 
 
     // all variable values are preset to zero. Be sure to re-initialize the ones you care about  
-
-    //Make sure we have valid reconstructed data
-
-
-    //int nNoConv = m_tkrGeom->numNoConverter();
-    //int nThick  = m_tkrGeom->numSuperGlast();
-    //int nThin   = m_tkrGeom->numLayers() - nThick - nNoConv;
 
     double die_width = m_tkrGeom->ladderPitch();
     int nDies = m_tkrGeom->nWaferAcross();
@@ -530,7 +513,6 @@ StatusCode TkrValsTool::calculate()
         Event::TkrTrackHitVecConItr pHit = track_1->begin();
         int gapId = -1;
         bool gapFound = false;
-        //int plane = m_tkrGeom->getPlane((*pHit)->getTkrId());
         while(pHit != track_1->end()) {
             const Event::TkrTrackHit* hit = *pHit++;
             unsigned int bits = hit->getStatusBits();
@@ -541,10 +523,6 @@ StatusCode TkrValsTool::calculate()
                 Tkr_1_GapY = gapPos.y();
                 //TkrId is good!
                 gapId = m_tkrGeom->getPlane(hit->getTkrId());
-                //gapId1 = plane;
-                //if (gapId1!=gapId) {
-                //    std::cout << "GapId1/GapId " << gapId1 << " " << gapId << std::endl;
-                //}
                 gapFound = true;
             }
             //plane--;
@@ -564,7 +542,6 @@ StatusCode TkrValsTool::calculate()
             double countThreshold = 15; // counts
             double normFactor  =  1./53.;
 
-            //double rawToT = cluster->getRawToT();
             double mips = cluster->getMips();
 
             double tot = cluster->ToT();
@@ -761,8 +738,8 @@ StatusCode TkrValsTool::calculate()
                 yms = Q(3,3);
                 radlen = m_G4PropTool->getRadLength(arc_len); 
             }
-            double xSprd = sqrt(4.+xms*16.); // 4.0 sigma and not smaller then 2mm (was 2.5 sigma)
-            double ySprd = sqrt(4.+yms*16.); // Limit to a tower... 
+            double xSprd = 80.*secth; 
+            double ySprd = 80.*secth;  
             double halfTray = 0.5*m_tkrGeom->trayWidth();
             xSprd = std::min(xSprd, halfTray);
             ySprd = std::min(ySprd, halfTray);
@@ -770,22 +747,16 @@ StatusCode TkrValsTool::calculate()
             // Assume location of shower center is given by 1st track
             Point x_hit = x1 + arc_len*t1;
             int numHits = pQueryClusters->numberOfHitsNear(ilayer, xSprd, ySprd, x_hit, t1);
+
+			//  Look for extra hits around track head
             if(ilayer == firstLayer) {
-                double xRgn = 30.*sqrt(1+(cos(Tkr_1_Phi)*secth)*(cos(Tkr_1_Phi)*secth));
-                double yRgn = 30.*sqrt(1+(sin(Tkr_1_Phi)*secth)*(sin(Tkr_1_Phi)*secth));
+                double xRgn = 30.*secth;
+                double yRgn = 30.*secth;
                 Tkr_HDCount = pQueryClusters->numberOfUUHitsNear(ilayer, xRgn, yRgn, x_hit);
             }
 
             double layer_edge = towerEdge(x_hit);
 
-            double in_frac_soft = containedFraction(x_hit, gap, rm_soft, costh, Tkr_1_Phi);
-            if(in_frac_soft < .01) in_frac_soft = .01; 
-
-            double in_frac_hard = containedFraction(x_hit, gap, rm_hard, costh, Tkr_1_Phi);
-            if(in_frac_hard < .01) in_frac_hard = .01; 
-
-            double corr_factor = 1./((1.-hard_frac)*in_frac_soft + hard_frac*in_frac_hard);
-            if(corr_factor > max_corr) corr_factor = max_corr; 
             double delta_rad= radlen-radlen_old;
             double thisRad;
             //A bit cleaner
@@ -814,8 +785,6 @@ StatusCode TkrValsTool::calculate()
                 }
             }
 
-            double ene_corr = corr_factor*delta_rad; //*ene; 
-            tracker_ene_corr += ene_corr;
             total_hits       += numHits; 
             ave_edge         += layer_edge*delta_rad; 
             rad_len_sum      += delta_rad;
@@ -830,17 +799,14 @@ StatusCode TkrValsTool::calculate()
             arc_len += fabs( deltaZ/t1.z()); 
             radlen_old = radlen; 
         }
-        // Coef's from Linear Regression analysis in Miner
-        // defined in anonymous namespace above
-        // Note: there is a corner of phase space where this can get much too large
-        //  (a check would be to compare with TkrKalEneSum - if its larger, pick
-        //   TkrKalEneSum but maybe not -  this will happen in mis-tracked events)
-        Tkr_Energy     = (cfThin*thin_hits + cfThick*thick_hits + cfNoConv*blank_hits
-            + cfRadLen*std::min(rad_len_sum, 3.0)
-            + cfZ*(x1.z()-z0))/std::max(costh, .4);
+ 
+        Tkr_Energy     = (cfThin*thin_hits + cfThick*thick_hits)/std::max(costh, .2);
 
-        Tkr_Edge_Corr  = tracker_ene_corr/rad_len_sum;
-        Tkr_Energy_Corr= Tkr_Edge_Corr*Tkr_Energy;
+		// The following flattens the cos(theta) dependence.  Anomolous leakage for widely spaced
+		// samples?  
+        Tkr_Energy_Corr= Tkr_Energy*(1.+ .0012*(Tkr_1_FirstLayer-1)*(Tkr_1_FirstLayer-1)) 
+			                        *(1 + .3*std::max((4-Tkr_1_FirstLayer),0.));
+
         Tkr_Total_Hits = total_hits;
         Tkr_Thin_Hits  = thin_hits;
         Tkr_Thick_Hits = thick_hits;
@@ -862,53 +828,4 @@ double TkrValsTool::towerEdge(Point pos) const
 
     edge = 0.5*m_towerPitch - std::max(fabs(x_twr),fabs(y_twr));
     return edge;
-}
-
-double  TkrValsTool::containedFraction(Point pos, double gap,  
-                                       double r, double costh, double phi) const
-{
-    // Get the projected angles for the gap
-    double tanth = sqrt(1.-costh*costh)/costh;
-    double gap_x = gap - 35.*sin(phi)*tanth;
-    double x = pos.x();
-    double y = pos.y();
-    if(gap_x < 5.) gap_x = 5.;
-    double gap_y = gap - 35.*cos(phi)*tanth;
-    if(gap_y < 5.) gap_y = 5.; 
-
-    // X Edges
-    double x_twr = globalToLocal(x, m_towerPitch, m_xNum);
-    double edge = m_towerPitch/2. - fabs(x_twr);
-    double r_frac_plus = (edge-gap_x/2.)/r; 
-    double angle_factor = sin(phi)*(1./costh - 1.);
-    double in_frac_x  =  circleFractionSimpson(r_frac_plus, angle_factor);
-    if (x>m_tkrGeom->getLATLimit(0,LOW)+0.5*m_towerPitch
-        && x<m_tkrGeom->getLATLimit(0,HIGH)-0.5*m_towerPitch) 
-    {
-        double r_frac_minus = (edge + gap_x/2.)/r;
-        in_frac_x += circleFractionSimpson(-r_frac_minus, angle_factor);
-    }
-
-    // Y Edges
-    double y_twr = globalToLocal(y, m_towerPitch, m_yNum);
-    edge = m_towerPitch/2. - fabs(y_twr);
-    r_frac_plus = (edge-gap_y/2.)/r; 
-    angle_factor = cos(phi)*(1./costh - 1.);
-    double in_frac_y  =  circleFractionSimpson(r_frac_plus, angle_factor);
-    if (y>m_tkrGeom->getLATLimit(1,LOW)+0.5*m_towerPitch 
-        && y<m_tkrGeom->getLATLimit(1,HIGH)-0.5*m_towerPitch) 
-    {
-        double r_frac_minus = (edge + gap_y/2.)/r;
-        in_frac_y += circleFractionSimpson(-r_frac_minus, angle_factor);
-    }
-
-    // Cross term assumes x and y are independent 
-    double in_frac = 1.;
-    if(in_frac_x > .999) in_frac = in_frac_y;
-    else if(in_frac_y > .999) in_frac = in_frac_x; 
-    else in_frac = 1. - (1.-in_frac_x) - (1.-in_frac_y) + 
-        (1.-in_frac_x)*(1.-in_frac_y);  //Cross Term Correction?  
-    if(in_frac < .01) in_frac = .01;
-
-    return in_frac;
 }
