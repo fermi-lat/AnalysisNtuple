@@ -291,7 +291,7 @@ StatusCode EvtValsTool::calculate()
 	//    Use Kalman energy when not enough in the Cal,
 	//    use Last Layer Correction when avaialable (eCalEneLLCorr > 0) or else
 	//    use integrated edge and leakage correction from CalValsTool
-    double eCalSumCorr, eCalEneLLCorr;
+    double eCalSumCorr;
     if(    m_pCalTool->getVal("CalEnergyCorr", eCalSumCorr, nextCheck).isSuccess()
 		//&& m_pCalTool->getVal("CalEnergyLLCorr", eCalEneLLCorr, nextCheck).isSuccess()
 		) { // NOTE: THIS IS STILL LARGELY UNDESIDED WHAT TO DO HERE....!!!!!!!  
