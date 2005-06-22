@@ -3,7 +3,7 @@
 @brief Calculates the "Event" analysis variables from the other ntuple variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.19 2005/01/04 23:49:33 atwood Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.20 2005/06/17 05:11:16 atwood Exp $
 */
 
 #include "ValBase.h"
@@ -41,44 +41,40 @@ public:
 
 private:
 
-    //Global ACDTuple Items
-    //double EvtEnergyOpt;
+    //Global Items
     double EvtRun;
     double EvtEventId;
     double EvtElapsedTime;
     double EvtLiveTime;
 
-    double EvtEnergyOpt;
+    double EvtEnergyCorr;
     double EvtEnergyRaw;
-    double EvtMcEnergySigma;
-    double EvtCalEdgeAngle;
+    double EvtDeltaEoE;
+    double EvtECaldgeAngle;
     double EvtTkrEdgeAngle;
-    double EvtLogESum;
+    double EvtLogEnergy;
     double EvtTkr1EFrac;
     double EvtVtxKin;
     double EvtVtxEAngle;
     double EvtTkrComptonRatio;
-    double EvtTkrEComptonRatio;
+    double EvtETkrComptonRatio;
     double EvtPSFModel; 
 
-    double EvtTkr1EChisq;
-    double EvtTkr1EFirstChisq;
-    double EvtTkr1EQual;
-    double EvtTkr1ECovDet; 
+    double EvtETkr1Chisq;
+    double EvtETkr1FirstChisq;
+    double EvtETkr1Qual;
     double EvtTkr1PSFMdRat;
 
-    double EvtTkr2EChisq;
-    double EvtTkr2EFirstChisq;
-    double EvtTkr2EQual;
-
-    double EvtCalETLRatio;
-    double EvtCalEXtalRatio;
-    double EvtCalEXtalTrunc;
-    double EvtCalETrackDoca;
-    double EvtCalETrackSep;
-    double EvtVtxEEAngle;
-    double EvtVtxEDoca;
-    double EvtVtxEHeadSep;
+    double EvtECalXtalRatio;
+    double EvtECalXtalTrunc;
+    double EvtECalTrackDoca;
+    double EvtECalTrackSep;
+	double EvtECalTransRms;
+	double EvtECalLongRms;
+	double EvtECalLRmsAsym;
+	double EvtECalTrackAngle;
+    double EvtEVtxAngle;
+    double EvtEVtxDoca;
 
     IValsTool* m_pMcTool;
     IValsTool* m_pGltTool;
@@ -89,6 +85,23 @@ private:
     IValsTool* m_pAcdTool;
 
     ITkrGeometrySvc* m_tkrGeom;
+
+	// These are copies of the new DC2 vars from IM.   Left here for reference
+// EvtECalXtalRatio	continuous	CalXtalRatio/(2.99-1.19*LogEnergyOpt  + .122*LogEnergyOpt^2)/(.749-.355*Tkr1ZDir)
+// EvtECalTrackDoca	continuous	CalTrackDoca/(272-140.5*min(EvtLogEnergy, 3.8) + 18.7*min(EvtLogEnergy, 3.8)^2)/(3.08+2.67*Tkr1ZDir)
+// EvtECalXtalsTrunc	continuous	CalXtalsTrunc/(max(1.,(-85.4 + 65.2*LogEnergyOpt - 10.4*LogEnergyOpt^2)) + min(12*(LogEnergyOpt-3.3)^2*(max(3.3,LogEnergyOpt)-3.3)/(LogEnergyOpt-3.3),14.))/(1.2+.224*Tkr1ZDir)
+// EvtECalTransRms	continuous	CalTransRms/(12.5+ 22.*exp(-(EvtLogEnergy-2.3)^2/.8))/(1.34+.55*Tkr1ZDir)
+// EvtECalLongRms	continuous	CalLongRms/(ifelse(EvtLogEnergy < 3.8, (96.1 - 39*EvtLogEnergy + 5.6*EvtLogEnergy^2),  28.*(.847-.0134*EvtLogEnergy+.015*EvtLogEnergy^2)))/(1.06+.0867*Tkr1ZDir)
+// EvtECalLRmsAsym	continuous	CalLRmsAsym/(.012+.06*exp(-(EvtLogEnergy-2.0)^2/1.3))/(1.01-.0718*Tkr1ZDir)
+// EvtECalTrackAngle	continuous	CalTrackAngle/(2.3-1.11*min(EvtLogEnergy,4.0)+.138*min(EvtLogEnergy,4.0)^2)/(1.43+.612*Tkr1ZDir)
+
+// EvtETkr1Chisq	continuous	Tkr1Chisq/(6.49 -22.1*Tkr1ZDir -22.8*Tkr1ZDir^2)
+// EvtETkr1FirstChisq	continuous	Tkr1FirstChisq/(4.34-.708*EvtLogEnergy+.19*EvtLogEnergy^2)/(.751-1.74*Tkr1ZDir-1.83*Tkr1ZDir^2)
+// EvtETkr1Qual	continuous	Tkr1Qual/(56.6 +6.78*Tkr1ZDir + 8.23*Tkr1ZDir^2)
+// EvtETkrComptonRatio	continuous	EvtTkrComptonRatio / (-9.34+7.22*EvtLogEnergy - .672*EvtLogEnergy^2)/(-.509 - 3.65*Tkr1ZDir - 2.03*Tkr1ZDir^2)
+
+// EvtVtxEAngle	continuous	VtxAngle*sqrt(EvtEnergySumOpt)/(4.24 -1.98*EvtLogEnergy + .269*EvtLogEnergy^2)/(1.95+2.36*Tkr1ZDir+1.3*Tkr1ZDir^2)
+
 
 };
 
@@ -181,37 +194,35 @@ StatusCode EvtValsTool::initialize()
     addItem("EvtElapsedTime",   &EvtElapsedTime);
     addItem("EvtLiveTime",      &EvtLiveTime);
 
-    addItem("EvtEnergySumOpt",     &EvtEnergyOpt);
+    addItem("EvtEnergyCorr",    &EvtEnergyCorr);
     addItem("EvtEnergyRaw",     &EvtEnergyRaw);
-    addItem("EvtMcEnergySigma", &EvtMcEnergySigma);
-    addItem("EvtCalEdgeAngle",  &EvtCalEdgeAngle);
+    addItem("EvtDeltaEoE",      &EvtDeltaEoE);
+    addItem("EvtECaldgeAngle",  &EvtECaldgeAngle);
     addItem("EvtTkrEdgeAngle",  &EvtTkrEdgeAngle);
-    addItem("EvtLogESum",       &EvtLogESum);
+    addItem("EvtLogEnergy",     &EvtLogEnergy);
     addItem("EvtTkr1EFrac",     &EvtTkr1EFrac);
     addItem("EvtVtxKin",        &EvtVtxKin);
     addItem("EvtVtxEAngle",     &EvtVtxEAngle);
     addItem("EvtTkrComptonRatio", &EvtTkrComptonRatio);
-    addItem("EvtTkrEComptonRatio", &EvtTkrEComptonRatio);
+	addItem("EvtETkrComptonRatio", &EvtETkrComptonRatio);
     addItem("EvtPSFModel",      &EvtPSFModel);
 
-    addItem("EvtTkr1EChisq",    &EvtTkr1EChisq);
-    addItem("EvtTkr1EFirstChisq", &EvtTkr1EFirstChisq);
-    addItem("EvtTkr1EQual",     &EvtTkr1EQual);
+    addItem("EvtETkr1Chisq",    &EvtETkr1Chisq);
+    addItem("EvtETkr1FirstChisq", &EvtETkr1FirstChisq);
+    addItem("EvtETkr1Qual",     &EvtETkr1Qual);
     addItem("EvtTkr1PSFMdRat",  &EvtTkr1PSFMdRat);
-    addItem("EvtTkr1ECovDet",   &EvtTkr1ECovDet);
 
-    addItem("EvtTkr2EChisq",    &EvtTkr2EChisq);
-    addItem("EvtTkr2EFirstChisq", &EvtTkr2EFirstChisq);
-    addItem("EvtTkr2EQual",     &EvtTkr2EQual);
+    addItem("EvtECalXtalRatio", &EvtECalXtalRatio);
+    addItem("EvtECalXtalTrunc", &EvtECalXtalTrunc);
+    addItem("EvtECalTrackDoca", &EvtECalTrackDoca);
+    addItem("EvtECalTrackSep",  &EvtECalTrackSep);
+	addItem("EvtECalTransRms",  &EvtECalTransRms);
+    addItem("EvtECalLongRms",   &EvtECalLongRms);
+	addItem("EvtECalLRmsAsym",  &EvtECalLRmsAsym);
+	addItem("EvtECalTrackAngle",&EvtECalTrackAngle);
 
-    addItem("EvtCalETLRatio",   &EvtCalETLRatio);
-    addItem("EvtCalEXtalRatio", &EvtCalEXtalRatio);
-    addItem("EvtCalEXtalTrunc", &EvtCalEXtalTrunc);
-    addItem("EvtCalETrackDoca", &EvtCalETrackDoca);
-    addItem("EvtCalETrackSep",  &EvtCalETrackSep);
-    addItem("EvtVtxEEAngle",    &EvtVtxEEAngle);
-    addItem("EvtVtxEDoca",      &EvtVtxEDoca);
-    addItem("EvtVtxEHeadSep",   &EvtVtxEHeadSep);
+    addItem("EvtEVtxAngle",    &EvtEVtxAngle);
+    addItem("EvtEVtxDoca",      &EvtEVtxDoca);
 
     zeroVals();
 
@@ -255,8 +266,8 @@ StatusCode EvtValsTool::calculate()
         && m_pTkrTool->getVal("TkrSumKalEne", eTkrKalEne, firstCheck).isSuccess()) 
     {
         eTkrBest = std::max(eTkr+eCalSum, eTkrKalEne);
-        if(eCalSum < 100 || eCalRLn < 2) {
-            if(eCalSum < 5 || eCalRLn < 2) {
+        if(eCalSum < 350 || eCalRLn < 4) {
+            if(eCalSum < 5 || eCalRLn < 4) {
                 CAL_Type = 0;
             }
             else {CAL_Type = 1;}
@@ -267,11 +278,12 @@ StatusCode EvtValsTool::calculate()
  // EdgeAngle:   distance from tower edge / cos(theta) 
     double tkrEdge, calEdge, tkr1ZDir = -1.;
     if(m_pTkrTool->getVal("Tkr1ZDir",tkr1ZDir, nextCheck).isSuccess()) {
+		if(tkr1ZDir == 0.) tkr1ZDir = -1.; 
         if (m_pTkrTool->getVal("TkrTwrEdge", tkrEdge, nextCheck).isSuccess()) {
             EvtTkrEdgeAngle = -tkrEdge/tkr1ZDir;
         }
         if (m_pCalTool->getVal("CalTwrEdge", calEdge, nextCheck).isSuccess()) {
-            EvtCalEdgeAngle = -calEdge/tkr1ZDir;
+            EvtECaldgeAngle = -calEdge/tkr1ZDir;
         }
     }
 	double tkr1ZDir2 = tkr1ZDir*tkr1ZDir;  
@@ -282,34 +294,28 @@ StatusCode EvtValsTool::calculate()
     double eCalSumCorr, eCalEneLLCorr;
     if(    m_pCalTool->getVal("CalEnergyCorr", eCalSumCorr, nextCheck).isSuccess()
 		//&& m_pCalTool->getVal("CalEnergyLLCorr", eCalEneLLCorr, nextCheck).isSuccess()
-		) {
-        if(CAL_Type == 0) EvtEnergyOpt = eTkrBest;
-		else {
-		//	if(eCalEneLLCorr > 0) EvtEnergyOpt = eCalEneLLCorr; //This is wrong! LL has comp.for TkrEne!
-		//	else {
-				// Note: There is an adhoc-factor of ~.6(1+cos(theta))^2 correction. Why is this needed? 
-				EvtEnergyOpt = (eTkr + eCalSumCorr);
+		) { // NOTE: THIS IS STILL LARGELY UNDESIDED WHAT TO DO HERE....!!!!!!!  
+    //    if(CAL_Type == 0) EvtEnergyCorr = eTkrBest;
+	//	else {
+		//	if(eCalEneLLCorr > 0) EvtEnergyCorr = eCalEneLLCorr; //This is wrong! LL has comp.for TkrEne!
+		//	else { 
+				EvtEnergyCorr = (eTkr + eCalSumCorr);
 		//	}
-		}
+	//	}
     }
     
     double mcEnergy;
     if(m_pMcTool->getVal("McEnergy", mcEnergy, firstCheck).isSuccess()){
-        EvtMcEnergySigma = (EvtEnergyOpt - mcEnergy)/(mcEnergy);
+        EvtDeltaEoE = (EvtEnergyCorr - mcEnergy)/(mcEnergy);
     }
     // Model simple for PSF(68%) 
-    EvtPSFModel = sqrt(pow((.061/pow((std::max(EvtEnergyOpt,1.)/100),.8)),2) + (.001745*.001745));
+    EvtPSFModel = sqrt(pow((.061/pow((std::max(EvtEnergyCorr,1.)/100),.8)),2) + (.001745*.001745));
 
 	// Log(base 10) of measured energy - useful for parameterizing effects
-    EvtLogESum = log10(std::min(std::max(EvtEnergyOpt,10.),1000000.));
-    double logE = std::min(std::max(EvtLogESum,1.3), 4.7);
+    EvtLogEnergy = log10(std::min(std::max(EvtEnergyCorr,10.),1000000.));
+    double logE = std::min(std::max(EvtLogEnergy,1.3), 6.0);
     double logE2 = logE*logE; 
     
-	// Track 1 covariance determinant with energy dependence compensation
-    double tkr1CovDet;
-    if (m_pTkrTool->getVal("Tkr1CovDet",tkr1CovDet, nextCheck).isSuccess()) {
-        EvtTkr1ECovDet = tkr1CovDet/pow(std::max(EvtEnergyOpt,1.0), 1.3);
-    }
 
 	// Ratio of PSF model to event total PSF error. Note PhiErr = sin(theta)*d(phi)
     double tkr1ThetaErr, tkr1PhiErr;
@@ -322,17 +328,17 @@ StatusCode EvtValsTool::calculate()
 	// Fraction of energy in Track 1
     double tkr1ConE;
     if (m_pTkrTool->getVal("Tkr1ConEne",tkr1ConE, nextCheck).isSuccess()) {
-        if(EvtEnergyOpt>0.0) EvtTkr1EFrac = tkr1ConE/EvtEnergyOpt;
+        if(EvtEnergyCorr>0.0) EvtTkr1EFrac = tkr1ConE/EvtEnergyCorr;
     }
 
 	// Vtx kinematic variable:  angle * event energy / Track_1 energy fraction
     double vtxAngle;
     if (m_pVtxTool->getVal("VtxAngle", vtxAngle, firstCheck).isSuccess()) {
-        if (tkr1ConE>0.0) EvtVtxKin = vtxAngle*EvtEnergyOpt*EvtEnergyOpt/tkr1ConE;
+        if (tkr1ConE>0.0) EvtVtxKin = vtxAngle*EvtEnergyCorr/EvtTkr1EFrac;
     }
 
 	// Vtx angle x event energy  ~ constant
-    EvtVtxEAngle = vtxAngle*EvtEnergyOpt;
+    EvtVtxEAngle = vtxAngle*EvtEnergyCorr;
     
 	// Hit counting around track compared to hits on track.  Compton scatters
 	// have a ratio ~< 1 (as do MIPs etc.  - this is similar to the former
@@ -341,58 +347,29 @@ StatusCode EvtValsTool::calculate()
     if (m_pTkrTool->getVal("TkrTotalHits", totHits, nextCheck).isSuccess()) {
         if (m_pTkrTool->getVal("Tkr1FirstLayer", tkr1First, nextCheck).isSuccess()){
             EvtTkrComptonRatio = totHits/(2.*(m_tkrGeom->numLayers()-tkr1First));
-            EvtTkrEComptonRatio = EvtTkrComptonRatio/(-3.77 + 3.57*logE - .547*logE2)
-                                  /(1.69 + 1.74*tkr1ZDir + .987*tkr1ZDir2);
+            EvtETkrComptonRatio = EvtTkrComptonRatio/(-9.34+7.22*logE - .672*logE2)
+				                         /(-.509 - 3.65*tkr1ZDir - 2.03*tkr1ZDir2);
         }
     }
 
 	// Energy compensated track 1 chisq
     double tkr1Chisq;
     if (m_pTkrTool->getVal("Tkr1Chisq", tkr1Chisq, nextCheck).isSuccess()) {
-        EvtTkr1EChisq = tkr1Chisq/(11.5 - 3.73*logE + .362*logE2)
-                                 /(.558 - 2.53*tkr1ZDir - 2.50*tkr1ZDir2);
+        EvtETkr1Chisq = tkr1Chisq/(6.49 -22.1*tkr1ZDir -22.8*tkr1ZDir2);
     }
     double tkr1_1stChisq;
     if (m_pTkrTool->getVal("Tkr1FirstChisq", tkr1_1stChisq, nextCheck).isSuccess()) {
-        EvtTkr1EFirstChisq = tkr1_1stChisq/(6.37 - 1.87*logE + .199*logE2)
-                                /(1.99 + 1.39*tkr1ZDir + .0805*tkr1ZDir2);
+        EvtETkr1FirstChisq = tkr1_1stChisq/(4.34-.708*logE+.19*logE2)
+			                 /(.751-1.74*tkr1ZDir-1.83*tkr1ZDir2);
     }
     double tkr1Qual;
     if (m_pTkrTool->getVal("Tkr1Qual", tkr1Qual, nextCheck).isSuccess()) {
-        EvtTkr1EQual = tkr1Qual/(49.3 + 4.52*logE - .518*logE2)
-                                /(1.04 + .197*tkr1ZDir + .180*tkr1ZDir2);
-    }
-    double tkr2Chisq;
-    if (m_pTkrTool->getVal("Tkr2Chisq", tkr2Chisq, nextCheck).isSuccess()) {
-        EvtTkr2EChisq = tkr2Chisq/(4.74- 1.06*logE + .257*logE2)
-                                /(.366 - 3.68*tkr1ZDir - 3.18*tkr1ZDir2);
-    }
-    double tkr2_1stChisq;
-    if (m_pTkrTool->getVal("Tkr2FirstChisq", tkr2_1stChisq, nextCheck).isSuccess()) {
-        EvtTkr2EFirstChisq = tkr2_1stChisq/ (.472 + .77*logE + .0646*logE2)
-                                /(.0404 - 4.57*tkr1ZDir - 3.66*tkr1ZDir2);
-    }
-    double tkr2Qual;
-    if (m_pTkrTool->getVal("Tkr2Qual", tkr2Qual, nextCheck).isSuccess()) {
-        double minLogE = std::min(logE, 2.77);
-        double minLogE2 = minLogE*minLogE; 
-        EvtTkr2EQual = tkr2Qual/ (-6.53 +42.1*minLogE - 7.63*minLogE2)
-                                /(1.18 + .541*tkr1ZDir + .368*tkr1ZDir2);
-    }
-
-    double calTrms, calLrms;
-    if(m_pCalTool->getVal("CalTransRms", calTrms, nextCheck).isSuccess()&
-       m_pCalTool->getVal("CalLongRms", calLrms, nextCheck).isSuccess()){
-           if(calLrms > 0.) {
-             EvtCalETLRatio = (calTrms/calLrms)/ (9 - 4.01*logE + .481*logE2)
-                                /(1.47 + .907*tkr1ZDir + .338*tkr1ZDir2);
-           }
+        EvtETkr1Qual = tkr1Qual/(56.6 +6.78*tkr1ZDir + 8.23*tkr1ZDir2);
     }
 
     double calXtalRatio;
     if(m_pCalTool->getVal("CalXtalRatio", calXtalRatio, nextCheck).isSuccess()) {
-        EvtCalEXtalRatio = calXtalRatio/(3.47-1.40*logE  + .146*logE2)
-                               /(.960 + .0933*tkr1ZDir + .167*tkr1ZDir2);
+        EvtECalXtalRatio = calXtalRatio/(2.99-1.19*logE  + .122*logE2)/(.749-.355*tkr1ZDir);
     }
 
     double calXtalsTrunc;
@@ -400,35 +377,54 @@ StatusCode EvtValsTool::calculate()
         double term1 = std::max(1., (-85.4 + 65.2*logE - 10.4*logE2));
         double logE33 = logE-3.3; 
         double term2 = (logE33 > 0.) ? std::min(14., 12.*logE33*logE33): 0.;
-        EvtCalEXtalTrunc = calXtalsTrunc/(term1 + term2)/(.935 - .382*tkr1ZDir - .343*tkr1ZDir2);
+        EvtECalXtalTrunc = calXtalsTrunc/(term1 + term2)/(.935 - .382*tkr1ZDir - .343*tkr1ZDir2);
     }
 
     double calTrackDoca;
     if(m_pCalTool->getVal("CalTrackDoca", calTrackDoca, nextCheck).isSuccess()) {
-        EvtCalETrackDoca = calTrackDoca*sqrt(EvtEnergyOpt)/(3100 - 1500*logE + 239*logE2)
-                                /(5.06 + 10.5*tkr1ZDir +6.17*tkr1ZDir2);
+		double logETrunc = std::min(EvtLogEnergy, 3.8); 
+        EvtECalTrackDoca = calTrackDoca/(272.-140.5*logETrunc + 18.7*logETrunc*logETrunc)
+			                           /(3.08+2.67*tkr1ZDir);
     }
 
- //   double calTrackSep;
- //   if(m_pCalTool->getVal("CalTrackSep", calTrackSep, nextCheck).isSuccess()) {
- //       double logEmin = std::min(logE, 3.6); 
- //       EvtCalETrackSep = calTrackSep/(1380 - 692*logEmin + 91.3*logEmin*logEmin)
- //                               /(3.85 + 5.98*tkr1ZDir +2.53*tkr1ZDir2);
- //   }
+	double calTransRms;
+    if(m_pCalTool->getVal("CalTransRms", calTransRms, nextCheck).isSuccess()) {
+		double logEGaussSq = (EvtLogEnergy-2.3)*(EvtLogEnergy-2.3);
+        EvtECalTransRms = calTransRms/(12.5+ 22.*exp(-logEGaussSq/.8))/(1.34+.55*tkr1ZDir);
+    }
 
-    EvtVtxEEAngle = EvtVtxEAngle/ (96.0 -  70.7*logE + 17.6*logE2) 
-                                / (1.54 + 1.46*tkr1ZDir + .889*tkr1ZDir2);
+	double calLongRms;
+    if(m_pCalTool->getVal("CalLongRms", calLongRms, nextCheck).isSuccess()) {
+		if(logE < 3.8) {
+		    EvtECalLongRms = calLongRms/(96.1 - 39*logE + 5.6*logE2);
+		}
+		else {
+			EvtECalLongRms = calLongRms/(28.*(.847-.0134*logE+.015*logE2));
+		}
+		EvtECalLongRms /= (1.06+.0867*tkr1ZDir);
+    }
+
+	double calLRmsAsym;
+    if(m_pCalTool->getVal("CalLRmsAsym", calLRmsAsym, nextCheck).isSuccess()) {
+		double logEGaussSq = (logE-2.0)*(logE-2.0); 
+		EvtECalLRmsAsym	 = calLRmsAsym/(.012+.06*exp(-logEGaussSq/1.3))/(1.01-.0718*tkr1ZDir);
+    }
+
+    double calTrackAngle;
+    if(m_pCalTool->getVal("CalTrackAngle", calTrackAngle, nextCheck).isSuccess()) {
+		double logETrunc = std::min(logE, 4.0); 
+		EvtECalTrackAngle =	calTrackAngle/(2.3-1.11*logETrunc +.138*logETrunc*logETrunc)
+			                /(1.43+.612*tkr1ZDir);
+    }
+
+    EvtEVtxAngle = vtxAngle*sqrt(EvtEnergyCorr)/(4.24 -1.98*logE + .269*logE2)
+		                                       /(1.95+2.36*tkr1ZDir+1.3*tkr1ZDir2);
+
     double vtxDoca;
     if (m_pVtxTool->getVal("VtxDOCA", vtxDoca, firstCheck).isSuccess()) {
-        EvtVtxEDoca = vtxDoca/(1.55 - .685*logE+ .0851*logE2) 
+        EvtEVtxDoca = vtxDoca/(1.55 - .685*logE+ .0851*logE2) 
                                 / (2.21 + 3.01*tkr1ZDir + 1.59*tkr1ZDir2);
     }
-/*
-    double vtxHeadSep;
-    if (m_pVtxTool->getVal("VtxHeadSep", vtxHeadSep, firstCheck).isSuccess()) {
-        EvtVtxEHeadSep = vtxHeadSep/ (2.83 - .94*logE + .108*logE2) 
-                                / (2.45 + 3.34*tkr1ZDir + 1.58*tkr1ZDir2);
-    }
-*/
+
     return sc;
 }
