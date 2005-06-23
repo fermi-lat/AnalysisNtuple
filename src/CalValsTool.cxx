@@ -3,7 +3,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.52 2005/02/11 07:15:30 lsrea Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.54 2005/06/17 05:11:16 atwood Exp $
 */
 
 // Include files
@@ -24,7 +24,7 @@
 #include "Event/Recon/TkrRecon/TkrTrack.h"
 #include "Event/Recon/TkrRecon/TkrVertex.h"
 #include "Event/Recon/CalRecon/CalCluster.h"
-#include "event/Recon/CalRecon/CalEventEnergy.h"
+#include "Event/Recon/CalRecon/CalEventEnergy.h"
 #include "Event/Recon/CalRecon/CalParams.h"
 #include "Event/Recon/CalRecon/CalXtalRecData.h"
 #include "geometry/Ray.h"
