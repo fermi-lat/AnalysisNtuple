@@ -3,7 +3,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.54 2005/06/17 05:11:16 atwood Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.55 2005/06/23 17:03:35 usher Exp $
 */
 
 // Include files
@@ -141,6 +141,7 @@
       //Calimeter items with Recon - Tracks
       double CAL_Track_DOCA;
       double CAL_Track_Angle;
+	  double CAL_Track_Sep;
       double CAL_x0;
       double CAL_y0;
   };
@@ -238,6 +239,7 @@
       addItem("CalLATEdge",    &CAL_LATEdge);
       addItem("CalTrackDoca",  &CAL_Track_DOCA);
       addItem("CalTrackAngle", &CAL_Track_Angle);
+      addItem("CalTrackSep",   &CAL_Track_Sep);
 
       addItem("CalELayer0",    &CAL_eLayer[0]);
       addItem("CalELayer1",    &CAL_eLayer[1]);
@@ -409,16 +411,33 @@ StatusCode CalValsTool::calculate()
     
     // If there are tracks, use the best one
 	int num_tracks = 0;
+	Point x1, x2; 
+	Vector t1, t2; 
 	if(pTracks) num_tracks = pTracks->size();
 	if(num_tracks > 0) { 
-    
         // Get the first track
         Event::TkrTrackColConPtr pTrack1 = pTracks->begin();
         Event::TkrTrack* track_1 = *pTrack1;
     
         // Get the start and direction 
-        x0 = track_1->getInitialPosition();
-        t0 = track_1->getInitialDirection();
+        x1 = track_1->getInitialPosition();
+        t1 = track_1->getInitialDirection();
+		x0 = x1; 
+		t0 = t1;
+
+	     if(num_tracks > 1) { 
+        // Get the second track
+            pTrack1++;
+            Event::TkrTrack* track_1 = *pTrack1;
+    
+        // Get the start and direction 
+            x2 = track_1->getInitialPosition();
+            t2 = track_1->getInitialDirection();
+
+			Point x2Top = x2 + (pos0.z()-x2.z())/t2.z() * t2; 
+			CAL_Track_Sep = (x2Top - pos0).mag();
+		 }
+
     
         // If vertexed - use first vertex
         if(pVerts) {
