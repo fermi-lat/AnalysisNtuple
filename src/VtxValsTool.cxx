@@ -3,7 +3,7 @@
 @brief Calculates the Vtx analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.15 2005/01/04 23:49:33 atwood Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.16 2005/04/04 21:25:31 lsrea Exp $
 */
 
 // Include files
@@ -196,7 +196,9 @@ StatusCode VtxValsTool::calculate()
 		Point  x2 = track_2->front()->getPoint(Event::TkrTrackHit::SMOOTHED);
 	    Vector t2 = track_2->front()->getDirection(Event::TkrTrackHit::SMOOTHED);
 
-		VTX_Head_Sep = (x1-x2).magnitude(); 
+		Point x2H = x2 + ((x1.z()-x2.z())/t2.z()) * t2;
+
+		VTX_Head_Sep = (x1-x2H).magnitude(); 
 
 		double cost1t2 = t1*t2; 
 		double t1t2  = acos(cost1t2); 
