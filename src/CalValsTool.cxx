@@ -3,7 +3,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.55 2005/06/23 17:03:35 usher Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.56 2005/07/08 17:53:23 atwood Exp $
 */
 
 // Include files
@@ -88,14 +88,6 @@
       double m_calZTop;
       double m_calZBot;
 
-	  // Internal Variables
-	  double m_radLen_CsI;
-      double m_radLen_Stuff;
-      double m_radLen_CntrStuff;
-
-      IPropagator * m_G4PropTool; 
-      IValsTool* m_pTkrTool;
-
       double CAL_EnergyRaw;
 	  double CAL_EnergyCorr;
       double CAL_Leak_Corr;
@@ -137,6 +129,16 @@
 
       double CAL_MIP_Diff; 
       double CAL_MIP_Ratio;
+
+      // New variables for new energy correction tools
+      double CAL_cfp_energy;      // Energy from Full Profile tool
+      double CAL_cfp_totChiSq;    // Total ChiSquare of fit divided by 11
+      double CAL_cfp_calEffRLn;   // Effective radiation lengths in the Cal
+
+      double CAL_lll_energy;      // Energy from the Last Layer Likelihood tool
+      double CAL_lll_chiSquare;   // Chisquare from the Last Layer Likelihood
+      double CAL_tkl_energy;      // Energy from the tracker Likelihood tool
+      double CAL_tkl_chiSquare;   // Chisquare from the tracker likelihood
       
       //Calimeter items with Recon - Tracks
       double CAL_Track_DOCA;
@@ -192,24 +194,6 @@
                log << MSG::ERROR << "Couldn't initialize the CAL constants" << endreq;
              return StatusCode::FAILURE;
           }
-
-          // pick up the propagator
- 
-          IToolSvc* toolSvc = 0;
-          if(service("ToolSvc", toolSvc, true).isFailure()) {
-              log << MSG::ERROR << "Couldn't find the ToolSvc!" << endreq;
-              return StatusCode::FAILURE;
-          }
-          if(!toolSvc->retrieveTool("G4PropagationTool", m_G4PropTool)) {
-              log << MSG::ERROR << "Couldn't find the ToolSvc!" << endreq;
-              return StatusCode::FAILURE;
-          }
-
-          sc = toolSvc->retrieveTool("TkrValsTool", m_pTkrTool);
-          if( sc.isFailure() ) {
-              log << MSG::ERROR << "Unable to find tool: " "TkrValsTool" << endreq;
-              return sc;
-          }        
       } else {
           return StatusCode::FAILURE;
       }
@@ -274,6 +258,14 @@
       addItem("CalX0",         &CAL_x0);
       addItem("CalY0",         &CAL_y0);
 
+      addItem("CalCfpEnergy",  &CAL_cfp_energy);
+      addItem("CalCfpChiSq",   &CAL_cfp_totChiSq);
+      addItem("CalCfpEffRLn",  &CAL_cfp_calEffRLn);
+      addItem("CalLllEnergy",  &CAL_lll_energy);
+      addItem("CalLllChiSq",   &CAL_lll_chiSquare);
+      addItem("CalTklEnergy",  &CAL_tkl_energy);
+      addItem("CalTklChiSq",   &CAL_tkl_chiSquare);
+
       zeroVals();
       
       return sc;
@@ -311,7 +303,8 @@ StatusCode CalValsTool::calculate()
         {
             Event::CalCorToolResult corResult = **corIter;
 
-            if (corResult.getCorrectionName() == "CalValsCorrTool"){
+            if (corResult.getCorrectionName() == "CalValsCorrTool")
+            {
                 CAL_EnergyCorr   = corResult["CorrectedEnergy"];
 			    CAL_Leak_Corr    = corResult["LeakCorrection"];
                 CAL_Edge_Corr    = corResult["EdgeCorrection"]; 
@@ -329,8 +322,22 @@ StatusCode CalValsTool::calculate()
  
 	            CAL_x0 = corResult["CalTopX0"];
 	            CAL_y0 = corResult["CalTopY0"];
-
-                break;
+            }
+            else if (corResult.getCorrectionName() == "CalFullProfileTool")
+            {
+                CAL_cfp_energy    = corResult.getParams().getEnergy();
+                CAL_cfp_totChiSq  = corResult["totchisq"];
+                CAL_cfp_calEffRLn = corResult["cal_eff_RLn"];
+            }
+            else if (corResult.getCorrectionName() == "CalLastLayerLikelihoodTool")
+            {
+                CAL_lll_energy    = corResult.getParams().getEnergy();
+                CAL_lll_chiSquare = corResult["GeometricCut"];
+            }
+            else if (corResult.getCorrectionName() == "CalTkrLikelihoodTool")
+            {
+                CAL_tkl_energy    = corResult.getParams().getEnergy();
+                CAL_tkl_chiSquare = corResult["GeometricCut"];
             }
         }
     }
