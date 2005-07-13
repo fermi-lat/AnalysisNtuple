@@ -3,7 +3,7 @@
 @brief Calculates the "Event" analysis variables from the other ntuple variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.20 2005/06/17 05:11:16 atwood Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.22 2005/06/22 23:11:55 usher Exp $
 */
 
 #include "ValBase.h"
@@ -50,7 +50,7 @@ private:
     double EvtEnergyCorr;
     double EvtEnergyRaw;
     double EvtDeltaEoE;
-    double EvtECaldgeAngle;
+    double EvtCalEdgeAngle;
     double EvtTkrEdgeAngle;
     double EvtLogEnergy;
     double EvtTkr1EFrac;
@@ -197,7 +197,7 @@ StatusCode EvtValsTool::initialize()
     addItem("EvtEnergyCorr",    &EvtEnergyCorr);
     addItem("EvtEnergyRaw",     &EvtEnergyRaw);
     addItem("EvtDeltaEoE",      &EvtDeltaEoE);
-    addItem("EvtECaldgeAngle",  &EvtECaldgeAngle);
+    addItem("EvtCalEdgeAngle",  &EvtCalEdgeAngle);
     addItem("EvtTkrEdgeAngle",  &EvtTkrEdgeAngle);
     addItem("EvtLogEnergy",     &EvtLogEnergy);
     addItem("EvtTkr1EFrac",     &EvtTkr1EFrac);
@@ -283,7 +283,7 @@ StatusCode EvtValsTool::calculate()
             EvtTkrEdgeAngle = -tkrEdge/tkr1ZDir;
         }
         if (m_pCalTool->getVal("CalTwrEdge", calEdge, nextCheck).isSuccess()) {
-            EvtECaldgeAngle = -calEdge/tkr1ZDir;
+            EvtCalEdgeAngle = -calEdge/tkr1ZDir;
         }
     }
 	double tkr1ZDir2 = tkr1ZDir*tkr1ZDir;  
