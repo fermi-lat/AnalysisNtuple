@@ -3,7 +3,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.56 2005/07/08 17:53:23 atwood Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.57 2005/07/13 23:57:33 usher Exp $
 */
 
 // Include files
@@ -136,9 +136,9 @@
       double CAL_cfp_calEffRLn;   // Effective radiation lengths in the Cal
 
       double CAL_lll_energy;      // Energy from the Last Layer Likelihood tool
-      double CAL_lll_chiSquare;   // Chisquare from the Last Layer Likelihood
+      double CAL_lll_energyErr;   // Chisquare from the Last Layer Likelihood
       double CAL_tkl_energy;      // Energy from the tracker Likelihood tool
-      double CAL_tkl_chiSquare;   // Chisquare from the tracker likelihood
+      double CAL_tkl_energyErr;   // Chisquare from the tracker likelihood
       
       //Calimeter items with Recon - Tracks
       double CAL_Track_DOCA;
@@ -262,9 +262,9 @@
       addItem("CalCfpChiSq",   &CAL_cfp_totChiSq);
       addItem("CalCfpEffRLn",  &CAL_cfp_calEffRLn);
       addItem("CalLllEnergy",  &CAL_lll_energy);
-      addItem("CalLllChiSq",   &CAL_lll_chiSquare);
+      addItem("CalLllEneErr",  &CAL_lll_energyErr);
       addItem("CalTklEnergy",  &CAL_tkl_energy);
-      addItem("CalTklChiSq",   &CAL_tkl_chiSquare);
+      addItem("CalTklEneErr",  &CAL_tkl_energyErr);
 
       zeroVals();
       
@@ -332,12 +332,12 @@ StatusCode CalValsTool::calculate()
             else if (corResult.getCorrectionName() == "CalLastLayerLikelihoodTool")
             {
                 CAL_lll_energy    = corResult.getParams().getEnergy();
-                CAL_lll_chiSquare = corResult["GeometricCut"];
+                CAL_lll_energyErr = corResult.getParams().getEnergyErr();
             }
             else if (corResult.getCorrectionName() == "CalTkrLikelihoodTool")
             {
                 CAL_tkl_energy    = corResult.getParams().getEnergy();
-                CAL_tkl_chiSquare = corResult["GeometricCut"];
+                CAL_tkl_energyErr = corResult.getParams().getEnergyErr();
             }
         }
     }
