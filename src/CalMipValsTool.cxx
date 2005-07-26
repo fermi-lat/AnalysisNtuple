@@ -3,7 +3,7 @@
 @brief Calculates the Cal Mip analysis variables
 @author F. Piron
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalMipValsTool.cxx,v 1.1 2005/07/14 17:09:18 piron Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalMipValsTool.cxx,v 1.2 2005/07/26 16:12:37 piron Exp $
 */
 
 // Include files
@@ -54,21 +54,20 @@
   @author F. Piron
   */
   
-  class CalMipValsTool :   public ValBase
-  {
-  public:
+class CalMipValsTool :   public ValBase
+{
+public:  
+    CalMipValsTool( const std::string& type, 
+                    const std::string& name, 
+                    const IInterface* parent);
       
-      CalMipValsTool( const std::string& type, 
-          const std::string& name, 
-          const IInterface* parent);
+    virtual ~CalMipValsTool() { }
       
-      virtual ~CalMipValsTool() { }
+    StatusCode initialize();
       
-      StatusCode initialize();
+    StatusCode calculate();
       
-      StatusCode calculate();
-      
-  private:
+private:
     double m_num;
     double m_x0;
     double m_y0;
@@ -82,45 +81,45 @@
     double m_ecorRms;
     double m_chi2;
     double m_erm;     
-  };
+};
   
-  // Static factory for instantiation of algtool objects
-  static ToolFactory<CalMipValsTool> s_factory;
-  const IToolFactory& CalMipValsToolFactory = s_factory;
+// Static factory for instantiation of algtool objects
+static ToolFactory<CalMipValsTool> s_factory;
+const IToolFactory& CalMipValsToolFactory = s_factory;
   
-  // Standard Constructor
-  CalMipValsTool::CalMipValsTool(const std::string& type, 
-      const std::string& name, 
-      const IInterface* parent)
-      : ValBase( type, name, parent )
-  {    
-      // Declare additional interface
-      declareInterface<IValsTool>(this); 
-  }
+// Standard Constructor
+CalMipValsTool::CalMipValsTool(const std::string& type, 
+                               const std::string& name, 
+                               const IInterface* parent)
+               : ValBase( type, name, parent )
+{    
+    // Declare additional interface
+    declareInterface<IValsTool>(this); 
+}
   
-  StatusCode CalMipValsTool::initialize()
-  {
-      StatusCode sc = StatusCode::SUCCESS;
-      
-      MsgStream log(msgSvc(), name());
-      
-      if( ValBase::initialize().isFailure()) return StatusCode::FAILURE;
-      
-      addItem("CalMipNum",     &m_num);      
-      addItem("CalMipX0",      &m_x0);      
-      addItem("CalMipY0",      &m_y0);      
-      addItem("CalMipZ0",      &m_z0);      
-      addItem("CalMipXDir",    &m_xDir);   
-      addItem("CalMipYDir",    &m_yDir);    
-      addItem("CalMipZDir",    &m_zDir);    
-      addItem("CalMipD2edge",  &m_d2edge);  
-      addItem("CalMipArcLen",  &m_arcLen);  
-      addItem("CalMipEcor",    &m_ecor);    
-      addItem("CalMipEcorRms", &m_ecorRms); 
-      addItem("CalMipChi2",    &m_chi2);    
-      addItem("CalMipErm",     &m_erm);     
-      
-      return sc;
+StatusCode CalMipValsTool::initialize()
+{
+    StatusCode sc = StatusCode::SUCCESS;
+    
+    MsgStream log(msgSvc(), name());
+    
+    if( ValBase::initialize().isFailure()) return StatusCode::FAILURE;
+    
+    addItem("CalMipNum",     &m_num);      
+    addItem("CalMipX0",      &m_x0);      
+    addItem("CalMipY0",      &m_y0);      
+    addItem("CalMipZ0",      &m_z0);      
+    addItem("CalMipXDir",    &m_xDir);   
+    addItem("CalMipYDir",    &m_yDir);    
+    addItem("CalMipZDir",    &m_zDir);    
+    addItem("CalMipD2edge",  &m_d2edge);  
+    addItem("CalMipArcLen",  &m_arcLen);  
+    addItem("CalMipEcor",    &m_ecor);    
+    addItem("CalMipEcorRms", &m_ecorRms); 
+    addItem("CalMipChi2",    &m_chi2);    
+    addItem("CalMipErm",     &m_erm);     
+    
+    return sc;
 }
 
 StatusCode CalMipValsTool::calculate()
@@ -150,8 +149,8 @@ StatusCode CalMipValsTool::calculate()
     int ipassed[100][2];
     for(int j=0;j<100;j++)
     {
-      ipassed[j][0]=0;
-      ipassed[j][1]=0;
+        ipassed[j][0]=0;
+        ipassed[j][1]=0;
     }
     int n1=0,n2=0;
 
@@ -175,34 +174,34 @@ StatusCode CalMipValsTool::calculate()
     int it=-1;
     for(Event::CalMipTrackCol::const_iterator calMipTrackIter=p_calMipTrackCol->begin(); calMipTrackIter != p_calMipTrackCol->end(); calMipTrackIter++)
     {
-      it++;
-      log << "------------------------------------------------------------" << endreq;
-      log << "counter col=" << it << " / size = " << m_num << endreq;
-      Event::CalMipTrack* p_calMipTrack    =  *calMipTrackIter;
-      p_calMipTrack->writeOut(log);
-      log << "------------------------------------------------------------" << endreq;
+        it++;
+        log << "------------------------------------------------------------" << endreq;
+        log << "counter col=" << it << " / size = " << m_num << endreq;
+        Event::CalMipTrack* p_calMipTrack    =  *calMipTrackIter;
+        p_calMipTrack->writeOut(log);
+        log << "------------------------------------------------------------" << endreq;
 
-      point   = p_calMipTrack->getPoint   ();
-      dir     = p_calMipTrack->getDir     ();
-      d2c     = p_calMipTrack->getD2C     ();
-      d2edge  = p_calMipTrack->getD2Edge  ();
-      calEdge = p_calMipTrack->getCalEdge ();
-      arcLen  = p_calMipTrack->getArcLen  ();
-      ecor    = p_calMipTrack->getEcor    ();
-      ecorRms = p_calMipTrack->getEcorRms ();
-      chi2    = p_calMipTrack->getChi2    ();
-      erm     = p_calMipTrack->getErm     ();
+        point   = p_calMipTrack->getPoint   ();
+        dir     = p_calMipTrack->getDir     ();
+        d2c     = p_calMipTrack->getD2C     ();
+        d2edge  = p_calMipTrack->getD2Edge  ();
+        calEdge = p_calMipTrack->getCalEdge ();
+        arcLen  = p_calMipTrack->getArcLen  ();
+        ecor    = p_calMipTrack->getEcor    ();
+        ecorRms = p_calMipTrack->getEcorRms ();
+        chi2    = p_calMipTrack->getChi2    ();
+        erm     = p_calMipTrack->getErm     ();
             
-      if (d2edge<1000000)
-      {
-        n1++;
-        ipassed[it][0]=1;
-        if (ecor>10.0 && ecor<14.2)
+        if (d2edge<1000000)
         {
-          n2++;
-          ipassed[it][1]=1;
+            n1++;
+            ipassed[it][0]=1;
+            if (ecor>10.0 && ecor<14.2)
+            {
+                n2++;
+                ipassed[it][1]=1;
+            }
         }
-      }
     }
         
 //     if (n2<=0)
@@ -210,34 +209,34 @@ StatusCode CalMipValsTool::calculate()
       return sc;
     else
     {
-      // loop again over tracks to keep the track with best chi2
-      int it=-1;
-      double chi2min=999999;
-      for(Event::CalMipTrackCol::const_iterator calMipTrackIter=p_calMipTrackCol->begin(); calMipTrackIter != p_calMipTrackCol->end(); calMipTrackIter++)
-      {
-        it++;
-        //        if (!ipassed[it][1])
-        if (!ipassed[it][0])
-          continue;
-            
-        Event::CalMipTrack* p_calMipTrack    =  *calMipTrackIter;
-        
-        double chi2Cur    = p_calMipTrack->getChi2    ();
-        if (chi2Cur<chi2min)
+        // loop again over tracks to keep the track with best chi2
+        int it=-1;
+        double chi2min=999999;
+        for(Event::CalMipTrackCol::const_iterator calMipTrackIter=p_calMipTrackCol->begin(); calMipTrackIter != p_calMipTrackCol->end(); calMipTrackIter++)
         {
-          chi2min=chi2Cur;
-          chi2=chi2Cur;
-          point   = p_calMipTrack->getPoint   ();
-          dir     = p_calMipTrack->getDir     ();
-          d2c     = p_calMipTrack->getD2C     ();
-          d2edge  = p_calMipTrack->getD2Edge  ();
-          calEdge = p_calMipTrack->getCalEdge ();
-          arcLen  = p_calMipTrack->getArcLen  ();
-          ecor    = p_calMipTrack->getEcor    ();
-          ecorRms = p_calMipTrack->getEcorRms ();
-          erm     = p_calMipTrack->getErm     ();
+            it++;
+            //        if (!ipassed[it][1])
+            if (!ipassed[it][0])
+                continue;
+            
+            Event::CalMipTrack* p_calMipTrack    =  *calMipTrackIter;
+        
+            double chi2Cur    = p_calMipTrack->getChi2    ();
+            if (chi2Cur<chi2min)
+            {
+                chi2min=chi2Cur;
+                chi2=chi2Cur;
+                point   = p_calMipTrack->getPoint   ();
+                dir     = p_calMipTrack->getDir     ();
+                d2c     = p_calMipTrack->getD2C     ();
+                d2edge  = p_calMipTrack->getD2Edge  ();
+                calEdge = p_calMipTrack->getCalEdge ();
+                arcLen  = p_calMipTrack->getArcLen  ();
+                ecor    = p_calMipTrack->getEcor    ();
+                ecorRms = p_calMipTrack->getEcorRms ();
+                erm     = p_calMipTrack->getErm     ();
+            }
         }
-      }
     }
     
     m_x0=point.x();
