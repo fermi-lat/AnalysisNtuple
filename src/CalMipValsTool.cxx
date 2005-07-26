@@ -3,7 +3,7 @@
 @brief Calculates the Cal Mip analysis variables
 @author F. Piron
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalMipValsTool.cxx,v 1.55 2005/06/23 17:03:35 usher Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalMipValsTool.cxx,v 1.1 2005/07/14 17:09:18 piron Exp $
 */
 
 // Include files
@@ -130,7 +130,7 @@ StatusCode CalMipValsTool::calculate()
     // Retrieve the calMipTrack collection   
 
     MsgStream log(msgSvc(), name());
-    log << MSG::DEBUG << " FP : readCalMipTrackCol in CalMipValsTool" << endreq;
+    log << MSG::DEBUG << "FP : readCalMipTrackCol in CalMipValsTool" << endreq;
 
     SmartDataPtr<Event::CalMipTrackCol> p_calMipTrackCol(m_pEventSvc, EventModel::CalRecon::CalMipTrackCol); 
 
@@ -155,6 +155,7 @@ StatusCode CalMipValsTool::calculate()
     }
     int n1=0,n2=0;
 
+    m_num=0;
     m_x0=-5.;
     m_y0=-5.;
     m_z0=-5.;
@@ -174,10 +175,9 @@ StatusCode CalMipValsTool::calculate()
     int it=-1;
     for(Event::CalMipTrackCol::const_iterator calMipTrackIter=p_calMipTrackCol->begin(); calMipTrackIter != p_calMipTrackCol->end(); calMipTrackIter++)
     {
+      it++;
       log << "------------------------------------------------------------" << endreq;
       log << "counter col=" << it << " / size = " << m_num << endreq;
-      log << "----------------" << endreq;
-      it++;
       Event::CalMipTrack* p_calMipTrack    =  *calMipTrackIter;
       p_calMipTrack->writeOut(log);
       log << "------------------------------------------------------------" << endreq;
@@ -193,7 +193,7 @@ StatusCode CalMipValsTool::calculate()
       chi2    = p_calMipTrack->getChi2    ();
       erm     = p_calMipTrack->getErm     ();
             
-      if (d2edge<12)
+      if (d2edge<1000000)
       {
         n1++;
         ipassed[it][0]=1;
@@ -253,7 +253,7 @@ StatusCode CalMipValsTool::calculate()
     m_chi2=chi2;
     m_erm=erm;
     
-    log << MSG::DEBUG << " FP : readCalMipTrackCol in CalMipValsTool End  " << m_num << " " << n2 << endreq;
+    log << MSG::DEBUG << " FP : readCalMipTrackCol in CalMipValsTool End  " << m_num << endreq;
     return sc;
 }
 
