@@ -3,7 +3,7 @@
 @brief Calculates the "Event" analysis variables from the other ntuple variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.23 2005/07/13 19:46:40 atwood Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.24 2005/07/27 15:20:01 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -254,13 +254,13 @@ StatusCode EvtValsTool::calculate()
         EvtLiveTime    = header->livetime();
     }
 
-    double eCalSum, eTkr;
+    float eCalSum, eTkr;
     if(    m_pCalTool->getVal("CalEnergyRaw", eCalSum, firstCheck).isSuccess()
         && m_pTkrTool->getVal("TkrEnergyCorr", eTkr, firstCheck).isSuccess()) {
         EvtEnergyRaw = eTkr + eCalSum;
     }
 
-    double eTkrKalEne, eCalRLn, eTkrBest; //, eCal
+    float eTkrKalEne, eCalRLn, eTkrBest; //, eCal
     int CAL_Type;
     if (   m_pCalTool->getVal("CalCsIRLn", eCalRLn, firstCheck).isSuccess()
         && m_pTkrTool->getVal("TkrSumKalEne", eTkrKalEne, firstCheck).isSuccess()) 
@@ -276,7 +276,7 @@ StatusCode EvtValsTool::calculate()
     }
 
  // EdgeAngle:   distance from tower edge / cos(theta) 
-    double tkrEdge, calEdge, tkr1ZDir = -1.;
+    float tkrEdge, calEdge, tkr1ZDir = -1.;
     if(m_pTkrTool->getVal("Tkr1ZDir",tkr1ZDir, nextCheck).isSuccess()) {
 		if(tkr1ZDir == 0.) tkr1ZDir = -1.; 
         if (m_pTkrTool->getVal("TkrTwrEdge", tkrEdge, nextCheck).isSuccess()) {
@@ -286,12 +286,12 @@ StatusCode EvtValsTool::calculate()
             EvtCalEdgeAngle = -calEdge/tkr1ZDir;
         }
     }
-	double tkr1ZDir2 = tkr1ZDir*tkr1ZDir;  
+	float tkr1ZDir2 = tkr1ZDir*tkr1ZDir;  
 	// Final Energy Selection: (Combo approach) 
 	//    Use Kalman energy when not enough in the Cal,
 	//    use Last Layer Correction when avaialable (eCalEneLLCorr > 0) or else
 	//    use integrated edge and leakage correction from CalValsTool
-    double eCalSumCorr;
+    float eCalSumCorr;
     if(    m_pCalTool->getVal("CalEnergyCorr", eCalSumCorr, nextCheck).isSuccess()
 		//&& m_pCalTool->getVal("CalEnergyLLCorr", eCalEneLLCorr, nextCheck).isSuccess()
 		) { // NOTE: THIS IS STILL LARGELY UNDESIDED WHAT TO DO HERE....!!!!!!!  
@@ -304,7 +304,7 @@ StatusCode EvtValsTool::calculate()
 	//	}
     }
     
-    double mcEnergy;
+    float mcEnergy;
     if(m_pMcTool->getVal("McEnergy", mcEnergy, firstCheck).isSuccess()){
         EvtDeltaEoE = (EvtEnergyCorr - mcEnergy)/(mcEnergy);
     }
@@ -313,12 +313,12 @@ StatusCode EvtValsTool::calculate()
 
 	// Log(base 10) of measured energy - useful for parameterizing effects
     EvtLogEnergy = log10(std::min(std::max(EvtEnergyCorr,10.f),1000000.f));
-    double logE = std::min(std::max(EvtLogEnergy,1.3f), 6.0f);
-    double logE2 = logE*logE; 
+    float logE = std::min(std::max(EvtLogEnergy,1.3f), 6.0f);
+    float logE2 = logE*logE; 
     
 
 	// Ratio of PSF model to event total PSF error. Note PhiErr = sin(theta)*d(phi)
-    double tkr1ThetaErr, tkr1PhiErr;
+    float tkr1ThetaErr, tkr1PhiErr;
     if (m_pTkrTool->getVal("Tkr1ThetaErr",tkr1ThetaErr, nextCheck).isSuccess() &&
         m_pTkrTool->getVal("Tkr1PhiErr",tkr1PhiErr, nextCheck).isSuccess()) {
         EvtTkr1PSFMdRat = sqrt(tkr1ThetaErr*tkr1ThetaErr + tkr1PhiErr*tkr1PhiErr)/ 
@@ -326,13 +326,13 @@ StatusCode EvtValsTool::calculate()
     }
 
 	// Fraction of energy in Track 1
-    double tkr1ConE;
+    float tkr1ConE;
     if (m_pTkrTool->getVal("Tkr1ConEne",tkr1ConE, nextCheck).isSuccess()) {
         if(EvtEnergyCorr>0.0) EvtTkr1EFrac = tkr1ConE/EvtEnergyCorr;
     }
 
 	// Vtx kinematic variable:  angle * event energy / Track_1 energy fraction
-    double vtxAngle;
+    float vtxAngle;
     if (m_pVtxTool->getVal("VtxAngle", vtxAngle, firstCheck).isSuccess()) {
         if (tkr1ConE>0.0) EvtVtxKin = vtxAngle*EvtEnergyCorr/EvtTkr1EFrac;
     }
@@ -343,7 +343,7 @@ StatusCode EvtValsTool::calculate()
 	// Hit counting around track compared to hits on track.  Compton scatters
 	// have a ratio ~< 1 (as do MIPs etc.  - this is similar to the former
 	// Surplus Hit Ratio
-    double totHits, tkr1First;
+    float totHits, tkr1First;
     if (m_pTkrTool->getVal("TkrTotalHits", totHits, nextCheck).isSuccess()) {
         if (m_pTkrTool->getVal("Tkr1FirstLayer", tkr1First, nextCheck).isSuccess()){
             EvtTkrComptonRatio = totHits/(2.*(m_tkrGeom->numLayers()-tkr1First));
@@ -353,47 +353,47 @@ StatusCode EvtValsTool::calculate()
     }
 
 	// Energy compensated track 1 chisq
-    double tkr1Chisq;
+    float tkr1Chisq;
     if (m_pTkrTool->getVal("Tkr1Chisq", tkr1Chisq, nextCheck).isSuccess()) {
         EvtETkr1Chisq = tkr1Chisq/(6.49 -22.1*tkr1ZDir -22.8*tkr1ZDir2);
     }
-    double tkr1_1stChisq;
+    float tkr1_1stChisq;
     if (m_pTkrTool->getVal("Tkr1FirstChisq", tkr1_1stChisq, nextCheck).isSuccess()) {
         EvtETkr1FirstChisq = tkr1_1stChisq/(4.34-.708*logE+.19*logE2)
 			                 /(.751-1.74*tkr1ZDir-1.83*tkr1ZDir2);
     }
-    double tkr1Qual;
+    float tkr1Qual;
     if (m_pTkrTool->getVal("Tkr1Qual", tkr1Qual, nextCheck).isSuccess()) {
         EvtETkr1Qual = tkr1Qual/(56.6 +6.78*tkr1ZDir + 8.23*tkr1ZDir2);
     }
 
-    double calXtalRatio;
+    float calXtalRatio;
     if(m_pCalTool->getVal("CalXtalRatio", calXtalRatio, nextCheck).isSuccess()) {
         EvtECalXtalRatio = calXtalRatio/(2.99-1.19*logE  + .122*logE2)/(.749-.355*tkr1ZDir);
     }
 
-    double calXtalsTrunc;
+    float calXtalsTrunc;
     if(m_pCalTool->getVal("CalXtalsTrunc", calXtalsTrunc, nextCheck).isSuccess()) {
-        double term1 = std::max(1., (-85.4 + 65.2*logE - 10.4*logE2));
-        double logE33 = logE-3.3; 
-        double term2 = (logE33 > 0.) ? std::min(14., 12.*logE33*logE33): 0.;
+        float term1 = std::max(1., (-85.4 + 65.2*logE - 10.4*logE2));
+        float logE33 = logE-3.3; 
+        float term2 = (logE33 > 0.) ? std::min(14., 12.*logE33*logE33): 0.;
         EvtECalXtalTrunc = calXtalsTrunc/(term1 + term2)/(.935 - .382*tkr1ZDir - .343*tkr1ZDir2);
     }
 
-    double calTrackDoca;
+    float calTrackDoca;
     if(m_pCalTool->getVal("CalTrackDoca", calTrackDoca, nextCheck).isSuccess()) {
-		double logETrunc = std::min(EvtLogEnergy, 3.8f); 
+		float logETrunc = std::min(EvtLogEnergy, 3.8f); 
         EvtECalTrackDoca = calTrackDoca/(272.-140.5*logETrunc + 18.7*logETrunc*logETrunc)
 			                           /(3.08+2.67*tkr1ZDir);
     }
 
-	double calTransRms;
+	float calTransRms;
     if(m_pCalTool->getVal("CalTransRms", calTransRms, nextCheck).isSuccess()) {
-		double logEGaussSq = (EvtLogEnergy-2.3)*(EvtLogEnergy-2.3);
+		float logEGaussSq = (EvtLogEnergy-2.3)*(EvtLogEnergy-2.3);
         EvtECalTransRms = calTransRms/(12.5+ 22.*exp(-logEGaussSq/.8))/(1.34+.55*tkr1ZDir);
     }
 
-	double calLongRms;
+	float calLongRms;
     if(m_pCalTool->getVal("CalLongRms", calLongRms, nextCheck).isSuccess()) {
 		if(logE < 3.8) {
 		    EvtECalLongRms = calLongRms/(96.1 - 39*logE + 5.6*logE2);
@@ -404,15 +404,15 @@ StatusCode EvtValsTool::calculate()
 		EvtECalLongRms /= (1.06+.0867*tkr1ZDir);
     }
 
-	double calLRmsAsym;
+	float calLRmsAsym;
     if(m_pCalTool->getVal("CalLRmsAsym", calLRmsAsym, nextCheck).isSuccess()) {
-		double logEGaussSq = (logE-2.0)*(logE-2.0); 
+		float logEGaussSq = (logE-2.0)*(logE-2.0); 
 		EvtECalLRmsAsym	 = calLRmsAsym/(.012+.06*exp(-logEGaussSq/1.3))/(1.01-.0718*tkr1ZDir);
     }
 
-    double calTrackAngle;
+    float calTrackAngle;
     if(m_pCalTool->getVal("CalTrackAngle", calTrackAngle, nextCheck).isSuccess()) {
-		double logETrunc = std::min(logE, 4.0); 
+		float logETrunc = std::min(logE, 4.0f); 
 		EvtECalTrackAngle =	calTrackAngle/(2.3-1.11*logETrunc +.138*logETrunc*logETrunc)
 			                /(1.43+.612*tkr1ZDir);
     }
@@ -420,7 +420,7 @@ StatusCode EvtValsTool::calculate()
     EvtEVtxAngle = vtxAngle*sqrt(EvtEnergyCorr)/(4.24 -1.98*logE + .269*logE2)
 		                                       /(1.95+2.36*tkr1ZDir+1.3*tkr1ZDir2);
 
-    double vtxDoca;
+    float vtxDoca;
     if (m_pVtxTool->getVal("VtxDOCA", vtxDoca, firstCheck).isSuccess()) {
         EvtEVtxDoca = vtxDoca/(1.55 - .685*logE+ .0851*logE2) 
                                 / (2.21 + 3.01*tkr1ZDir + 1.59*tkr1ZDir2);
