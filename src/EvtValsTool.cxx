@@ -3,7 +3,7 @@
 @brief Calculates the "Event" analysis variables from the other ntuple variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.22 2005/06/22 23:11:55 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.23 2005/07/13 19:46:40 atwood Exp $
 */
 
 #include "ValBase.h"
@@ -42,39 +42,39 @@ public:
 private:
 
     //Global Items
-    double EvtRun;
-    double EvtEventId;
+    float EvtRun;
+    float EvtEventId;
     double EvtElapsedTime;
-    double EvtLiveTime;
+    float EvtLiveTime;
 
-    double EvtEnergyCorr;
-    double EvtEnergyRaw;
-    double EvtDeltaEoE;
-    double EvtCalEdgeAngle;
-    double EvtTkrEdgeAngle;
-    double EvtLogEnergy;
-    double EvtTkr1EFrac;
-    double EvtVtxKin;
-    double EvtVtxEAngle;
-    double EvtTkrComptonRatio;
-    double EvtETkrComptonRatio;
-    double EvtPSFModel; 
+    float EvtEnergyCorr;
+    float EvtEnergyRaw;
+    float EvtDeltaEoE;
+    float EvtCalEdgeAngle;
+    float EvtTkrEdgeAngle;
+    float EvtLogEnergy;
+    float EvtTkr1EFrac;
+    float EvtVtxKin;
+    float EvtVtxEAngle;
+    float EvtTkrComptonRatio;
+    float EvtETkrComptonRatio;
+    float EvtPSFModel; 
 
-    double EvtETkr1Chisq;
-    double EvtETkr1FirstChisq;
-    double EvtETkr1Qual;
-    double EvtTkr1PSFMdRat;
+    float EvtETkr1Chisq;
+    float EvtETkr1FirstChisq;
+    float EvtETkr1Qual;
+    float EvtTkr1PSFMdRat;
 
-    double EvtECalXtalRatio;
-    double EvtECalXtalTrunc;
-    double EvtECalTrackDoca;
-    double EvtECalTrackSep;
-	double EvtECalTransRms;
-	double EvtECalLongRms;
-	double EvtECalLRmsAsym;
-	double EvtECalTrackAngle;
-    double EvtEVtxAngle;
-    double EvtEVtxDoca;
+    float EvtECalXtalRatio;
+    float EvtECalXtalTrunc;
+    float EvtECalTrackDoca;
+    float EvtECalTrackSep;
+	float EvtECalTransRms;
+	float EvtECalLongRms;
+	float EvtECalLRmsAsym;
+	float EvtECalTrackAngle;
+    float EvtEVtxAngle;
+    float EvtEVtxDoca;
 
     IValsTool* m_pMcTool;
     IValsTool* m_pGltTool;
@@ -309,11 +309,11 @@ StatusCode EvtValsTool::calculate()
         EvtDeltaEoE = (EvtEnergyCorr - mcEnergy)/(mcEnergy);
     }
     // Model simple for PSF(68%) 
-    EvtPSFModel = sqrt(pow((.061/pow((std::max(EvtEnergyCorr,1.)/100),.8)),2) + (.001745*.001745));
+    EvtPSFModel = sqrt(pow((.061/pow((std::max(EvtEnergyCorr*1.,1.)/100),.8)),2) + (.001745*.001745));
 
 	// Log(base 10) of measured energy - useful for parameterizing effects
-    EvtLogEnergy = log10(std::min(std::max(EvtEnergyCorr,10.),1000000.));
-    double logE = std::min(std::max(EvtLogEnergy,1.3), 6.0);
+    EvtLogEnergy = log10(std::min(std::max(EvtEnergyCorr,10.f),1000000.f));
+    double logE = std::min(std::max(EvtLogEnergy,1.3f), 6.0f);
     double logE2 = logE*logE; 
     
 
@@ -382,7 +382,7 @@ StatusCode EvtValsTool::calculate()
 
     double calTrackDoca;
     if(m_pCalTool->getVal("CalTrackDoca", calTrackDoca, nextCheck).isSuccess()) {
-		double logETrunc = std::min(EvtLogEnergy, 3.8); 
+		double logETrunc = std::min(EvtLogEnergy, 3.8f); 
         EvtECalTrackDoca = calTrackDoca/(272.-140.5*logETrunc + 18.7*logETrunc*logETrunc)
 			                           /(3.08+2.67*tkr1ZDir);
     }

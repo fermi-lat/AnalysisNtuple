@@ -2,7 +2,7 @@
 @brief Calculates the Tkr hit analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrHitValsTool.cxx,v 1.8 2004/10/09 04:36:25 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrHitValsTool.cxx,v 1.9 2005/04/12 19:06:05 lsrea Exp $
 */
 
 // Include files
@@ -50,12 +50,12 @@ public:
 private:
     
     //TkrClusters Tuple Items
-    double Tkr_Cnv_Lyr_Hits;
-    double Tkr_Max_controller_hits;
-    double Tkr_Fst_Cnv_Lyr;
-    double Tkr_NCnv_Lyrs_Hit;
+    float Tkr_Cnv_Lyr_Hits;
+    float Tkr_Max_controller_hits;
+    float Tkr_Fst_Cnv_Lyr;
+    float Tkr_NCnv_Lyrs_Hit;
     
-    double Tkr_HitsPerLyr[_nLayers];
+    float Tkr_HitsPerLyr[_nLayers];
 
     ITkrQueryClustersTool* m_clusTool;
 };

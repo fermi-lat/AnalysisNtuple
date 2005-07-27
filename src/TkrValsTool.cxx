@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.58 2005/04/12 19:06:05 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.59 2005/06/17 05:11:16 atwood Exp $
 */
 
 // To Do:
@@ -85,96 +85,96 @@ private:
     IPropagator*           m_G4PropTool;    
 
     //Global Track Tuple Items
-    double Tkr_No_Tracks;
-    double Tkr_Sum_KalEne; 
-    double Tkr_Sum_ConEne;
-    double Tkr_Energy;
-    double Tkr_Energy_Corr;
-    double Tkr_HDCount; 
-    double Tkr_Total_Hits;
-    double Tkr_Thin_Hits;
-    double Tkr_Thick_Hits;
-    double Tkr_Blank_Hits;  
-    double Tkr_RadLength; 
-    double Tkr_TwrEdge; 
-    double Tkr_TrackLength;
+    float Tkr_No_Tracks;
+    float Tkr_Sum_KalEne; 
+    float Tkr_Sum_ConEne;
+    float Tkr_Energy;
+    float Tkr_Energy_Corr;
+    float Tkr_HDCount; 
+    float Tkr_Total_Hits;
+    float Tkr_Thin_Hits;
+    float Tkr_Thick_Hits;
+    float Tkr_Blank_Hits;  
+    float Tkr_RadLength; 
+    float Tkr_TwrEdge; 
+    float Tkr_TrackLength;
 
     //First Track Specifics
-    double Tkr_1_Chisq;
-    double Tkr_1_FirstChisq;
-    double Tkr_1_Gaps;
-	double Tkr_1_FirstGapPlane; 
-	double Tkr_1_GapX;
-	double Tkr_1_GapY;
-    double Tkr_1_FirstGaps; 
-    double Tkr_1_Hits;
-    double Tkr_1_FirstHits;
-    double Tkr_1_FirstLayer; 
-    double Tkr_1_LastLayer; 
+    float Tkr_1_Chisq;
+    float Tkr_1_FirstChisq;
+    float Tkr_1_Gaps;
+	float Tkr_1_FirstGapPlane; 
+	float Tkr_1_GapX;
+	float Tkr_1_GapY;
+    float Tkr_1_FirstGaps; 
+    float Tkr_1_Hits;
+    float Tkr_1_FirstHits;
+    float Tkr_1_FirstLayer; 
+    float Tkr_1_LastLayer; 
 
-    double Tkr_1_Qual;
-    double Tkr_1_Type;
+    float Tkr_1_Qual;
+    float Tkr_1_Type;
 
-    double Tkr_1_DifHits;
-    double Tkr_1_KalEne;
-    double Tkr_1_ConEne;
-    double Tkr_1_KalThetaMS;
-    double Tkr_1_TwrEdge;
-    double Tkr_1_PrjTwrEdge;
-    double Tkr_1_DieEdge;
-    double Tkr_1_TwrGap;
-    double Tkr_1_xdir;
-    double Tkr_1_ydir;
-    double Tkr_1_zdir;
-    double Tkr_1_Phi;
-    double Tkr_1_Theta;
-    double Tkr_1_x0;
-    double Tkr_1_y0;
-    double Tkr_1_z0;
-    double Tkr_1_Sxx;
-    double Tkr_1_Sxy;
-    double Tkr_1_Syy;
-    double Tkr_1_ThetaErr;
-    double Tkr_1_PhiErr;
-    double Tkr_1_ErrAsym;
-    double Tkr_1_CovDet;
-    double Tkr_1_ToTFirst;
-    double Tkr_1_ToTAve;
-    double Tkr_1_ToTTrAve;
-    double Tkr_1_ToTAsym;
-    double Tkr_1_ChisqAsym;
-    double Tkr_1_SSDVeto; 
+    float Tkr_1_DifHits;
+    float Tkr_1_KalEne;
+    float Tkr_1_ConEne;
+    float Tkr_1_KalThetaMS;
+    float Tkr_1_TwrEdge;
+    float Tkr_1_PrjTwrEdge;
+    float Tkr_1_DieEdge;
+    float Tkr_1_TwrGap;
+    float Tkr_1_xdir;
+    float Tkr_1_ydir;
+    float Tkr_1_zdir;
+    float Tkr_1_Phi;
+    float Tkr_1_Theta;
+    float Tkr_1_x0;
+    float Tkr_1_y0;
+    float Tkr_1_z0;
+    float Tkr_1_Sxx;
+    float Tkr_1_Sxy;
+    float Tkr_1_Syy;
+    float Tkr_1_ThetaErr;
+    float Tkr_1_PhiErr;
+    float Tkr_1_ErrAsym;
+    float Tkr_1_CovDet;
+    float Tkr_1_ToTFirst;
+    float Tkr_1_ToTAve;
+    float Tkr_1_ToTTrAve;
+    float Tkr_1_ToTAsym;
+    float Tkr_1_ChisqAsym;
+    float Tkr_1_SSDVeto; 
 
     //Second Track Specifics
-    double Tkr_2_Chisq;
-    double Tkr_2_FirstChisq;
-    double Tkr_2_FirstGaps; 
-    double Tkr_2_Qual;
-    double Tkr_2_Type;
-    double Tkr_2_Hits;
-    double Tkr_2_FirstHits;
-    double Tkr_2_FirstLayer; 
-    double Tkr_2_LastLayer; 
+    float Tkr_2_Chisq;
+    float Tkr_2_FirstChisq;
+    float Tkr_2_FirstGaps; 
+    float Tkr_2_Qual;
+    float Tkr_2_Type;
+    float Tkr_2_Hits;
+    float Tkr_2_FirstHits;
+    float Tkr_2_FirstLayer; 
+    float Tkr_2_LastLayer; 
 
-    double Tkr_2_Gaps;
-    double Tkr_2_DifHits;
-    double Tkr_2_KalEne;
-    double Tkr_2_ConEne;
-    double Tkr_2_KalThetaMS;
-    double Tkr_2_TwrEdge;
-    double Tkr_2_PrjTwrEdge;
-    double Tkr_2_DieEdge;
-    double Tkr_2_xdir;
-    double Tkr_2_ydir;
-    double Tkr_2_zdir;
-    double Tkr_2_Phi;
-    double Tkr_2_Theta;
-    double Tkr_2_x0;
-    double Tkr_2_y0;
-    double Tkr_2_z0;
+    float Tkr_2_Gaps;
+    float Tkr_2_DifHits;
+    float Tkr_2_KalEne;
+    float Tkr_2_ConEne;
+    float Tkr_2_KalThetaMS;
+    float Tkr_2_TwrEdge;
+    float Tkr_2_PrjTwrEdge;
+    float Tkr_2_DieEdge;
+    float Tkr_2_xdir;
+    float Tkr_2_ydir;
+    float Tkr_2_zdir;
+    float Tkr_2_Phi;
+    float Tkr_2_Theta;
+    float Tkr_2_x0;
+    float Tkr_2_y0;
+    float Tkr_2_z0;
 
-    double Tkr_2TkrAngle;
-    double Tkr_2TkrHDoca;
+    float Tkr_2TkrAngle;
+    float Tkr_2TkrHDoca;
 
     // here's some test stuff... if it works for a couple it will work for all
     //float Tkr_float;
@@ -442,7 +442,7 @@ StatusCode TkrValsTool::calculate()
         // theta and phi are of direction of source, hence the minus sign
         // this code replaces atan and acos used before
         Tkr_1_Phi         = (-t1).phi();
-        if (Tkr_1_Phi<0.0) Tkr_1_Phi += 2*M_PI;
+        if (Tkr_1_Phi<0.0f) Tkr_1_Phi += static_cast<float>(2*M_PI);
         Tkr_1_Theta       = (-t1).theta();
 
         const Event::TkrTrackParams& Tkr_1_Cov = track_1->front()->getTrackParams(Event::TkrTrackHit::SMOOTHED);
@@ -666,7 +666,7 @@ StatusCode TkrValsTool::calculate()
 
             // this replaces atan used before
             Tkr_2_Phi         = (-t2).phi();
-            if (Tkr_2_Phi<0.0) Tkr_2_Phi += 2*M_PI;
+            if (Tkr_2_Phi<0.0) Tkr_2_Phi += static_cast<float>(2*M_PI);
             Tkr_2_Theta       = (-t2).theta();
 
             Tkr_2_x0         = x2.x();
@@ -805,7 +805,7 @@ StatusCode TkrValsTool::calculate()
 		// The following flattens the cos(theta) dependence.  Anomolous leakage for widely spaced
 		// samples?  
         Tkr_Energy_Corr= Tkr_Energy*(1.+ .0012*(Tkr_1_FirstLayer-1)*(Tkr_1_FirstLayer-1)) 
-			                        *(1 + .3*std::max((4-Tkr_1_FirstLayer),0.));
+			                        *(1 + .3*std::max((4-Tkr_1_FirstLayer),0.f));
 
         Tkr_Total_Hits = total_hits;
         Tkr_Thin_Hits  = thin_hits;

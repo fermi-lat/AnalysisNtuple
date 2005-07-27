@@ -3,7 +3,7 @@
 @brief Calculates the Cal Mip analysis variables
 @author F. Piron
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalMipValsTool.cxx,v 1.2 2005/07/26 16:12:37 piron Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalMipValsTool.cxx,v 1.3 2005/07/26 16:43:28 usher Exp $
 */
 
 // Include files
@@ -68,19 +68,19 @@ public:
     StatusCode calculate();
       
 private:
-    double m_num;
-    double m_x0;
-    double m_y0;
-    double m_z0;
-    double m_xDir;
-    double m_yDir;
-    double m_zDir;
-    double m_d2edge;
-    double m_arcLen;
-    double m_ecor;
-    double m_ecorRms;
-    double m_chi2;
-    double m_erm;     
+    float m_num;
+    float m_x0;
+    float m_y0;
+    float m_z0;
+    float m_xDir;
+    float m_yDir;
+    float m_zDir;
+    float m_d2edge;
+    float m_arcLen;
+    float m_ecor;
+    float m_ecorRms;
+    float m_chi2;
+    float m_erm;     
 };
   
 // Static factory for instantiation of algtool objects

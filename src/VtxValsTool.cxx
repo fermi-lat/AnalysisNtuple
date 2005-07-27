@@ -3,7 +3,7 @@
 @brief Calculates the Vtx analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.16 2005/04/04 21:25:31 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.17 2005/07/08 17:54:08 atwood Exp $
 */
 
 // Include files
@@ -64,25 +64,25 @@ public:
 private:
 
 	//Vertexing Items
-	double VTX_xdir;
-	double VTX_ydir;
-	double VTX_zdir;
-	double VTX_Phi;
-	double VTX_Theta;
-	double VTX_x0;
-	double VTX_y0;
-	double VTX_z0;
-	double VTX_Angle;
-	double VTX_DOCA;
-	double VTX_Head_Sep;
+	float VTX_xdir;
+	float VTX_ydir;
+	float VTX_zdir;
+	float VTX_Phi;
+	float VTX_Theta;
+	float VTX_x0;
+	float VTX_y0;
+	float VTX_z0;
+	float VTX_Angle;
+	float VTX_DOCA;
+	float VTX_Head_Sep;
 
-	double VTX_S1;
-	double VTX_S2;
+	float VTX_S1;
+	float VTX_S2;
 
-	double VTX_Quality; 
-	double VTX_Chisq; 
-	double VTX_AddedRL;
-	double VTX_Status;
+	float VTX_Quality; 
+	float VTX_Chisq; 
+	float VTX_AddedRL;
+	float VTX_Status;
 
 };
 
@@ -174,7 +174,7 @@ StatusCode VtxValsTool::calculate()
 	VTX_zdir      = t0.z();
 
 	VTX_Phi       = (-t0).phi();
-	if (VTX_Phi<0.0) VTX_Phi += 2*M_PI;
+	if (VTX_Phi<0.0f) VTX_Phi += static_cast<float>(2*M_PI);
 	VTX_Theta     = (-t0).theta();
 
 	VTX_x0        = x0.x();
@@ -208,7 +208,7 @@ StatusCode VtxValsTool::calculate()
 		VTX_S2    = gamma->getTkr2ArcLen();
 
 		// Set a rogue value here in case this is a single 
-		if(VTX_xdir == t1.x() && VTX_ydir == t1.y()) VTX_Angle = -.1;
+		if(VTX_xdir == t1.x() && VTX_ydir == t1.y()) VTX_Angle = -.1f;
 
 		VTX_Quality = gamma->getQuality(); 
 		VTX_Chisq   = gamma->getChiSquare(); 

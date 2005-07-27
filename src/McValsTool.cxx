@@ -2,7 +2,7 @@
 @brief Calculates the Mc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.21 2005/01/25 23:06:25 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.22 2005/02/25 05:49:12 lsrea Exp $
 */
 // Include files
 
@@ -57,36 +57,36 @@ private:
     double getEnergyExitingTkr(Event::McParticle* mcPart);
     
     //Pure MC Tuple Items
-    double MC_SourceId;
-    double MC_Id;
-    double MC_Charge;
-    double MC_Energy;
-    double MC_LogEnergy;
-    double MC_EFrac;
-    double MC_OpenAngle; 
-    double MC_TkrExitEne;
+    float MC_SourceId;
+    float MC_Id;
+    float MC_Charge;
+    float MC_Energy;
+    float MC_LogEnergy;
+    float MC_EFrac;
+    float MC_OpenAngle; 
+    float MC_TkrExitEne;
 
     
-    double MC_x0;
-    double MC_y0;
-    double MC_z0;
+    float MC_x0;
+    float MC_y0;
+    float MC_z0;
     
-    double MC_xdir;
-    double MC_ydir;
-    double MC_zdir;
+    float MC_xdir;
+    float MC_ydir;
+    float MC_zdir;
     
     //MC - Compared to Recon Items
-    double MC_x_err; 
-    double MC_y_err;
-    double MC_z_err;
+    float MC_x_err; 
+    float MC_y_err;
+    float MC_z_err;
     
-    double MC_xdir_err; 
-    double MC_ydir_err;
-    double MC_zdir_err;
+    float MC_xdir_err; 
+    float MC_ydir_err;
+    float MC_zdir_err;
     
-    double MC_dir_err;
-    double MC_TKR1_dir_err;
-    double MC_TKR2_dir_err;
+    float MC_dir_err;
+    float MC_TKR1_dir_err;
+    float MC_TKR2_dir_err;
 
     // to decode the particle charge
     IParticlePropertySvc* m_ppsvc;    

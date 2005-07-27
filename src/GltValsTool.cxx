@@ -2,7 +2,7 @@
 @brief Calculates the Trigger analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.24 2005/04/06 19:01:42 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.25 2005/04/12 18:48:58 lsrea Exp $
 */
 
 // Include files
@@ -60,18 +60,18 @@ private:
     ITkrGeometrySvc*       m_tkrGeom;
 
     //TkrClusters Tuple Items
-    double Trig_word;
-    double Trig_GemSummary;
-    double Trig_evtFlags;
-    double Trig_tower;
-    double Trig_xTower;
-    double Trig_yTower; 
-    double Trig_layer;
-    double Trig_total; 
-    double Trig_numTowers;
-    double Trig_type; // was: 1= corner, 2 = side, 3 = core, now number of exposed sides (0-4)
-    double Trig_moment; 
-    double Trig_zDir; 
+    float Trig_word;
+    float Trig_GemSummary;
+    float Trig_evtFlags;
+    float Trig_tower;
+    float Trig_xTower;
+    float Trig_yTower; 
+    float Trig_layer;
+    float Trig_total; 
+    float Trig_numTowers;
+    float Trig_type; // was: 1= corner, 2 = side, 3 = core, now number of exposed sides (0-4)
+    float Trig_moment; 
+    float Trig_zDir; 
 
     ITkrQueryClustersTool* m_clusTool;
 };

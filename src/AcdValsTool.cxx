@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.14 2004/10/01 19:43:58 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.15 2005/06/17 05:11:16 atwood Exp $
 */
 
 #include "ValBase.h"
@@ -54,23 +54,23 @@ public:
 private:
     
     //Global ACDTuple Items
-    double ACD_Total_Energy;
-    double ACD_Tile_Count; 
-    double ACD_DOCA;
-    double ACD_ActiveDist;
-    double ACD_GammaDOCA; 
-    double ACD_ActDistTop;
-    double ACD_ActDistR0;
-    double ACD_ActDistR1;
-    double ACD_ActDistR2;
-    double ACD_tileTopCount;
-    double ACD_tileCount0;
-    double ACD_tileCount1;
-    double ACD_tileCount2;
-    double ACD_tileCount3;
-    double ACD_ribbon_ActiveDist;
-    double ACD_TkrHitsCountTop;
-    double ACD_TkrHitsCountRows[4];
+    float ACD_Total_Energy;
+    float ACD_Tile_Count; 
+    float ACD_DOCA;
+    float ACD_ActiveDist;
+    float ACD_GammaDOCA; 
+    float ACD_ActDistTop;
+    float ACD_ActDistR0;
+    float ACD_ActDistR1;
+    float ACD_ActDistR2;
+    float ACD_tileTopCount;
+    float ACD_tileCount0;
+    float ACD_tileCount1;
+    float ACD_tileCount2;
+    float ACD_tileCount3;
+    float ACD_ribbon_ActiveDist;
+    float ACD_TkrHitsCountTop;
+    float ACD_TkrHitsCountRows[4];
 
     IGlastDetSvc *m_detSvc;
     double m_vetoThresholdMeV;

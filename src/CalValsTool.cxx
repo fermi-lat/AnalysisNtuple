@@ -3,7 +3,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.57 2005/07/13 23:57:33 usher Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.58 2005/07/14 22:48:25 usher Exp $
 */
 
 // Include files
@@ -88,64 +88,64 @@
       double m_calZTop;
       double m_calZBot;
 
-      double CAL_EnergyRaw;
-	  double CAL_EnergyCorr;
-      double CAL_Leak_Corr;
-      double CAL_Edge_Corr;
-	  double CAL_Total_Corr; 
+      float CAL_EnergyRaw;
+	  float CAL_EnergyCorr;
+      float CAL_Leak_Corr;
+      float CAL_Edge_Corr;
+	  float CAL_Total_Corr; 
    
-      double CAL_CsI_RLn;
-      double CAL_Tot_RLn;
-      double CAL_Cntr_RLn; 
-	  double CAL_LAT_RLn; 
-      double CAL_DeadTot_Rat;
-      double CAL_DeadCnt_Rat; 
+      float CAL_CsI_RLn;
+      float CAL_Tot_RLn;
+      float CAL_Cntr_RLn; 
+	  float CAL_LAT_RLn; 
+      float CAL_DeadTot_Rat;
+      float CAL_DeadCnt_Rat; 
  
-      double CAL_t_Pred; 
-      double CAL_deltaT;
-      double CAL_xEcntr;
-      double CAL_yEcntr;
-      double CAL_zEcntr;
-      double CAL_xdir;
-      double CAL_ydir;
-      double CAL_zdir;
+      float CAL_t_Pred; 
+      float CAL_deltaT;
+      float CAL_xEcntr;
+      float CAL_yEcntr;
+      float CAL_zEcntr;
+      float CAL_xdir;
+      float CAL_ydir;
+      float CAL_zdir;
 
-	  double CAL_Gap_Fraction;  
-      double CAL_TwrEdgeCntr;
-	  double CAL_TwrEdgeTop;
-      double CAL_LATEdge; 
+	  float CAL_Gap_Fraction;  
+      float CAL_TwrEdgeCntr;
+	  float CAL_TwrEdgeTop;
+      float CAL_LATEdge; 
 
-      double CAL_Lyr0_Ratio;
-      double CAL_Lyr7_Ratio;
-      double CAL_BkHalf_Ratio;
+      float CAL_Lyr0_Ratio;
+      float CAL_Lyr7_Ratio;
+      float CAL_BkHalf_Ratio;
 
-      double CAL_Xtal_Ratio;
-      double CAL_Xtal_maxEne; 
-      double CAL_eLayer[8];
-      double CAL_No_Xtals_Trunc;
-      double CAL_Long_Rms;
-      double CAL_Trans_Rms;
-      double CAL_LRms_Asym;
+      float CAL_Xtal_Ratio;
+      float CAL_Xtal_maxEne; 
+      float CAL_eLayer[8];
+      float CAL_No_Xtals_Trunc;
+      float CAL_Long_Rms;
+      float CAL_Trans_Rms;
+      float CAL_LRms_Asym;
 
-      double CAL_MIP_Diff; 
-      double CAL_MIP_Ratio;
+      float CAL_MIP_Diff; 
+      float CAL_MIP_Ratio;
 
       // New variables for new energy correction tools
-      double CAL_cfp_energy;      // Energy from Full Profile tool
-      double CAL_cfp_totChiSq;    // Total ChiSquare of fit divided by 11
-      double CAL_cfp_calEffRLn;   // Effective radiation lengths in the Cal
+      float CAL_cfp_energy;      // Energy from Full Profile tool
+      float CAL_cfp_totChiSq;    // Total ChiSquare of fit divided by 11
+      float CAL_cfp_calEffRLn;   // Effective radiation lengths in the Cal
 
-      double CAL_lll_energy;      // Energy from the Last Layer Likelihood tool
-      double CAL_lll_energyErr;   // Chisquare from the Last Layer Likelihood
-      double CAL_tkl_energy;      // Energy from the tracker Likelihood tool
-      double CAL_tkl_energyErr;   // Chisquare from the tracker likelihood
+      float CAL_lll_energy;      // Energy from the Last Layer Likelihood tool
+      float CAL_lll_energyErr;   // Chisquare from the Last Layer Likelihood
+      float CAL_tkl_energy;      // Energy from the tracker Likelihood tool
+      float CAL_tkl_energyErr;   // Chisquare from the tracker likelihood
       
       //Calimeter items with Recon - Tracks
-      double CAL_Track_DOCA;
-      double CAL_Track_Angle;
-	  double CAL_Track_Sep;
-      double CAL_x0;
-      double CAL_y0;
+      float CAL_Track_DOCA;
+      float CAL_Track_Angle;
+	  float CAL_Track_Sep;
+      float CAL_x0;
+      float CAL_y0;
   };
   
   // Static factory for instantiation of algtool objects
@@ -466,16 +466,16 @@ StatusCode CalValsTool::calculate()
         double cosCalt0 = -t0*cal_dir; 
         CAL_Track_Angle = acos(cosCalt0);
     }
-    else CAL_Track_Angle = -.1; 
+    else CAL_Track_Angle = -.1f; 
 
 	// Energy compared to muon 
     CAL_MIP_Diff    = CAL_EnergyRaw- 12.07*CAL_CsI_RLn;
     const double minRadLen = 0.1;
-    CAL_MIP_Ratio   = CAL_EnergyRaw/(12.07*std::max(CAL_CsI_RLn, minRadLen));
+    CAL_MIP_Ratio   = CAL_EnergyRaw/(12.07*std::max(CAL_CsI_RLn*1., minRadLen));
 
 	// Ratios of rad. len. in material other then CsI
-    CAL_DeadTot_Rat = m_radLen_Stuff/std::max(minRadLen, CAL_Tot_RLn);
-    CAL_DeadCnt_Rat = m_radLen_CntrStuff/std::max(minRadLen, CAL_Cntr_RLn); 
+    CAL_DeadTot_Rat = m_radLen_Stuff/std::max(minRadLen, CAL_Tot_RLn*1.);
+    CAL_DeadCnt_Rat = m_radLen_CntrStuff/std::max(minRadLen, CAL_Cntr_RLn*1.); 
 
     return sc;
 }
