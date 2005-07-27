@@ -2,6 +2,8 @@
   @brief Package AnalysisNtule
   @verbatim
  
+ v2r4p3  27-Jul-05    TU  Modify EvtValsTool to pass floats when asking for results from
+                          other AnaTup tools
  v2r4p2  27-Jul-05    TU  Protection against NaN's in Cal Track angle calculation
  v2r4p1  27-Jul-05   LSR  Change most doubles to floats... saves 40% of space
  v2r3p2  25-Jul-05    TU  Updates to Mip finder output in ntuple
