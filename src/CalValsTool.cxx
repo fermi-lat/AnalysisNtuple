@@ -3,7 +3,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.58 2005/07/14 22:48:25 usher Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.59 2005/07/27 15:20:01 lsrea Exp $
 */
 
 // Include files
@@ -151,7 +151,7 @@
   // Static factory for instantiation of algtool objects
   static ToolFactory<CalValsTool> s_factory;
   const IToolFactory& CalValsToolFactory = s_factory;
-  
+
   // Standard Constructor
   CalValsTool::CalValsTool(const std::string& type, 
       const std::string& name, 
@@ -270,7 +270,6 @@
       
       return sc;
 }
-
 
 StatusCode CalValsTool::calculate()
 {
@@ -463,7 +462,8 @@ StatusCode CalValsTool::calculate()
 	// Find angle between Track and Cal. Moment axis
 	// Note: the direction in Cal is opposite to tracking!
     if(fabs(cal_dir.x()) < 1.) {
-        double cosCalt0 = -t0*cal_dir; 
+        double cosCalt0 = std::min(1., -t0*cal_dir); 
+        cosCalt0 = std::max(cosCalt0, -1.);  // just in case...
         CAL_Track_Angle = acos(cosCalt0);
     }
     else CAL_Track_Angle = -.1f; 
