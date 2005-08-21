@@ -3,7 +3,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.59 2005/07/27 15:20:01 lsrea Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.60 2005/07/27 16:35:15 usher Exp $
 */
 
 // Include files
@@ -349,10 +349,14 @@ StatusCode CalValsTool::calculate()
     CAL_EnergyRaw  = calCluster->getCalParams().getEnergy();
     for(int i = 0; i<8; i++) CAL_eLayer[i] = (*calCluster)[i].getEnergy();
 
-	CAL_Trans_Rms = sqrt(calCluster->getRmsTrans()/CAL_EnergyRaw);
-	CAL_Long_Rms  = sqrt(calCluster->getRmsLong()/CAL_EnergyRaw) / 
+    CAL_Trans_Rms = sqrt(calCluster->getRmsTrans()/CAL_EnergyRaw);
+    if ((CAL_LAT_RLn - CAL_Cntr_RLn) > 0.0) {
+        CAL_Long_Rms  = sqrt(calCluster->getRmsLong()/CAL_EnergyRaw) / 
 		            log(CAL_LAT_RLn - CAL_Cntr_RLn);
-	CAL_LRms_Asym = calCluster->getRmsLongAsym();
+    } else {
+        CAL_Long_Rms = 0;
+    }
+    CAL_LRms_Asym = calCluster->getRmsLongAsym();
 
     if(CAL_EnergyRaw>0.0) {
         CAL_Lyr0_Ratio  = CAL_eLayer[0]/CAL_EnergyRaw;
@@ -361,17 +365,19 @@ StatusCode CalValsTool::calculate()
                             CAL_eLayer[6]+CAL_eLayer[7])/CAL_EnergyRaw;
     }
     
-    // Find Xtal with max. energy
+    int no_xtals=0;
     CAL_Xtal_maxEne = 0.; 
-    for( Event::CalXtalRecCol::const_iterator jlog=pxtalrecs->begin(); jlog != pxtalrecs->end(); ++jlog)
-	{
-        const Event::CalXtalRecData& recLog = **jlog;    
-        double eneLog = recLog.getEnergy();
-        if(eneLog > CAL_Xtal_maxEne) CAL_Xtal_maxEne = eneLog; 
-    }
+    if (pxtalrecs) {
+        // Find Xtal with max. energy
+        for( Event::CalXtalRecCol::const_iterator jlog=pxtalrecs->begin(); jlog != pxtalrecs->end(); ++jlog) {
+            const Event::CalXtalRecData& recLog = **jlog;    
+            double eneLog = recLog.getEnergy();
+            if(eneLog > CAL_Xtal_maxEne) CAL_Xtal_maxEne = eneLog; 
+        }
  
 	// Number of Xtals
-	int no_xtals=pxtalrecs->size();
+        no_xtals=pxtalrecs->size();
+    }
     int no_xtals_trunc=calCluster->getNumTruncXtals();
     CAL_Xtal_Ratio= (no_xtals>0) ? float(no_xtals_trunc)/no_xtals : 0;
     CAL_No_Xtals_Trunc = float(no_xtals_trunc); 

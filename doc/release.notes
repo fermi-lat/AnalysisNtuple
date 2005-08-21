@@ -2,6 +2,7 @@
   @brief Package AnalysisNtule
   @verbatim
  
+ v2r4p4  22-Aug-05   HMK  Patch to CalValsTool::calculate to check for zero
  v2r4p3  27-Jul-05    TU  Modify EvtValsTool to pass floats when asking for results from
                           other AnaTup tools
  v2r4p2  27-Jul-05    TU  Protection against NaN's in Cal Track angle calculation
