@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.59 2005/06/17 05:11:16 atwood Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.60 2005/07/27 15:20:01 lsrea Exp $
 */
 
 // To Do:
@@ -511,6 +511,8 @@ StatusCode TkrValsTool::calculate()
         double chisq_first = 0.;
         double chisq_last  = 0.; 
         Event::TkrTrackHitVecConItr pHit = track_1->begin();
+
+        int plane = m_tkrGeom->getPlane((*pHit)->getTkrId()); 
         int gapId = -1;
         bool gapFound = false;
         while(pHit != track_1->end()) {
@@ -521,11 +523,15 @@ StatusCode TkrValsTool::calculate()
                 Point  gapPos = hit->getPoint(Event::TkrTrackHit::PREDICTED);
                 Tkr_1_GapX = gapPos.x();
                 Tkr_1_GapY = gapPos.y();
-                //TkrId is good!
-                gapId = m_tkrGeom->getPlane(hit->getTkrId());
+                idents::TkrId tkrId = hit->getTkrId();
+                if(tkrId.hasTray()) {
+                    gapId = m_tkrGeom->getPlane(hit->getTkrId());
+                } else {
+                    gapId = plane;
+                }
                 gapFound = true;
             }
-            //plane--;
+            plane--;
             if (!(bits & Event::TkrTrackHit::HITONFIT)) continue;
             const Event::TkrCluster* cluster = hit->getClusterPtr();
             int size =  (int) (const_cast<Event::TkrCluster*>(cluster))->size();
