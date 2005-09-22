@@ -2,6 +2,7 @@
   @brief Package AnalysisNtule
   @verbatim
  
+ v2r5    22-Sep-05   HMK  Add ribbon variables in AcdValsTool
  v2r4p5  24-Aug-05   HMK  Patch CalValsTool::calculate to check to see if the
                      calClusterCol->empty()
  v2r4p4  22-Aug-05   HMK  Patch to CalValsTool::calculate to check for zero

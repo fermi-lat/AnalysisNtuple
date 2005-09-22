@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.15 2005/06/17 05:11:16 atwood Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.16 2005/07/27 15:20:01 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -55,7 +55,9 @@ private:
     
     //Global ACDTuple Items
     float ACD_Total_Energy;
+    float ACD_Total_Ribbon_Energy;
     float ACD_Tile_Count; 
+    float ACD_Ribbon_Count;
     float ACD_DOCA;
     float ACD_ActiveDist;
     float ACD_GammaDOCA; 
@@ -151,6 +153,8 @@ StatusCode AcdValsTool::initialize()
       
     // load up the map
     addItem("AcdTotalEnergy", &ACD_Total_Energy);
+    addItem("AcdRibbonEnergy", &ACD_Total_Ribbon_Energy);
+    addItem("AcdRibbonCount", &ACD_Ribbon_Count);
     addItem("AcdTileCount",    &ACD_Tile_Count);
     addItem("AcdDoca",         &ACD_DOCA);
     addItem("AcdActiveDist",   &ACD_ActiveDist);
@@ -197,7 +201,9 @@ StatusCode AcdValsTool::calculate()
     if (pACD)
     {
         ACD_Total_Energy  = pACD->getEnergy();
+        ACD_Total_Ribbon_Energy = pACD->getRibbonEnergy();
         ACD_Tile_Count    = pACD->getTileCount(); 
+        ACD_Ribbon_Count  = pACD->getRibbonCount();
         ACD_DOCA          = pACD->getDoca();
         ACD_ActiveDist    = pACD->getActiveDist();
         ACD_GammaDOCA     = pACD->getGammaDoca();
