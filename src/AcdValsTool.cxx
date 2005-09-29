@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.16 2005/07/27 15:20:01 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.17 2005/09/22 08:21:47 heather Exp $
 */
 
 #include "ValBase.h"
@@ -30,6 +30,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.16 
 
 #include <algorithm>
 #include <numeric>
+#include <map>
 
 /** @class AcdValsTool
 @brief Calculates Acd Values
@@ -38,28 +39,30 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.16 
 class AcdValsTool : public ValBase
 {
 public:
-    
+
     AcdValsTool( const std::string& type, 
         const std::string& name, 
         const IInterface* parent);
-    
+
     virtual ~AcdValsTool() { }
-    
+
     StatusCode initialize();
-    
+
     StatusCode calculate();
-    
+
     void tkrHitsCount();
 
 private:
-    
+
     //Global ACDTuple Items
     float ACD_Total_Energy;
     float ACD_Total_Ribbon_Energy;
     float ACD_Tile_Count; 
     float ACD_Ribbon_Count;
     float ACD_DOCA;
+    float ACD_DOCA_Energy;
     float ACD_ActiveDist;
+    float ACD_ActiveDist_Energy;
     float ACD_GammaDOCA; 
     float ACD_ActDistTop;
     float ACD_ActDistR0;
@@ -77,8 +80,8 @@ private:
     IGlastDetSvc *m_detSvc;
     double m_vetoThresholdMeV;
     double m_tkrHitsCountCut;
-    
-    
+
+
 };
 namespace {
 
@@ -122,18 +125,18 @@ AcdValsTool::AcdValsTool(const std::string& type,
 StatusCode AcdValsTool::initialize()
 {
     StatusCode sc = StatusCode::SUCCESS;
-    
+
     MsgStream log(msgSvc(), name());
 
-   if( ValBase::initialize().isFailure()) return StatusCode::FAILURE;
-   
-   setProperties();
+    if( ValBase::initialize().isFailure()) return StatusCode::FAILURE;
+
+    setProperties();
     // get the services
-    
-   // use the pointer from ValBase
-   
-   if( serviceLocator() ) {
-                
+
+    // use the pointer from ValBase
+
+    if( serviceLocator() ) {
+
         // find GlastDevSvc service
         if (service("GlastDetSvc", m_detSvc, true).isFailure()){
             log << MSG::INFO << "Couldn't find the GlastDetSvc!" << endreq;
@@ -144,20 +147,22 @@ StatusCode AcdValsTool::initialize()
             if (sc.isFailure()) {
                 log << MSG::INFO << "Unable to retrieve threshold, setting the value to 0.4 MeV" << endreq;
                 m_vetoThresholdMeV = 0.4;
-   
-             }
-         }
-   } else {
-       return StatusCode::FAILURE;
-   }
-      
+
+            }
+        }
+    } else {
+        return StatusCode::FAILURE;
+    }
+
     // load up the map
     addItem("AcdTotalEnergy", &ACD_Total_Energy);
     addItem("AcdRibbonEnergy", &ACD_Total_Ribbon_Energy);
     addItem("AcdRibbonCount", &ACD_Ribbon_Count);
     addItem("AcdTileCount",    &ACD_Tile_Count);
     addItem("AcdDoca",         &ACD_DOCA);
+    addItem("AcdDocaTileEnergy",         &ACD_DOCA_Energy);
     addItem("AcdActiveDist",   &ACD_ActiveDist);
+    addItem("AcdActDistTileEnergy",   &ACD_ActiveDist_Energy);
     addItem("AcdGammaDoca",    &ACD_GammaDOCA);
 
     addItem("AcdActDistTop",&ACD_ActDistTop);
@@ -179,7 +184,7 @@ StatusCode AcdValsTool::initialize()
     addItem("AcdTkrHitsCountR3", &ACD_TkrHitsCountRows[3]);
 
     zeroVals();
-    
+
     return sc;
 }
 
@@ -187,9 +192,9 @@ StatusCode AcdValsTool::initialize()
 StatusCode AcdValsTool::calculate()
 {
     StatusCode sc = StatusCode::SUCCESS;
-    
+
     tkrHitsCount();
-    
+
     SmartDataPtr<Event::AcdRecon>           pACD(m_pEventSvc,EventModel::AcdRecon::Event);
 
     // Recover Track associated info. (not currently used 
@@ -200,12 +205,30 @@ StatusCode AcdValsTool::calculate()
     //Make sure we have valid ACD data
     if (pACD)
     {
+        // Make a map relating AcdId to energy in the tile
+        std::map<idents::AcdId, double> energyIdMap;
+
+        const std::vector<idents::AcdId> tileIds = pACD->getIdCol();
+        const std::vector<double> tileEnergies   = pACD->getEnergyCol();
+
+        int maxTiles = tileIds.size();
+        for (int i = 0; i<maxTiles; i++) {
+            energyIdMap[tileIds[i]] = tileEnergies[i];
+        }
+
         ACD_Total_Energy  = pACD->getEnergy();
         ACD_Total_Ribbon_Energy = pACD->getRibbonEnergy();
         ACD_Tile_Count    = pACD->getTileCount(); 
         ACD_Ribbon_Count  = pACD->getRibbonCount();
+
+        idents::AcdId tileId = pACD->getMinDocaId();
         ACD_DOCA          = pACD->getDoca();
+        ACD_DOCA_Energy   = energyIdMap[tileId];
+
+        tileId            = pACD->getMaxActDistId();
         ACD_ActiveDist    = pACD->getActiveDist();
+        ACD_ActiveDist_Energy = energyIdMap[tileId];
+
         ACD_GammaDOCA     = pACD->getGammaDoca();
         ACD_ribbon_ActiveDist = pACD->getRibbonActiveDist();
 
@@ -217,34 +240,34 @@ StatusCode AcdValsTool::calculate()
 
         //Code from meritAlg.... 
         // get the map of energy vs tile id: have to construct from two parallel vectors
-       float m_acd_tileCount[5];
-       const std::vector<double> energies = pACD->getEnergyCol();
-       const std::vector<idents::AcdId>& ids = pACD->getIdCol();
-       std::vector<double>::const_iterator eit = energies.begin();
+        float m_acd_tileCount[5];
+        const std::vector<double> energies = pACD->getEnergyCol();
+        const std::vector<idents::AcdId>& ids = pACD->getIdCol();
+        std::vector<double>::const_iterator eit = energies.begin();
 
-       std::map<idents::AcdId, double> emap;
-       for( std::vector<idents::AcdId>::const_iterator idit = ids.begin(); 
-           idit != ids.end() && eit !=energies.end(); ++idit, ++ eit){
-           emap[*idit]=*eit;
-       }
-     
-      // use acd_row predicate to count number of top tiles
-      m_acd_tileCount[0] = std::count_if(emap.begin(), emap.end(), acd_row(-1) );
+        std::map<idents::AcdId, double> emap;
+        for( std::vector<idents::AcdId>::const_iterator idit = ids.begin(); 
+            idit != ids.end() && eit !=energies.end(); ++idit, ++ eit){
+                emap[*idit]=*eit;
+            }
 
-      // use acd_row predicate to count number of tiles per side row
-      if(true)for( int row = 0; row<=3; ++row){ 
-          m_acd_tileCount[row+1] = std::count_if(emap.begin(), emap.end(), acd_row(row) );
-      }
-      ACD_tileTopCount = m_acd_tileCount[0];
-      ACD_tileCount0 = m_acd_tileCount[1];
-      ACD_tileCount1 = m_acd_tileCount[2];
-      ACD_tileCount2 = m_acd_tileCount[3];       
-      ACD_tileCount3 = m_acd_tileCount[4];       
+        // use acd_row predicate to count number of top tiles
+        m_acd_tileCount[0] = std::count_if(emap.begin(), emap.end(), acd_row(-1) );
+
+        // use acd_row predicate to count number of tiles per side row
+        if(true)for( int row = 0; row<=3; ++row){ 
+            m_acd_tileCount[row+1] = std::count_if(emap.begin(), emap.end(), acd_row(row) );
+        }
+        ACD_tileTopCount = m_acd_tileCount[0];
+        ACD_tileCount0 = m_acd_tileCount[1];
+        ACD_tileCount1 = m_acd_tileCount[2];
+        ACD_tileCount2 = m_acd_tileCount[3];       
+        ACD_tileCount3 = m_acd_tileCount[4];       
 
     } else {
         return StatusCode::FAILURE;
     }
-    
+
     return sc;
 }
 
@@ -280,7 +303,7 @@ void AcdValsTool::tkrHitsCount() {
         // If neither veto discrim from either PMT is high - we should skip
         //if ( (!(*acdDigiIt)->getVeto(Event::AcdDigi::A)) && 
         //     (!(*acdDigiIt)->getVeto(Event::AcdDigi::B)) ) continue;
-        
+
         idents::VolumeIdentifier volId = (*acdDigiIt)->getVolId();
         std::string str;
         std::vector<double> dim;
@@ -295,7 +318,7 @@ void AcdValsTool::tkrHitsCount() {
             log << MSG::WARNING << "Failed to get transformation" << endreq;
             continue;
         }
-		
+
         HepPoint3D center(0., 0., 0.);
         HepPoint3D acdCenter = transform * center;
 
