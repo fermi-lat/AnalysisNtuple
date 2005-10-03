@@ -2,6 +2,7 @@
   @brief Package AnalysisNtule
   @verbatim
  
+ v2r6    03-Oct-05   LSR  Add 2 new Acd variables: energies associated with actDist and Doca tiles
  v2r5p1  22-Sep-05   LSR  Bullet-proof TkrValsTool against bad TkrId's
  v2r5    22-Sep-05   HMK  Add ribbon variables in AcdValsTool
  v2r4p5  24-Aug-05   HMK  Patch CalValsTool::calculate to check to see if the
