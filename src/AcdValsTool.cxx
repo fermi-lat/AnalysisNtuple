@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.17 2005/09/22 08:21:47 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.18 2005/09/29 19:27:12 burnett Exp $
 */
 
 #include "ValBase.h"
@@ -62,12 +62,17 @@ private:
     float ACD_DOCA;
     float ACD_DOCA_Energy;
     float ACD_ActiveDist;
+    float ACD_ActiveDist3D;
     float ACD_ActiveDist_Energy;
     float ACD_GammaDOCA; 
     float ACD_ActDistTop;
     float ACD_ActDistR0;
     float ACD_ActDistR1;
     float ACD_ActDistR2;
+    float ACD_ActDist3DTop;
+    float ACD_ActDist3DR0;
+    float ACD_ActDist3DR1;
+    float ACD_ActDist3DR2;
     float ACD_tileTopCount;
     float ACD_tileCount0;
     float ACD_tileCount1;
@@ -162,6 +167,7 @@ StatusCode AcdValsTool::initialize()
     addItem("AcdDoca",         &ACD_DOCA);
     addItem("AcdDocaTileEnergy",         &ACD_DOCA_Energy);
     addItem("AcdActiveDist",   &ACD_ActiveDist);
+    addItem("AcdActiveDist3D",   &ACD_ActiveDist3D);
     addItem("AcdActDistTileEnergy",   &ACD_ActiveDist_Energy);
     addItem("AcdGammaDoca",    &ACD_GammaDOCA);
 
@@ -169,6 +175,11 @@ StatusCode AcdValsTool::initialize()
     addItem("AcdActDistSideRow0",&ACD_ActDistR0);
     addItem("AcdActDistSideRow1",&ACD_ActDistR1);
     addItem("AcdActDistSideRow2",&ACD_ActDistR2);
+
+    addItem("AcdActDist3DTop",&ACD_ActDist3DTop);
+    addItem("AcdActDist3DSideRow0",&ACD_ActDist3DR0);
+    addItem("AcdActDist3DSideRow1",&ACD_ActDist3DR1);
+    addItem("AcdActDist3DSideRow2",&ACD_ActDist3DR2);
 
     addItem("AcdNoTop",        &ACD_tileTopCount);
     addItem("AcdNoSideRow0",   &ACD_tileCount0);
@@ -227,6 +238,7 @@ StatusCode AcdValsTool::calculate()
 
         tileId            = pACD->getMaxActDistId();
         ACD_ActiveDist    = pACD->getActiveDist();
+        ACD_ActiveDist3D    = pACD->getActiveDist3D();
         ACD_ActiveDist_Energy = energyIdMap[tileId];
 
         ACD_GammaDOCA     = pACD->getGammaDoca();
@@ -237,6 +249,12 @@ StatusCode AcdValsTool::calculate()
         ACD_ActDistR0 = adist[1];
         ACD_ActDistR1 = adist[2];
         ACD_ActDistR2 = adist[3];
+
+        const std::vector<double> & adist3D = pACD->getRowActDist3DCol();
+        ACD_ActDist3DTop = adist3D[0];
+        ACD_ActDist3DR0 = adist3D[1];
+        ACD_ActDist3DR1 = adist3D[2];
+        ACD_ActDist3DR2 = adist3D[3];
 
         //Code from meritAlg.... 
         // get the map of energy vs tile id: have to construct from two parallel vectors
