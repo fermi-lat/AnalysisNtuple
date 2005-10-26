@@ -3,7 +3,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.61 2005/08/21 19:02:50 heather Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.62 2005/08/24 07:42:31 heather Exp $
 */
 
 // Include files
@@ -464,7 +464,7 @@ StatusCode CalValsTool::calculate()
     Vector x_diff = x0 - cal_pos;
     double x_diff_sq = x_diff*x_diff;
     double x_diff_t0 = x_diff*t0;
-    CAL_Track_DOCA = sqrt(x_diff_sq - x_diff_t0*x_diff_t0);
+    CAL_Track_DOCA = sqrt(std::max(0.0, x_diff_sq - x_diff_t0*x_diff_t0));
 
 	// Find angle between Track and Cal. Moment axis
 	// Note: the direction in Cal is opposite to tracking!

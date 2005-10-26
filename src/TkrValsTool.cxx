@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.60 2005/07/27 15:20:01 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.61 2005/09/22 19:02:24 lsrea Exp $
 */
 
 // To Do:
@@ -451,12 +451,12 @@ StatusCode TkrValsTool::calculate()
         Tkr_1_Syy         = Tkr_1_Cov.getySlpySlp();
         double sinPhi     = sin(Tkr_1_Phi);
         double cosPhi     = cos(Tkr_1_Phi);
-        Tkr_1_ThetaErr      = t1.z()*t1.z()*sqrt(cosPhi*cosPhi*Tkr_1_Sxx + 
-            2.*sinPhi*cosPhi*Tkr_1_Sxy + sinPhi*sinPhi*Tkr_1_Syy); 
-        Tkr_1_PhiErr        = (-t1.z())*sqrt(sinPhi*sinPhi*Tkr_1_Sxx - 
-            2.*sinPhi*cosPhi*Tkr_1_Sxy + cosPhi*cosPhi*Tkr_1_Syy);
+        Tkr_1_ThetaErr      = t1.z()*t1.z()*sqrt(std::max(0.0, cosPhi*cosPhi*Tkr_1_Sxx + 
+            2.*sinPhi*cosPhi*Tkr_1_Sxy + sinPhi*sinPhi*Tkr_1_Syy)); 
+        Tkr_1_PhiErr        = (-t1.z())*sqrt(std::max(0.0, sinPhi*sinPhi*Tkr_1_Sxx - 
+            2.*sinPhi*cosPhi*Tkr_1_Sxy + cosPhi*cosPhi*Tkr_1_Syy));
         Tkr_1_ErrAsym     = fabs(Tkr_1_Sxy/(Tkr_1_Sxx + Tkr_1_Syy));
-        Tkr_1_CovDet      = sqrt(Tkr_1_Sxx*Tkr_1_Syy-Tkr_1_Sxy*Tkr_1_Sxy)*Tkr_1_zdir*Tkr_1_zdir;
+        Tkr_1_CovDet      = sqrt(std::max(0.0f,Tkr_1_Sxx*Tkr_1_Syy-Tkr_1_Sxy*Tkr_1_Sxy))*Tkr_1_zdir*Tkr_1_zdir;
 
         Tkr_TrackLength = -(Tkr_1_z0-z0)/Tkr_1_zdir;
 
@@ -611,7 +611,7 @@ StatusCode TkrValsTool::calculate()
         }
         Tkr_1_ToTTrAve = (Tkr_1_ToTAve - max_ToT - min_ToT)/(Tkr_1_Hits-2.);
         Tkr_1_ToTAve /= Tkr_1_Hits;
-        Tkr_1_ToTAsym = (last_ToT - first_ToT)/(first_ToT + last_ToT);
+        if(first_ToT+last_ToT>0) Tkr_1_ToTAsym = (last_ToT - first_ToT)/(first_ToT + last_ToT);
         Tkr_1_FirstGapPlane = gapId; 
 
 

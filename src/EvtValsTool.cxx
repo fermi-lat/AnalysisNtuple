@@ -3,7 +3,7 @@
 @brief Calculates the "Event" analysis variables from the other ntuple variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.24 2005/07/27 15:20:01 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.25 2005/07/27 22:20:42 usher Exp $
 */
 
 #include "ValBase.h"
@@ -254,7 +254,7 @@ StatusCode EvtValsTool::calculate()
         EvtLiveTime    = header->livetime();
     }
 
-    float eCalSum, eTkr;
+    float eCalSum = -1.0, eTkr = -1.0;
     if(    m_pCalTool->getVal("CalEnergyRaw", eCalSum, firstCheck).isSuccess()
         && m_pTkrTool->getVal("TkrEnergyCorr", eTkr, firstCheck).isSuccess()) {
         EvtEnergyRaw = eTkr + eCalSum;
@@ -291,7 +291,7 @@ StatusCode EvtValsTool::calculate()
 	//    Use Kalman energy when not enough in the Cal,
 	//    use Last Layer Correction when avaialable (eCalEneLLCorr > 0) or else
 	//    use integrated edge and leakage correction from CalValsTool
-    float eCalSumCorr;
+    float eCalSumCorr = -1.0;
     if(    m_pCalTool->getVal("CalEnergyCorr", eCalSumCorr, nextCheck).isSuccess()
 		//&& m_pCalTool->getVal("CalEnergyLLCorr", eCalEneLLCorr, nextCheck).isSuccess()
 		) { // NOTE: THIS IS STILL LARGELY UNDESIDED WHAT TO DO HERE....!!!!!!!  
@@ -306,7 +306,8 @@ StatusCode EvtValsTool::calculate()
     
     float mcEnergy;
     if(m_pMcTool->getVal("McEnergy", mcEnergy, firstCheck).isSuccess()){
-        EvtDeltaEoE = (EvtEnergyCorr - mcEnergy)/(mcEnergy);
+        if (mcEnergy>0) { EvtDeltaEoE = (EvtEnergyCorr - mcEnergy)/(mcEnergy);}
+        else {EvtDeltaEoE = -2.0;} 
     }
     // Model simple for PSF(68%) 
     EvtPSFModel = sqrt(pow((.061/pow((std::max(EvtEnergyCorr*1.,1.)/100),.8)),2) + (.001745*.001745));
@@ -321,14 +322,14 @@ StatusCode EvtValsTool::calculate()
     float tkr1ThetaErr, tkr1PhiErr;
     if (m_pTkrTool->getVal("Tkr1ThetaErr",tkr1ThetaErr, nextCheck).isSuccess() &&
         m_pTkrTool->getVal("Tkr1PhiErr",tkr1PhiErr, nextCheck).isSuccess()) {
-        EvtTkr1PSFMdRat = sqrt(tkr1ThetaErr*tkr1ThetaErr + tkr1PhiErr*tkr1PhiErr)/ 
+            EvtTkr1PSFMdRat = sqrt(std::max(0.0f, tkr1ThetaErr*tkr1ThetaErr + tkr1PhiErr*tkr1PhiErr))/ 
                           EvtPSFModel;
     }
 
 	// Fraction of energy in Track 1
     float tkr1ConE;
     if (m_pTkrTool->getVal("Tkr1ConEne",tkr1ConE, nextCheck).isSuccess()) {
-        if(EvtEnergyCorr>0.0) EvtTkr1EFrac = tkr1ConE/EvtEnergyCorr;
+        if(EvtEnergyCorr>0.0) EvtTkr1EFrac = std::max(0.01f, tkr1ConE/EvtEnergyCorr);
     }
 
 	// Vtx kinematic variable:  angle * event energy / Track_1 energy fraction

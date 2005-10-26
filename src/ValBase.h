@@ -2,7 +2,7 @@
 @brief header file for ValBase.cxx
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.h,v 1.26 2004/09/10 18:26:01 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.h,v 1.27 2004/09/10 20:36:49 lsrea Exp $
 */
 
 #ifndef ValBase_h
@@ -111,7 +111,7 @@ protected:
 
     static double circleFraction(double r) {
         double rl = (fabs(r) < 1.) ? fabs(r):1.; 
-        double a_slice = 2.*(M_PI/4. - rl*sqrt(1.-rl*rl)/2. - asin(rl)/2.);
+        double a_slice = 2.*(M_PI/4. - rl*sqrt(std::max(0.0,1.-rl*rl))/2. - asin(rl)/2.);
         double in_frac = 1.-a_slice/M_PI;
         if(r < 0.) in_frac = a_slice/M_PI;
         return in_frac;

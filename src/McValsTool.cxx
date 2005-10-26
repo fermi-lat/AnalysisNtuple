@@ -2,7 +2,7 @@
 @brief Calculates the Mc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.22 2005/02/25 05:49:12 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.23 2005/07/27 15:20:01 lsrea Exp $
 */
 // Include files
 
@@ -174,6 +174,8 @@ StatusCode McValsTool::calculate()
     if(pMcEvent) {
         MC_SourceId = pMcEvent->getSourceId();
     }
+    
+    MC_Energy = -1;
     
     if (pMcParticle) {
         
