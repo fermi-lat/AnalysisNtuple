@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.61 2005/09/22 19:02:24 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.62 2005/10/26 00:05:50 lsrea Exp $
 */
 
 // To Do:
@@ -774,6 +774,7 @@ StatusCode TkrValsTool::calculate()
             case SUPER:
                 thisRad = radThick;
                 thick_hits += numHits;
+                break;
             case NOCONV:
                 thisRad = 0.0;
                 blank_hits += numHits;
