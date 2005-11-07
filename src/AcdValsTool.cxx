@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.18 2005/09/29 19:27:12 burnett Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.19 2005/10/19 19:08:45 heather Exp $
 */
 
 #include "ValBase.h"
@@ -160,6 +160,51 @@ StatusCode AcdValsTool::initialize()
     }
 
     // load up the map
+
+/** @page anatup_vars
+    @section adcvalstool AdCValsTool Variables
+    Notes
+    - Default Doca/ActiveDistance is -2000.
+    - Active distance is negative if a track is outside a tile, 
+    positive if inside.
+    - For variables called AcdNoXXX, "No" means "Number."
+
+<table>
+<tr><th> Variable </th> <th> Description					
+<tr><td> AcdTotalEnergy 	
+<td>        Total energy deposited in ACD
+<tr><td> AcdTileCount 
+<td>        Number of tiles fired
+<tr><td> AcdDoca 
+<td>        Nearest distance of any track from the center of any tile 
+<tr><td> AcdDocaTileEnergy   
+<td>        The deposited energy in the corresponding hit tile 
+<tr><td> AcdActiveDist 	
+<td>        Largest active distance of any track to the edge of any tile 
+<tr><td> AcdActDistTileEnergy 
+<td>        The deposited energy in the corresponding hit tile 
+<tr><td> AcdGammaDoca 
+<td>        Distance of Gamma to the center of the nearest tile 
+<tr><td> AcdActDistTop   
+<td>        Smallest active distance of any track to top tiles 
+<tr><td> AcdActDistSideRow[0...3] 	
+<td>        Smallest active distance of any track to tiles in side row [0...3] 
+<tr><td> AcdNoTop 
+<td>        hit tile count for top 
+<tr><td> AcdNoSideRow[0...3] 
+<td>        Hit Tile count for side row [0...3] 
+<tr><td> AcdRibbonActDist   
+<td>        Smallest active distance to any ribbon 
+            (considered as a straight line of no thickness) 
+<tr><td> AcdTkrHitsCountTop 	
+<td>        Count of the number of TkrClusters within a pre-defined distance 
+            (default: 250 mm) of the center of the hit top ACD tiles. 
+<tr><td> AcdTkrHitsCountR[0...3] 
+<td>        ditto for ACD tiles in side row [0...3] 
+</table>
+    */
+
+
     addItem("AcdTotalEnergy", &ACD_Total_Energy);
     addItem("AcdRibbonEnergy", &ACD_Total_Ribbon_Energy);
     addItem("AcdRibbonCount", &ACD_Ribbon_Count);

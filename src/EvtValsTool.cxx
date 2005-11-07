@@ -3,7 +3,7 @@
 @brief Calculates the "Event" analysis variables from the other ntuple variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.25 2005/07/27 22:20:42 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.26 2005/10/26 00:05:50 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -189,6 +189,80 @@ StatusCode EvtValsTool::initialize()
 
 
     // load up the map
+
+    /** @page anatup_vars 
+    @section evtvalstool EvtValsTool Variables
+
+These are calculated from combinations of the variables from different tools. 
+
+NOTE
+- All EvtEXxx variables are previous variables compensated for energy and angle 
+
+<table>
+<tr><th> Variable </th><th> Description
+<tr><td> EvtRun 
+<td>        Run number, copied from the event header NEW: replaces Run in the merit ntuple  
+<tr><td> EvtEventId 
+<td>        Sequence number of event in the run (as generated) NEW: replaces Event_ID in the merit ntuple 
+<tr><td> EvtElapsedTime 
+<td>        Elapsed time in seconds since t0 (for DC1: 18-July-2005, 
+            for the future: mission start 1-Jan-2001) 
+<tr><td> EvtEnergyCorr 
+<td>        Event energy formed by adding the corrected tracker energy 
+            (TkrEnergyCorr) to the layer-by-layer corrected cal. energy CalEnergyCorr. 
+<tr><td> EvtEnergyRaw 
+<td>        TkrEnergy + CalEnergyRaw
+<tr><td> EvtDeltaEoE 
+<td>        (EvtEneryCorr -  McEnergy)/ McEnergy. Was EvtMcEnergySigma 
+<tr><td> EvtCalEdgeAngle 
+<td>        Obsolete; replaced by CalTwrGap 
+<tr><td> EvtTkrEdgeAngle 
+<td>        Obsolete; replaced by Tkr1TwrGap 
+<tr><td> EvtLogEnergy 
+<td>        log10 of EvtEnergySumOpt, pegged between log10(20) and log10(50,000). Was EvtLogESum 
+<tr><td> EvtTkr1EFrac 
+<td>        Tkr1ConE/EvtEnergyCorr, roughly, fraction of energy carried by best track 
+<tr><td> EvtVtxKin 
+<td>        The vertex opening angle compenstated for the energy split between the tracks. 
+<tr><td> EvtVtxEAngle 
+<td>        VtxAngle*EvtEnergyCorr.  Should be approx. constant. 
+            However an empirical compensation is provided below (see EvtEVtxAngle) 
+<tr><td> EvtTkrComptonRatio 
+<td>        Ratio of TkrTotalHits to twice the number of layers from the head 
+         of the best track to the bottom of the TKR 
+<tr><td> EvtETkrComptonRatio 
+<td>        EvtTkrComptonRatio, flattened in energy and cos(theta). Was EvtTkrEComptonRatio 
+<tr><td> EvtPSFModel 
+<td>        PSF expected from simple model; depends only on energy. 
+<tr><td> EvtETkr1Chisq 
+<td>        Tkr1Chisq, compensated for energy and angle. 
+<tr><td> EvtETkr1FirstChisq 
+<td>        Tkr1FirstChisq, compensated for energy and angle 
+<tr><td> EvtETkr1Qual 
+<td>        Tkr1Qual, compensated for energy and angle 
+<tr><td> EvtTkr1PSFMdRat 
+<td>        Ratio of errors from covariance matrix to EvtPSFModel 
+<tr><td> EvtECalTransRms 
+<td>        CalTransRms, compensated for energy and angle 
+<tr><td> EvtECalLongRms 
+<td>        CalLongRms, compensated for energy and angle 
+<tr><td> EvtECalLRmsAsym 
+<td>        CalLRmsAsym, compensated for energy and angle 
+<tr><td> EvtECalXtalRatio 
+<td>        CalXtalRatio, compensated for energy and angle 
+<tr><td> EvtECalXtalTrunc 
+<td>        CalXtalsTrunc, compensated for energy and angle 
+<tr><td> EvtECalTrackDoca 
+<td>        CalTrackDoca, compensated for energy and angle 
+<tr><td> EvtECalTrackSep 
+<td>        CalTrackSep, compensated for energy and angle 
+<tr><td> EvtEVtxAngle 
+<td>        EvtVtxEAngle, compensated for energy and angle 
+<tr><td> EvtEVtxDoca 
+<td>        VtxDOCA, compensated for energy and angle 
+</table>
+    */
+
     addItem("EvtRun",           &EvtRun);
     addItem("EvtEventId",       &EvtEventId);
     addItem("EvtElapsedTime",   &EvtElapsedTime);
@@ -221,7 +295,7 @@ StatusCode EvtValsTool::initialize()
 	addItem("EvtECalLRmsAsym",  &EvtECalLRmsAsym);
 	addItem("EvtECalTrackAngle",&EvtECalTrackAngle);
 
-    addItem("EvtEVtxAngle",    &EvtEVtxAngle);
+    addItem("EvtEVtxAngle",     &EvtEVtxAngle);
     addItem("EvtEVtxDoca",      &EvtEVtxDoca);
 
     zeroVals();

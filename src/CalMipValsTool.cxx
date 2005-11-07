@@ -3,7 +3,7 @@
 @brief Calculates the Cal Mip analysis variables
 @author F. Piron
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalMipValsTool.cxx,v 1.3 2005/07/26 16:43:28 usher Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalMipValsTool.cxx,v 1.4 2005/07/27 15:20:01 lsrea Exp $
 */
 
 // Include files
@@ -104,6 +104,34 @@ StatusCode CalMipValsTool::initialize()
     MsgStream log(msgSvc(), name());
     
     if( ValBase::initialize().isFailure()) return StatusCode::FAILURE;
+
+    /** @page anatup_vars
+    @section calmipvalstool CalMipValsTool Variables
+
+    <table>
+    <tr><th> Variable </th> <th> Description
+    <tr><td> CalMipNum  
+    <td>         Number of Cal Mips found? 
+    <tr><td> CalMip[X/Y/Z]0  
+    <td>         tbd  
+    <tr><td> CalMip[X/Y/Z]Dir  
+    <td>         tbd 
+    <tr><td> CalMipD2edge  
+    <td>         tbd 
+    <tr><td> CalMipArcLen  
+    <td>         tbd 
+    <tr><td> CalMipEcor  
+    <td>         tbd 
+    <tr><td> CalMipEcorRms  
+    <td>         tbd 
+    <tr><td> CalMipChi2  
+    <td>         tbd 
+    <tr><td> CalMipErm 
+    <td>         tbd
+    </table>
+
+    */
+
     
     addItem("CalMipNum",     &m_num);      
     addItem("CalMipX0",      &m_x0);      

@@ -2,6 +2,8 @@
   @brief Package AnalysisNtule
   @verbatim
  
+
+ v2r8p2  07-Nov-05   LSR  Try again
  v2r8p1  07-Nov-05   LSR  Major update of documentation... code is unchanged
  v2r8    04-Nov-05   LSR  New vars:
                               TkrSurplusHitRatio: #hits outside/#hits inside energy/angle-dependent cone
@@ -10,6 +12,7 @@
                               Tkr1CoreHC: total # extra hits in small circles around each hit on track 1
                               
                               Deprecated: TkrTotalHits -- same as TkrSurplusHCInside 
+>>>>>>> 1.104
  v2r7p2  01-Nov-05   LSR  Fix bug in calc. of TkrBlankHits
  v2r7p1  25-Oct-05   LSR  Protect some variables from divide-by-zero and negative sqrt
  v2r7    19-Oct-05   HMK  Store new AcdRecon ActDist alongside old one for now

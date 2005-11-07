@@ -2,7 +2,7 @@
 @brief Calculates the Mc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.23 2005/07/27 15:20:01 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.24 2005/10/26 00:05:50 lsrea Exp $
 */
 // Include files
 
@@ -125,6 +125,49 @@ StatusCode McValsTool::initialize()
     }
     
     // load up the map
+
+    /** @page anatup_vars 
+    @section mcvalstool McValsTool Variables
+
+<table>
+<tr><th> Variable </th><th> Description
+<tr><td> McSourceId 
+<td>        Unique integer associated with each MC source type; 
+            from McEvent header replaces Mc_src_Id in merit ntuple 
+<tr><td> McId 
+<td>        StdHepId of primary (-13 = mu+, 22 = gamma, etc.) 
+<tr><td> McCharge 
+<td>        Charge of primary 
+<tr><td> McEnergy 
+<td>        Kinetic energy of the generated primary particle 
+<tr><td> McLogEnergy 
+<td>        log10(McEnergy) 
+<tr><td> McEFrac 
+<td>        Fraction of incident energy in highest-energy daughter 
+<tr><td> McOpeningAngle 
+<td>        Actual opening angle between the first and second daughters 
+            of the promary as generated, (For a primary photon, 
+            these will ordinarily be the electron and positron.) 
+<tr><td> McTkrExitEne 
+<td>        Attempt to calculate the total energy <strong>leaving</strong> the tracker volume 
+<tr><td> Mc[X/Y/Z]0 
+<td>        [x/y/z] coordinate of photon conversion or charged particle origin 
+<tr><td> Mc[X/Y/Z]Dir 
+<td>        [x/y/z] direction cosine of primary particle 
+<tr><td> Mc[X/Y]Err 
+<td>        [x/y] (found) - [x/y] (Mc) (Mc position taken at the z of the 
+            found vertex or first hit)
+<tr><td> McZErr 
+<td>        z(<strong>actual</strong> vertex or first hit) - McZ0 
+<tr><td> Mc[X/Y/Z]DirErr 
+<td>        [x/y/z]dir (found) - [x/y/z]dir (Mc )
+<tr><td> McDirErr 
+<td>        Angle between found direction and Mc direction (radians )
+<tr><td> McTkr[1/2]DirErr 
+<td>        Angle between direction of [best/second] track and Mc direction (radians) 
+</table>
+    */
+
 
     addItem("McSourceId",     &MC_SourceId);
     addItem("McId",           &MC_Id);  

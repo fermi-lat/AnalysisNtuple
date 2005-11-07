@@ -3,7 +3,7 @@
 @brief Calculates the Vtx analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.17 2005/07/08 17:54:08 atwood Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.18 2005/07/27 15:20:01 lsrea Exp $
 */
 
 // Include files
@@ -116,6 +116,44 @@ StatusCode VtxValsTool::initialize()
 	}
 
 	// load up the map
+
+    /** @page anatup_vars 
+    @section vtxvalstool VtxValsTool Variables
+
+<table>
+<tr><th> Variable </th><th> Description
+<tr><td> Vtx[X/Y/Z]Dir 
+<td>        [x/y/z] direction cosine of the (1st) vertex 
+<tr><td> VtxPhi 
+<td>        Azimuthal angle of vertex, radians 
+            (direction of source, not flight direction!) Range: (0,2pi) 
+<tr><td> VtxTheta 
+<td>        Polar angle of vertex, radians (ditto direction)
+<tr><td> Vtx[X/Y/Z]0 
+<td>        [x/y/z] coordinate of vertex; if the two tracks making up 
+            the vertex are nearly parallel, 
+            the coordinates of the vertex may become very large. 
+<tr><td> VtxAngle 
+<td>        Angle between the two tracks of the vertex (radians) 
+<tr><td> VtxDOCA 
+<td>        Distance of closest approach between the two tracks 
+<tr><td> VtxHeadSep 
+<td>        Distance between the heads of the two tracks 
+<tr><td> VtxStatus 
+<td>        Summary of track composition and topology.
+            See TkrVertex.h in the Event package for a detailed description.
+<tr><td> VtxQuality 
+<td>        Vertex quality parameter used to order the possible vertices and 
+            select the best one. <strong>Should generally not be used in analysis</strong>. 
+<tr><td> VtxChisq 
+<td>         The covariant chi-squared for the pairing of the tracks. 
+<tr><td> VtxS[1/2] 
+<td>        Distance of DOCA point from head of track [1/2] 
+<tr><td> VtxAddedRL 
+<td>        The additional radiation lengths prior to the first measured silicon 
+            strip hit at the vertex location. <em>New!</em> 
+</table>
+    */
 
 	// Pair reconstruction
 	addItem("VtxXDir",      &VTX_xdir);     

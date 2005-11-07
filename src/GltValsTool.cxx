@@ -2,7 +2,7 @@
 @brief Calculates the Trigger analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.25 2005/04/12 18:48:58 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.26 2005/07/27 15:20:01 lsrea Exp $
 */
 
 // Include files
@@ -115,6 +115,44 @@ StatusCode GltValsTool::initialize()
     }
 
     // load up the map
+
+
+    /** @page anatup_vars 
+    @section gltvalstool GltValsTool Variables
+    (Glt = GLAST Trigger)
+
+<table>
+<tr><th> Variable </th><th> Description
+<tr><td> GltWord 
+<td>        Trigger word from the event header, based on digi information (null value: -1)
+            The definition of the bits can be found in TriggerBits.h in the enums package.
+<tr><td> GltGemSummary 
+<td>        For Data, a copy of the GEM condtion summary; for MC, 
+            the same as calculated from the trigger (digi) information (null value: -1) 
+            The bits are defined in GemConditionsSummary.h in the enums package
+<tr><td>  GltEventFlags  
+<td>        Event flags from Ebf 
+<tr><td> GltTower 
+<td>        Id of tower that triggered; if more than one, 
+            choose the tower with the highest triggered layer (null value: -1) 
+<tr><td> Glt[X/Y]Tower 
+<td>        [x/y] index of GltTower (null value = -1) 
+<tr><td> GltTotal 
+<td>        Number of possible triggers (a straight-through track in a single tower 
+            produces 13 potential triggers 
+<tr><td> GltNumTowers 
+<td>        Number of towers which trigger (crossing track) 
+<tr><td> GltType 
+<td>        Number of exposed sides for the triggered tower, 
+            i.e. 0 = central tower, 1 = side tower, 2 = edge edge tower, 
+            4 = any single-tower setup 	
+<tr><td> GltMoment 
+<td>        Do not use 
+<tr><td> GltZDir 
+<td>        Do not use 
+</table>
+    */
+
 
     addItem("GltWord",       &Trig_word);
     addItem("GltGemSummary", &Trig_GemSummary);
