@@ -2,6 +2,7 @@
   @brief Package AnalysisNtule
   @verbatim
  
+ v2r8p1  07-Nov-05   LSR  Major update of documentation... code is unchanged
  v2r8    04-Nov-05   LSR  New vars:
                               TkrSurplusHitRatio: #hits outside/#hits inside energy/angle-dependent cone
                               TkrSurplusHCInside: #hits inside cone
