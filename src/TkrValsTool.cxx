@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.64 2005/11/04 19:56:42 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.65 2005/11/07 18:19:47 lsrea Exp $
 */
 
 // To Do:
@@ -1162,6 +1162,7 @@ StatusCode TkrValsTool::calculate()
                 isXY[tower] = (clusCount[0][tower]>0 && clusCount[1][tower]>0);
                 //std::cout << "tower " << tower << ", " << clusCount[0][tower] 
                 //    << " " << clusCount[1][tower] << ", " << isXY[tower] << std::endl;
+            }
             // make sure *this* tower is included!
             isXY[thisTower] = true;
 
