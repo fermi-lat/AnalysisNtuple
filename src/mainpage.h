@@ -86,7 +86,12 @@
   any tool written for the package should be named "BlahBlahValsTool". 
   
   <hr>
- @section notes release.notes
+ @section vars Description of the variables
+ Here are the <A HREF="./anatup_vars.html"> standard</A> variables, and here are the 
+ <A HREF="./anatup_vars_optional.html"> optional</A> ones.
+
+  <hr>
+ @section notes Release Notes
   release.notes
  <hr>
  @section requirements requirements
