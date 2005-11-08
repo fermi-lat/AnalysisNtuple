@@ -3,7 +3,7 @@
 @brief Calculates the Cal Mip analysis variables
 @author F. Piron
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalMipValsTool.cxx,v 1.4 2005/07/27 15:20:01 lsrea Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalMipValsTool.cxx,v 1.5 2005/11/07 18:19:47 lsrea Exp $
 */
 
 // Include files
@@ -111,23 +111,26 @@ StatusCode CalMipValsTool::initialize()
     <table>
     <tr><th> Variable </th> <th> Description
     <tr><td> CalMipNum  
-    <td>         Number of Cal Mips found? 
+    <td>         Total number of found mip-like tracks in the Cal
     <tr><td> CalMip[X/Y/Z]0  
-    <td>         tbd  
+    <td>         [x/y/z] coordinates of the energy centroid of the best track
     <tr><td> CalMip[X/Y/Z]Dir  
-    <td>         tbd 
+    <td>         [x/y/z] direction cosines of the best track
     <tr><td> CalMipD2edge  
-    <td>         tbd 
+    <td>         Distance of the best track from the nearest edge of the Cal
     <tr><td> CalMipArcLen  
-    <td>         tbd 
+    <td>         Length of the best track (mm)
     <tr><td> CalMipEcor  
-    <td>         tbd 
+    <td>         Mean vertical-eq1uvalent energy (MeV) of the best track,
+                 obtained by averaging the pathlength-corrected energies in each layer
     <tr><td> CalMipEcorRms  
-    <td>         tbd 
+    <td>         RMS of CalMipEcor
     <tr><td> CalMipChi2  
-    <td>         tbd 
+    <td>         Chi-squared of the direction fit for the best track
+                 (combination of least squares in XZ and YZ planes)
     <tr><td> CalMipErm 
-    <td>         tbd
+    <td>         total energy (MeV) contained in a cylinder of 1 Moliere radius 
+                 around the best track
     </table>
 
     */
