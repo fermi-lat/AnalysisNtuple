@@ -8,7 +8,7 @@
 @section Introduction
 
 The variables from the Analysis Ntuple are presented here grouped by tool. 
-Within each tool, variables are arranged according to their position in the ntuple.
+Within each tool, variables are arranged roughly according to their position in the ntuple.
 
 Unless otherwise noted, energy is in MeV, length is in mm, and angle is in radians. 
 Also, unless otherwised noted, the null value, that is, the value in the ntuple when 
