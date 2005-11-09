@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.19 2005/10/19 19:08:45 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.20 2005/11/07 18:19:47 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -65,6 +65,7 @@ private:
     float ACD_ActiveDist3D;
     float ACD_ActiveDist_Energy;
     float ACD_GammaDOCA; 
+    float ACD_Corner_DOCA;
     float ACD_ActDistTop;
     float ACD_ActDistR0;
     float ACD_ActDistR1;
@@ -178,13 +179,15 @@ StatusCode AcdValsTool::initialize()
 <tr><td> AcdDoca 
 <td>        Nearest distance of any track from the center of any tile 
 <tr><td> AcdDocaTileEnergy   
-<td>        The deposited energy in the corresponding hit tile 
+<td>        The deposited MC energy in the corresponding hit tile 
 <tr><td> AcdActiveDist 	
 <td>        Largest active distance of any track to the edge of any tile 
 <tr><td> AcdActDistTileEnergy 
-<td>        The deposited energy in the corresponding hit tile 
+<td>        The deposited MC energy in the corresponding hit tile 
 <tr><td> AcdGammaDoca 
 <td>        Distance of Gamma to the center of the nearest tile 
+<tr><td> AcdCornerDoca 
+<td>        Minimum Distance of Closest Approach to the corner side gaps 
 <tr><td> AcdActDistTop   
 <td>        Smallest active distance of any track to top tiles 
 <tr><td> AcdActDistSideRow[0...3] 	
@@ -215,6 +218,7 @@ StatusCode AcdValsTool::initialize()
     addItem("AcdActiveDist3D",   &ACD_ActiveDist3D);
     addItem("AcdActDistTileEnergy",   &ACD_ActiveDist_Energy);
     addItem("AcdGammaDoca",    &ACD_GammaDOCA);
+    addItem("AcdCornerDoca",    &ACD_Corner_DOCA);
 
     addItem("AcdActDistTop",&ACD_ActDistTop);
     addItem("AcdActDistSideRow0",&ACD_ActDistR0);
@@ -287,6 +291,7 @@ StatusCode AcdValsTool::calculate()
         ACD_ActiveDist_Energy = energyIdMap[tileId];
 
         ACD_GammaDOCA     = pACD->getGammaDoca();
+        ACD_Corner_DOCA   = pACD->getCornerDoca();
         ACD_ribbon_ActiveDist = pACD->getRibbonActiveDist();
 
         const std::vector<double> & adist = pACD->getRowActDistCol();
