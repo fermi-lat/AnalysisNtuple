@@ -2,7 +2,7 @@
 @brief Calculates the Trigger analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.26 2005/07/27 15:20:01 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.27 2005/11/07 18:19:47 lsrea Exp $
 */
 
 // Include files
@@ -126,10 +126,32 @@ StatusCode GltValsTool::initialize()
 <tr><td> GltWord 
 <td>        Trigger word from the event header, based on digi information (null value: -1)
             The definition of the bits can be found in TriggerBits.h in the enums package.
+
+            Here is the situation as of Glast Release v7r2:
+@verbatim
+  b_ACDL =     1  ///>  set if cover or side veto, low threshold
+  b_Track=     2  ///>  3 consecutive x-y layers hit
+  b_LO_CAL=    4  ///>  single log above low threshold
+  b_HI_CAL=    8  ///>  single log above high threshold
+  b_ACDH =    16  ///>  cover or side veto, high threshold ("CNO")
+  b_THROTTLE= 32  ///>  Ritz throttle
+@endverbatim
+
+        The definitions are not expected to change.
 <tr><td> GltGemSummary 
 <td>        For Data, a copy of the GEM condtion summary; for MC, 
             the same as calculated from the trigger (digi) information (null value: -1) 
-            The bits are defined in GemConditionsSummary.h in the enums package
+            The bits are defined in GemConditionsSummary.h in the enums package.
+
+            Here is the situation as of GlastRelease v2r7:
+@verbatim
+  ROI   = 1         CNO       =  16
+  TKR   = 2         PERIODIC  =  32
+  CALLE = 4         SOLICITED =  64
+  CALHE = 8         EXTERNAL  = 128
+@endverbatim
+
+            The definitions are not expected to change.
 <tr><td>  GltEventFlags  
 <td>        Event flags from Ebf 
 <tr><td> GltTower 
