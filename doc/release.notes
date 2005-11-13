@@ -2,7 +2,7 @@
   @brief Package AnalysisNtule
   @verbatim
 
- v2r9p2  12-Nov-05   LSR  Fix negative numbers in Tkr1CoreHC, and some cleanup
+ v2r9p2  12-Nov-05   LSR  Fix negative values of Tkr1CoreHC, and some cleanup
  v2r9p1  09-Nov-05   LSR  More doc... put some bit defns back in
  v2r9    08-Nov-05   HMK  Add in Bill's new AcdCornerDoca
  v2r8p4  08-Nov-05   LSR  More doc... CalMipValsTool done
