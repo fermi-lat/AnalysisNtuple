@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.65 2005/11/07 18:19:47 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.66 2005/11/07 19:30:38 lsrea Exp $
 */
 
 // To Do:
@@ -581,7 +581,7 @@ namespace {
     //regions for various hit counts
     double _nearRegion     = 30.0;   // for TkrHDCount
     double _upstreamRegion = 150.0;  // for TkrUpstreamHC
-    int    _nUpstream      = 4;      // max number of layers
+    int    _nUpstream      = 4;      // max number of layers to look upstream
     double _coreRegion     = 10.0;   // for Tkr1CoreHC
     
 }
@@ -985,7 +985,79 @@ StatusCode TkrValsTool::calculate()
         int firstPlane = m_tkrGeom->getPlane(track_1->front()->getTkrId()); 
         int firstLayer = m_tkrGeom->getLayer(firstPlane);
         double zFirstLayer = m_tkrGeom->getLayerZ(firstLayer);
+
+        // for the footprints
+        double secthX = 1./sqrt(1.0 - t1.x()*t1.x());
+        double secthY = 1./sqrt(1.0 - t1.y()*t1.y());
+
+        int numLayersTrack = Tkr_1_FirstLayer - Tkr_1_LastLayer + 1;
+
+        // do the hit counts
+
+        // Tkr_HDCount
+
+        double xNearRgn = _nearRegion*secthX;
+        double yNearRgn = _nearRegion*secthY;
+
+        Tkr_HDCount = pQueryClusters->numberOfUUHitsNear(Tkr_1_FirstLayer, 
+            xNearRgn, yNearRgn, x1);
+        
+        // Tkr1CoreHC:
+
+        double xCoreRgn = _coreRegion*secthX;
+        double yCoreRgn = _coreRegion*secthY;
+
+        int numLayers = m_tkrGeom->numLayers();
+
         Event::TkrTrackHitVecConItr hitIter = track_1->begin();
+        for(;hitIter!=track_1->end(); ++hitIter) {
+            const Event::TkrTrackHit* thisHit = *hitIter;
+            idents::TkrId thisId = thisHit->getTkrId();
+            int thisPlane = m_tkrGeom->getPlane(thisId);
+            int thisLayer = m_tkrGeom->getLayer(thisPlane);
+            int thisView  = thisId.getView();
+            Point pos;
+            if(thisHit->validMeasuredHit()) {
+                pos  = thisHit->getPoint(Event::TkrTrackHit::MEASURED);
+            } else if(thisHit->validFilteredHit()) {
+                pos  = thisHit->getPoint(Event::TkrTrackHit::FILTERED);
+            } else { continue; }
+
+            double distance = (thisView==0 ? xCoreRgn : yCoreRgn);
+            int coreHits = pQueryClusters->numberOfHitsNear(thisView, thisLayer,
+                distance, pos);
+            if (thisHit->validCluster()) coreHits--;
+            Tkr_1_CoreHC += coreHits;
+        }
+
+        //TkrUpstreamHC
+
+        int topLayer  = numLayers - 1;
+        int layer    = firstLayer+1;
+        int upperLayer = std::min(firstLayer+_nUpstream, topLayer);
+        double xUpstreamRgn = _upstreamRegion*secthX;
+        double yUpstreamRgn = _upstreamRegion*secthY;
+
+        for(; layer<=upperLayer; ++layer) {
+            double zLayer = m_tkrGeom->getLayerZ(layer);
+            double deltaZ = zFirstLayer - zLayer;
+            double arcLength = deltaZ*secth;
+            Point x_hit = x1 + arcLength*t1;
+            double xUpstreamRgn = _upstreamRegion*secthX;
+            double yUpstreamRgn = _upstreamRegion*secthY;
+            Tkr_UpstreamHC += pQueryClusters->numberOfHitsNear(layer, 
+                xUpstreamRgn, yUpstreamRgn, x_hit, t1);       
+        }
+
+        // Surplus hits
+
+        double tanth = (1.0-costh*costh)*secth;
+        double spread0 = _coneOffset + _layerFactor*tanth;
+        double cosFactor = pow(secth, _expCosth);
+
+        float Tkr_SurplusHCOutside = 0.0f;
+        //float Tkr_SurplusHCInside  = 0.0f;
+        //float Tkr_Total_Hits = 0.0f;
 
         // hate to do this, but we need ERecon
         // Recover pointer to CalEventEnergy info 
@@ -1015,106 +1087,20 @@ StatusCode TkrValsTool::calculate()
             _coneAngleEBreak, _coneAngleEMax);
         }
 
-        // for the footprints
-        double secthX = 1./sqrt(1.0 - t1.x()*t1.x());
-        double secthY = 1./sqrt(1.0 - t1.y()*t1.y());
-
-        double tanth = (1.0-costh*costh)*secth;
-        double spread0 = _coneOffset + _layerFactor*tanth;
-        double cosFactor = pow(secth, _expCosth);
-
         double xSprd0 = coneAngle*secthX*cosFactor;
         double ySprd0 = coneAngle*secthY*cosFactor;
 
-        float Tkr_SurplusHCOutside = 0.0f;
-        //float Tkr_SurplusHCInside  = 0.0f;
-        //float Tkr_Total_Hits = 0.0f;
-
-        // doesn't work for reverse-found tracks
-        // I'm going to try to do several things at once here
-
-        int numLayersTrack = Tkr_1_FirstLayer - Tkr_1_LastLayer + 1;
-        Tkr_1_CoreHC = -track_1->getNumFitHits();
-
-        // do all the odd-ball hit counts here
-        int topLayer = m_tkrGeom->numLayers() - 1;
-        for(int ilayer = topLayer; ilayer>=0; --ilayer) {
-
-            double zLayer = m_tkrGeom->getLayerZ(ilayer);
-            double deltaZ = zFirstLayer - zLayer;
-            double arcLength = deltaZ*secth;
-            Point x_hit = x1 + arcLength*t1;
-
-            double xUpstreamRgn = _upstreamRegion*secthX;
-            double yUpstreamRgn = _upstreamRegion*secthY;
-
-            //  Look for extra hits
-            int deltaLayer = firstLayer-ilayer;
+        for(layer = firstLayer; layer>=0; --layer) {
             
-            if (deltaLayer<0 && deltaLayer>-_nUpstream - 1) { // up to 4 layers above track
-                double xUpstreamRgn = _upstreamRegion*secthX;
-                double yUpstreamRgn = _upstreamRegion*secthY;
-                Tkr_UpstreamHC += pQueryClusters->numberOfHitsNear(ilayer, 
-                    xUpstreamRgn, yUpstreamRgn, x_hit, t1);
-            } 
- 
-            if(deltaLayer==0) { // around track head
-               double xNearRgn = _nearRegion*secthX;
-               double yNearRgn = _nearRegion*secthY;
-               Tkr_HDCount = pQueryClusters->numberOfUUHitsNear(ilayer, 
-                   xNearRgn, yNearRgn, x_hit);
-            }
-            
-            if (deltaLayer>=0 && deltaLayer<numLayersTrack) { //hits near the 1st track
-                // get a TkrHit for this layer
-                double xCoreRgn = _coreRegion*secthX;
-                double yCoreRgn = _coreRegion*secthY;
-                const Event::TkrTrackHit* thisHit = *hitIter;
-                int thisPlane = m_tkrGeom->getPlane(thisHit->getTkrId());
-                int thisLayer = m_tkrGeom->getLayer(thisPlane);
-                bool valid = true;
-                while (ilayer != thisLayer && thisLayer > firstLayer-numLayersTrack) {
-                    hitIter++;
-                    thisHit = *hitIter;
-                    idents::TkrId id = thisHit->getTkrId();
-                    thisPlane = m_tkrGeom->getPlane(id);
-                    thisLayer = m_tkrGeom->getLayer(thisPlane);
-                }
-                Event::TkrTrackHit::ParamType type;
-
-                if (thisHit->validFilteredHit()) {
-                    type = Event::TkrTrackHit::FILTERED;
-                } else if (thisHit->validSmoothedHit()) {
-                    type = Event::TkrTrackHit::SMOOTHED;
-                } else if (thisHit->validPredictedHit()) {
-                    type = Event::TkrTrackHit::PREDICTED;
-                } else if (thisHit->validMeasuredHit()) {
-                    type = Event::TkrTrackHit::MEASURED;
-                } else {
-                    valid = false;
-                }
-
-                if (valid) {
-                    Point thisPos = thisHit->getPoint(type);
-                    Vector thisDir = thisHit->getDirection(type);
-                    int coreHits = pQueryClusters->numberOfHitsNear(ilayer, 
-                        xCoreRgn, yCoreRgn, thisPos, thisDir);
-                    Tkr_1_CoreHC += coreHits;
-                }
-            }
-        }
-
-        for(int ilayer = firstLayer; ilayer>=0; --ilayer) {
-            
-            if(ilayer <firstLayer) {
+            if(layer <firstLayer) {
                 radlen = m_G4PropTool->getRadLength(arc_len); 
             }
 
             // Assume location of shower center is given by 1st track
 
             // try to get actual x and y (accounting for the differences in z)
-            double zX = m_tkrGeom->getLayerZ(ilayer, 0);
-            double zY = m_tkrGeom->getLayerZ(ilayer, 1);
+            double zX = m_tkrGeom->getLayerZ(layer, 0);
+            double zY = m_tkrGeom->getLayerZ(layer, 1);
             double zAve = 0.5*(zX + zY);
             double arcLenX = (x1.z() - zX)*secth;
             double arcLenY = (x1.z() - zY)*secth;
@@ -1144,7 +1130,7 @@ StatusCode TkrValsTool::calculate()
             int view;
             // fpr each layer, count the clusters in each tower, view
             for (view=0; view<2; ++view) {
-                clusVec[view] = pQueryClusters->getClusters(view, ilayer);
+                clusVec[view] = pQueryClusters->getClusters(view, layer);
                 //std::cout << clusVec[view].size() << std::endl;
                 Event::TkrClusterVecConItr iter = clusVec[view].begin();
                 for(;iter!=clusVec[view].end(); ++iter) {
@@ -1168,8 +1154,8 @@ StatusCode TkrValsTool::calculate()
 
             float factor;
 
-            double xSprd = spread0 + xSprd0*(firstLayer-ilayer);
-            double ySprd = spread0 + ySprd0*(firstLayer-ilayer);
+            double xSprd = spread0 + xSprd0*(firstLayer-layer);
+            double ySprd = spread0 + ySprd0*(firstLayer-layer);
 
             // test each cluster in surviving towers
             int mode = 0;
@@ -1234,7 +1220,7 @@ StatusCode TkrValsTool::calculate()
             double delta_rad= radlen-radlen_old;
             double thisRad;
             //A bit cleaner
-            switch (m_tkrGeom->getLayerType(ilayer)) {
+            switch (m_tkrGeom->getLayerType(layer)) {
                 case STANDARD:
                     thisRad = radThin;
                     thin_hits += numHits;
@@ -1250,7 +1236,7 @@ StatusCode TkrValsTool::calculate()
                 default:
                     break;
             }
-            if (ilayer==firstLayer) {
+            if (layer==firstLayer) {
                 // on first layer, add in 1/2 if the 1st plane is the top of a layer
                 if(m_tkrGeom->isTopPlaneInLayer(firstPlane)) {delta_rad = 0.5*thisRad*secth;}
             } else {
@@ -1265,9 +1251,9 @@ StatusCode TkrValsTool::calculate()
             rad_len_sum      += delta_rad;
 
             // Increment arc-length
-            if(ilayer==0) break;
+            if(layer==0) break;
 
-            double z_next = m_tkrGeom->getLayerZ(ilayer-1);
+            double z_next = m_tkrGeom->getLayerZ(layer-1);
             double deltaZ = z_present - z_next;
             z_present = z_next;
 
