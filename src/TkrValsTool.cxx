@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.66 2005/11/07 19:30:38 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.67 2005/11/13 00:59:06 lsrea Exp $
 */
 
 // To Do:
@@ -301,14 +301,17 @@ Notes:
 <tr><td> TkrHDCount 
 <td>        Number of unused clusters in top x-y layer of the best track 
             within a radius of 30 mm, corrected for track angle
-            (Used in PSF analysis and Bkg. Rej.) 
+            (Used in PSF analysis and background rejection) 
 <tr><td> TkrTotalHits 
 <td>        Deprecated. Use TkrSurplusHCInside instead
 <tr><td> TkrSurplusHitsInside 
 <td>        Number of clusters inside an energy- and angle-dependent cone 
             centered on the reconstructed axis of the best track and
             starting at the head of track 1. 
-<tr><td> TkrThinHits 
+<tr><td> TkrSurplusHitRatio
+<td>        Ratio of the number of hits outside the cone to the number
+            inside.
+<tr><td> TkrThinHits
 <td>        Number of clusters in the above cone in the thin-converter layers 
 <tr><td> TkrThickHits 
 <td>        Number of clusters in the above cone in the thick-converter layers 
@@ -317,7 +320,7 @@ Notes:
 <tr><td> Tkr2TkrAngle 
 <td>      Angle between first and second reconstructed tracks 
 <tr><td> Tkr2TkrHDoca  
-<td>        Distance between first and second track inthe plane of the 
+<td>        Distance between first and second track in the plane of the 
             first hit on the first track. 
             This is most useful if the two tracks are almost parallel, 
             in which case the usual DOCA is poorly measured.  
@@ -327,7 +330,7 @@ Notes:
 
 <table>
 <tr><td> Tkr[1/2]Chisq 
-<td>        Track chisquared  
+<td>        Track chisquared 
 <tr><td> Tkr[1/2]FirstChisq  
 <td>        Track chisquared for first Tkr[1/2]FirstHits layers  
 <tr><td> Tkr[1/2]Hits  
@@ -345,7 +348,6 @@ Notes:
              (This and the following X,Y pair can be used to find dead strips)
 <tr><td> Tkr1[X/Y]Gap  
 <td>        [x/y] location of first gap on track 1  
-
 <tr><td> Tkr[1/2]FirstGaps  
 <td>        Number of gaps in first Tkr1FirstHits layers on track  
 <tr><td> Tkr[1/2]Qual  
@@ -354,9 +356,35 @@ Notes:
              This is used primarily to order the tracks during patrec. 
              <strong>It's not a good idea to cut on this variable!</strong>  
 <tr><td> Tkr[1/2]Type  
-<td>        These are the status bits from the tracking.  
-             There is a good deal of information here about how the track was found and fitted.   
-             See TkrTrack.h in the Event package for a detailed description  
+<td>        These are the status bits from the trackign, containing information
+             about how the track was found and fitted.   
+             See TkrTrack.h in the Event package for the current description.     
+             As of GlastRelease v7r2, the status word bits organized as follows:
+
+@verbatim
+
+       |  0   0   0   0  |  0   0   0   0  |  0   0   0   0  |  0   0   0   0   |
+        [ Pat Rec Info  ]  [Pass ][ E-Loss] [ Track Energy ]  [Track Fit Status]
+
+        FOUND    = 0x0001,  //Set if track has been "found" by pat rec
+        FILTERED = 0x0002,  //Set if track fit filter stage has been run
+        SMOOTHED = 0x0004,  //Set if track fit smoother has been run
+        REVFILTR = 0x0008,  //Set if track has been reverse-filtered
+        CALENERGY= 0x0010,  //Set if track energy from raw calorimeter info
+        LATENERGY= 0x0020,  //Set if track energy from TKR+CAL constrained
+        USERENERGY= 0x0040, //Set if track energy set by user
+        MCENERGY = 0x0080,  //Set if energy from users or from MC truth
+        RADELOSS = 0x0100,  //Set if radiative energy loss used (e+/e- fitting)
+        MIPELOSS = 0x0200,  //Set if Bethe-Block energy loss used (not e+/e-)
+        ONEPASS  = 0x0400,  //Set if the full first pass track fit finished
+        TWOPASS  = 0x0800,  //Set if an iteration of the first fit finished
+        PRCALSRCH= 0x1000,  //Set if Pat. Rec. used Cal Energy Centroid
+        PRBLNSRCH= 0x2000,  //Set if Pat. Rec. used only Track info.
+        TOP      = 0x4000,  //Set if track traj. intercepts top tracker plane
+        BOTTOM   = 0x8000   //Set if track traj. intercepts first Cal layer
+
+@endverbatim
+The definitions should be fairly stable.
 <tr><td> Tkr[1/2]TwrEdge  
 <td>        Distance from tower edge of initial point (0 is halfway between the towers, 
              increases towards center of tower) 

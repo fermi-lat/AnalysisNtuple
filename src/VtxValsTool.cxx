@@ -3,7 +3,7 @@
 @brief Calculates the Vtx analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.18 2005/07/27 15:20:01 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.19 2005/11/07 18:19:47 lsrea Exp $
 */
 
 // Include files
@@ -141,7 +141,22 @@ StatusCode VtxValsTool::initialize()
 <td>        Distance between the heads of the two tracks 
 <tr><td> VtxStatus 
 <td>        Summary of track composition and topology.
-            See TkrVertex.h in the Event package for a detailed description.
+            See TkrVertex.h in the Event package for the current description.
+            The definitions as of GR v7r2 are:
+@verbatim
+
+    |  0   0   0   0  |  0   0   0   0  |  0   0   0   0  |  0   0   0   0   |
+                                         [Track Topology ] [Track composition]
+
+    ONETKRVTX = 0x0001,  //Set if single track vertex
+    TWOTKRVTX = 0x0002,  //Set if 2 track vertex
+    MULTKRVTX = 0x0004,  //Set if >2 track vertex
+    DOCAVTX   = 0x0010,  //Set if vertex location set by DOCA point
+    FIRSTHIT  = 0x0020,  //Set if two tracks share first hit
+    STAGVTX   = 0x0040,  //Set if tracks don't start in same plane (staggered)
+    CROSSTKR  = 0x0080   //Set if DOCA location lies inside track hits
+
+@endverbatim
 <tr><td> VtxQuality 
 <td>        Vertex quality parameter used to order the possible vertices and 
             select the best one. <strong>Should generally not be used in analysis</strong>. 
