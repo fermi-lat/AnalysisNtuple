@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.67 2005/11/13 00:59:06 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.68 2005/11/18 16:49:15 lsrea Exp $
 */
 
 // To Do:
@@ -1090,8 +1090,11 @@ StatusCode TkrValsTool::calculate()
         // hate to do this, but we need ERecon
         // Recover pointer to CalEventEnergy info 
         double CAL_EnergyCorr = 0.0;
-        Event::CalEventEnergy* calEventEnergy = 
-            SmartDataPtr<Event::CalEventEnergy>(m_pEventSvc, EventModel::CalRecon::CalEventEnergy);
+        Event::CalEventEnergyCol * calEventEnergyCol = 
+          SmartDataPtr<Event::CalEventEnergyCol>(m_pEventSvc, EventModel::CalRecon::CalEventEnergyCol);
+        Event::CalEventEnergy * calEventEnergy = 0 ;
+        if ((calEventEnergyCol!=0)&&(!calEventEnergyCol->empty()))
+          calEventEnergy = calEventEnergyCol->front() ;
         if (calEventEnergy != 0) {
             // Extraction of results from CalValCorrTool in CalRecon... 
             Event::CalCorToolResultCol::iterator corIter = calEventEnergy->begin();

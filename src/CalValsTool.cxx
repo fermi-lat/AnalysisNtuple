@@ -3,7 +3,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.63 2005/10/26 00:05:50 lsrea Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.64 2005/11/07 18:19:47 lsrea Exp $
 */
 
 // Include files
@@ -385,9 +385,12 @@ StatusCode CalValsTool::calculate()
     SmartDataPtr<Event::CalXtalRecCol> 
         pxtalrecs(m_pEventSvc,EventModel::CalRecon::CalXtalRecCol);
 
-	// Recover pointer to CalEventEnergy info  
-    Event::CalEventEnergy* calEventEnergy = 
-                 SmartDataPtr<Event::CalEventEnergy>(m_pEventSvc, EventModel::CalRecon::CalEventEnergy);
+    // Recover pointer to CalEventEnergy
+    Event::CalEventEnergyCol * calEventEnergyCol = 
+        SmartDataPtr<Event::CalEventEnergyCol>(m_pEventSvc,EventModel::CalRecon::CalEventEnergyCol) ;
+    Event::CalEventEnergy * calEventEnergy = 0 ;
+    if ((calEventEnergyCol!=0)&&(!calEventEnergyCol->empty()))
+        calEventEnergy = calEventEnergyCol->front() ;
 
     // If calEventEnergy then fill TkrEventParams
     // Note: TkrEventParams initializes to zero in the event of no CalEventEnergy
