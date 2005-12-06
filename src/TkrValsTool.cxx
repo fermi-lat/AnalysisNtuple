@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.68 2005/11/18 16:49:15 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.69 2005/11/25 16:50:14 chamont Exp $
 */
 
 // To Do:
@@ -464,8 +464,11 @@ The definitions should be fairly stable.
 <tr><td> Tkr1ChisqAsym  
 <td>        Asymmetry between last two and first two track-segment delta-chisquared's  
 <tr><td> Tkr1SSDVeto  
-<td>        Number of silicon  layers before start of track that have no hits near the track.   
-            Can be used as a back-up for the ACD.  
+<td>        Number of silicon planes between the top of the extrapolated track 
+            and the first plane that has a hit near the track. Only planes that have
+            wafers which intersect the extrapolated track are considered. No checks 
+            for dead strips, etc. are made (yet!).
+            Can be used as a back-up for the ACD. 
 </table>
 
     */
@@ -611,7 +614,7 @@ namespace {
     double _upstreamRegion = 150.0;  // for TkrUpstreamHC
     int    _nUpstream      = 4;      // max number of layers to look upstream
     double _coreRegion     = 10.0;   // for Tkr1CoreHC
-    
+    double _vetoRegion     = 10.0;   // for Tkr1SSDVeto
 }
 
 StatusCode TkrValsTool::calculate()
@@ -890,19 +893,57 @@ StatusCode TkrValsTool::calculate()
         idents::VolumeIdentifier volId;
         idents::VolumeIdentifier prefix = m_detSvc->getIDPrefix();
 
-        for(int istep = 1; istep < numSteps; ++istep) { // Note: skip the first vol - as this is the head SSD
+        int firstPlane = m_tkrGeom->getPlane(track_1->front()->getTkrId()); 
+        int firstLayer = m_tkrGeom->getLayer(firstPlane);
+        double zFirstLayer = m_tkrGeom->getLayerZ(firstLayer);
+
+        int numLayersTrack = Tkr_1_FirstLayer - Tkr_1_LastLayer + 1;
+
+        double costh = fabs(t1.z());
+        double secth = 1./costh;
+
+        // for the footprints
+        double secthX = 1./sqrt(1.0 - t1.x()*t1.x());
+        double secthY = 1./sqrt(1.0 - t1.y()*t1.y());
+
+        double xVetoRgn = _vetoRegion*secthX;
+        double yVetoRgn = _vetoRegion*secthY;
+
+        // Note: skip the first vol - as this is the head SSD
+        for(int istep = 1; istep < numSteps; ++istep) { 
             volId = m_G4PropTool->getStepVolumeId(istep);
             volId.prepend(prefix);
             Point x_step       = m_G4PropTool->getStepPosition(istep); 
-            if((x_step.z()-x1.z()) < 10.0) continue; 
+
+            // we're outside the LAT
             if(x_step.z() > topOfTkr || !m_tkrGeom->isInActiveLAT(x_step) ) break; 
 
             // check that it's really a TKR hit (probably overkill)
             if(volId.size() != 9) continue; 
             if(!(volId[0]==0 && volId[3]==1)) continue; // !(LAT && TKR)
-            if(volId[6]> 1) continue;  //It's a converter!  
+            if(volId[6]> 1) continue;  //It's a converter or some other tray element!
 
-            Tkr_1_SSDVeto += 1.; 
+            // now check if there's a hit near the extrapolated track!
+            // if there is, reset the veto counter... we want leading non-hits
+
+            int tray = volId[4];
+            int face  = volId[6];
+            int layer, view;
+            m_tkrGeom->trayToLayer(tray, face, layer, view);
+
+            // I think we want to do this, most likely this is missed for
+            //   some good reason.
+            if(layer==firstLayer) continue;
+
+            double vetoRgn = (view==0 ? xVetoRgn : yVetoRgn);
+
+            int nVetoHits = pQueryClusters->numberOfHitsNear(view, layer, 
+                vetoRgn, x_step, t1);
+            if (nVetoHits>0) { Tkr_1_SSDVeto = 0.0; }
+            else { Tkr_1_SSDVeto += 1.0; }
+
+            // before, we didn't check to see if there was a close hit
+            //  in the plane... lots of room for a screw-up!
         }
 
         if(nTracks > 1) {
@@ -983,8 +1024,6 @@ StatusCode TkrValsTool::calculate()
         double tkrTrackEnergy = tkrTrackEnergy1 + tkrTrackEnergy2;
 
         // Computation of the tracker contribution to the total energy 
-        double costh = fabs(t1.z());
-        double secth = 1./costh;
         arc_min = (x1.z() - m_tkrGeom->calZTop())*secth; 
         m_G4PropTool->setStepStart(x1, t1);
         m_G4PropTool->step(arc_min);
@@ -1008,20 +1047,7 @@ StatusCode TkrValsTool::calculate()
         std::vector<float> layerInCount(numTowers,0.0);
         std::vector<float> layerOutCount(numTowers,0.0);
 
-        //std::cout << std::endl;
-
-        int firstPlane = m_tkrGeom->getPlane(track_1->front()->getTkrId()); 
-        int firstLayer = m_tkrGeom->getLayer(firstPlane);
-        double zFirstLayer = m_tkrGeom->getLayerZ(firstLayer);
-
-        // for the footprints
-        double secthX = 1./sqrt(1.0 - t1.x()*t1.x());
-        double secthY = 1./sqrt(1.0 - t1.y()*t1.y());
-
-        int numLayersTrack = Tkr_1_FirstLayer - Tkr_1_LastLayer + 1;
-
         // do the hit counts
-
         // Tkr_HDCount
 
         double xNearRgn = _nearRegion*secthX;
@@ -1071,8 +1097,6 @@ StatusCode TkrValsTool::calculate()
             double deltaZ = zFirstLayer - zLayer;
             double arcLength = deltaZ*secth;
             Point x_hit = x1 + arcLength*t1;
-            double xUpstreamRgn = _upstreamRegion*secthX;
-            double yUpstreamRgn = _upstreamRegion*secthY;
             Tkr_UpstreamHC += pQueryClusters->numberOfHitsNear(layer, 
                 xUpstreamRgn, yUpstreamRgn, x_hit, t1);       
         }
