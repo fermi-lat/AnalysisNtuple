@@ -4,6 +4,7 @@
 
 Branch GRv7r3p1
 ------------------------
+ v2r9p3gr1  08-Dec-05 LSR  Add new var: CalEdgeEnergy ("ACD for the CAL"!)
  v2r9p3gr0  07-Dec-05 LSR  Fix up calculation of Tkr1SSDVeto to match main branch
 
 
