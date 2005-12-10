@@ -3,7 +3,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.64 2005/11/07 18:19:47 lsrea Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.65 2005/11/25 16:50:14 chamont Exp $
 */
 
 // Include files
@@ -85,6 +85,7 @@
       /// CAL vars
       double m_calXWidth;
       double m_calYWidth;
+      double m_deltaSide;
       double m_calZTop;
       double m_calZBot;
 
@@ -114,6 +115,7 @@
       float CAL_TwrEdgeCntr;
 	  float CAL_TwrEdgeTop;
       float CAL_LATEdge; 
+      float CAL_EdgeEnergy;
 
       float CAL_Lyr0_Ratio;
       float CAL_Lyr7_Ratio;
@@ -147,6 +149,10 @@
       float CAL_x0;
       float CAL_y0;
   };
+  namespace {
+      // this is the test distance for the CAL_EdgeEnergy variable
+      double _deltaEdge = 50.0;
+  }
   
   // Static factory for instantiation of algtool objects
   static ToolFactory<CalValsTool> s_factory;
@@ -246,6 +252,11 @@
 <td>        Closest distance of track 1, projected to the top of the CAL, 
             to the edge of the CAL layer, taking non-square shape into account. 
             This is essentially the old merit skirt variable. 
+<tr><td> CalEdgeEnergy 
+<td>        The sum of the raw energies in each crystal for which the energy centroid 
+            is within _deltaEdge (currently 50 mm) of the outside edge of one of 
+            the outside CAL modules.
+            This is an attempt at a "anti-coincidence counter" for the CAL.
 <tr><td> CalTwrEdgeCntr 
 <td>        Distance of the energy centroid from the nearest tower boundary.  
 <tr><td> CalGapFraction 
@@ -319,6 +330,7 @@
       addItem("CalTwrEdgeCntr",&CAL_TwrEdgeCntr);
 	  addItem("CalTwrEdge",    &CAL_TwrEdgeTop);
       addItem("CalLATEdge",    &CAL_LATEdge);
+      addItem("CalEdgeEnergy", &CAL_EdgeEnergy);
       addItem("CalTrackDoca",  &CAL_Track_DOCA);
       addItem("CalTrackAngle", &CAL_Track_Angle);
       addItem("CalTrackSep",   &CAL_Track_Sep);
@@ -469,9 +481,10 @@ StatusCode CalValsTool::calculate()
     
     int no_xtals=0;
     CAL_Xtal_maxEne = 0.; 
+    Event::CalXtalRecCol::const_iterator jlog;
     if (pxtalrecs) {
         // Find Xtal with max. energy
-        for( Event::CalXtalRecCol::const_iterator jlog=pxtalrecs->begin(); jlog != pxtalrecs->end(); ++jlog) {
+        for( jlog=pxtalrecs->begin(); jlog != pxtalrecs->end(); ++jlog) {
             const Event::CalXtalRecData& recLog = **jlog;    
             double eneLog = recLog.getEnergy();
             if(eneLog > CAL_Xtal_maxEne) CAL_Xtal_maxEne = eneLog; 
@@ -514,6 +527,36 @@ StatusCode CalValsTool::calculate()
     double dX = std::max(calXLo-CAL_x0, CAL_x0-calXHi);
     double dY = std::max(calYLo-CAL_y0, CAL_y0-calYHi);
     CAL_LATEdge = -std::max(dX, dY);
+    // collect the CAL edge energy
+    // the edge is larger of the width and length of the layer
+    // we can do better if this is at all useful.
+    if (pxtalrecs) {
+        for( jlog=pxtalrecs->begin(); jlog != pxtalrecs->end(); ++jlog) {
+            const Event::CalXtalRecData& recLog = **jlog;    
+            Point pos = recLog.getPosition();
+            double xPos = pos.x(); double yPos = pos.y();
+            double minX, minY;
+            minX = std::min(abs(xPos-calXLo),abs(xPos-calXHi));
+            minY = std::min(abs(yPos-calYLo),abs(yPos-calYHi));
+            // for later... no time to check this out now!
+            /*
+            idents::CalXtalId id = recLog.getPackedId();
+            if (id.isX()) {
+                double minX = 
+                    std::min(abs(xPos-(calXLo+m_deltaSide)),abs(xPos-(calXHi-m_deltaSide)));
+                double minY = std::min(abs(yPos-calYLo),abs(yPos-calYHi));
+            } else {
+                double minX = std::min(abs(xPos-calXLo),abs(xPos-calXHi));
+                double minY = 
+                    std::min(abs(yPos-(calYLo+m_deltaSide)),abs(yPos-(calYHi-m_deltaSide)));
+            }
+            */
+            if ((minX<_deltaEdge) ||  (minY<_deltaEdge)) {
+                double eneLog = recLog.getEnergy();
+                CAL_EdgeEnergy += eneLog;
+            }
+        }
+    }
 
 	// Compare Track (or vertex) to Cal soltion
 	Point x0  =  cal_pos;
@@ -594,6 +637,12 @@ StatusCode CalValsTool::getCalInfo()
     m_calZBot = m_tkrGeom->calZBot();
     m_calXWidth = m_tkrGeom->calXWidth();
     m_calYWidth = m_tkrGeom->calYWidth();
+    /*
+    double calModuleWid, calXtalLen;
+    m_detSvc->getNumericConstByName("CalModuleWidth", &calModuleWid);
+    m_detSvc->getNumericConstByName("CsILength", &calXtalLen);
+    double m_deltaSide = calModuleWid - calXtalLen;
+    */
 
     return StatusCode::SUCCESS;
 }
