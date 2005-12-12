@@ -1,8 +1,9 @@
 /**
-
 @file _Intro_optional.h
 @brief file to anchor the ntuple documentation page
+*/
 
+/**
 @page anatup_vars_optional Optional AnalysisNtuple Variables
  
 @section intro Introduction

@@ -1,8 +1,9 @@
 /**
- 
 @file _Intro_official.h
 @brief file to anchor the ntuple documentation page
+*/
 
+/**
 @page anatup_vars Standard AnalysisNtuple Variables
  
 @section intro Introduction
