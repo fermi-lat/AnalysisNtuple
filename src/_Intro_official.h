@@ -1,8 +1,9 @@
 /**
- 
 @file _Intro_official.h
 @brief file to anchor the ntuple documentation page
+*/
 
+/**
 @page anatup_vars Standard AnalysisNtuple Variables
  
 @section intro Introduction
@@ -14,4 +15,4 @@ Unless otherwise noted, energy is in MeV, length is in mm, and angle is in radia
 Also, unless otherwised noted, the null value, that is, the value in the ntuple when 
 there is no calculated value for a given variable, is zero.
 
- */
+*/
