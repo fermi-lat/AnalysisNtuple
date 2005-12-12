@@ -5,7 +5,7 @@
 
 @page anatup_vars_optional Optional AnalysisNtuple Variables
  
-@section Introduction
+@section intro Introduction
 
 Listed below are the variables produced by the ValsTools which are not part of the official merit ntuple, but which may be invoked by adding their names to the tool list.
 

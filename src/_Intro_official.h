@@ -5,7 +5,7 @@
 
 @page anatup_vars Standard AnalysisNtuple Variables
  
-@section Introduction
+@section intro Introduction
 
 The variables from the Analysis Ntuple are presented here grouped by tool. 
 Within each tool, variables are arranged roughly according to their position in the ntuple.
