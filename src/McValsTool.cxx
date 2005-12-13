@@ -2,7 +2,7 @@
 @brief Calculates the Mc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.24 2005/10/26 00:05:50 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.25 2005/11/07 18:19:47 lsrea Exp $
 */
 // Include files
 
@@ -130,41 +130,41 @@ StatusCode McValsTool::initialize()
     @section mcvalstool McValsTool Variables
 
 <table>
-<tr><th> Variable </th><th> Description
+<tr><th> Variable <th> Type <th> Description
 <tr><td> McSourceId 
-<td>        Unique integer associated with each MC source type; 
+<td>F<td>   Unique integer associated with each MC source type; 
             from McEvent header replaces Mc_src_Id in merit ntuple 
 <tr><td> McId 
-<td>        StdHepId of primary (-13 = mu+, 22 = gamma, etc.) 
+<td>F<td>   StdHepId of primary (-13 = mu+, 22 = gamma, etc.) 
 <tr><td> McCharge 
-<td>        Charge of primary 
+<td>F<td>   Charge of primary 
 <tr><td> McEnergy 
-<td>        Kinetic energy of the generated primary particle 
+<td>F<td>   Kinetic energy of the generated primary particle 
 <tr><td> McLogEnergy 
-<td>        log10(McEnergy) 
+<td>F<td>   log10(McEnergy) 
 <tr><td> McEFrac 
-<td>        Fraction of incident energy in highest-energy daughter 
+<td>F<td>   Fraction of incident energy in highest-energy daughter 
 <tr><td> McOpeningAngle 
-<td>        Actual opening angle between the first and second daughters 
+<td>F<td>   Actual opening angle between the first and second daughters 
             of the promary as generated, (For a primary photon, 
             these will ordinarily be the electron and positron.) 
 <tr><td> McTkrExitEne 
-<td>        Attempt to calculate the total energy <strong>leaving</strong> the tracker volume 
+<td>F<td>   Attempt to calculate the total energy <strong>leaving</strong> the tracker volume 
 <tr><td> Mc[X/Y/Z]0 
-<td>        [x/y/z] coordinate of photon conversion or charged particle origin 
+<td>F<td>   [x/y/z] coordinate of photon conversion or charged particle origin 
 <tr><td> Mc[X/Y/Z]Dir 
-<td>        [x/y/z] direction cosine of primary particle 
+<td>F<td>   [x/y/z] direction cosine of primary particle 
 <tr><td> Mc[X/Y]Err 
-<td>        [x/y] (found) - [x/y] (Mc) (Mc position taken at the z of the 
+<td>F<td>   [x/y] (found) - [x/y] (Mc) (Mc position taken at the z of the 
             found vertex or first hit)
 <tr><td> McZErr 
-<td>        z(<strong>actual</strong> vertex or first hit) - McZ0 
+<td>F<td>   z(<strong>actual</strong> vertex or first hit) - McZ0 
 <tr><td> Mc[X/Y/Z]DirErr 
-<td>        [x/y/z]dir (found) - [x/y/z]dir (Mc )
+<td>F<td>   [x/y/z]dir (found) - [x/y/z]dir (Mc )
 <tr><td> McDirErr 
-<td>        Angle between found direction and Mc direction (radians )
+<td>F<td>   Angle between found direction and Mc direction (radians )
 <tr><td> McTkr[1/2]DirErr 
-<td>        Angle between direction of [best/second] track and Mc direction (radians) 
+<td>F<td>   Angle between direction of [best/second] track and Mc direction (radians) 
 </table>
     */
 

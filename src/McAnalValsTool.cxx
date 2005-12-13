@@ -1,7 +1,7 @@
 /** @file McAnalValsTool.cxx
     @brief declartion, implementaion of the class UserAlg
 
-    $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McAnalValsTool.cxx,v 1.8 2004/09/30 17:12:21 lsrea Exp $
+    $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McAnalValsTool.cxx,v 1.9 2005/11/07 18:19:47 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -202,7 +202,7 @@ StatusCode McAnalValsTool::initialize()
     @section mcanalvalstool McAnalValsTool Variables
 
 <table>
-<tr><th> Variable </th><th> Description
+<tr><th> Variable <th> Type <th> Description
 <tr><td> McaNumCalls <td> Tracy will fill all this out at some point 
 <tr><td> McaPrmEnergy <td> tbd 
 <tr><td> McaPrmDecEne <td> tbd 

@@ -3,7 +3,7 @@
 @brief Calculates the Vtx analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.19 2005/11/07 18:19:47 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.20 2005/11/18 16:49:15 lsrea Exp $
 */
 
 // Include files
@@ -121,26 +121,26 @@ StatusCode VtxValsTool::initialize()
     @section vtxvalstool VtxValsTool Variables
 
 <table>
-<tr><th> Variable </th><th> Description
+<tr><th> Variable <th> Type <th> Description
 <tr><td> Vtx[X/Y/Z]Dir 
-<td>        [x/y/z] direction cosine of the (1st) vertex 
+<td>F<td>   [x/y/z] direction cosine of the (1st) vertex 
 <tr><td> VtxPhi 
-<td>        Azimuthal angle of vertex, radians 
+<td>F<td>   Azimuthal angle of vertex, radians 
             (direction of source, not flight direction!) Range: (0,2pi) 
 <tr><td> VtxTheta 
-<td>        Polar angle of vertex, radians (ditto direction)
+<td>F<td>   Polar angle of vertex, radians (ditto direction)
 <tr><td> Vtx[X/Y/Z]0 
-<td>        [x/y/z] coordinate of vertex; if the two tracks making up 
+<td>F<td>   [x/y/z] coordinate of vertex; if the two tracks making up 
             the vertex are nearly parallel, 
             the coordinates of the vertex may become very large. 
 <tr><td> VtxAngle 
-<td>        Angle between the two tracks of the vertex (radians) 
+<td>F<td>   Angle between the two tracks of the vertex (radians) 
 <tr><td> VtxDOCA 
-<td>        Distance of closest approach between the two tracks 
+<td>F<td>   Distance of closest approach between the two tracks 
 <tr><td> VtxHeadSep 
-<td>        Distance between the heads of the two tracks 
+<td>F<td>   Distance between the heads of the two tracks 
 <tr><td> VtxStatus 
-<td>        Summary of track composition and topology.
+<td>F<td>   Summary of track composition and topology.
             See TkrVertex.h in the Event package for the current description.
             The definitions as of GR v7r2 are:
 @verbatim
@@ -158,14 +158,14 @@ StatusCode VtxValsTool::initialize()
 
 @endverbatim
 <tr><td> VtxQuality 
-<td>        Vertex quality parameter used to order the possible vertices and 
+<td>F<td>   Vertex quality parameter used to order the possible vertices and 
             select the best one. <strong>Should generally not be used in analysis</strong>. 
 <tr><td> VtxChisq 
-<td>         The covariant chi-squared for the pairing of the tracks. 
+<td>F<td>    The covariant chi-squared for the pairing of the tracks. 
 <tr><td> VtxS[1/2] 
-<td>        Distance of DOCA point from head of track [1/2] 
+<td>F<td>   Distance of DOCA point from head of track [1/2] 
 <tr><td> VtxAddedRL 
-<td>        The additional radiation lengths prior to the first measured silicon 
+<td>F<td>   The additional radiation lengths prior to the first measured silicon 
             strip hit at the vertex location. <em>New!</em> 
 </table>
     */

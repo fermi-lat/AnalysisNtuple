@@ -2,6 +2,7 @@
   @brief Package AnalysisNtule
   @verbatim
 
+ v2r9p8  13-Dec-05   LSR  Add type info to the variable documentation
  v2r9p7  12-Dec-05   LSR  2nd Try
  v2r9p6  12-Dec-05   LSR  Fix the documentation
  v2r9p5  11-Dec-05   LSR  Add CalEdgeEnergy var to CalValsTool
