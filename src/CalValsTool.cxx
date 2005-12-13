@@ -3,7 +3,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.64 2005/11/07 18:19:47 lsrea Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.64.2.1 2005/12/08 23:55:20 lsrea Exp $
 */
 
 // Include files
@@ -210,101 +210,137 @@
       /** @page anatup_vars 
       @section calvalstool CalValsTool Variables
 <table>
-<tr><th> Variable </th><th> Description
+<tr><th> Variable <th> Type <th> Description
 <tr><td> CalEnergyRaw 
+<td> F
 <td>        Sum of the raw energies in all the crystals.  
             Includes estimate of missed energy due to zero-supression.  
     This replaces the variable CalEnergySum.  NEW! 
 <tr><td> CalEnergyCorr 
+<td> F
 <td>        Cal Energy corrected layer-by-layer for edges and leakage.  
             This replaces the variable CalEneSumCorr. NEW! 
 <tr><td> CalLeakCorr 
+<td> F
 <td>        Leakage correction: this is the contained fraction of the total energy 
             after edge corrections.  
 <tr><td> CalEdgeCorr 
+<td> F
 <td>        Effective layer-by-layer edge correction mainly due to the gaps 
              between Cal modules; multiplicative 
 <tr><td> CalTotalCorr 
+<td> F
 <td>        Global total correction. Includes effect due to dead material; 
             multiplicative 
 <tr><td> CalCsIRLn 
+<td> F
 <td>        Total radiation lengths in crystals, integrated along the 
             event axis (line connecting the first hit in the tracker to the CAL energy centroid) 
 <tr><td> CalTotRLn 
+<td> F
 <td>        Total radiation lengths in the CAL, integrated along the event axis. 
 <tr><td> CalCntRLn 
+<td> F
 <td>        Radiation lengths integrated along the event axis, up to energy centroid 
 <tr><td> CalLATRLn 
+<td> F
 <td>        Total radiation lengths integrated along the event axis 
             (including the tracker). 
 <tr><td> CalDeadTotRat 
+<td> F
 <td>        Ratio of radiation lengths in dead material to CalTotRLn 
 <tr><td> CalDeadCntRat 
+<td> F
 <td>        Ratio of radiation lengths in dead material up to energy centroid, 
     to CalCntRat 
 <tr><td> CalTPred 
+<td> F
 <td>        Model-predicted energy centroid in radiation lengths 
 <tr><td> CalDeltaT 
+<td> F
 <td>        Difference between measured and predicted energy centroids 
 <tr><td> CalTwrEdge 
+<td> F
 <td>        Distance of the entry point of the best track from the tower boundary, 
             measured at the top of the CAL. 
 <tr><td> CalLATEdge 
+<td> F
 <td>        Closest distance of track 1, projected to the top of the CAL, 
             to the edge of the CAL layer, taking non-square shape into account. 
             This is essentially the old merit skirt variable. 
 <tr><td> CalEdgeEnergy 
+<td> F
 <td>        The sum of the raw energies in each crystal for which the energy centroid 
             is within _deltaEdge (currently 50 mm) of the outside edge of one of 
             the outside CAL modules.
             This is an attempt at a "anti-coincidence counter" for the CAL.
 <tr><td> CalTwrEdgeCntr 
+<td> F
 <td>        Distance of the energy centroid from the nearest tower boundary.  
 <tr><td> CalGapFraction 
+<td> F
 <td>        Approximate fraction of the shower volumn which falls in inter-tower gaps. 
 <tr><td> CalTrackSep 
+<td> F
 <td>        Distance between impact points of two best tracks at CAL front face; 
             zero if only one track 
 <tr><td> CalTrackDoca 
+<td> F
 <td>        Distance between the projected vertex (or track if only one track) 
     and the energy centroid, evaluated at the z of the centroid. 
 <tr><td> CalTrackAngle 
+<td> F
 <td>        Angle between "gamma" direction in the tracker and direction of the CAL "track" 
 <tr><td> CalELayerN, N=0,7 
+<td> F
 <td>        Energy deposited in layer N of the CAL 
 <tr><td> CalLyr0Ratio 
+<td> F
 <td>        Ratio of CalELayer0 to CalEnergyRaw 
 <tr><td> CalLyr7Ratio 
+<td> F
 <td>        Ratio of CalELayer7 to CalEnergyRaw 
 <tr><td> CalBkHalfRatio 
+<td> F
 <td>        Ratio of total energy in back half of CAL (layers 4-7) to 
             CalEnergyRaw 
 <tr><td> CalXtalsTrunc 
+<td> F
 <td>        Number of CAL Xtals with > %1 of CalEnergyRaw (see CalXtalRatio) 
 <tr><td> CalXtalRatio 
+<td> F
 <td>        Ratio of number of Xtals with energy > 1% of CalEnergyRaw to 
             total number of struck Xtals in the event. 
 <tr><td> CalXtalMaxEne 
+<td> F
 <td>        Maximum energy found in a single Xtal
 <tr><td> CalLongRms 
+<td> F
 <td>        rms of the average of the 1st and 3rd shower moments. 
             Indicates the length of the measured shower along the shower axis. 
 <tr><td> CalLRmsAsym 
+<td> F
 <td>        The asymetry of the 1st and 3rd shower moments.  
             This should be close to zero. Because of ordering of moments it is slightly ... (??)
 <tr><td> CalTransRms 
+<td> F
 <td>        rms of transverse position measurements.
 <tr><td> CalMIPDiff 
+<td> F
 <td>        Difference between measured energy and that expected 
             from a minimum-ionizing particle 
 <tr><td> CalMIPRatio 
+<td> F
 <td>        Ratio of measured energy to that expected from a 
             minimum-ionizing particle 
 <tr><td> Cal[X/Y/Z]Ecentr 
+<td> F
 <td>        Energy centroid in [x/y/z]
 <tr><td> Cal[X/Y/Z]Dir 
+<td> F
 <td>        [x/y/z] direction cosine of CAL "track" 
 <tr><td> Cal[X/Y]0 
+<td> F
 <td>        [x/y] position of CAL "track" 
 </table>
 

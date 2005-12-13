@@ -2,7 +2,7 @@
 @brief Calculates the Trigger analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.28 2005/11/10 01:39:24 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.29 2005/11/18 16:49:15 lsrea Exp $
 */
 
 // Include files
@@ -122,8 +122,9 @@ StatusCode GltValsTool::initialize()
     (Glt = GLAST Trigger)
 
 <table>
-<tr><th> Variable </th><th> Description
+<tr><th> Variable <th> Type <th> Description
 <tr><td> GltWord 
+<td> F
 <td>        Trigger word from the event header, based on digi information (null value: -1)
             The definition of the bits can be found in TriggerBits.h in the enums package.
 
@@ -137,6 +138,7 @@ StatusCode GltValsTool::initialize()
   b_THROTTLE= 0x20  ///>  Ritz throttle
 @endverbatim
 <tr><td> GltGemSummary 
+<td> F
 <td>        For Data, a copy of the GEM condtion summary; for MC, 
             the same as calculated from the trigger (digi) information (null value: -1) 
             The bits are defined in GemConditionsSummary.h in the enums package.
@@ -149,24 +151,32 @@ StatusCode GltValsTool::initialize()
   CALHE = 0x08         EXTERNAL  =  0x80
 @endverbatim
 <tr><td>  GltEventFlags  
+<td> F
 <td>        Event flags from Ebf 
 <tr><td> GltTower 
+<td> F
 <td>        Id of tower that triggered; if more than one, 
             choose the tower with the highest triggered layer (null value: -1) 
 <tr><td> Glt[X/Y]Tower 
+<td> F
 <td>        [x/y] index of GltTower (null value = -1) 
 <tr><td> GltTotal 
+<td> F
 <td>        Number of possible triggers (a straight-through track in a single tower 
             produces 13 potential triggers 
 <tr><td> GltNumTowers 
+<td> F
 <td>        Number of towers which trigger (crossing track) 
 <tr><td> GltType 
+<td> F
 <td>        Number of exposed sides for the triggered tower, 
             i.e. 0 = central tower, 1 = side tower, 2 = edge edge tower, 
             4 = any single-tower setup 	
 <tr><td> GltMoment 
+<td> F
 <td>        Do not use 
 <tr><td> GltZDir 
+<td> F
 <td>        Do not use 
 </table>
     */

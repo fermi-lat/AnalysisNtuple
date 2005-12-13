@@ -17,4 +17,6 @@ Unless otherwise noted, energy is in MeV, length is in mm, and angle is in radia
 Also, unless otherwised noted, the null value, that is, the value in the ntuple when 
 there is no calculated value for a given variable, is zero.
 
+ The variables may be of type <b>I</b>nt, <b>F</b>loat, or <b>D</b>ouble.
+
  */

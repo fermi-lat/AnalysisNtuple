@@ -3,7 +3,7 @@
 @brief Calculates the "Event" analysis variables from the other ntuple variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.26 2005/10/26 00:05:50 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.27 2005/11/07 18:19:47 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -199,66 +199,94 @@ NOTE
 - All EvtEXxx variables are previous variables compensated for energy and angle 
 
 <table>
-<tr><th> Variable </th><th> Description
+<tr><th> Variable <th> Type <th> Description
 <tr><td> EvtRun 
+<td> F
 <td>        Run number, copied from the event header NEW: replaces Run in the merit ntuple  
 <tr><td> EvtEventId 
+<td> F
 <td>        Sequence number of event in the run (as generated) NEW: replaces Event_ID in the merit ntuple 
 <tr><td> EvtElapsedTime 
+<td> D
 <td>        Elapsed time in seconds since t0 (for DC1: 18-July-2005, 
             for the future: mission start 1-Jan-2001) 
 <tr><td> EvtEnergyCorr 
+<td> F
 <td>        Event energy formed by adding the corrected tracker energy 
             (TkrEnergyCorr) to the layer-by-layer corrected cal. energy CalEnergyCorr. 
 <tr><td> EvtEnergyRaw 
+<td> F
 <td>        TkrEnergy + CalEnergyRaw
 <tr><td> EvtDeltaEoE 
+<td> F
 <td>        (EvtEneryCorr -  McEnergy)/ McEnergy. Was EvtMcEnergySigma 
 <tr><td> EvtCalEdgeAngle 
+<td> F
 <td>        Obsolete; replaced by CalTwrGap 
 <tr><td> EvtTkrEdgeAngle 
+<td> F
 <td>        Obsolete; replaced by Tkr1TwrGap 
 <tr><td> EvtLogEnergy 
+<td> F
 <td>        log10 of EvtEnergySumOpt, pegged between log10(20) and log10(50,000). Was EvtLogESum 
 <tr><td> EvtTkr1EFrac 
+<td> F
 <td>        Tkr1ConE/EvtEnergyCorr, roughly, fraction of energy carried by best track 
 <tr><td> EvtVtxKin 
+<td> F
 <td>        The vertex opening angle compenstated for the energy split between the tracks. 
 <tr><td> EvtVtxEAngle 
+<td> F
 <td>        VtxAngle*EvtEnergyCorr.  Should be approx. constant. 
             However an empirical compensation is provided below (see EvtEVtxAngle) 
 <tr><td> EvtTkrComptonRatio 
+<td> F
 <td>        Ratio of TkrTotalHits to twice the number of layers from the head 
          of the best track to the bottom of the TKR 
 <tr><td> EvtETkrComptonRatio 
+<td> F
 <td>        EvtTkrComptonRatio, flattened in energy and cos(theta). Was EvtTkrEComptonRatio 
 <tr><td> EvtPSFModel 
+<td> F
 <td>        PSF expected from simple model; depends only on energy. 
 <tr><td> EvtETkr1Chisq 
+<td> F
 <td>        Tkr1Chisq, compensated for energy and angle. 
 <tr><td> EvtETkr1FirstChisq 
+<td> F
 <td>        Tkr1FirstChisq, compensated for energy and angle 
 <tr><td> EvtETkr1Qual 
+<td> F
 <td>        Tkr1Qual, compensated for energy and angle 
 <tr><td> EvtTkr1PSFMdRat 
+<td> F
 <td>        Ratio of errors from covariance matrix to EvtPSFModel 
 <tr><td> EvtECalTransRms 
+<td> F
 <td>        CalTransRms, compensated for energy and angle 
 <tr><td> EvtECalLongRms 
+<td> F
 <td>        CalLongRms, compensated for energy and angle 
 <tr><td> EvtECalLRmsAsym 
+<td> F
 <td>        CalLRmsAsym, compensated for energy and angle 
 <tr><td> EvtECalXtalRatio 
+<td> F
 <td>        CalXtalRatio, compensated for energy and angle 
 <tr><td> EvtECalXtalTrunc 
+<td> F
 <td>        CalXtalsTrunc, compensated for energy and angle 
 <tr><td> EvtECalTrackDoca 
+<td> F
 <td>        CalTrackDoca, compensated for energy and angle 
 <tr><td> EvtECalTrackSep 
+<td> F
 <td>        CalTrackSep, compensated for energy and angle 
 <tr><td> EvtEVtxAngle 
+<td> F
 <td>        EvtVtxEAngle, compensated for energy and angle 
 <tr><td> EvtEVtxDoca 
+<td> F
 <td>        VtxDOCA, compensated for energy and angle 
 </table>
     */

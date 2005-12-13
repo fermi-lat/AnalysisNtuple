@@ -2,7 +2,7 @@
 @brief Calculates the Tkr hit analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrHitValsTool.cxx,v 1.10 2005/07/27 15:20:01 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrHitValsTool.cxx,v 1.11 2005/11/07 18:19:47 lsrea Exp $
 */
 
 // Include files
@@ -100,14 +100,18 @@ StatusCode TkrHitValsTool::initialize()
     @section tkrhitvalstool TkrHitValsTool Variables
 
 <table>
-<tr><th> Variable </th> <th> Description					
+<tr><th> Variable <th> Type <th> Description					
 <tr><td> TkrNumHits 	
+<td> F
 <td>        Total number of TKR clusters 
 <tr><td> TkrFirstLayer
+<td> F
 <td>        First layer containing a cluster 
 <tr><td> TkrNumLayersHit
+<td> F
 <td>        Total number of hit layers 
 <tr><td> TkrHitsInLyrNN, NN=(00,17)   
+<td> F
 <td>        Number of clusters in (bi)layer NN 
            (numbered from the bottom of the tracker) 
 </table>

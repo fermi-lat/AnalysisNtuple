@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.68 2005/11/18 16:49:15 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.68.2.1 2005/12/07 23:46:48 lsrea Exp $
 */
 
 // To Do:
@@ -280,46 +280,62 @@ Notes:
 
 @subsection general General variables
      <table>
-<tr><th> Variable </th> <th> Description				                 
+<tr><th> Variable <th> Type <th> Description				                 
 <tr><td> TkrNumTracks 	
+<td> F
 <td>        Number of tracks found (Maximum is set by TkrRecon, currently 10) 
 <tr><td> TkrSumKalEne 
+<td> F
 <td>        Sum of Kalman energies (see TkrNKalEne, below) 
             for the two best tracks 
 <tr><td> TkrSumConEne 	
+<td> F
 <td>        Sum of the energies for the two best tracks, 
             as assigned by the patrec energy tool 
 <tr><td> TkrEnergy 
+<td> F
 <td>        Energy in tracker, as determined from linear regression analysis 
             of number of clusters 
 <tr><td> TkrEnergySum 	
+<td> F
 <td>        Deprecated 
 <tr><td> TkrEnergyCorr 
+<td> F
 <td>        TkrEnergy corrected by TkrEdgeCorr 
 <tr><td> TkrEdgeCorr 	
+<td> F
 <td>        Tracker edge correction. This may go away; it's an intermediate quantity 
 <tr><td> TkrHDCount 
+<td> F
 <td>        Number of unused clusters in top x-y layer of the best track 
             within a radius of 30 mm, corrected for track angle
             (Used in PSF analysis and background rejection) 
 <tr><td> TkrTotalHits 
+<td> F
 <td>        Deprecated. Use TkrSurplusHCInside instead
 <tr><td> TkrSurplusHitsInside 
+<td> F
 <td>        Number of clusters inside an energy- and angle-dependent cone 
             centered on the reconstructed axis of the best track and
             starting at the head of track 1. 
 <tr><td> TkrSurplusHitRatio
+<td> F
 <td>        Ratio of the number of hits outside the cone to the number
             inside.
 <tr><td> TkrThinHits
+<td> F
 <td>        Number of clusters in the above cone in the thin-converter layers 
 <tr><td> TkrThickHits 
+<td> F
 <td>        Number of clusters in the above cone in the thick-converter layers 
 <tr><td> TkrBlankHits 
+<td> F
 <td>        Number of clusters in the above cone in the no-converter layers 
 <tr><td> Tkr2TkrAngle 
+<td> F
 <td>      Angle between first and second reconstructed tracks 
 <tr><td> Tkr2TkrHDoca  
+<td> F
 <td>        Distance between first and second track in the plane of the 
             first hit on the first track. 
             This is most useful if the two tracks are almost parallel, 
@@ -329,33 +345,47 @@ Notes:
 @subsection both Variables that exist for both best and second tracks
 
 <table>
+<tr><th> Variable <th> Type <th> Description				                 
 <tr><td> Tkr[1/2]Chisq 
+<td> F
 <td>        Track chisquared 
+<td> F
 <tr><td> Tkr[1/2]FirstChisq  
+<td> F
 <td>        Track chisquared for first Tkr[1/2]FirstHits layers  
 <tr><td> Tkr[1/2]Hits  
+<td> F
 <td>        Number of clusters in track  
 <tr><td> Tkr[1/2]FirstHits  
+<td> F
 <td>        Number of initial track hits used to determine the starting direction  
 <tr><td> Tkr[1/2][First/Last]Layer  
+<td> F
 <td>        [First/Last] layer in track  (layer 0 is the bottom of the tracker)
 <tr><td> Tkr[1/2]DifHits  
+<td> F
 <td>        Difference between the number of x and y clusters associated with track  
 <tr><td> Tkr[1/2]Gaps  
+<td> F
 <td>        Total number of gaps in track  
 <tr><td> Tkr1FirstGapPlane  
+<td> F
 <td>        plane number of first gap on track 1  
              (This and the following X,Y pair can be used to find dead strips)
 <tr><td> Tkr1[X/Y]Gap  
+<td> F
 <td>        [x/y] location of first gap on track 1  
 <tr><td> Tkr[1/2]FirstGaps  
+<td> F
 <td>        Number of gaps in first Tkr1FirstHits layers on track  
 <tr><td> Tkr[1/2]Qual  
+<td> F
 <td>        Track "quality": depends on the number of clusters and chisquared of the track. 
              Maximum is currently 64, can be negative if chisqared gets large. 
              This is used primarily to order the tracks during patrec. 
              <strong>It's not a good idea to cut on this variable!</strong>  
 <tr><td> Tkr[1/2]Type  
+<td> F
 <td>        These are the status bits from the trackign, containing information
              about how the track was found and fitted.   
              See TkrTrack.h in the Event package for the current description.     
@@ -386,84 +416,111 @@ Notes:
 @endverbatim
 The definitions should be fairly stable.
 <tr><td> Tkr[1/2]TwrEdge  
+<td> F
 <td>        Distance from tower edge of initial point (0 is halfway between the towers, 
              increases towards center of tower) 
 <tr><td> Tkr[1/2]PrjTwrEdge  
+<td> F
 <td>        Distance from tower edge of track extrapolated to the layer upstream 
              of the first layer (See Tkr1TwrEdge.) 
 <tr><td> Tkr[1/2]DieEdge  
+<td> F
 <td>        Distance from die (wafer) edge of initial point 
              (0 is halfway between the dies, increases toward center of die)  
 <tr><td> Tkr[1/2]KalEne  
+<td> F
 <td>        Kalman energy of track 1; this is the energy determined from the multiple scattering 
             along the track (goes like 1/E). Since it is possible to measure a 
             zero scattering angle, which would lead to infinite energy, 
             the minimum measureable angle, which limits the energy to reasonable values  
 <tr><td> Tkr[1/2]ConEne  
+<td> F
 <td>        Energy from PatRec energy tool for track 1. 
              The tool computes the total event energy and then partitions it 
              between the first 2 tracks according to their Kalman energies 
              and energy errors  
 <tr><td> Tkr[1/2]KalThetaMS  
+<td> F
 <td>        Multiple scattering angle (radians) referenced to first layer. 
              The contributions from all the layers in the track are adjusted 
              for the predicted energy in each layer, and weighted accordingly. 
              So the result is sensitive to the particle type and 
              the chosen energy-loss mechanism. 		
 <tr><td> Tkr[1/2][X/Y/Z]Dir  
+<td> F
 <td>        Track [x/y/z] direction cosine  
 <tr><td> Tkr[1/2]Phi  
+<td> F
 <td>        Track phi, radians 
             (direction from which particle comes, not particle direction!) 
             range: (0, 2pi)  
 <tr><td> Tkr[1/2]Theta  
+<td> F
 <td>        Track theta, radians (direction ditto)  
 <tr><td> Tkr[1/2][X/Y/Z]0  
+<td> F
 <td>        Track [x/y/z] position at first hit  
 </table>
 @subsection best_only Variables that exist only for best track
 
 <table>
+<tr><th> Variable <th> Type <th> Description				                 
 <tr><td> TkrRadLength 
+<td> F
 <td>        Radiation lengths traversed by the best track. 
              This is from half-way thru the initial converter to the lowest bi-plane 
              in the tracker, whether or not the track actually gets to the end. 
 <tr><td> TkrTwrEdge 
+<td> F
 <td>        The average distance of the best track from the "edge" of each tray, 
              weighted by radiation lengths traversed. 
             (The edge is a plane halfway between the towers. 
 <tr><td> TkrTrackLength 
+<td> F
 <td>        Distance between the start of the best track and the grid, along the track axis. 	
 <tr><td> Tkr1TwrGap  
+<td> F
 <td>        Length of track in nominal intertower gap, currently set to 18 mm. 
             Can be a small as zero if track exits through bottom of tracker, 
             and as large as the intertower gap, if track crosses to adjacent tower.  
 <tr><td> Tkr1ThetaErr  
+<td> F
 <td>        Error on the measurement of theta  
 <tr><td> Tkr1PhiErr  
+<td> F
 <td>        Error on the measurement of phi.  
 <tr><td> Tkr1ErrAsym  
+<td> F
 <td>        Tkr1SXY/(Tkr1SXX + Tkr1SYY)  
 <tr><td> Tkr1CovDet  
+<td> F
 <td>        Determinant of the error matrix, 
              but normalized to remove the dependence on cos(theta)          
 <tr><td> Tkr1S[XX/YY]  
+<td> F
 <td>        [x-x/y-y] element of the covariance matrix; square of error on [x/y]  
 <tr><td> Tkr1SXY  
+<td> F
 <td>        x-y element of the covariance matrix; covariance  
 <tr><td> Tkr1ToTFirst  
+<td> F
 <td>        ToT of first hit on best track 
             (All ToT's are adjusted for pathlength in the measuring and non-measuring 
             directions in the strip, and for the strip width.)  
 <tr><td> Tkr1ToTAve  
+<td> F
 <td>        Average ToT for the hits on the best track  
 <tr><td> Tkr1ToTTrAve  
+<td> F
 <td>        Average ToT for the hits on the best track, excluding the largest and smallest  
 <tr><td> Tkr1ToTAsym  
+<td> F
 <td>        Asymmetry between last two and first two ToT's for the best track  
 <tr><td> Tkr1ChisqAsym  
+<td> F
 <td>        Asymmetry between last two and first two track-segment delta-chisquared's  
 <tr><td> Tkr1SSDVeto  
+<td> F
 <td>        Number of silicon planes between the top of the extrapolated track 
             and the first plane that has a hit near the track. Only planes that have
             wafers which intersect the extrapolated track are considered. No checks 

@@ -1,7 +1,7 @@
 /** @file McAnalValsTool.cxx
     @brief declartion, implementaion of the class UserAlg
 
-    $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McAnalValsTool.cxx,v 1.8 2004/09/30 17:12:21 lsrea Exp $
+    $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McAnalValsTool.cxx,v 1.9 2005/11/07 18:19:47 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -202,65 +202,65 @@ StatusCode McAnalValsTool::initialize()
     @section mcanalvalstool McAnalValsTool Variables
 
 <table>
-<tr><th> Variable </th><th> Description
-<tr><td> McaNumCalls <td> Tracy will fill all this out at some point 
-<tr><td> McaPrmEnergy <td> tbd 
-<tr><td> McaPrmDecEne <td> tbd 
-<tr><td> McaDecPos[X/Y/Z] <td> tbd 
-<tr><td> McaPrmDecPos[X/Y/Z] <td> tbd 
-<tr><td> McaPrmCosDir[X/Y/Z] <td> tbd 
-<tr><td> McaPrmDecCos[X/Y/Z] <td> tbd 
-<tr><td> McaPrmNDghtrs <td> tbd 
-<tr><td> McaPrmDecCode <td> tbd 
-<tr><td> McaPrmNumSecndry <td> tbd 
-<tr><td> McaPrmNumAsscted <td> tbd 
-<tr><td> McaPrmTrkPattern <td> tbd 
-<tr><td> McaPrmMcAngle <td> tbd 
-<tr><td> McaPrmClsAngle <td> tbd 
-<tr><td> McaPrmDecLayer <td> tbd 
-<tr><td> McaPrmDecInCnv <td> tbd 
-<tr><td> McaScd1PartType <td> tbd 
-<tr><td> McaScd1FirstLyr <td> tbd 
-<tr><td> McaScd1LastLyr <td> tbd 
-<tr><td> McaScd1Energy <td> tbd 
-<tr><td> McaScd1CosDir[X/Y/Z] <td> tbd 
-<tr><td> McaScd1NHits <td> tbd 
-<tr><td> McaScd1NClstrs <td> tbd 
-<tr><td> McaScd1NGaps <td> tbd 
-<tr><td> McaScd11stGapSz <td> tbd 
-<tr><td> McaScd1NHits2Gp <td> tbd 
-<tr><td> McaScd1McTrkRms <td> tbd 
-<tr><td> McaScd1Ang2Gam <td> tbd 
-<tr><td> McaScd1Cls2Gam <td> tbd 
-<tr><td> McaScd1ELastHit <td> tbd 
-<tr><td> McaScd1RadEloss <td> tbd 
-<tr><td> McaScd1DeltaRay <td> tbd 
-<tr><td> McaScd1NBrems <td> tbd 
-<tr><td> McaScd1NDeltas <td> tbd 
-<tr><td> McaScd1NDeltaHt <td> tbd 
-<tr><td> McaScd1AveRange <td> tbd 
-<tr><td> McaScd1MaxRange <td> tbd 
-<tr><td> McaScd2PartType <td> tbd 
-<tr><td> McaScd2FirstLyr <td> tbd 
-<tr><td> McaScd2LastLyr <td> tbd 
-<tr><td> McaScd2Energy <td> tbd 
-<tr><td> McaScd2CosDir[X/Y/Z] <td> tbd 
-<tr><td> McaScd2NHits <td> tbd 
-<tr><td> McaScd2NClstrs <td> tbd 
-<tr><td> McaScd2NGaps <td> tbd 
-<tr><td> McaScd21stGapSz <td> tbd 
-<tr><td> McaScd2NHits2Gp <td> tbd 
-<tr><td> McaScd2McTrkRms <td> tbd 
-<tr><td> McaScd2Ang2Gam <td> tbd 
-<tr><td> McaScd2Cls2Gam <td> tbd 
-<tr><td> McaScd2ELastHit <td> tbd 
-<tr><td> McaScd2RadEloss <td> tbd 
-<tr><td> McaScd2DeltaRay <td> tbd 
-<tr><td> McaScd2NBrems <td> tbd 
-<tr><td> McaScd2NDeltas <td> tbd 
-<tr><td> McaScd2NDeltaHt <td> tbd 
-<tr><td> McaScd2AveRange <td> tbd 
-<tr><td> McaScd2MaxRange <td> tbd 
+<tr><th> Variable <th> Type <th> Description
+<tr><td> McaNumCalls <td> D <td> Tracy will fill all this out at some point 
+<tr><td> McaPrmEnergy <td> D <td> tbd
+<tr><td> McaPrmDecEne <td> D <td> tbd
+<tr><td> McaDecPos[X/Y/Z] <td> D <td> tbd
+<tr><td> McaPrmDecPos[X/Y/Z] <td> D <td> tbd
+<tr><td> McaPrmCosDir[X/Y/Z] <td> D <td> tbd
+<tr><td> McaPrmDecCos[X/Y/Z] <td> D <td> tbd
+<tr><td> McaPrmNDghtrs <td> D <td> tbd
+<tr><td> McaPrmDecCode <td> D <td> tbd
+<tr><td> McaPrmNumSecndry <td> D <td> tbd
+<tr><td> McaPrmNumAsscted <td> D <td> tbd
+<tr><td> McaPrmTrkPattern <td> D <td> tbd
+<tr><td> McaPrmMcAngle <td> D <td> tbd
+<tr><td> McaPrmClsAngle <td> D <td> tbd
+<tr><td> McaPrmDecLayer <td> D <td> tbd
+<tr><td> McaPrmDecInCnv <td> D <td> tbd
+<tr><td> McaScd1PartType <td> D <td> tbd
+<tr><td> McaScd1FirstLyr <td> D <td> tbd
+<tr><td> McaScd1LastLyr <td> D <td> tbd
+<tr><td> McaScd1Energy <td> D <td> tbd
+<tr><td> McaScd1CosDir[X/Y/Z] <td> D <td> tbd
+<tr><td> McaScd1NHits <td> D <td> tbd
+<tr><td> McaScd1NClstrs <td> D <td> tbd
+<tr><td> McaScd1NGaps <td> D <td> tbd
+<tr><td> McaScd11stGapSz <td> D <td> tbd
+<tr><td> McaScd1NHits2Gp <td> D <td> tbd
+<tr><td> McaScd1McTrkRms <td> D <td> tbd
+<tr><td> McaScd1Ang2Gam <td> D <td> tbd
+<tr><td> McaScd1Cls2Gam <td> D <td> tbd
+<tr><td> McaScd1ELastHit <td> D <td> tbd
+<tr><td> McaScd1RadEloss <td> D <td> tbd
+<tr><td> McaScd1DeltaRay <td> D <td> tbd
+<tr><td> McaScd1NBrems <td> D <td> tbd
+<tr><td> McaScd1NDeltas <td> D <td> tbd
+<tr><td> McaScd1NDeltaHt <td> D <td> tbd
+<tr><td> McaScd1AveRange <td> D <td> tbd
+<tr><td> McaScd1MaxRange <td> D <td> tbd
+<tr><td> McaScd2PartType <td> D <td> tbd
+<tr><td> McaScd2FirstLyr <td> D <td> tbd
+<tr><td> McaScd2LastLyr <td> D <td> tbd
+<tr><td> McaScd2Energy <td> D <td> tbd
+<tr><td> McaScd2CosDir[X/Y/Z] <td> D <td> tbd
+<tr><td> McaScd2NHits <td> D <td> tbd
+<tr><td> McaScd2NClstrs <td> D <td> tbd
+<tr><td> McaScd2NGaps <td> D <td> tbd
+<tr><td> McaScd21stGapSz <td> D <td> tbd
+<tr><td> McaScd2NHits2Gp <td> D <td> tbd
+<tr><td> McaScd2McTrkRms <td> D <td> tbd
+<tr><td> McaScd2Ang2Gam <td> D <td> tbd
+<tr><td> McaScd2Cls2Gam <td> D <td> tbd
+<tr><td> McaScd2ELastHit <td> D <td> tbd
+<tr><td> McaScd2RadEloss <td> D <td> tbd
+<tr><td> McaScd2DeltaRay <td> D <td> tbd
+<tr><td> McaScd2NBrems <td> D <td> tbd
+<tr><td> McaScd2NDeltas <td> D <td> tbd
+<tr><td> McaScd2NDeltaHt <td> D <td> tbd
+<tr><td> McaScd2AveRange <td> D <td> tbd
+<tr><td> McaScd2MaxRange <td> D <td> tbd
 </table>
 
 */
