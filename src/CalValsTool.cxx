@@ -3,7 +3,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.66 2005/12/10 18:12:15 lsrea Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.67 2005/12/13 19:00:37 lsrea Exp $
 */
 
 // Include files
@@ -536,19 +536,19 @@ StatusCode CalValsTool::calculate()
             Point pos = recLog.getPosition();
             double xPos = pos.x(); double yPos = pos.y();
             double minX, minY;
-            minX = std::min(abs(xPos-calXLo),abs(xPos-calXHi));
-            minY = std::min(abs(yPos-calYLo),abs(yPos-calYHi));
+            minX = std::min(fabs(xPos-calXLo),fabs(xPos-calXHi));
+            minY = std::min(fabs(yPos-calYLo),fabs(yPos-calYHi));
             // for later... no time to check this out now!
             /*
             idents::CalXtalId id = recLog.getPackedId();
             if (id.isX()) {
                 double minX = 
-                    std::min(abs(xPos-(calXLo+m_deltaSide)),abs(xPos-(calXHi-m_deltaSide)));
-                double minY = std::min(abs(yPos-calYLo),abs(yPos-calYHi));
+                    std::min(fabs(xPos-(calXLo+m_deltaSide)),fabs(xPos-(calXHi-m_deltaSide)));
+                double minY = std::min(fabs(yPos-calYLo),fabs(yPos-calYHi));
             } else {
-                double minX = std::min(abs(xPos-calXLo),abs(xPos-calXHi));
+                double minX = std::min(fabs(xPos-calXLo),fabs(xPos-calXHi));
                 double minY = 
-                    std::min(abs(yPos-(calYLo+m_deltaSide)),abs(yPos-(calYHi-m_deltaSide)));
+                    std::min(fabs(yPos-(calYLo+m_deltaSide)),fabs(yPos-(calYHi-m_deltaSide)));
             }
             */
             if ((minX<_deltaEdge) ||  (minY<_deltaEdge)) {

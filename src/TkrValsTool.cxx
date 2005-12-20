@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.70 2005/12/06 04:51:43 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.71 2005/12/13 19:00:37 lsrea Exp $
 */
 
 // To Do:
@@ -899,7 +899,7 @@ StatusCode TkrValsTool::calculate()
         int firstLayer = m_tkrGeom->getLayer(firstPlane);
         double zFirstLayer = m_tkrGeom->getLayerZ(firstLayer);
 
-        int numLayersTrack = Tkr_1_FirstLayer - Tkr_1_LastLayer + 1;
+        //int numLayersTrack = (int) (Tkr_1_FirstLayer - Tkr_1_LastLayer) + 1;
 
         double costh = fabs(t1.z());
         double secth = 1./costh;
@@ -1032,7 +1032,7 @@ StatusCode TkrValsTool::calculate()
         double z_present = x1.z();
 
         // Compute the sum-of radiation_lengths x Hits in each layer
-        double tracker_ene_corr = 0.; 
+        //double tracker_ene_corr = 0.; 
         double rad_len_sum  = 0.; 
         double radlen       = 0.;
         double radlen_old   = 0.; 
@@ -1043,8 +1043,8 @@ StatusCode TkrValsTool::calculate()
         int    blank_hits   = 0; 
         double ave_edge     = 0.; 
 
-        float surplus_in = 0;
-        float total_layer_hits = 0;
+        //float surplus_in = 0;
+        //float total_layer_hits = 0;
         int numTowers = m_xNum*m_yNum;
         std::vector<float> layerInCount(numTowers,0.0);
         std::vector<float> layerOutCount(numTowers,0.0);
@@ -1055,7 +1055,7 @@ StatusCode TkrValsTool::calculate()
         double xNearRgn = _nearRegion*secthX;
         double yNearRgn = _nearRegion*secthY;
 
-        Tkr_HDCount = pQueryClusters->numberOfUUHitsNear(Tkr_1_FirstLayer, 
+        Tkr_HDCount = pQueryClusters->numberOfUUHitsNear((int) Tkr_1_FirstLayer, 
             xNearRgn, yNearRgn, x1);
         
         // Tkr1CoreHC:
@@ -1228,9 +1228,9 @@ StatusCode TkrValsTool::calculate()
                         bool in;
                         // replace with current definition of "in"
                         if(view==0) {
-                            in = (abs(diff.x())<=xSprd && (abs(diff.y())-ySprd<0.5*m_activeWidth));
+                            in = (fabs(diff.x())<=xSprd && (fabs(diff.y())-ySprd<0.5*m_activeWidth));
                         } else { 
-                            in = (abs(diff.y())<=ySprd && (abs(diff.x())-xSprd<0.5*m_activeWidth));
+                            in = (fabs(diff.y())<=ySprd && (fabs(diff.x())-xSprd<0.5*m_activeWidth));
                         }
                         if (in) {layerInCount[tower]  += 1.0f;}
                         else    {layerOutCount[tower] += 1.0f;}
@@ -1253,8 +1253,8 @@ StatusCode TkrValsTool::calculate()
                         int towerY = idents::TowerId(idY.getTowerX(), idY.getTowerY()).id();
                         if(towerX!=towerY) continue;
                         layerOutCount[tower] += 1.0f;
-                        double dx = abs(x_hit.x() - (*iterX)->position().x());
-                        double dy = abs(x_hit.y() - (*iterY)->position().y());
+                        double dx = fabs(x_hit.x() - (*iterX)->position().x());
+                        double dy = fabs(x_hit.y() - (*iterY)->position().y());
                         if (dx>xSprd || dy>ySprd) continue;
                         // could be inside!
                         if(dx*dx/xDenom + dy*dy/yDenom < 1.) layerInCount[tower] += 1.0f;
@@ -1266,8 +1266,8 @@ StatusCode TkrValsTool::calculate()
 
             int numHits = 0, numHitsOut = 0;
             for(tower=0;tower<numTowers;++tower) {
-                numHitsOut += layerOutCount[tower];
-                numHits    += layerInCount[tower]*factor;
+                numHitsOut += (int)layerOutCount[tower];
+                numHits    += (int)layerInCount[tower]*factor;
             }
             Tkr_SurplusHCOutside += numHitsOut;
             Tkr_SurplusHCInside  += numHits;
