@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.71 2005/12/13 19:00:37 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.72 2005/12/20 06:14:52 lsrea Exp $
 */
 
 // To Do:
@@ -1267,7 +1267,7 @@ StatusCode TkrValsTool::calculate()
             int numHits = 0, numHitsOut = 0;
             for(tower=0;tower<numTowers;++tower) {
                 numHitsOut += (int)layerOutCount[tower];
-                numHits    += (int)layerInCount[tower]*factor;
+                numHits    += (int)(layerInCount[tower]*factor);
             }
             Tkr_SurplusHCOutside += numHitsOut;
             Tkr_SurplusHCInside  += numHits;
