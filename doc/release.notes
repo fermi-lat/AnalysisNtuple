@@ -2,6 +2,10 @@
   @brief Package AnalysisNtule
   @verbatim
 
+Branch GR-v7r3p20-newext
+------------------------
+ v2r9cl0    31-Jan--6  TU  Tag development branch for new externals
+
 Branch GRv7r3p1
 ------------------------
  v2r9p3gr4  13-Dec-05 LSR  Add type info to the variable documentation

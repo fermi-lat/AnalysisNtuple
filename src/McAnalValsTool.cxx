@@ -1,7 +1,7 @@
 /** @file McAnalValsTool.cxx
     @brief declartion, implementaion of the class UserAlg
 
-    $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McAnalValsTool.cxx,v 1.9 2005/11/07 18:19:47 lsrea Exp $
+    $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McAnalValsTool.cxx,v 1.9.2.1 2005/12/13 18:43:09 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -374,7 +374,7 @@ StatusCode McAnalValsTool::calculate()
         const Event::McParticle* mcSecond = 0;
 
         idents::VolumeIdentifier curVolId    = const_cast<Event::McParticle*>(mcPart)->getFinalId();
-        HepLorentzVector         primary4mom = mcPart->initialFourMomentum();
+        CLHEP::HepLorentzVector  primary4mom = mcPart->initialFourMomentum();
 
         // Retrieve information about the primary particle
         m_prmEnergy     = primary4mom.e();
@@ -471,10 +471,10 @@ StatusCode McAnalValsTool::calculate()
         if (mcMain)
         {
             // To get the sum of the angles
-            Hep3Vector       mainVec    = m_mcEvent->getTrackDirection(mcMain);
-            HepLorentzVector main4mom   = mcMain->initialFourMomentum();
-            double           mainMom    = main4mom.vect().mag();
-            HepLorentzVector main4cls(mainMom*mainVec,main4mom.e());
+            CLHEP::Hep3Vector       mainVec    = m_mcEvent->getTrackDirection(mcMain);
+            CLHEP::HepLorentzVector main4mom   = mcMain->initialFourMomentum();
+            double                  mainMom    = main4mom.vect().mag();
+            CLHEP::HepLorentzVector main4cls(mainMom*mainVec,main4mom.e());
 
             // Fill the angle related info
             calcMcAngleInfo(mcMain, mcPart, m_scd1Ang2Gam, m_scd1Cls2Gam, m_scd1McTrkRms, m_scd1Type,
@@ -511,10 +511,10 @@ StatusCode McAnalValsTool::calculate()
             // If there are two gamma conversion tracks then do this part
             if (mcSecond)
             {
-                Hep3Vector       secondVec = m_mcEvent->getTrackDirection(mcSecond);
-                HepLorentzVector scnd4mom  = mcSecond->initialFourMomentum();
-                double           scndMom   = scnd4mom.vect().mag();
-                HepLorentzVector scnd4cls(scndMom*secondVec,scnd4mom.e());
+                CLHEP::Hep3Vector       secondVec = m_mcEvent->getTrackDirection(mcSecond);
+                CLHEP::HepLorentzVector scnd4mom  = mcSecond->initialFourMomentum();
+                double                  scndMom   = scnd4mom.vect().mag();
+                CLHEP::HepLorentzVector scnd4cls(scndMom*secondVec,scnd4mom.e());
                 
                 calcMcAngleInfo(mcSecond, mcPart, m_scd2Ang2Gam, m_scd2Cls2Gam, m_scd2McTrkRms, m_scd2Type,
                                 m_scd2Energy, m_scd2CosDirX, m_scd2CosDirY, m_scd2CosDirZ, m_scd2NHits, m_scd2NClstrs,
@@ -570,11 +570,11 @@ void McAnalValsTool::calcMcAngleInfo(const Event::McParticle* mcPart, const Even
                                      double& prtNHits, double& prtNClstrs, double& prtNGaps, double& prt1stGapSz,
                                      double& prtNHits2Gp)
 {
-    Hep3Vector       mainVec    = m_mcEvent->getTrackDirection(mcPart);
-    HepLorentzVector main4mom   = mcPart->initialFourMomentum();
-    double           mainMom    = main4mom.vect().mag();
-    HepLorentzVector main4cls(mainMom*mainVec,main4mom.e());
-    double           cosAng2Gam = main4mom.vect().unit().dot(mcGamma->initialFourMomentum().vect().unit());
+    CLHEP::Hep3Vector       mainVec    = m_mcEvent->getTrackDirection(mcPart);
+    CLHEP::HepLorentzVector main4mom   = mcPart->initialFourMomentum();
+    double                  mainMom    = main4mom.vect().mag();
+    CLHEP::HepLorentzVector main4cls(mainMom*mainVec,main4mom.e());
+    double                  cosAng2Gam = main4mom.vect().unit().dot(mcGamma->initialFourMomentum().vect().unit());
 
     if (ang2Gam < -1.) 
     {

@@ -2,7 +2,7 @@
 @brief Calculates the Mc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.25 2005/11/07 18:19:47 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.25.2.1 2005/12/13 18:43:09 lsrea Exp $
 */
 // Include files
 
@@ -253,7 +253,7 @@ StatusCode McValsTool::calculate()
         HepPoint3D Mc_x0;
         // launch point for charged particle; conversion point for neutral
         Mc_x0 = (MC_Charge==0 ? (*pMCPrimary)->finalPosition() : (*pMCPrimary)->initialPosition());
-        HepLorentzVector Mc_p0 = (*pMCPrimary)->initialFourMomentum();
+        CLHEP::HepLorentzVector Mc_p0 = (*pMCPrimary)->initialFourMomentum();
         // there's a method v.m(), but it does something tricky if m2<0
         double mass = sqrt(std::max(Mc_p0.m2(),0.0));
         
@@ -279,9 +279,9 @@ StatusCode McValsTool::calculate()
             SmartRef<Event::McParticle> pp1 = daughters[0]; 
             std::string interaction = pp1->getProcess();
             if(interaction == "conv") { // Its a photon conversion; For comptons "compt" or brems "brem"  
-                HepLorentzVector Mc_p1 = pp1->initialFourMomentum();
+                CLHEP::HepLorentzVector Mc_p1 = pp1->initialFourMomentum();
                 SmartRef<Event::McParticle> pp2 = daughters[1];
-                HepLorentzVector Mc_p2 = pp2->initialFourMomentum();
+                CLHEP::HepLorentzVector Mc_p2 = pp2->initialFourMomentum();
                 double e1 = Mc_p1.t();
                 double e2 = Mc_p2.t();
                 MC_EFrac = e1/MC_Energy; 

@@ -2,7 +2,7 @@
 @brief Calculates the Trigger analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.29 2005/11/18 16:49:15 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.29.2.1 2005/12/13 18:43:09 lsrea Exp $
 */
 
 // Include files
@@ -328,7 +328,7 @@ StatusCode GltValsTool::calculate()
         x_sum = y_sum = z_sum = wts = g1 = g2 = L11 = L12 = L22 = 0.;
         zmax = 0.;
         zmin = 20.; 
-        HepSymMatrix moments(3,0); 
+        CLHEP::HepSymMatrix moments(3,0); 
 
         if(iTrig_tower >= 0) {
             for(tower = 0; tower<_nTowers; ++tower) {
@@ -390,7 +390,7 @@ StatusCode GltValsTool::calculate()
                 moments /= wts;
 
                 // Now find transformation to diagonalize
-                HepMatrix U(3,3);
+                CLHEP::HepMatrix U(3,3);
                 U = diagonalize(&moments);
 
                 // Now get directions, etc. 
