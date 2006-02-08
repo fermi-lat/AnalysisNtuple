@@ -2,7 +2,7 @@
 @brief Uses the XxxValsTools to produce a comprehensive ntuple
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.25 2005/01/25 23:06:25 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.26 2006/02/08 04:10:17 lsrea Exp $
 */
 
 // Gaudi system includes
@@ -137,12 +137,12 @@ AnalysisNtupleAlg::AnalysisNtupleAlg(const std::string& name, ISvcLocator* pSvcL
 ,m_count(0)
 {
     // declare properties with setProperties calls
-    declareProperty("tupleName",  m_tupleName=""); 
+    declareProperty("tupleName",  m_tupleName="MeritTuple"); 
     // so it looks like NTupleWriterSvc property, no harm having both!
     declareProperty("tuple_name",  m_tupleName="");   
     // List of tools to use -- maybe a bit kludgy, since the spelling need to be correct!
     declareProperty("toolList", m_toolnames);
-    declareProperty("doNtuple", m_doNtuple=false);
+    declareProperty("doNtuple", m_doNtuple=true);
     
 }
 
@@ -209,7 +209,7 @@ StatusCode AnalysisNtupleAlg::initialize(){
         
     // get a pointer to our ntupleWriterSvc
     m_ntupleSvc = 0;
-    if (!m_tupleName.empty()& m_doNtuple) {
+    if (!m_tupleName.empty()&& m_doNtuple) {
         if (service("RootTupleSvc", m_ntupleSvc, true).isFailure()) {
             log << MSG::ERROR 
                 << "AnalysisNtupleAlg failed to get the RootTupleSvc" 
@@ -220,21 +220,10 @@ StatusCode AnalysisNtupleAlg::initialize(){
     
     m_visitor = new NtupleVisitor(m_ntupleSvc, m_tupleName);
     
-    log << MSG::DEBUG;
-    if(log.isActive()) {
-        log << "AnalysisNtuple called" << endreq;
-    }
-    log << endreq;
 
-    if (!m_tupleName.empty() & m_doNtuple) {
+    if (!m_tupleName.empty() && m_doNtuple) {
                 
-        /*
-        if(m_ntupleSvc->addItem(m_tupleName,  "NumCalls",  &m_count ).isFailure()) {
-            log << MSG::ERROR << "AddItem failed" << endreq;
-            return fail;
-        }
-        */
-        
+       
         int size = m_toolvec.size();
         for( int i =0; i<size; ++i){
             if(m_toolvec[i]->traverse(m_visitor, false)==IValsTool::Visitor::ERROR) {
@@ -243,8 +232,6 @@ StatusCode AnalysisNtupleAlg::initialize(){
             }
         }
     }
-
-    log << MSG::INFO << "AnalysisNtuple set with " << m_toolvec.size() << " tools" << endreq;
     
     return sc;
 }
@@ -258,29 +245,9 @@ StatusCode AnalysisNtupleAlg::execute()
 
     bool countCalc = false;
 
-#if 0    // old intupleSvc required this: now it is automatic
-    if (!m_tupleName.empty()& m_doNtuple) {
-               
-        /*
-        if(m_ntupleSvc->addItem(m_tupleName.c_str(), "NumCalls", &m_count).isFailure()) {
-            log << MSG::ERROR << "AddItem failed" << endreq;
-            return fail;
-        }
-        */
-        ++m_count;
-        
-        int size = m_toolvec.size();
-        for( int i =0; i<size; ++i){
-            if(m_toolvec[i]->traverse(m_visitor)==IValsTool::Visitor::ERROR) {
-                log << MSG::ERROR << m_toolvec[i] << " traversal failed" << endreq;
-                return fail;
-            }
-        }
-    }
-#else
+
     ++m_count;
-    m_ntupleSvc->storeRowFlag(true);  // needed to save the event with RootTupleSvc
-#endif
+    m_ntupleSvc->storeRowFlag(m_tupleName, true);  // needed to save the event with RootTupleSvc
 
 
     for( std::vector<IValsTool*>::iterator i =m_toolvec.begin(); i != m_toolvec.end(); ++i){
