@@ -2,7 +2,7 @@
 @brief implements all the methods of the XxxValsTools
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.cxx,v 1.25 2004/09/10 18:26:01 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.cxx,v 1.26 2004/09/10 20:36:49 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -80,7 +80,8 @@ void ValBase::zeroVals()
         if (ptr->getType()==FLOAT)       *reinterpret_cast<float*>(ptr->getPointer()) = 0.0;
         else if (ptr->getType()==DOUBLE) *reinterpret_cast<double*>(ptr->getPointer()) = 0.0;
         else if (ptr->getType()==INT)    *reinterpret_cast<int*>(ptr->getPointer()) = 0;
-    }
+        else if (ptr->getType()==UINT)    *reinterpret_cast<unsigned int*>(ptr->getPointer()) = 0;
+   }
 
 }
 
@@ -107,6 +108,13 @@ void ValBase::addItem(std::string varName, int* pValue)
     m_ntupleMap.push_back(pair);
 }
 
+void ValBase::addItem(std::string varName, unsigned int* pValue)
+{
+    TypedPointer* ptr = new TypedPointer(UINT, (void*) pValue);
+    valPair* pair = new valPair(varName, ptr);
+
+    m_ntupleMap.push_back(pair);
+}
 StatusCode ValBase::browse(std::string varName) 
 {
     // browse always triggers a calculation, which doesn't reset the m_newEvent flag
@@ -155,6 +163,7 @@ StatusCode ValBase::browse(std::string varName)
         if (type==FLOAT)       {std::cout << *reinterpret_cast<float*>(ptr->getPointer());}
         else if (type==DOUBLE) {std::cout << *reinterpret_cast<double*>(ptr->getPointer());}
         else if (type==INT)    {std::cout << *reinterpret_cast<int*>(ptr->getPointer());}
+        else if (type==UINT)    {std::cout << *reinterpret_cast<unsigned int*>(ptr->getPointer());}
         std::cout << separator;
     }
     std::cout << std::endl;
@@ -201,6 +210,11 @@ StatusCode ValBase::getValCheck(std::string varName, int& value)
     return getVal(varName, value, CHECK);
 }
 
+StatusCode ValBase::getValCheck(std::string varName, unsigned int& value)
+{
+    // a simple way to force the check
+    return getVal(varName, value, CHECK);
+}
 
 StatusCode ValBase::getTypedPointer(std::string varName, TypedPointer*& ptr, int check)
 {
@@ -242,6 +256,15 @@ StatusCode ValBase::getVal(std::string varName, int& value, int check)
     return sc;
 }
 
+StatusCode ValBase::getVal(std::string varName, unsigned int& value, int check)
+{
+    TypedPointer* ptr = 0;
+    StatusCode sc = getTypedPointer(varName, ptr, check);
+    if(sc.isSuccess()) {
+        value = *(reinterpret_cast<unsigned int*>(ptr->getPointer()));
+    }
+    return sc;
+}
 StatusCode ValBase::getVal(std::string varName, double& value, int check)
 {
     TypedPointer* ptr = 0;
@@ -323,11 +346,17 @@ IValsTool::Visitor::eVisitorRet ValBase::traverse(IValsTool::Visitor* v,
         TypedPointer* ptr = pair->second;
         valType type = ptr->getType();
         if (type==FLOAT) {
-            ret = v->analysisValue(pair->first, *(reinterpret_cast<float*>(ptr->getPointer())));
+            ret = v->analysisValue(pair->first, 
+                *(reinterpret_cast<float*>(ptr->getPointer())));
         } else if (type==DOUBLE) {
-            ret = v->analysisValue(pair->first, *(reinterpret_cast<double*>(ptr->getPointer())));
-        } else {
-            ret = v->analysisValue(pair->first, *(reinterpret_cast<int*>(ptr->getPointer())));
+            ret = v->analysisValue(pair->first, 
+                *(reinterpret_cast<double*>(ptr->getPointer())));
+        } else if (type==UINT) {
+            ret = v->analysisValue(pair->first, 
+                *(reinterpret_cast<unsigned int*>(ptr->getPointer())));
+        } else if (type==INT) {
+            ret = v->analysisValue(pair->first, 
+                *(reinterpret_cast<int*>(ptr->getPointer())));
         }
 
         if (ret!= IValsTool::Visitor::CONT) return ret;

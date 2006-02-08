@@ -2,7 +2,7 @@
 @brief common abstract inteface for all the XxxValsTools
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/AnalysisNtuple/IValsTool.h,v 1.12 2003/05/09 05:22:08 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/AnalysisNtuple/IValsTool.h,v 1.13 2004/09/10 04:59:02 lsrea Exp $
 */
 
 #ifndef _H_IValsTool
@@ -35,10 +35,12 @@ public:
     virtual StatusCode getVal(std::string varName, double& value, int check = CALC) = 0;
     virtual StatusCode getVal(std::string varName, float& value, int check = CALC) = 0;
     virtual StatusCode getVal(std::string varName, int& value, int check = CALC) = 0;
+    virtual StatusCode getVal(std::string varName, unsigned int& value, int check = CALC) = 0;
     /// get a particular value, using ntuple name, with calc checking
     virtual StatusCode getValCheck(std::string varName, double& value) =0;
     virtual StatusCode getValCheck(std::string varName, float& value) =0;
     virtual StatusCode getValCheck(std::string varName, int& value) =0;
+    virtual StatusCode getValCheck(std::string varName, unsigned int& value) =0;
     /// output the names and values, either all (default) or just one;
     virtual StatusCode browse(std::string varName = "") =0;
     /// let the user trigger her own calculation
@@ -73,6 +75,8 @@ public:
             const float& value) const =0;
         virtual Visitor::eVisitorRet analysisValue(std::string varName,
             const int& value) const =0;
+        virtual Visitor::eVisitorRet analysisValue(std::string varName,
+            const unsigned int& value) const =0;
     }; 
     
     

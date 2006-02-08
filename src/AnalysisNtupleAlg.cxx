@@ -2,7 +2,7 @@
 @brief Uses the XxxValsTools to produce a comprehensive ntuple
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.24 2004/09/10 04:59:02 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.25 2005/01/25 23:06:25 lsrea Exp $
 */
 
 // Gaudi system includes
@@ -39,6 +39,8 @@ public:
         analysisValue(std::string varName, const float& value) const;
     virtual IValsTool::Visitor::eVisitorRet 
         analysisValue(std::string varName, const int& value) const;
+    virtual IValsTool::Visitor::eVisitorRet 
+        analysisValue(std::string varName, const unsigned int& value) const;
     virtual ~NtupleVisitor() {}
     
 private:
@@ -58,6 +60,7 @@ IValsTool::Visitor::eVisitorRet NtupleVisitor::analysisValue(std::string varName
     }    
     return IValsTool::Visitor::CONT;
 }
+
 IValsTool::Visitor::eVisitorRet NtupleVisitor::analysisValue(std::string varName, 
                                                              const float& value) const
 { 
@@ -68,8 +71,20 @@ IValsTool::Visitor::eVisitorRet NtupleVisitor::analysisValue(std::string varName
     }    
     return IValsTool::Visitor::CONT;
 }
+
 IValsTool::Visitor::eVisitorRet NtupleVisitor::analysisValue(std::string varName, 
                                                              const int& value) const
+{ 
+    StatusCode sc;
+    if (m_ntupleSvc) {
+        sc = m_ntupleSvc->addItem(m_ntupleName,  varName, &value );
+        if (sc.isFailure()) return IValsTool::Visitor::ERROR;
+    }    
+    return IValsTool::Visitor::CONT;
+}
+
+IValsTool::Visitor::eVisitorRet NtupleVisitor::analysisValue(std::string varName, 
+                                                             const unsigned int& value) const
 { 
     StatusCode sc;
     if (m_ntupleSvc) {
@@ -147,7 +162,7 @@ StatusCode AnalysisNtupleAlg::initialize(){
 
     //probably a better way to do this!
     // default set:
-    std::string toolnames [] = {"Mc", "Glt", "TkrHit", "Tkr", "Vtx",  "Cal", "Acd", "Evt", "", "", "", ""};
+    std::string toolnames [] = {"Mc", "Glt", "Tkr", "Vtx",  "Cal", "Acd", "Evt", "CalMip", "", "", ""};
     int i;
     int namesSize;
 
@@ -213,10 +228,12 @@ StatusCode AnalysisNtupleAlg::initialize(){
 
     if (!m_tupleName.empty() & m_doNtuple) {
                 
+        /*
         if(m_ntupleSvc->addItem(m_tupleName,  "NumCalls",  &m_count ).isFailure()) {
             log << MSG::ERROR << "AddItem failed" << endreq;
             return fail;
         }
+        */
         
         int size = m_toolvec.size();
         for( int i =0; i<size; ++i){
@@ -241,20 +258,15 @@ StatusCode AnalysisNtupleAlg::execute()
 
     bool countCalc = false;
 
-    /* test for missing first event
-    if (m_count==0) {
-        m_ntupleSvc->storeRowFlag(false);
-        m_count++;
-        return sc;
-    }
-    */
 #if 0    // old intupleSvc required this: now it is automatic
     if (!m_tupleName.empty()& m_doNtuple) {
                
+        /*
         if(m_ntupleSvc->addItem(m_tupleName.c_str(), "NumCalls", &m_count).isFailure()) {
             log << MSG::ERROR << "AddItem failed" << endreq;
             return fail;
         }
+        */
         ++m_count;
         
         int size = m_toolvec.size();
@@ -269,6 +281,12 @@ StatusCode AnalysisNtupleAlg::execute()
     ++m_count;
     m_ntupleSvc->storeRowFlag(true);  // needed to save the event with RootTupleSvc
 #endif
+
+
+    for( std::vector<IValsTool*>::iterator i =m_toolvec.begin(); i != m_toolvec.end(); ++i){
+        (*i)->doCalcIfNotDone();
+    }
+
     // all the tools have been called at this point, so from now on,
     ///  we can call them with the no-calculate flag
     

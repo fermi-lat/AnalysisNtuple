@@ -2,7 +2,7 @@
 @brief header file for ValBase.cxx
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.h,v 1.27 2004/09/10 20:36:49 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.h,v 1.28 2005/10/26 00:05:50 lsrea Exp $
 */
 
 #ifndef ValBase_h
@@ -27,7 +27,7 @@ class IDataProviderSvc;
 
 */
 namespace {
-    enum valType {DOUBLE, FLOAT, INT};
+    enum valType {DOUBLE, FLOAT, INT, UINT};
     class TypedPointer 
     {
     public:  
@@ -37,6 +37,9 @@ namespace {
 
         valType getType()       { return    m_type; }
         void* getPointer()      { return    m_pointer; }
+        void setVal(unsigned int val)   { 
+            *(reinterpret_cast<unsigned int*>(getPointer())) = val; 
+        }
         void setVal(int val)    { *(reinterpret_cast<int*>(getPointer())) = val; }
         void setVal(float val)  { *(reinterpret_cast<float*>(getPointer())) = val; }
         void setVal(double val) { *(reinterpret_cast<double*>(getPointer())) = val; }
@@ -66,16 +69,19 @@ public:
     virtual void addItem(std::string varName, double* pValue);
     virtual void addItem(std::string varName, float* pValue);
     virtual void addItem(std::string varName, int* pValue);
+    virtual void addItem(std::string varName, unsigned int* pValue);
     /// do calculation if not already done for this event
     virtual StatusCode doCalcIfNotDone();
     /// get a particular value, using ntuple name default forces calculation
     virtual StatusCode getVal(std::string varName, double& value, int check = 0);
     virtual StatusCode getVal(std::string varName, float& value, int check = 0);
     virtual StatusCode getVal(std::string varName, int& value, int check = 0);
+    virtual StatusCode getVal(std::string varName, unsigned int& value, int check = 0);
     /// get a particular value, using ntuple name, with calc checking (called by AnaTup)
     virtual StatusCode getValCheck(std::string varName, double& value);
     virtual StatusCode getValCheck(std::string varName, float& value);
     virtual StatusCode getValCheck(std::string varName, int& value);
+    virtual StatusCode getValCheck(std::string varName, unsigned int& value);
     /// output the list of names
     virtual void announceBadName(std::string varName);
     /// output the names and values, either all (default) or just one;
