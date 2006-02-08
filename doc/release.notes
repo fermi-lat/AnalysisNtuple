@@ -2,6 +2,8 @@
   @brief Package AnalysisNtule
   @verbatim
 
+ v2r10   08-Feb-05   LSR  UInt for Run/EventId, move ntuple filling to AnalysisNtupleAlg
+                             requires latest merit, GlastClassify, ntupleWriterSvc, Gleam
  v2r9p11 20-Dec-05   LSR  more warnings
  v2r9p10 19-Dec-05   LSR  fixed some warnings, including abs(double)!
  v2r9p9  13-Dec-05   LSR  Missed one

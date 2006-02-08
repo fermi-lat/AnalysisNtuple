@@ -2,11 +2,12 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.73 2005/12/20 17:24:34 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.74 2006/02/08 04:10:17 lsrea Exp $
 */
 
 
-#define POST_CAL_MOD 1
+// #define PRE_CALMOD 1
+
 // To Do:
 // implement better code to check if in tower
 // Don't forget to remove the "1.5"s!! Done
@@ -1119,15 +1120,15 @@ StatusCode TkrValsTool::calculate()
         // Recover pointer to CalEventEnergy info 
         double CAL_EnergyCorr = 0.0;
 
-#ifdef POST_CAL_MOD
+#ifdef PRE_CALMOD
+       Event::CalEventEnergy* calEventEnergy = 
+            SmartDataPtr<Event::CalEventEnergy>(m_pEventSvc, EventModel::CalRecon::CalEventEnergy);
+#else
         Event::CalEventEnergyCol * calEventEnergyCol = 
           SmartDataPtr<Event::CalEventEnergyCol>(m_pEventSvc, EventModel::CalRecon::CalEventEnergyCol);
         Event::CalEventEnergy * calEventEnergy = 0 ;
         if ((calEventEnergyCol!=0)&&(!calEventEnergyCol->empty()))
           calEventEnergy = calEventEnergyCol->front() ;
-#else
-       Event::CalEventEnergy* calEventEnergy = 
-            SmartDataPtr<Event::CalEventEnergy>(m_pEventSvc, EventModel::CalRecon::CalEventEnergy);
 #endif
         if (calEventEnergy != 0) {
             // Extraction of results from CalValCorrTool in CalRecon... 
