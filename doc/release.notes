@@ -2,6 +2,7 @@
   @brief Package AnalysisNtule
   @verbatim
 
+ v2r10p1 09-Feb-05   LSR  New Mc var... McNumIncident: number of incident particles (usually 1)
  v2r10   08-Feb-05   LSR  UInt for Run/EventId, move ntuple filling to AnalysisNtupleAlg
                              requires latest merit, GlastClassify, ntupleWriterSvc, Gleam
  v2r9p11 20-Dec-05   LSR  more warnings
