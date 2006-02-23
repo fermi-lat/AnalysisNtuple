@@ -3,7 +3,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.64.2.1 2005/12/08 23:55:20 lsrea Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.64.2.2 2005/12/13 18:43:09 lsrea Exp $
 */
 
 // Include files
@@ -316,12 +316,14 @@
 <td>        Maximum energy found in a single Xtal
 <tr><td> CalLongRms 
 <td> F
-<td>        rms of the average of the 1st and 3rd shower moments. 
-            Indicates the length of the measured shower along the shower axis. 
+<td>        This is proportional to the length of the measured shower along the shower axis.
+            It is determined by diagonalizing the matrix of the positions of the energy deposits,
+            like an inertia tensor, but with energy substituted for mass, and taking the average
+            of the two large eigenvalues. (Includes an ad-hoc correction for energy.)
 <tr><td> CalLRmsAsym 
 <td> F
-<td>        The asymetry of the 1st and 3rd shower moments.  
-            This should be close to zero. Because of ordering of moments it is slightly ... (??)
+<td>        The asymmetry of the two large eigenvalues above
+            This should be close to zero, for a "typical" shower.
 <tr><td> CalTransRms 
 <td> F
 <td>        rms of transverse position measurements.
