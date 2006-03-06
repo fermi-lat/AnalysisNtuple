@@ -67,23 +67,25 @@
  @section jobOptions jobOptions
 
  @param AnalysisNtupleAlg.doNtuple
-  Controls the generation of the ntuple. (Default is false.) This can be turned on for
-  the test progream. For general use, the ntuple should be written out through the merit
-  package.
+  Controls the generation of the ntuple. (Default is true.) This package now does the output
+  for the ntuple.
   
  @param AnalysisNtupleAlg.tupleName 
-  Sets the name of the ntuple. (Default is "".) Must be the one opened by NTupleWriteSvc,
-  but there's no way for the code to find out what that is.  The name for
-  a standard GLEAM job is "GLEAM".
+  Sets the name of the ntuple. (Default is "MeritTuple".) Must be the one opened by NTupleWriteSvc,
+  but there's no way for the code to find out what that is.  
  
- @param AnalysisNtupleAlg.tuple_name
-  An alternate spelling, to match the one used by NTupleWriterSvc.
-
  @param AnalysisNtupleAlg.toolList
   A vector of strings that sets the list of tools requested. (Default is the 8 standard tools.) 
   Each string is the name
   of a tool with the "ValsTool" removed, so "TkrHitValsTool" becomes "TkrHit". This means that
   any tool written for the package should be named "BlahBlahValsTool". 
+
+ @param AnalysisNtupleAlg.enableDebugCalc
+  Does some tests on the ntuple vars for every event... doesn't seem to be working too well at
+  the moment!
+ 
+ @param AnalysisNtupleAlg.countCalcs
+  Counts the number of times that a given Tool is called for each event
   
   <hr>
  @section vars Description of the variables

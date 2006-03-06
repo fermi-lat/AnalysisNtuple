@@ -2,23 +2,44 @@
 @brief calculates the DOCA between two straight lines, and related quantities
 @author Tracy Usher, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/Doca.cxx,v 1.2 2003/03/05 02:03:29 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/Doca.cxx,v 1.3 2004/06/17 19:44:00 lsrea Exp $
 */
 
 #include "Doca.h"
 
 //
-// Constructor is where all the real work gets done...
+// ini() is where all the real work gets done...
 //
 
 
-Doca::Doca(const Ray& ray1, const Ray& ray2)
+Doca::Doca(const Ray& ray1, 
+           const Ray& ray2) 
+           : P(ray1.position()), u(ray1.direction()), 
+           Q(ray2.position()), v(ray2.direction()), 
+           p1(p_nullRay)
 {
-    //Copy the input rays to the class
-    P = ray1.position();
-    u = ray1.direction().unit();
-    Q = ray2.position();
-    v = ray2.direction().unit();
+    ini();
+}
+
+Doca::Doca(const Point& point1, const Vector& vector1,
+           const Point& point2, const Vector& vector2)
+           : P(point1), u(vector1), Q(point2), v(vector2), 
+           p1(p_nullRay)
+{
+    ini();
+}
+
+void Doca::ini() {
+
+    u = u.unit();
+
+    m_mode = LINELINE;
+    if(v.mag()==0.0) {
+        m_mode = LINEPOINT;
+        return;
+    }
+
+    v = v.unit();
 
     //Determine vector from start point track 1 to start of track 2
     Vector w     = P - Q;
@@ -52,31 +73,21 @@ Doca::Doca(const Ray& ray1, const Ray& ray2)
 
 Point Doca::docaPointRay1()
 {
-    Point w = P + s * u;
-
-    return w;
+     return P + s * u;
 }
 
 Point Doca::docaPointRay2()
 {
-    Point w = Q + t * v;
+    if(m_mode==LINEPOINT) return p_nullRay;
 
-    return w;
+    return Q + t * v;
 }
 
-/*
-double Doca::docaPoint1Ray2()
+double Doca::docaOfPoint(const Point& p)
 {
-    Vector w = P - Q;
-    Vector c = v.cross(w);
+    p1 = p;
+    Vector dp =  p1 - P;
+    s  = dp.dot(u);
 
-    return c.magnitude();
+    return (dp.cross(u)).mag();
 }
-double Doca::docaRay1Point2()
-{
-    Vector w = Q - P;
-    Vector c = u.cross(w.unit());
-
-    return c.magnitude();
-}
-*/

@@ -2,11 +2,9 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.74 2006/02/08 04:10:17 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.73 2005/12/20 17:24:34 lsrea Exp $
 */
-
-
-// #define PRE_CALMOD 1
+//#define PRE_CALMOD 1
 
 // To Do:
 // implement better code to check if in tower
@@ -40,7 +38,8 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.74 
 
 #include "GlastSvc/Reco/IPropagatorSvc.h"
 #include "GaudiKernel/IToolSvc.h"
-#include "geometry/Ray.h"
+#include "Doca.h"
+
 
 // M_PI defined in ValBase.h
 
@@ -105,6 +104,7 @@ private:
     float Tkr_SurplusHitRatio;
     float Tkr_SurplusHCInside;
     float Tkr_UpstreamHC;
+    float TkrDispersion;
 
     //First Track Specifics
     float Tkr_1_Chisq;
@@ -152,6 +152,7 @@ private:
     float Tkr_1_ChisqAsym;
     float Tkr_1_SSDVeto; 
     float Tkr_1_CoreHC;
+    float Tkr_1_LATEdge;
 
     //Second Track Specifics
     float Tkr_2_Chisq;
@@ -310,10 +311,11 @@ Notes:
 <tr><td> TkrSurplusHitsInside 
 <td>F<td>   Number of clusters inside an energy- and angle-dependent cone 
             centered on the reconstructed axis of the best track and
-            starting at the head of track 1. 
+            starting at the head of track 1. Only hits in layers with at
+            least one x and one y cluster in the tower are counted.
 <tr><td> TkrSurplusHitRatio
 <td>F<td>   Ratio of the number of hits outside the cone to the number
-            inside.
+            inside. See TkrSurplusHitsInside
 <tr><td> TkrThinHits
 <td>F<td>   Number of clusters in the above cone in the thin-converter layers 
 <tr><td> TkrThickHits 
@@ -474,6 +476,22 @@ The definitions should be fairly stable.
             wafers which intersect the extrapolated track are considered. No checks 
             for dead strips, etc. are made (yet!).
             Can be used as a back-up for the ACD. 
+<tr><td> Tkr1CoreHC
+<td>F<td>   Number of clusters within a roughly cylindrical region )(default radius 10 mm) 
+            around the hits in each plane between the first and last on the best
+            track, excluding the clusters that belong to the track itself
+<tr><td> TkrDispersion
+<td>F<td>   the RMS of the distances between the 1st track and all others in the event.
+            For tracks which start "above" the first track distance is the 3-D distance
+            For the rest, distance is the doca of the head of the track to the axis of
+            the first track.
+<tr><td> TkrUpstreamHC
+<td>F<td>   The number of hits in a cylinder (default radius 150 mm) up to 4 layers thick
+            above the head of the first track.
+<tr><td> Tkr1CORERatio
+<td>F<td>   the ratio of Tkr1CoreHC and Tkr1Hits
+<tr><td> Tkr1LATEdge
+<td>F<td>   Minimum distance to any LAT edge of the head of the best track
 </table>
 
     */
@@ -495,6 +513,7 @@ The definitions should be fairly stable.
     addItem("TkrSurplusHCInside", &Tkr_SurplusHCInside);
     addItem("TkrSurplusHitRatio", &Tkr_SurplusHitRatio);
     addItem("TkrUpstreamHC",  &Tkr_UpstreamHC);
+    addItem("TkrDispersion", &TkrDispersion);
 
     addItem("Tkr1Chisq",      &Tkr_1_Chisq);
     addItem("Tkr1FirstChisq", &Tkr_1_FirstChisq);
@@ -545,6 +564,7 @@ The definitions should be fairly stable.
     addItem("Tkr1ChisqAsym",  &Tkr_1_ChisqAsym);
     addItem("Tkr1SSDVeto",    &Tkr_1_SSDVeto);
     addItem("Tkr1CoreHC",     &Tkr_1_CoreHC);
+    addItem("Tkr1LATEdge",    &Tkr_1_LATEdge);
 
     addItem("Tkr2Chisq",      &Tkr_2_Chisq);
     addItem("Tkr2FirstChisq", &Tkr_2_FirstChisq);
@@ -951,8 +971,41 @@ StatusCode TkrValsTool::calculate()
             //  in the plane... lots of room for a screw-up!
         }
 
+        // minimum distance from any edge, measured from the edge of the active area
+        double deltaEdge = 0.5*(m_towerPitch - m_tkrGeom->trayWidth()) 
+            - m_tkrGeom->siDeadDistance() ;
+        double tkrXLo = m_tkrGeom->getLATLimit(0,LOW)  + deltaEdge;
+        double tkrXHi = m_tkrGeom->getLATLimit(0,HIGH) - deltaEdge;
+        double tkrYLo = m_tkrGeom->getLATLimit(1,LOW)  + deltaEdge;
+        double tkrYHi = m_tkrGeom->getLATLimit(1,HIGH) - deltaEdge;
+
+        double xEdge = std::min(Tkr_1_x0-tkrXLo, tkrXHi- Tkr_1_x0);
+        double yEdge = std::min(Tkr_1_y0-tkrYLo, tkrYHi- Tkr_1_y0);
+
+        Tkr_1_LATEdge = (float) std::min(xEdge, yEdge);
+
         if(nTracks > 1) {
             pTrack++;
+
+            // try Bill's dispersion variable here
+
+
+            Doca trk1Doca(x1, t1);
+
+            Event::TkrTrackColConPtr trkIter;
+
+            for(trkIter=pTrack; trkIter!=pTracks->end(); ++trkIter) {
+                Event::TkrTrack* trk = *trkIter;
+                double docaTrk = trk1Doca.docaOfPoint(trk->getInitialPosition());
+                TkrDispersion += (float) docaTrk*docaTrk;
+                double s = trk1Doca.arcLenRay1();
+                if (s<0) {
+                    TkrDispersion += (float) s*s;
+                }
+            }
+            TkrDispersion = sqrt(TkrDispersion/(nTracks-1));
+
+
             const Event::TkrTrack* track_2 = *pTrack;
             Tkr_2_Chisq        = track_2->getChiSquareSmooth();
             Tkr_2_FirstChisq     = track_2->chiSquareSegment();
@@ -1119,7 +1172,6 @@ StatusCode TkrValsTool::calculate()
         // hate to do this, but we need ERecon
         // Recover pointer to CalEventEnergy info 
         double CAL_EnergyCorr = 0.0;
-
 #ifdef PRE_CALMOD
        Event::CalEventEnergy* calEventEnergy = 
             SmartDataPtr<Event::CalEventEnergy>(m_pEventSvc, EventModel::CalRecon::CalEventEnergy);

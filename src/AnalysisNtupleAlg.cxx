@@ -2,7 +2,7 @@
 @brief Uses the XxxValsTools to produce a comprehensive ntuple
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.26 2006/02/08 04:10:17 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.27 2006/02/08 18:23:09 burnett Exp $
 */
 
 // Gaudi system includes
@@ -124,7 +124,8 @@ private:
     std::vector<std::string> m_toolnames;
     /// switch to turn on ntupleWriterSvc, for test purposes
     bool m_doNtuple;
-
+    bool m_doDebug;
+    bool m_countCalcs;
     
     IValsTool::Visitor* m_visitor; 
 };
@@ -139,11 +140,12 @@ AnalysisNtupleAlg::AnalysisNtupleAlg(const std::string& name, ISvcLocator* pSvcL
     // declare properties with setProperties calls
     declareProperty("tupleName",  m_tupleName="MeritTuple"); 
     // so it looks like NTupleWriterSvc property, no harm having both!
-    declareProperty("tuple_name",  m_tupleName="");   
-    // List of tools to use -- maybe a bit kludgy, since the spelling need to be correct!
+    //declareProperty("tuple_name",  m_tupleName="");   
+    // List of tools to use -- maybe a bit kludgy, since the spelling needs to be correct!
     declareProperty("toolList", m_toolnames);
     declareProperty("doNtuple", m_doNtuple=true);
-    
+    declareProperty("enableDebugCalc", m_doDebug=false);
+    declareProperty("countCalcs", m_countCalcs=false);  
 }
 
 StatusCode AnalysisNtupleAlg::initialize(){
@@ -220,10 +222,8 @@ StatusCode AnalysisNtupleAlg::initialize(){
     
     m_visitor = new NtupleVisitor(m_ntupleSvc, m_tupleName);
     
-
     if (!m_tupleName.empty() && m_doNtuple) {
                 
-       
         int size = m_toolvec.size();
         for( int i =0; i<size; ++i){
             if(m_toolvec[i]->traverse(m_visitor, false)==IValsTool::Visitor::ERROR) {
@@ -243,7 +243,7 @@ StatusCode AnalysisNtupleAlg::execute()
     
     MsgStream   log( msgSvc(), name() );
 
-    bool countCalc = false;
+    bool countCalc = m_countCalcs;
 
 
     ++m_count;
@@ -253,32 +253,38 @@ StatusCode AnalysisNtupleAlg::execute()
     for( std::vector<IValsTool*>::iterator i =m_toolvec.begin(); i != m_toolvec.end(); ++i){
         (*i)->doCalcIfNotDone();
     }
+    for( std::vector<IValsTool*>::iterator i =m_toolvec.begin(); i != m_toolvec.end(); ++i){
+        (*i)->doCalcIfNotDone();
+    }
 
     // all the tools have been called at this point, so from now on,
     ///  we can call them with the no-calculate flag
     
-    bool debugStuff = false;
-    log << MSG::DEBUG;
-    if (log.isActive()) {
-        debugStuff = true;;
-        log << "Debug display: ";
-    }
-    log << endreq;
+    bool debugStuff = m_doDebug;
 
-    if (countCalc || debugStuff) log << MSG::INFO << "number of calcs for standard call: " 
-        << m_toolvec[0]->getCalcCount()<< endreq;
-    
+    if (countCalc || debugStuff) {
+        if (m_count < 5) {
+            log << MSG::INFO << "number of calculations per event: " << endreq; 
+            unsigned int i;
+            for(i =0; i<m_toolvec.size(); ++i){
+                log << MSG::INFO << m_toolnames[i] << ": " << m_toolvec[i]->getCalcCount()<< endreq;
+            }
+            log << MSG::INFO << endreq;
+        }else {
+            log << MSG::INFO << "call count message suppressed. " << endreq;
+        } 
+    }
+
     if(debugStuff) {
-        double answer;
-        
+
         int namesSize = m_toolnames.size();
         int i;
 
         //do a browse
 
         for (i=0;i<namesSize; ++i) {
-            log << MSG::DEBUG << "Dump of variables in " << m_toolnames[i] << endreq;
-            m_toolvec[i]->browse();
+            log << MSG::INFO << "Dump of variables in " << m_toolnames[i] << endreq;
+            m_toolvec[i]->browse(log);
         }
 
         std::string varname;
@@ -289,12 +295,13 @@ StatusCode AnalysisNtupleAlg::execute()
             if      (toolname=="McValsTool"     ) {varname = "McXErr";}
             else if (toolname=="GltValsTool"    ) {varname = "GltTotal";}
             else if (toolname=="TkrHitValsTool" ) {varname = "TkrHitsInLyr00";}
-            else if (toolname=="TkrValsTool"    ) {varname = "TkrEnergyCorr";}
+            else if (toolname=="TkrValsTool"    ) {varname = "TkrSumKalEne";}
             else if (toolname=="VtxValsTool"    ) {varname = "VtxZDir";}
-            else if (toolname=="CalValsTool"    ) {varname = "CalEneSumCorr";}
+            else if (toolname=="CalValsTool"    ) {varname = "CalEnergyRaw";}
+            else if (toolname=="CalMipValsTool" ) {varname = "CalMipNum";}
             else if (toolname=="AcdValsTool"    ) {varname = "AcdTileCount";}
-            else if (toolname=="EvtValsTool"    ) {varname = "EvtLogESum";}
-            else if (toolname=="McAnalValsTool" ) {varname = "McPrmEnegy";}
+            else if (toolname=="EvtValsTool"    ) {varname = "EvtEnergyRaw";}
+            else if (toolname=="McAnalValsTool" ) {varname = "McaPrmEnegy";}
             else                                  {varname = "";}
             varnames.push_back(varname);
         }
@@ -305,19 +312,19 @@ StatusCode AnalysisNtupleAlg::execute()
         for(i=0; i<vecSize; ++i){
             varname = varnames[i];
             if (varname=="") continue;
-            // browse can only be called in forced calculation mode
-            m_toolvec[i]->browse(varnames[i]);
-            sc = m_toolvec[i]->getVal(varname, answer, NOCALC);
-            log << MSG::DEBUG;
-            if (log.isActive()) {
-                log << "  compared to: " << answer;
-            }
-            log << endreq;    
+            std::string answerString;
+            sc = m_toolvec[i]->getVal(varname, answerString, NOCALC);
+            log  << MSG::INFO << varname << " = " << answerString << " " << endreq;  
+            m_toolvec[i]->browse(log, varnames[i]);
         }        
     }     
     log << MSG::DEBUG;
     if (log.isActive()) {
-        log << "calculations done " << m_toolvec[0]->getCalcCount() << " times in this event.";
+        log << MSG::DEBUG << "number of calculations per event: " << endreq; 
+        unsigned int i;
+        for(i =0; i<m_toolvec.size(); ++i){
+            log << MSG::DEBUG << m_toolnames[i] << ": " << m_toolvec[i]->getCalcCount()<< endreq;
+        }
     }
     log << endreq;
     return sc;

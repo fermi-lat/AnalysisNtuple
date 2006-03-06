@@ -2,6 +2,12 @@
   @brief Package AnalysisNtule
   @verbatim
 
+ v2r11   05-Mar-05   LSR  Fix getVal(varname) ... required a change to IValsTool.h, which means 
+                             that merit needs to be rebuilt
+                          Add new variables from Bill to TkrValsTool and CalValsTool
+                          Fix sourceId and charge for heavy ions
+ v2r10p2 02-Mar-05   LSR  Connect debug flags to properties in AnalysisNtupleAlg...
+                              Need to fix getVal(varName) !!
  v2r10p1 09-Feb-05   LSR  New Mc var... McNumIncident: number of incident particles (usually 1)
  v2r10   08-Feb-05   LSR  UInt for Run/EventId, move ntuple filling to AnalysisNtupleAlg
                              requires latest merit, GlastClassify, ntupleWriterSvc, Gleam

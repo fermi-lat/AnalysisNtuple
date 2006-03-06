@@ -2,7 +2,7 @@
 @brief implements all the methods of the XxxValsTools
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.cxx,v 1.26 2004/09/10 20:36:49 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.cxx,v 1.27 2006/02/08 04:10:18 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -16,8 +16,6 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.cxx,v 1.26 2004
 #include "Event/TopLevel/Event.h"
 
 #include <algorithm>
-
-int ValBase::m_calcCount = 0;
 
 ValBase::ValBase(const std::string& type, 
                          const std::string& name, 
@@ -33,6 +31,7 @@ StatusCode ValBase::initialize()
 
     m_newEvent = true;
     m_check = CHECK;
+    m_calcCount = 0;
 
     m_ntupleMap.clear();
 
@@ -115,14 +114,14 @@ void ValBase::addItem(std::string varName, unsigned int* pValue)
 
     m_ntupleMap.push_back(pair);
 }
-StatusCode ValBase::browse(std::string varName) 
+StatusCode ValBase::browse(MsgStream log, std::string varName) 
 {
     // browse always triggers a calculation, which doesn't reset the m_newEvent flag
-    MsgStream log(msgSvc(), name());
+    //MsgStream log(msgSvc(), name());
 
     m_check = CALC;
 
-    log << MSG::INFO << "ValBase::browse called" << endreq;
+    //log << MSG::INFO << "ValBase::browse called" << endreq;
 
     std::string delim     = "\"";
     std::string separator = " ";
@@ -135,9 +134,9 @@ StatusCode ValBase::browse(std::string varName)
     m_check = CHECK;
     
     if (varName!="") {
-        std::cout  << " Variable " ;
+        log << MSG::INFO << " Variable " ;
     } else {
-        std::cout   << " Values of the variables:" << std::endl << indent;
+        log   << MSG::INFO << " Values of the variables:" << endreq << indent;
     }
     int length = indent.size();
     constMapIter it = m_ntupleMap.begin();
@@ -152,21 +151,21 @@ StatusCode ValBase::browse(std::string varName)
         int deltaL= (pair->first).size() + 2*delim.size() + separator.size() + valLen + 2;
         length += deltaL;
         if(length>78) {
-            std::cout <<std::endl << indent ;
+            log << MSG::INFO << endreq << indent ;
             length = indent.size() + deltaL;
         }
-        std::cout << delim << pair->first << delim << ": " ;
+        log << delim << pair->first << delim << ": " ;
 
         TypedPointer* ptr = (*it)->second;
         valType type = ptr->getType();
 
-        if (type==FLOAT)       {std::cout << *reinterpret_cast<float*>(ptr->getPointer());}
-        else if (type==DOUBLE) {std::cout << *reinterpret_cast<double*>(ptr->getPointer());}
-        else if (type==INT)    {std::cout << *reinterpret_cast<int*>(ptr->getPointer());}
-        else if (type==UINT)    {std::cout << *reinterpret_cast<unsigned int*>(ptr->getPointer());}
-        std::cout << separator;
+        if (type==FLOAT)        {log << *reinterpret_cast<float*>(ptr->getPointer());}
+        else if (type==DOUBLE)  {log << *reinterpret_cast<double*>(ptr->getPointer());}
+        else if (type==INT)     {log << *reinterpret_cast<int*>(ptr->getPointer());}
+        else if (type==UINT)    {log << *reinterpret_cast<unsigned int*>(ptr->getPointer());}
+        log << separator;
     }
-    std::cout << std::endl;
+    log << endreq;
     return StatusCode::SUCCESS;
 }
 
@@ -216,6 +215,12 @@ StatusCode ValBase::getValCheck(std::string varName, unsigned int& value)
     return getVal(varName, value, CHECK);
 }
 
+StatusCode ValBase::getValCheck(std::string varName, std::string& value)
+{
+    // a simple way to force the check
+    return getVal(varName, value, CHECK);
+}
+
 StatusCode ValBase::getTypedPointer(std::string varName, TypedPointer*& ptr, int check)
 {
     // optional check flag
@@ -244,7 +249,26 @@ StatusCode ValBase::getTypedPointer(std::string varName, TypedPointer*& ptr, int
     return sc;
 }
 
-
+StatusCode ValBase::getVal(std::string varName, std::string& value, int check)
+{
+    char buffer[80];
+    TypedPointer* ptr = 0;
+    StatusCode sc = getTypedPointer(varName, ptr, check);
+    valType type = ptr->getType();
+    if(sc.isSuccess()) {
+        if (type==FLOAT)        {
+            float foo =             *reinterpret_cast<float*>(ptr->getPointer());
+            sprintf(buffer, "%f", foo);}
+        else if (type==DOUBLE)  {sprintf(buffer, "%d", 
+            *reinterpret_cast<double*>(ptr->getPointer()), "%s");}
+        else if (type==INT)     {sprintf(buffer, "%i", 
+            *reinterpret_cast<int*>(ptr->getPointer()));}
+        else if (type==UINT)    {sprintf(buffer, "%i", 
+            *reinterpret_cast<unsigned int*>(ptr->getPointer()));}
+    }
+    value = std::string(buffer);
+    return sc;
+}
 
 StatusCode ValBase::getVal(std::string varName, int& value, int check)
 {
@@ -281,6 +305,9 @@ StatusCode ValBase::getVal(std::string varName, float& value, int check)
     StatusCode sc = getTypedPointer(varName, ptr, check);
     if(sc.isSuccess()) {
         value = *(reinterpret_cast<float*>(ptr->getPointer()));
+        //std::cout << std::endl;
+        //std::cout << varName << " " << value << std::endl;
+        //std::cout << std::endl;
     }
     return sc;
 }
