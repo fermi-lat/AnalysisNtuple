@@ -3,7 +3,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.68 2005/12/20 06:14:52 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.71 2006/03/06 02:32:43 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -520,7 +520,7 @@ StatusCode CalValsTool::calculate()
         for( jlog=pxtalrecs->begin(); jlog != pxtalrecs->end(); ++jlog) {
             const Event::CalXtalRecData& recLog = **jlog;    
             double eneLog = recLog.getEnergy();
-            if(eneLog > CAL_Xtal_maxEne) CAL_Xtal_maxEne = eneLog; 
+            if(eneLog > CAL_Xtal_maxEne) CAL_Xtal_maxEne = eneLog;
         }
 
         // Number of Xtals

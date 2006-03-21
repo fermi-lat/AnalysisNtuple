@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.21 2005/11/09 01:10:06 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.22 2005/12/13 19:00:37 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -24,7 +24,8 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.21 
 
 #include "GlastSvc/GlastDetSvc/IGlastDetSvc.h"
 // Point used by AcdDigi
-#include "CLHEP/Geometry/Point3D.h"  //<=== check this
+//#include "CLHEP/Geometry/Point3D.h"  //<=== check this
+#include "CLHEP/Geometry/Transform3D.h"
 // Point used by TKR
 //#include "geometry/Point.h"  <=== check this
 
@@ -380,7 +381,7 @@ void AcdValsTool::tkrHitsCount() {
             log << MSG::WARNING << "Failed to retrieve Shape by Id" << endreq;
             continue;
         }
-        HepTransform3D transform;
+        HepGeom::Transform3D transform;
         sc = m_detSvc->getTransform3DByID(volId, &transform);
         if (sc.isFailure() ) {
             log << MSG::WARNING << "Failed to get transformation" << endreq;
