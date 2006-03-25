@@ -2,6 +2,7 @@
   @brief Package AnalysisNtule
   @verbatim
 
+ v2r12   24-Mar-06   HMK  Update for new CLHEP 1.9.2.2
  v2r11   05-Mar-05   LSR  Fix getVal(varname) ... required a change to IValsTool.h, which means 
                              that merit needs to be rebuilt
                           Add new variables from Bill to TkrValsTool and CalValsTool
