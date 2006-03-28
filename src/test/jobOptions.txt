@@ -9,7 +9,7 @@
 //
 
 ApplicationMgr.ExtSvc = { 
-    "GlastEventSelector/EventSelector" , 
+//    "GlastEventSelector/EventSelector" , 
     "EventCnvSvc"
     };
 EventPersistencySvc.CnvServices = {"EventCnvSvc"};
