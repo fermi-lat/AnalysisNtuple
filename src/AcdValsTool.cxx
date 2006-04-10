@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.21 2005/11/09 01:10:06 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.21.2.1 2005/12/13 18:43:09 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -66,6 +66,8 @@ private:
     float ACD_ActiveDist_Energy;
     float ACD_GammaDOCA; 
     float ACD_Corner_DOCA;
+    float ACD_Tkr1Ribbon_Dist;
+    float ACD_TkrRibbon_Dist;
     float ACD_ActDistTop;
     float ACD_ActDistR0;
     float ACD_ActDistR1;
@@ -195,7 +197,13 @@ StatusCode AcdValsTool::initialize()
 <td>        Distance of Gamma to the center of the nearest tile 
 <tr><td> AcdCornerDoca 
 <td> F
-<td>        Minimum Distance of Closest Approach to the corner side gaps 
+<td>        Minimum Distance of Closest Approach of best track to the corner side gaps 
+<tr><td> AcdTkrRibbonDist
+<td> F
+<td>        Minimum Distance of Closest Approach of any track to any ribbons that cover gaps
+<tr><td> AcdTkr1RibbonDist
+<td> F
+<td>        Minimum Distance of Closest Approach to best track to any ribbons that cover gaps 
 <tr><td> AcdActDistTop   
 <td> F
 <td>        Smallest active distance of any track to top tiles 
@@ -234,6 +242,8 @@ StatusCode AcdValsTool::initialize()
     addItem("AcdActDistTileEnergy",   &ACD_ActiveDist_Energy);
     addItem("AcdGammaDoca",    &ACD_GammaDOCA);
     addItem("AcdCornerDoca",    &ACD_Corner_DOCA);
+    addItem("AcdTkrRibbonDist",    &ACD_TkrRibbon_Dist);
+    addItem("AcdTkr1RibbonDist",    &ACD_Tkr1Ribbon_Dist);
 
     addItem("AcdActDistTop",&ACD_ActDistTop);
     addItem("AcdActDistSideRow0",&ACD_ActDistR0);
@@ -308,6 +318,37 @@ StatusCode AcdValsTool::calculate()
         ACD_GammaDOCA     = pACD->getGammaDoca();
         ACD_Corner_DOCA   = pACD->getCornerDoca();
         ACD_ribbon_ActiveDist = pACD->getRibbonActiveDist();
+
+	// loop over AcdGaps & get least distance between track extrapolation & ribbon
+	ACD_TkrRibbon_Dist = -2000.;
+	ACD_Tkr1Ribbon_Dist = -2000.;
+	const Event::AcdTkrGapPocaCol& gaps = pACD->getAcdTkrGapPocaCol();
+	for ( Event::AcdTkrGapPocaCol::const_iterator itrGap = gaps.begin(); 
+	      itrGap != gaps.end(); itrGap++ ) {
+	  // only take the upward going side 
+	  if ( (*itrGap)->getArcLength() < 0. ) continue;
+	  // only take ribbon gaps	  
+	  bool isRibbon(false);
+	  switch ( (*itrGap)->getId().gapType() ) {
+	  case 1: // X_RibbonSide
+	  case 2: // Y_RibbonSide
+	  case 3: // Y_RibbonTop
+	    isRibbon = true;
+	    break;
+	  default:
+	    break;
+	  }
+	  if ( !isRibbon ) continue;
+	  // only look at first two tracks	  
+	  if ( (*itrGap)->trackIndex() == 0 ) {
+	    if ( (*itrGap)->getDoca() > ACD_Tkr1Ribbon_Dist ) {
+	      ACD_Tkr1Ribbon_Dist = (*itrGap)->getDoca();
+	    } 
+	  } 
+	  if ( (*itrGap)->getDoca() > ACD_TkrRibbon_Dist ) {
+	    ACD_TkrRibbon_Dist = (*itrGap)->getDoca();
+	  }	  
+	}
 
         const std::vector<double> & adist = pACD->getRowActDistCol();
         ACD_ActDistTop = adist[0];
