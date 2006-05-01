@@ -3,7 +3,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.68 2005/12/20 06:14:52 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.71 2006/03/06 02:32:43 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -644,7 +644,7 @@ StatusCode CalValsTool::calculate()
     //double x_diff_t0 = x_diff*t0;
     //CAL_Track_DOCA = sqrt(std::max(0.0, x_diff_sq - x_diff_t0*x_diff_t0));
     Doca track1(x1, t1);
-    double CAL_Track_DOCA = track1.docaOfPoint(cal_pos);
+    CAL_Track_DOCA = track1.docaOfPoint(cal_pos);
 
     // try Bill's new vars... 
     if (pxtalrecs) {
