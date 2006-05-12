@@ -3,7 +3,7 @@
 @brief Calculates the "Event" analysis variables from the other ntuple variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.27 2005/11/07 18:19:47 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.27.2.1 2005/12/13 18:43:09 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -42,8 +42,8 @@ public:
 private:
 
     //Global Items
-    float EvtRun;
-    float EvtEventId;
+    double EvtRun;
+    double EvtEventId;
     double EvtElapsedTime;
     float EvtLiveTime;
 
