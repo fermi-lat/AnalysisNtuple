@@ -3,7 +3,7 @@
 @brief Calculates the "Event" analysis variables from the other ntuple variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.27.2.1 2005/12/13 18:43:09 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.27.2.2 2006/05/12 16:34:43 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -201,10 +201,10 @@ NOTE
 <table>
 <tr><th> Variable <th> Type <th> Description
 <tr><td> EvtRun 
-<td> F
+<td> D
 <td>        Run number, copied from the event header NEW: replaces Run in the merit ntuple  
 <tr><td> EvtEventId 
-<td> F
+<td> D
 <td>        Sequence number of event in the run (as generated) NEW: replaces Event_ID in the merit ntuple 
 <tr><td> EvtElapsedTime 
 <td> D
