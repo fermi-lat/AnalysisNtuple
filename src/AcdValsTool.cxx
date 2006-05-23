@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.23 2006/03/21 01:43:49 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.24 2006/05/02 23:54:33 echarles Exp $
 */
 
 #include "ValBase.h"
@@ -294,7 +294,7 @@ StatusCode AcdValsTool::calculate()
         ACD_DOCA          = pACD->getDoca();
         ACD_DOCA_Energy   = energyIdMap[tileId];
 
-        tileId            = pACD->getMaxActDistId();
+        tileId            = pACD->getMaxActDist3DId();
         ACD_ActiveDist    = pACD->getActiveDist();
         ACD_ActiveDist3D    = pACD->getActiveDist3D();
         ACD_ActiveDist_Energy = energyIdMap[tileId];
