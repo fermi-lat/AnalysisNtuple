@@ -3,7 +3,7 @@
 @brief Calculates the Vtx analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.20 2005/11/18 16:49:15 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.21 2005/12/13 19:00:37 lsrea Exp $
 */
 
 // Include files
@@ -69,6 +69,13 @@ private:
 	float VTX_zdir;
 	float VTX_Phi;
 	float VTX_Theta;
+    float VTX_Sxx;
+    float VTX_Sxy;
+    float VTX_Syy;
+    float VTX_ThetaErr;
+    float VTX_PhiErr;
+    //float VTX_ErrAsym;
+    //float VTX_CovDet;
 	float VTX_x0;
 	float VTX_y0;
 	float VTX_z0;
@@ -129,6 +136,14 @@ StatusCode VtxValsTool::initialize()
             (direction of source, not flight direction!) Range: (0,2pi) 
 <tr><td> VtxTheta 
 <td>F<td>   Polar angle of vertex, radians (ditto direction)
+<tr><td> VtxThetaErr  
+<td>F<td>   Error on the measurement of theta  
+<tr><td> VtxPhiErr  
+<td>F<td>   Error on the measurement of phi.  
+<tr><td> VtxS[XX/YY]  
+<td>F<td>   [x-x/y-y] element of the covariance matrix; square of error on [x/y]  
+<tr><td> VtxSXY  
+<td>F<td>   x-y element of the covariance matrix; covariance  
 <tr><td> Vtx[X/Y/Z]0 
 <td>F<td>   [x/y/z] coordinate of vertex; if the two tracks making up 
             the vertex are nearly parallel, 
@@ -176,7 +191,25 @@ StatusCode VtxValsTool::initialize()
 	addItem("VtxZDir",      &VTX_zdir);     
 	addItem("VtxPhi",       &VTX_Phi);  
 	addItem("VtxTheta",     &VTX_Theta);  
-	addItem("VtxX0",        &VTX_x0);       
+
+    addItem("VtxThetaErr",   &VTX_ThetaErr);
+    addItem("VtxPhiErr",     &VTX_PhiErr);
+    addItem("VtxSXX",        &VTX_Sxx);
+    addItem("VtxSXY",        &VTX_Sxy);
+    addItem("VtxSYY",        &VTX_Syy);
+
+    /* in case we want this later
+    <tr><td> VtxErrAsym  
+    <td>F<td>   Tkr1SXY/(Tkr1SXX + Tkr1SYY)  
+    <tr><td> VtxCovDet  
+    <td>F<td>   Determinant of the error matrix, 
+             but normalized to remove the dependence on cos(theta)
+    */
+    //addItem("VtxErrAsym",    &VTX_ErrAsym);
+    //addItem("VtxCovDet",     &VTX_CovDet);
+
+   
+    addItem("VtxX0",        &VTX_x0);       
 	addItem("VtxY0",        &VTX_y0);       
 	addItem("VtxZ0",        &VTX_z0);       
 	addItem("VtxAngle",     &VTX_Angle);    
@@ -229,6 +262,21 @@ StatusCode VtxValsTool::calculate()
 	VTX_Phi       = (-t0).phi();
 	if (VTX_Phi<0.0f) VTX_Phi += static_cast<float>(2*M_PI);
 	VTX_Theta     = (-t0).theta();
+
+    const Event::TkrTrackParams& VTX_Cov = track_1->front()->getTrackParams(Event::TkrTrackHit::SMOOTHED);
+    VTX_Sxx         = VTX_Cov.getxSlpxSlp();
+    VTX_Sxy         = VTX_Cov.getxSlpySlp();
+    VTX_Syy         = VTX_Cov.getySlpySlp();
+    double sinPhi     = sin(VTX_Phi);
+    double cosPhi     = cos(VTX_Phi);
+    VTX_ThetaErr      = t0.z()*t0.z()*sqrt(std::max(0.0, cosPhi*cosPhi*VTX_Sxx + 
+        2.*sinPhi*cosPhi*VTX_Sxy + sinPhi*sinPhi*VTX_Syy)); 
+    VTX_PhiErr        = (-t0.z())*sqrt(std::max(0.0, sinPhi*sinPhi*VTX_Sxx - 
+        2.*sinPhi*cosPhi*VTX_Sxy + cosPhi*cosPhi*VTX_Syy));
+    //VTX_ErrAsym     = fabs(VTX_Sxy/(VTX_Sxx + VTX_Syy));
+    //VTX_CovDet      = sqrt(std::max(0.0f,VTX_Sxx*VTX_Syy-VTX_Sxy*VTX_Sxy))*VTX_zdir*VTX_zdir;
+
+
 
 	VTX_x0        = x0.x();
 	VTX_y0        = x0.y();
