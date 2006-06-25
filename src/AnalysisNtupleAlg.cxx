@@ -2,7 +2,7 @@
 @brief Uses the XxxValsTools to produce a comprehensive ntuple
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.27 2006/02/08 18:23:09 burnett Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.28 2006/03/06 02:32:43 lsrea Exp $
 */
 
 // Gaudi system includes
@@ -34,23 +34,23 @@ public:
     NtupleVisitor(INTupleWriterSvc* ntupleSvc=0, std::string ntupleName="") 
         : m_ntupleSvc(ntupleSvc), m_ntupleName(ntupleName) {}
     virtual IValsTool::Visitor::eVisitorRet 
-        analysisValue(std::string varName, const double& value) const;
+        analysisValue(const std::string varName, const double& value) const;
     virtual IValsTool::Visitor::eVisitorRet 
-        analysisValue(std::string varName, const float& value) const;
+        analysisValue(const std::string varName, const float& value) const;
     virtual IValsTool::Visitor::eVisitorRet 
-        analysisValue(std::string varName, const int& value) const;
+        analysisValue(const std::string varName, const int& value) const;
     virtual IValsTool::Visitor::eVisitorRet 
-        analysisValue(std::string varName, const unsigned int& value) const;
+        analysisValue(const std::string varName, const unsigned int& value) const;
     virtual ~NtupleVisitor() {}
     
 private:
-    /// pointer to the ntuple servic
+    /// pointer to the ntuple service
     INTupleWriterSvc* m_ntupleSvc;
     /// name of the ntuple; should be the same as is set in NtupleWriterSvc
     std::string m_ntupleName;
 };
 
-IValsTool::Visitor::eVisitorRet NtupleVisitor::analysisValue(std::string varName, 
+IValsTool::Visitor::eVisitorRet NtupleVisitor::analysisValue(const std::string varName,
                                                              const double& value) const
 { 
     StatusCode sc;
@@ -61,7 +61,7 @@ IValsTool::Visitor::eVisitorRet NtupleVisitor::analysisValue(std::string varName
     return IValsTool::Visitor::CONT;
 }
 
-IValsTool::Visitor::eVisitorRet NtupleVisitor::analysisValue(std::string varName, 
+IValsTool::Visitor::eVisitorRet NtupleVisitor::analysisValue(const std::string varName,
                                                              const float& value) const
 { 
     StatusCode sc;
@@ -72,7 +72,7 @@ IValsTool::Visitor::eVisitorRet NtupleVisitor::analysisValue(std::string varName
     return IValsTool::Visitor::CONT;
 }
 
-IValsTool::Visitor::eVisitorRet NtupleVisitor::analysisValue(std::string varName, 
+IValsTool::Visitor::eVisitorRet NtupleVisitor::analysisValue(const std::string varName,
                                                              const int& value) const
 { 
     StatusCode sc;
@@ -83,7 +83,7 @@ IValsTool::Visitor::eVisitorRet NtupleVisitor::analysisValue(std::string varName
     return IValsTool::Visitor::CONT;
 }
 
-IValsTool::Visitor::eVisitorRet NtupleVisitor::analysisValue(std::string varName, 
+IValsTool::Visitor::eVisitorRet NtupleVisitor::analysisValue(const std::string varName,
                                                              const unsigned int& value) const
 { 
     StatusCode sc;
@@ -253,9 +253,11 @@ StatusCode AnalysisNtupleAlg::execute()
     for( std::vector<IValsTool*>::iterator i =m_toolvec.begin(); i != m_toolvec.end(); ++i){
         (*i)->doCalcIfNotDone();
     }
-    for( std::vector<IValsTool*>::iterator i =m_toolvec.begin(); i != m_toolvec.end(); ++i){
-        (*i)->doCalcIfNotDone();
-    }
+
+    // why twice???
+    //for( std::vector<IValsTool*>::iterator i =m_toolvec.begin(); i != m_toolvec.end(); ++i){
+    //    (*i)->doCalcIfNotDone();
+    //}
 
     // all the tools have been called at this point, so from now on,
     ///  we can call them with the no-calculate flag

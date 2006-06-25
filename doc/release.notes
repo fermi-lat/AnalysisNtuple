@@ -2,6 +2,8 @@
   @brief Package AnalysisNtule
   @verbatim
 
+ v2r15p2 25-Jun-06   LSR  add ability to write and access Root arrays, e.g. Tkr1Dir[3]
+                              Error recovery needs more work (for now, don't make errors!)                             
  v2r15p1 14-Jun-06   LSR  add covariance variables to VtxValsTool
  v2r15   23-May-06   THB  tag Heather's changes to AcdValsTool
  v2r14p1 02-May-06   EAC  Merge in updates to AcdValsTools from v2r9p3gr6

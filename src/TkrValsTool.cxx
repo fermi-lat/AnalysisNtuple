@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.73 2005/12/20 17:24:34 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.76 2006/03/06 02:32:43 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -188,6 +188,10 @@ private:
     // here's some test stuff... if it works for a couple it will work for all
     //float Tkr_float;
     //int   Tkr_int;
+    //float    Tkr_1Pos[3];
+    //double   Tkr_doubles[2];
+    //int      Tkr_ints[5];
+    //unsigned int Tkr_uInts[7];
 };
 
 namespace 
@@ -197,8 +201,7 @@ namespace
         double step = (xi-xmin)/(xmax-xmin);
         return ymin + (ymax-ymin)*step;
     }
-    }
-
+}
 
 // Static factory for instantiation of algtool objects
 static ToolFactory<TkrValsTool> s_factory;
@@ -601,8 +604,15 @@ The definitions should be fairly stable.
     addItem("Tkr2TkrHDoca",         &Tkr_2TkrHDoca); 
 
     // for test, uncomment these statements:
+
     //addItem("TkrFloat", &Tkr_float);
     //addItem("TkrInt",   &Tkr_int);
+    //try just aliasing it to the first of the three items
+    //  is it guaranteed to work?
+    //addItem("Tkr1Pos[3]",        &Tkr_1_x0);
+    //addItem("TkrIntArray[5]",    Tkr_ints);
+    //addItem("TkrDoubleArray[2]", Tkr_doubles);
+    //addItem("TkrUIntArray[7]",   Tkr_uInts);
 
     zeroVals();
 
@@ -714,6 +724,26 @@ StatusCode TkrValsTool::calculate()
         Tkr_1_x0          = x1.x();
         Tkr_1_y0          = x1.y();
         Tkr_1_z0          = x1.z();
+
+        //test
+        /* 
+        float fVal;
+        getVal("Tkr1Pos[0]", fVal, -1);
+        std::cout << "Tkr1Pos[0] " << fVal << std::endl;
+        getVal("Tkr1Pos[1]", fVal, -1);
+        std::cout << "Tkr1Pos[1] " << fVal << std::endl;
+        getVal("Tkr1Pos[2]", fVal, -1);
+        std::cout << "Tkr1Pos[2] " << fVal << std::endl;
+        getVal("Tkr1Pos[3]", fVal, -1);
+        std::cout << "Tkr1Pos[3] " << fVal << std::endl;
+        getVal("Tkr1Pos[3", fVal, -1);
+        std::cout << "Tkr1Pos[2] " << fVal << std::endl;
+
+        int i;
+        for (i=0; i<5;++i) {Tkr_ints[i] = i;}
+        for (i=0; i<2;++i) {Tkr_doubles[i] = i+1;}
+        for (i=0; i<7;++i) {Tkr_uInts[i] = i+1;}
+        */
 
         // theta and phi are of direction of source, hence the minus sign
         // this code replaces atan and acos used before

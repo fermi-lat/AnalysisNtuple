@@ -2,7 +2,7 @@
 @brief implements all the methods of the XxxValsTools
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.cxx,v 1.27 2006/02/08 04:10:18 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.cxx,v 1.28 2006/03/06 02:32:43 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -16,6 +16,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.cxx,v 1.27 2006
 #include "Event/TopLevel/Event.h"
 
 #include <algorithm>
+#include <cassert>
 
 ValBase::ValBase(const std::string& type, 
                          const std::string& name, 
@@ -23,44 +24,44 @@ ValBase::ValBase(const std::string& type,
   : AlgTool( type, name, parent ) { }
 
 
-StatusCode ValBase::initialize()
-{
-    // use the incident service to register begin, end events
-    IIncidentSvc* incsvc = 0;
-    IDataProviderSvc* eventsvc = 0;
+  StatusCode ValBase::initialize()
+  {
+      // use the incident service to register begin, end events
+      IIncidentSvc* incsvc = 0;
+      IDataProviderSvc* eventsvc = 0;
 
-    m_newEvent = true;
-    m_check = CHECK;
-    m_calcCount = 0;
+      m_newEvent = true;
+      m_check = CHECK;
+      m_calcCount = 0;
 
-    m_ntupleMap.clear();
+      m_ntupleMap.clear();
 
-    MsgStream log(msgSvc(), name());
+      MsgStream log(msgSvc(), name());
 
-    StatusCode sc = StatusCode::FAILURE;
+      StatusCode sc = StatusCode::FAILURE;
 
-    log << MSG::INFO << "ValBase is initializing" << endreq;
+      log << MSG::INFO << "ValBase is initializing" << endreq;
 
-    if (serviceLocator()) {
-        sc = serviceLocator()->service( "IncidentSvc", incsvc, true );
-        if(sc.isFailure()){
-            log << MSG::ERROR << "Could not find IncidentSvc" << std::endl;
-            return sc;
-        }
-        m_incSvc = incsvc;
-        
-        sc = serviceLocator()->service( "EventDataSvc", eventsvc, true );
-        if(sc.isFailure()){
-            log << MSG::ERROR << "Could not find EventDataSvc" << std::endl;
-            return sc;
-        }
-        m_pEventSvc = eventsvc;
-    } 
-    
-    //set up listener for IncidentSvc
-    incsvc->addListener(this, "BeginEvent", 100);
-    return sc;
-}
+      if (serviceLocator()) {
+          sc = serviceLocator()->service( "IncidentSvc", incsvc, true );
+          if(sc.isFailure()){
+              log << MSG::ERROR << "Could not find IncidentSvc" << std::endl;
+              return sc;
+          }
+          m_incSvc = incsvc;
+
+          sc = serviceLocator()->service( "EventDataSvc", eventsvc, true );
+          if(sc.isFailure()){
+              log << MSG::ERROR << "Could not find EventDataSvc" << std::endl;
+              return sc;
+          }
+          m_pEventSvc = eventsvc;
+      } 
+
+      //set up listener for IncidentSvc
+      incsvc->addListener(this, "BeginEvent", 100);
+      return sc;
+  }
 
 ValBase::~ValBase()
 {
@@ -76,54 +77,124 @@ void ValBase::zeroVals()
     mapIter it = m_ntupleMap.begin();
     for ( ; it!=m_ntupleMap.end(); ++it) {
         TypedPointer* ptr = ((*it)->second);
-        if (ptr->getType()==FLOAT)       *reinterpret_cast<float*>(ptr->getPointer()) = 0.0;
-        else if (ptr->getType()==DOUBLE) *reinterpret_cast<double*>(ptr->getPointer()) = 0.0;
-        else if (ptr->getType()==INT)    *reinterpret_cast<int*>(ptr->getPointer()) = 0;
-        else if (ptr->getType()==UINT)    *reinterpret_cast<unsigned int*>(ptr->getPointer()) = 0;
-   }
+        void* vPtr = ptr->getPointer();
+        valType type = ptr->getType();
+        int dim = ptr->getDim();
 
+        int i;
+        for (i=0; i<dim; ++i) {
+            switch (type) {
+            case FLOAT: 
+                *(reinterpret_cast<float*>(vPtr)+i) = 0.0;
+                break;
+            case DOUBLE:
+                *(reinterpret_cast<double*>(vPtr)+i) = 0.0;
+                break;
+            case INT:
+                *(reinterpret_cast<int*>(vPtr)+i) = 0;
+                break;
+            case UINT:
+                *(reinterpret_cast<unsigned int*>(vPtr)+i) = 0;
+                break;
+            }
+        }
+    }
 }
 
-void ValBase::addItem(std::string varName, double* pValue)
+std::string ValBase::getFullName(const std::string varName, int dim)
 {
-    TypedPointer* ptr = new TypedPointer(DOUBLE, (void*) pValue);
-    valPair* pair = new valPair(varName, ptr);
+    char buffer[6];
+    sprintf(buffer, "[%i]", dim);
+    std::string fullName = varName+buffer;
+    return fullName;
+}
+
+bool ValBase::getArrayArg(const std::string varName, std::string& baseName, int& arg)
+{
+    MsgStream log(msgSvc(), name());
+    
+    arg = -1;
+    baseName = varName;
+    bool hasArg = false;
+
+    int pos1, pos2;
+    pos1 = varName.find("[");
+    if (pos1!=-1) {
+        pos2 = varName.find("]");
+        if (pos2<pos1+2) {
+            log << MSG::ERROR << "variable " << varName << " out of range or malformed" << endreq;
+            assert(pos2<pos1+2);
+            return hasArg;
+        } else {
+            std::string strDim = varName.substr(pos1+1, pos2-pos1-1);
+            arg = atoi(strDim.c_str());
+            if(arg<0) {
+                log << MSG::ERROR << "variable " << varName << " out of range or malformed" << endreq;
+                assert(arg<0);
+                return hasArg;
+            }
+            baseName = varName.substr(0,pos1);
+            hasArg = true;
+            return hasArg;
+        }
+    } else {
+        arg = 1;
+        return hasArg;
+    }
+}
+
+void ValBase::addItem(const std::string varName, double* pValue)
+{
+    std::string baseName;
+    int dim;
+    bool hasArg = getArrayArg(varName, baseName, dim);
+    TypedPointer* ptr = new TypedPointer(DOUBLE, (void*) pValue, dim);
+    valPair* pair = new valPair(baseName, ptr);
 
     m_ntupleMap.push_back(pair);
 }
 
-void ValBase::addItem(std::string varName, float* pValue)
+void ValBase::addItem(const std::string varName, float* pValue)
 {
-    TypedPointer* ptr = new TypedPointer(FLOAT, (void*) pValue);
-    valPair* pair = new valPair(varName, ptr);
+    std::string baseName;
+    int dim;
+    bool hasArg = getArrayArg(varName, baseName, dim);
+    TypedPointer* ptr = new TypedPointer(FLOAT, (void*) pValue, dim);
+    valPair* pair = new valPair(baseName, ptr);
 
     m_ntupleMap.push_back(pair);
 }
-void ValBase::addItem(std::string varName, int* pValue)
+void ValBase::addItem(const std::string varName, int* pValue)
 {
-    TypedPointer* ptr = new TypedPointer(INT, (void*) pValue);
-    valPair* pair = new valPair(varName, ptr);
+    std::string baseName;
+    int dim;
+    bool hasArg = getArrayArg(varName, baseName, dim);
+    TypedPointer* ptr = new TypedPointer(INT, (void*) pValue, dim);
+    valPair* pair = new valPair(baseName, ptr);
 
     m_ntupleMap.push_back(pair);
 }
 
-void ValBase::addItem(std::string varName, unsigned int* pValue)
+void ValBase::addItem(const std::string varName, unsigned int* pValue)
 {
-    TypedPointer* ptr = new TypedPointer(UINT, (void*) pValue);
-    valPair* pair = new valPair(varName, ptr);
+    std::string baseName;
+    int dim;
+    bool hasArg = getArrayArg(varName, baseName, dim);
+    TypedPointer* ptr = new TypedPointer(UINT, (void*) pValue, dim);
+    valPair* pair = new valPair(baseName, ptr);
 
     m_ntupleMap.push_back(pair);
 }
-StatusCode ValBase::browse(MsgStream log, std::string varName) 
+
+StatusCode ValBase::browse(MsgStream log, std::string varName0) 
 {
     // browse always triggers a calculation, which doesn't reset the m_newEvent flag
-    //MsgStream log(msgSvc(), name());
 
     m_check = CALC;
 
     //log << MSG::INFO << "ValBase::browse called" << endreq;
 
-    std::string delim     = "\"";
+    std::string delim     = ""; //"\"";
     std::string separator = " ";
     std::string indent    = "    ";
     
@@ -132,6 +203,13 @@ StatusCode ValBase::browse(MsgStream log, std::string varName)
         return StatusCode::FAILURE;
     }
     m_check = CHECK;
+
+    std::string varName;
+    int element;
+    bool hasArg = getArrayArg(varName0, varName, element);
+    if (!hasArg) element = 0;
+    bool doAll = !hasArg;
+
     
     if (varName!="") {
         log << MSG::INFO << " Variable " ;
@@ -140,13 +218,10 @@ StatusCode ValBase::browse(MsgStream log, std::string varName)
     }
     int length = indent.size();
     constMapIter it = m_ntupleMap.begin();
+    
     for ( ; it!=m_ntupleMap.end(); ++it) {
         valPair* pair = *it;
         if (varName!="" && varName!=pair->first) continue;
-        /*
-        int valLen = (*(pair->second)==0) ? 1 : 13;
-        if (fmod(*(pair->second),1.)==0) valLen = 5;
-        */ 
         int valLen = 13;
         int deltaL= (pair->first).size() + 2*delim.size() + separator.size() + valLen + 2;
         length += deltaL;
@@ -158,12 +233,44 @@ StatusCode ValBase::browse(MsgStream log, std::string varName)
 
         TypedPointer* ptr = (*it)->second;
         valType type = ptr->getType();
+        int dim = ptr->getDim();
+        if(element>=dim || element<0) {
+            log << MSG::ERROR << "Browse: error in arg: " << element << endreq;
+            assert(element>=dim || element<0);
+        }
 
-        if (type==FLOAT)        {log << *reinterpret_cast<float*>(ptr->getPointer());}
-        else if (type==DOUBLE)  {log << *reinterpret_cast<double*>(ptr->getPointer());}
-        else if (type==INT)     {log << *reinterpret_cast<int*>(ptr->getPointer());}
-        else if (type==UINT)    {log << *reinterpret_cast<unsigned int*>(ptr->getPointer());}
-        log << separator;
+        int start = (doAll ? 0 : element);
+        int end   = (doAll ? dim-1 : element);
+        void* vPtr = ptr->getPointer();
+
+        int i;
+        if (doAll && dim>1) log << "(";
+        
+        for (i=start; i<=end; ++i) {
+
+            switch (type) {
+            case FLOAT: 
+                log << *(reinterpret_cast<float*>(vPtr)+i);
+                break;
+            case DOUBLE:
+                log << *(reinterpret_cast<double*>(vPtr)+i);
+                break;
+            case INT:
+                log << *(reinterpret_cast<int*>(vPtr)+i);
+                break;
+            case UINT: 
+                log << *(reinterpret_cast<unsigned int*>(vPtr)+i);
+                break;
+            default:
+                break;
+            }
+
+            if(doAll && dim>1) {
+                log << (i==dim-1 ? ")" : ",");
+            }
+            log << separator;
+        }
+        
     }
     log << endreq;
     return StatusCode::SUCCESS;
@@ -193,35 +300,35 @@ StatusCode ValBase::doCalcIfNotDone()
     return sc;
 }       
 
-StatusCode ValBase::getValCheck(std::string varName, double& value)
+StatusCode ValBase::getValCheck(const std::string varName, double& value)
 {
     // a simple way to force the check
     return getVal(varName, value, CHECK);
 }
-StatusCode ValBase::getValCheck(std::string varName, float& value)
+StatusCode ValBase::getValCheck(const std::string varName, float& value)
 {
     // a simple way to force the check
     return getVal(varName, value, CHECK);
 }
-StatusCode ValBase::getValCheck(std::string varName, int& value)
-{
-    // a simple way to force the check
-    return getVal(varName, value, CHECK);
-}
-
-StatusCode ValBase::getValCheck(std::string varName, unsigned int& value)
+StatusCode ValBase::getValCheck(const std::string varName, int& value)
 {
     // a simple way to force the check
     return getVal(varName, value, CHECK);
 }
 
-StatusCode ValBase::getValCheck(std::string varName, std::string& value)
+StatusCode ValBase::getValCheck(const std::string varName, unsigned int& value)
 {
     // a simple way to force the check
     return getVal(varName, value, CHECK);
 }
 
-StatusCode ValBase::getTypedPointer(std::string varName, TypedPointer*& ptr, int check)
+StatusCode ValBase::getValCheck(const std::string varName, std::string& value)
+{
+    // a simple way to force the check
+    return getVal(varName, value, CHECK);
+}
+
+StatusCode ValBase::getTypedPointer(const std::string varName, TypedPointer*& ptr, int check)
 {
     // optional check flag
 
@@ -249,62 +356,131 @@ StatusCode ValBase::getTypedPointer(std::string varName, TypedPointer*& ptr, int
     return sc;
 }
 
-StatusCode ValBase::getVal(std::string varName, std::string& value, int check)
+StatusCode ValBase::getVal(const std::string varName, std::string& value, int check)
 {
+    MsgStream log(msgSvc(), name());
+
     char buffer[80];
     TypedPointer* ptr = 0;
-    StatusCode sc = getTypedPointer(varName, ptr, check);
+
+    std::string baseName;
+    int element;
+    bool hasArg = getArrayArg(varName, baseName, element);
+    if(!hasArg) element = 0;
+    StatusCode sc = getTypedPointer(baseName, ptr, check);
+
+    void* vPtr = ptr->getPointer();
+
+    int dim = ptr->getDim();
+    if (element>=dim || element<0) 
+    {
+        log << MSG::ERROR << "GetVal: element " << varName << " out of range" << endreq;
+            assert(element<dim && element>-1);
+    }
+
     valType type = ptr->getType();
+    
     if(sc.isSuccess()) {
-        if (type==FLOAT)        {
-            float foo =             *reinterpret_cast<float*>(ptr->getPointer());
-            sprintf(buffer, "%f", foo);}
-        else if (type==DOUBLE)  {sprintf(buffer, "%d", 
-            *reinterpret_cast<double*>(ptr->getPointer()), "%s");}
-        else if (type==INT)     {sprintf(buffer, "%i", 
-            *reinterpret_cast<int*>(ptr->getPointer()));}
-        else if (type==UINT)    {sprintf(buffer, "%i", 
-            *reinterpret_cast<unsigned int*>(ptr->getPointer()));}
+        if (type==FLOAT) { sprintf(buffer, "%f", 
+            *(reinterpret_cast<float*>(vPtr)+element));}
+        else if (type==DOUBLE)  { sprintf(buffer, "%d", 
+            *(reinterpret_cast<double*>(vPtr)+element));}
+        else if (type==INT)     { sprintf(buffer, "%i", 
+            *(reinterpret_cast<int*>(vPtr)+element));}
+        else if (type==UINT)    { sprintf(buffer, "%i", 
+            *(reinterpret_cast<unsigned int*>(vPtr)+element));}
     }
     value = std::string(buffer);
     return sc;
 }
 
-StatusCode ValBase::getVal(std::string varName, int& value, int check)
+StatusCode ValBase::getVal(const std::string varName, int& value, int check)
 {
+    MsgStream log(msgSvc(), name());
     TypedPointer* ptr = 0;
-    StatusCode sc = getTypedPointer(varName, ptr, check);
+    std::string baseName;
+    int element;
+    bool hasArg = getArrayArg(varName, baseName, element);
+    if(!hasArg) element = 0;
+
+    StatusCode sc = getTypedPointer(baseName, ptr, check);
+    int dim = ptr->getDim();
+    if (element>=dim || element<0) 
+    {
+        log << MSG::ERROR << "GetVal: element " << varName << " out of range" << endreq;
+            assert(element<dim && element>-1);
+    }
+
     if(sc.isSuccess()) {
-        value = *(reinterpret_cast<int*>(ptr->getPointer()));
+        value = *(reinterpret_cast<int*>(ptr->getPointer())+element);
     }
     return sc;
 }
 
-StatusCode ValBase::getVal(std::string varName, unsigned int& value, int check)
+StatusCode ValBase::getVal(const std::string varName, unsigned int& value, int check)
 {
-    TypedPointer* ptr = 0;
-    StatusCode sc = getTypedPointer(varName, ptr, check);
+     MsgStream log(msgSvc(), name());
+   TypedPointer* ptr = 0;
+    std::string baseName;
+    int element;
+    bool hasArg = getArrayArg(varName, baseName, element);
+
+    StatusCode sc = getTypedPointer(baseName, ptr, check);
+    if(!hasArg) element = 0;
+    int dim = ptr->getDim();
+    if (element>=dim || element<0) 
+    {
+        log << MSG::ERROR << "GetVal: element " << varName << " out of range" << endreq;
+            assert(element<dim && element>-1);
+    }
+
     if(sc.isSuccess()) {
-        value = *(reinterpret_cast<unsigned int*>(ptr->getPointer()));
+        value = *(reinterpret_cast<unsigned int*>(ptr->getPointer())+element);
     }
     return sc;
 }
-StatusCode ValBase::getVal(std::string varName, double& value, int check)
+StatusCode ValBase::getVal(const std::string varName, double& value, int check)
 {
+    MsgStream log(msgSvc(), name());
     TypedPointer* ptr = 0;
-    StatusCode sc = getTypedPointer(varName, ptr, check);
+    std::string baseName;
+    int element;
+    bool hasArg = getArrayArg(varName, baseName, element);
+    if(!hasArg) element = 0;
+
+    StatusCode sc = getTypedPointer(baseName, ptr, check);
+    int dim = ptr->getDim();
+    if (element>=dim || element<0) 
+    {
+        log << MSG::ERROR << "GetVal: element " << varName << " out of range" << endreq;
+            assert(element<dim && element>-1);
+    }
+
     if(sc.isSuccess()) {
-        value = *(reinterpret_cast<double*>(ptr->getPointer()));
+        value = *(reinterpret_cast<double*>(ptr->getPointer())+element);
     }
     return sc;
 }
 
-StatusCode ValBase::getVal(std::string varName, float& value, int check)
+StatusCode ValBase::getVal(const std::string varName, float& value, int check)
 {
+    MsgStream log(msgSvc(), name());
     TypedPointer* ptr = 0;
-    StatusCode sc = getTypedPointer(varName, ptr, check);
+    std::string baseName;
+    int element;
+    bool hasArg = getArrayArg(varName, baseName, element);
+
+    StatusCode sc = getTypedPointer(baseName, ptr, check);
+    int dim = ptr->getDim();
+    if(!hasArg) element = 0;
+    if (element>=dim || element<0) 
+    {
+        log << MSG::ERROR << "GetVal: element " << varName << " out of range" << endreq;
+            assert(element<dim && element>-1);
+    }
+
     if(sc.isSuccess()) {
-        value = *(reinterpret_cast<float*>(ptr->getPointer()));
+        value = *(reinterpret_cast<float*>(ptr->getPointer())+element);
         //std::cout << std::endl;
         //std::cout << varName << " " << value << std::endl;
         //std::cout << std::endl;
@@ -316,7 +492,7 @@ void ValBase::announceBadName(std::string varName)
 {
     MsgStream log(msgSvc(), name());
 
-    std::string delim     = "\"";
+    std::string delim     = ""; //"\"";
     std::string separator = " ";
     std::string indent    = "    ";
     
@@ -372,18 +548,29 @@ IValsTool::Visitor::eVisitorRet ValBase::traverse(IValsTool::Visitor* v,
         valPair* pair = *it;
         TypedPointer* ptr = pair->second;
         valType type = ptr->getType();
-        if (type==FLOAT) {
-            ret = v->analysisValue(pair->first, 
-                *(reinterpret_cast<float*>(ptr->getPointer())));
-        } else if (type==DOUBLE) {
-            ret = v->analysisValue(pair->first, 
-                *(reinterpret_cast<double*>(ptr->getPointer())));
-        } else if (type==UINT) {
-            ret = v->analysisValue(pair->first, 
-                *(reinterpret_cast<unsigned int*>(ptr->getPointer())));
-        } else if (type==INT) {
-            ret = v->analysisValue(pair->first, 
-                *(reinterpret_cast<int*>(ptr->getPointer())));
+        void* vPtr = ptr->getPointer();
+        std::string varName = pair->first;
+
+        // here's where we need to construct the varName from the baseName and the dim
+        std::string fullName = varName;
+        int dim = ptr->getDim();
+        if (dim>1) {
+            fullName = getFullName(varName, dim);
+        }
+
+        switch (type) {
+            case FLOAT: 
+                ret = v->analysisValue(fullName, *(reinterpret_cast<float*>(vPtr)));
+                break;
+            case DOUBLE:
+                ret = v->analysisValue(fullName, *(reinterpret_cast<double*>(vPtr)));
+                break;
+            case UINT:
+                ret = v->analysisValue(fullName, *(reinterpret_cast<unsigned int*>(vPtr)));
+                break;
+            case INT:
+                ret = v->analysisValue(fullName, *(reinterpret_cast<int*>(vPtr)));
+                break;
         }
 
         if (ret!= IValsTool::Visitor::CONT) return ret;

@@ -2,7 +2,7 @@
 @brief header file for ValBase.cxx
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.h,v 1.29 2006/02/08 04:10:18 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.h,v 1.30 2006/03/06 02:32:43 lsrea Exp $
 */
 
 #ifndef ValBase_h
@@ -31,12 +31,14 @@ namespace {
     class TypedPointer 
     {
     public:  
-        TypedPointer(valType type, void* pointer) : m_type(type), m_pointer(pointer)
+        TypedPointer(valType type, void* pointer, int dim=1) : m_type(type), 
+            m_pointer(pointer), m_dim(dim)
         {}
         ~TypedPointer() {}
 
         valType getType()       { return    m_type; }
         void* getPointer()      { return    m_pointer; }
+        int getDim()            { return    m_dim; }
         void setVal(unsigned int val)   { 
             *(reinterpret_cast<unsigned int*>(getPointer())) = val; 
         }
@@ -47,6 +49,7 @@ namespace {
     private:
         valType m_type;
         void*   m_pointer;
+        int     m_dim;
     };
 }
 
@@ -66,29 +69,33 @@ public:
     /// clear map values
     virtual void zeroVals();
     /// add an item to the map
-    virtual void addItem(std::string varName, double* pValue);
-    virtual void addItem(std::string varName, float* pValue);
-    virtual void addItem(std::string varName, int* pValue);
-    virtual void addItem(std::string varName, unsigned int* pValue);
+    virtual void addItem(const std::string varName, double* pValue);
+    virtual void addItem(const std::string varName, float* pValue);
+    virtual void addItem(const std::string varName, int* pValue);
+    virtual void addItem(const std::string varName, unsigned int* pValue);
     /// do calculation if not already done for this event
     virtual StatusCode doCalcIfNotDone();
     /// get a particular value, using ntuple name default forces calculation
-    virtual StatusCode getVal(std::string varName, double& value, int check = 0);
-    virtual StatusCode getVal(std::string varName, float& value, int check = 0);
-    virtual StatusCode getVal(std::string varName, int& value, int check = 0);
-    virtual StatusCode getVal(std::string varName, unsigned int& value, int check = 0);
-    virtual StatusCode getVal(std::string varName, std::string& value, int check = 0);
+    virtual StatusCode getVal(const std::string varName, double& value, int check = 0);
+    virtual StatusCode getVal(const std::string varName, float& value, int check = 0);
+    virtual StatusCode getVal(const std::string varName, int& value, int check = 0);
+    virtual StatusCode getVal(const std::string varName, unsigned int& value, int check = 0);
+    virtual StatusCode getVal(const std::string varName, std::string& value, int check = 0);
     /// get a particular value, using ntuple name, with calc checking (called by AnaTup)
-    virtual StatusCode getValCheck(std::string varName, double& value);
-    virtual StatusCode getValCheck(std::string varName, float& value);
-    virtual StatusCode getValCheck(std::string varName, int& value);
-    virtual StatusCode getValCheck(std::string varName, unsigned int& value);
-    virtual StatusCode getValCheck(std::string varName, std::string& value);
+    virtual StatusCode getValCheck(const std::string varName, double& value);
+    virtual StatusCode getValCheck(const std::string varName, float& value);
+    virtual StatusCode getValCheck(const std::string varName, int& value);
+    virtual StatusCode getValCheck(const std::string varName, unsigned int& value);
+    virtual StatusCode getValCheck(const std::string varName, std::string& value);
+
+    virtual bool getArrayArg(const std::string varName, std::string& baseName,
+        int& dim);
+    virtual std::string getFullName(const std::string varName, int dim);
    
     /// output the list of names
-    virtual void announceBadName(std::string varName);
+    virtual void announceBadName(const std::string varName);
     /// output the names and values, either all (default) or just one;
-    virtual StatusCode browse(MsgStream log, std::string varName = "");
+    virtual StatusCode browse(MsgStream log, const std::string varName = "");
     /// this is called by the incident service at the beginning of an event
     virtual void handle(const Incident& inc);
     /// callback for visitor
@@ -101,12 +108,9 @@ public:
     
     // common initialization
     virtual StatusCode initialize();
-
-
     
 protected:
-    StatusCode getTypedPointer(std::string varName, TypedPointer*& ptr, int check);
-
+    StatusCode getTypedPointer(const std::string varName, TypedPointer*& ptr, int check);
 
     /// some static methods
 

@@ -16,7 +16,7 @@ Also, unless otherwised noted, the null value, that is, the value in the ntuple 
 there is no calculated value for a given variable, is zero.
 
 
-The variables may be of type <b>I</b>nt, <b>U</b>unsigned <b>I</b>int, <b>F</b>loat, or <b>D</b>ouble. 
+The variables may be of type <b>I</b>nt, <b>U</b>nsigned int, <b>F</b>loat, or <b>D</b>ouble. 
 Currently all but one are floats. (EvtElaspedTime is a double.) 
 
 */
