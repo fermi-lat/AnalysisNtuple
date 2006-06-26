@@ -2,7 +2,7 @@
 @brief implements all the methods of the XxxValsTools
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.cxx,v 1.28 2006/03/06 02:32:43 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.cxx,v 1.29 2006/06/25 23:00:52 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -101,7 +101,7 @@ void ValBase::zeroVals()
     }
 }
 
-std::string ValBase::getFullName(const std::string varName, int dim)
+std::string ValBase::getFullName(std::string varName, int dim)
 {
     char buffer[6];
     sprintf(buffer, "[%i]", dim);
@@ -109,7 +109,7 @@ std::string ValBase::getFullName(const std::string varName, int dim)
     return fullName;
 }
 
-bool ValBase::getArrayArg(const std::string varName, std::string& baseName, int& arg)
+bool ValBase::getArrayArg(std::string varName, std::string& baseName, int& arg)
 {
     MsgStream log(msgSvc(), name());
     
@@ -143,7 +143,7 @@ bool ValBase::getArrayArg(const std::string varName, std::string& baseName, int&
     }
 }
 
-void ValBase::addItem(const std::string varName, double* pValue)
+void ValBase::addItem(std::string varName, double* pValue)
 {
     std::string baseName;
     int dim;
@@ -154,7 +154,7 @@ void ValBase::addItem(const std::string varName, double* pValue)
     m_ntupleMap.push_back(pair);
 }
 
-void ValBase::addItem(const std::string varName, float* pValue)
+void ValBase::addItem(std::string varName, float* pValue)
 {
     std::string baseName;
     int dim;
@@ -164,7 +164,7 @@ void ValBase::addItem(const std::string varName, float* pValue)
 
     m_ntupleMap.push_back(pair);
 }
-void ValBase::addItem(const std::string varName, int* pValue)
+void ValBase::addItem(std::string varName, int* pValue)
 {
     std::string baseName;
     int dim;
@@ -175,7 +175,7 @@ void ValBase::addItem(const std::string varName, int* pValue)
     m_ntupleMap.push_back(pair);
 }
 
-void ValBase::addItem(const std::string varName, unsigned int* pValue)
+void ValBase::addItem(std::string varName, unsigned int* pValue)
 {
     std::string baseName;
     int dim;
@@ -300,35 +300,35 @@ StatusCode ValBase::doCalcIfNotDone()
     return sc;
 }       
 
-StatusCode ValBase::getValCheck(const std::string varName, double& value)
+StatusCode ValBase::getValCheck(std::string varName, double& value)
 {
     // a simple way to force the check
     return getVal(varName, value, CHECK);
 }
-StatusCode ValBase::getValCheck(const std::string varName, float& value)
+StatusCode ValBase::getValCheck(std::string varName, float& value)
 {
     // a simple way to force the check
     return getVal(varName, value, CHECK);
 }
-StatusCode ValBase::getValCheck(const std::string varName, int& value)
-{
-    // a simple way to force the check
-    return getVal(varName, value, CHECK);
-}
-
-StatusCode ValBase::getValCheck(const std::string varName, unsigned int& value)
+StatusCode ValBase::getValCheck(std::string varName, int& value)
 {
     // a simple way to force the check
     return getVal(varName, value, CHECK);
 }
 
-StatusCode ValBase::getValCheck(const std::string varName, std::string& value)
+StatusCode ValBase::getValCheck(std::string varName, unsigned int& value)
 {
     // a simple way to force the check
     return getVal(varName, value, CHECK);
 }
 
-StatusCode ValBase::getTypedPointer(const std::string varName, TypedPointer*& ptr, int check)
+StatusCode ValBase::getValCheck(std::string varName, std::string& value)
+{
+    // a simple way to force the check
+    return getVal(varName, value, CHECK);
+}
+
+StatusCode ValBase::getTypedPointer(std::string varName, TypedPointer*& ptr, int check)
 {
     // optional check flag
 
@@ -356,7 +356,7 @@ StatusCode ValBase::getTypedPointer(const std::string varName, TypedPointer*& pt
     return sc;
 }
 
-StatusCode ValBase::getVal(const std::string varName, std::string& value, int check)
+StatusCode ValBase::getVal(std::string varName, std::string& value, int check)
 {
     MsgStream log(msgSvc(), name());
 
@@ -394,7 +394,7 @@ StatusCode ValBase::getVal(const std::string varName, std::string& value, int ch
     return sc;
 }
 
-StatusCode ValBase::getVal(const std::string varName, int& value, int check)
+StatusCode ValBase::getVal(std::string varName, int& value, int check)
 {
     MsgStream log(msgSvc(), name());
     TypedPointer* ptr = 0;
@@ -417,7 +417,7 @@ StatusCode ValBase::getVal(const std::string varName, int& value, int check)
     return sc;
 }
 
-StatusCode ValBase::getVal(const std::string varName, unsigned int& value, int check)
+StatusCode ValBase::getVal(std::string varName, unsigned int& value, int check)
 {
      MsgStream log(msgSvc(), name());
    TypedPointer* ptr = 0;
@@ -439,7 +439,7 @@ StatusCode ValBase::getVal(const std::string varName, unsigned int& value, int c
     }
     return sc;
 }
-StatusCode ValBase::getVal(const std::string varName, double& value, int check)
+StatusCode ValBase::getVal(std::string varName, double& value, int check)
 {
     MsgStream log(msgSvc(), name());
     TypedPointer* ptr = 0;
@@ -462,7 +462,7 @@ StatusCode ValBase::getVal(const std::string varName, double& value, int check)
     return sc;
 }
 
-StatusCode ValBase::getVal(const std::string varName, float& value, int check)
+StatusCode ValBase::getVal(std::string varName, float& value, int check)
 {
     MsgStream log(msgSvc(), name());
     TypedPointer* ptr = 0;
