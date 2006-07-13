@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.76 2006/03/06 02:32:43 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.77 2006/06/25 23:00:52 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -809,13 +809,14 @@ StatusCode TkrValsTool::calculate()
         Tkr_1_DieEdge  = die_width/2. - Tkr_1_DieEdge; 
 
         // Section to dig out the TOT information
-        double first_ToT = 0.; 
-        double last_ToT  = 0.; 
-        double min_ToT   = maxToTVal; 
-        double max_ToT   = 0.;  
+        double first_ToTs = 0.; 
+        double last_ToTs  = 0.;
+        double min_ToT   = 1000.; 
+        double max_ToT   = -1000.;  
         int    hit_counter = 0; 
         double chisq_first = 0.;
         double chisq_last  = 0.; 
+
         Event::TkrTrackHitVecConItr pHit = track_1->begin();
 
         // loop over the hits to calculate various numbers
@@ -823,6 +824,21 @@ StatusCode TkrValsTool::calculate()
         int plane = m_tkrGeom->getPlane((*pHit)->getTkrId());
         int gapId = -1;
         bool gapFound = false;
+
+        
+        // count the number of real hits... may not be necessary but I'm nervous!
+        int clustersOnTrack = 0;
+        while(pHit != track_1->end()) {
+            const Event::TkrTrackHit* hit = *pHit++;
+            unsigned int bits = hit->getStatusBits();
+            if((bits & Event::TkrTrackHit::HITISSSD)==0) continue;
+            const Event::TkrCluster* cluster = hit->getClusterPtr();
+            double mips = cluster->getMips();
+            if (mips<0.0 || mips>10.0) continue;
+            clustersOnTrack++;
+        }
+
+        pHit = track_1->begin();
         while(pHit != track_1->end()) {
             const Event::TkrTrackHit* hit = *pHit++;
             unsigned int bits = hit->getStatusBits();
@@ -833,7 +849,7 @@ StatusCode TkrValsTool::calculate()
             else if (type==SUPER) {tkrTrackEnergy1 += cfThick;}
 
             // check if hit is in an ssd
-            if ( !gapFound && !(bits & Event::TkrTrackHit::HITISSSD)) {
+            if ( !gapFound && (bits & Event::TkrTrackHit::HITISSSD)==0) {
                 Point  gapPos = hit->getPoint(Event::TkrTrackHit::PREDICTED);
                 Tkr_1_GapX = gapPos.x();
                 Tkr_1_GapY = gapPos.y();
@@ -847,7 +863,7 @@ StatusCode TkrValsTool::calculate()
             } else {
             }
             plane--;
-            if (!(bits & Event::TkrTrackHit::HITONFIT)) continue;
+            if ((bits & Event::TkrTrackHit::HITISSSD)==0) continue;
             const Event::TkrCluster* cluster = hit->getClusterPtr();
             int size =  (int) (const_cast<Event::TkrCluster*>(cluster))->size();
             // get the local slopes
@@ -864,6 +880,7 @@ StatusCode TkrValsTool::calculate()
             double normFactor  =  1./53.;
 
             double mips = cluster->getMips();
+            if(mips<0.0 || mips>10.0) continue;
 
             double tot = cluster->ToT();
             if(tot>=totMax) tot = totMax;
@@ -915,26 +932,33 @@ StatusCode TkrValsTool::calculate()
             hit_counter++;  
             if (hit_counter==1) Tkr_1_ToTFirst = mips;
             Tkr_1_ToTAve += mips;
+            // first 2 valid clusters
             if(hit_counter < 3) {
-                first_ToT += mips;
+                first_ToTs += mips;
                 chisq_first += hit->getChiSquareSmooth();
             }
-            if(hit_counter > Tkr_1_Hits - 2){
-                last_ToT += mips;
+            // last 2 valid clusters
+            if(hit_counter > clustersOnTrack-2){
+                last_ToTs += mips;
                 chisq_last += hit->getChiSquareSmooth();
+            }
+        }
+
+        if(clustersOnTrack>3) {
+            Tkr_1_ToTTrAve = (Tkr_1_ToTAve - max_ToT - min_ToT)/(clustersOnTrack-2.);
+            Tkr_1_ToTAve /= clustersOnTrack;
+            if(first_ToTs+last_ToTs>0) {
+                Tkr_1_ToTAsym = (last_ToTs - first_ToTs)/(first_ToTs + last_ToTs);
             }
         }
 
         tkrTrackEnergy1 /= fabs(Tkr_1_zdir);
 
-        Tkr_1_ToTTrAve = (Tkr_1_ToTAve - max_ToT - min_ToT)/(Tkr_1_Hits-2.);
-        Tkr_1_ToTAve /= Tkr_1_Hits;
-        if(first_ToT+last_ToT>0) Tkr_1_ToTAsym = (last_ToT - first_ToT)/(first_ToT + last_ToT);
+
         Tkr_1_FirstGapPlane = gapId; 
 
-
         // Chisq Asymmetry - Front vs Back ends of tracks
-        Tkr_1_ChisqAsym = (chisq_last - chisq_first)/(chisq_last + chisq_first);
+        if (chisq_last+chisq_first>0) Tkr_1_ChisqAsym = (chisq_last - chisq_first)/(chisq_last + chisq_first);
 
         m_G4PropTool->setStepStart(x1, -t1); //Note minus sign - swim backwards towards ACD
 

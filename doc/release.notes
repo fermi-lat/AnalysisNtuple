@@ -2,6 +2,11 @@
   @brief Package AnalysisNtule
   @verbatim
 
+ v2r15p4 13-Jul-06   LSR  Beef up ToT calculations:
+                              Remove bad ToT's from consideration (good -> 0<mips<10)
+                                We need to deal with bad ToT's further upstream. They
+                                Are caused by bad gain calibrations
+                              Fix counting for Tkr1ToTAsym & Tkr1ChisqAsym 
  v2r15p3 26-Jun-06   LSR  revert interface to previous version; change was unnecessary and confusing
  v2r15p2 25-Jun-06   LSR  add ability to write and access Root arrays, e.g. Tkr1Dir[3]
                               Error recovery needs more work (for now, don't make errors!)                             
