@@ -17,6 +17,6 @@ there is no calculated value for a given variable, is zero.
 
 
 The variables may be of type <b>I</b>nt, <b>U</b>nsigned int, <b>F</b>loat, or <b>D</b>ouble. 
-Currently all but one are floats. (EvtElaspedTime is a double.) 
+Currently, for reasons of history, most are floats, even those that take only integer values.
 
 */

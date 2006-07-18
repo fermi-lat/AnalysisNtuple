@@ -2,6 +2,7 @@
   @brief Package AnalysisNtule
   @verbatim
 
+ v2r15p5 17-Jul-06   LSR  Add some variables to tag up-going heavy ions
  v2r15p4 13-Jul-06   LSR  Beef up ToT calculations:
                               Remove bad ToT's from consideration (good -> 0<mips<10)
                                 We need to deal with bad ToT's further upstream. They

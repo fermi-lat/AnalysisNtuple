@@ -3,7 +3,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.73 2006/03/31 18:01:50 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.74 2006/04/06 01:19:24 burnett Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -29,10 +29,12 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.73 
 #include "Event/Recon/CalRecon/CalParams.h"
 #include "Event/Recon/CalRecon/CalXtalRecData.h"
 
-#include "GlastSvc/Reco/IPropagatorTool.h"
-#include "GlastSvc/Reco/IPropagator.h" 
+#include "GaudiKernel/IToolSvc.h"
+//#include "GlastSvc/Reco/IPropagatorTool.h"
+//#include "GlastSvc/Reco/IPropagator.h" 
 
 #include "GlastSvc/GlastDetSvc/IGlastDetSvc.h"
+#include "GlastSvc/Reco/IPropagatorSvc.h"
 #include "TkrUtil/ITkrGeometrySvc.h"
 
 #include "idents/TowerId.h" 
@@ -76,6 +78,8 @@ private:
     IGlastDetSvc*    m_detSvc; 
     /// TkrGeometrySvc used for access to tracker geometry info
     ITkrGeometrySvc* m_tkrGeom;
+
+    IPropagator*     m_G4PropTool;    
 
     /// some Geometry
     double m_towerPitch;
@@ -147,9 +151,12 @@ private:
     float CAL_lll_energyErr;   // Chisquare from the Last Layer Likelihood
     float CAL_tkl_energy;      // Energy from the tracker Likelihood tool
     float CAL_tkl_energyErr;   // Chisquare from the tracker likelihood
-	float CAL_LkHd_energy;     // Energy from the Likelihood tool
+    float CAL_LkHd_energy;     // Energy from the Likelihood tool
     float CAL_LkHd_energyErr;  // Chisquare from the likelihood
-
+    float CAL_RmsE;            // Rms of layer energies, corrected for pathlength
+    //    and dropping layers with low E, normalized
+    //    to the energy in these layers.
+    float CAL_numLayersRms;    // Number of layers participating in CAL_RmsE
 
     //Calimeter items with Recon - Tracks
     float CAL_Track_DOCA;
@@ -159,6 +166,12 @@ private:
     float CAL_track_E_rms;
     float CAL_track_rms_trunc;
     float CAL_track_E_rms_trunc;
+
+    float CAL_rmsLayerE;
+    float CAL_rmsLayerEBack;
+    int   CAL_nLayersRmsBack;
+    float CAL_eAveBack;
+    float CAL_layer0Ratio;
 };
 namespace {
     // this is the test distance for the CAL_EdgeEnergy variable
@@ -202,6 +215,18 @@ StatusCode CalValsTool::initialize()
             log << MSG::ERROR << "Couldn't find the TkrGeometrySvc!" << endreq;
             return StatusCode::FAILURE;
         }
+
+        IToolSvc* toolSvc = 0;
+        if(service("ToolSvc", toolSvc, true).isFailure()) {
+            log << MSG::ERROR << "Couldn't find the ToolSvc!" << endreq;
+            return StatusCode::FAILURE;
+        }
+
+        if(!toolSvc->retrieveTool("G4PropagationTool", m_G4PropTool)) {
+            log << MSG::ERROR << "Couldn't find the G4PropagationTool!" << endreq;
+            return StatusCode::FAILURE;
+        }
+
 
         m_towerPitch = m_tkrGeom->towerPitch();
         m_xNum = m_tkrGeom->numXTowers();
@@ -318,19 +343,33 @@ StatusCode CalValsTool::initialize()
     <td>F<td>   [x/y] position of CAL "track" measured at the energy centroid 
     <tr><td> CalTrkXtalRms
     <td>F<td>   For this and the next three variables, a measure of the rms spread
-                of the crystals in the calorimeter around the projection of the first
-                track. They differ by the weighting and crystal count. This one is 
-                the rms of the DOCAs of all crystals with repect to the projected track
+    of the crystals in the calorimeter around the projection of the first
+    track. They differ by the weighting and crystal count. This one is 
+    the rms of the DOCAs of all crystals with repect to the projected track
     <tr><td> CalTrkXtalRmsE
     <td>F<td>   Same as the previous, but weighted by the deposited energy in 
-                each crystal
+    each crystal
     <tr><td> CalTrkXtalRmsTrunc
     <td>F<td>   Same as the first, but excludes the crystals with the largest DOCAs.
-                Default is to remove 10% of the crystals, with the number of crystals
-                included rounded to the nearest integer
+    Default is to remove 10% of the crystals, with the number of crystals
+    included rounded to the nearest integer
     <tr><td> CalTrkXtalRmsETrunc
     <td>F<td>   Same as the previous, but weighted by the deposited energy in
-                each crystal
+    each crystal
+    <tr><td> CalRmsLayerE
+    <td>F<td>   Rms of deposited energy (normalized to rad. lengths traversed, 
+    and to average energy deposited) for all
+    the layers with > 5% of deposited raw energy and at least 0.5 rad lengths
+    of predicted CsI traversed. 
+    <tr><td> CalRmsLayerEBack
+    <td>F<td>   Same as above, with layer 0 left out of the calculation
+    <tr><td> CalNLayersRmsBacj
+    <td>I<td>    Number of layers used in the calculation of CalRmsLayerEBack above
+    <tr><td> CalEAveBack
+    <td>F<td>   Average of normalized eDep excluding layer 0, cuts as for CalRmsLayerE above
+    <tr><td> CalLayer0Ratio
+    <td>F<td>   Ratio of layer0 normalized eDep to the average of the remaining layers, 
+    cuts as for CalRmsLayerE above
     </table>
 
     */
@@ -405,8 +444,14 @@ StatusCode CalValsTool::initialize()
     addItem("CalLllEneErr",  &CAL_lll_energyErr);
     addItem("CalTklEnergy",  &CAL_tkl_energy);
     addItem("CalTklEneErr",  &CAL_tkl_energyErr);
-    addItem("CalLkHdEnergy",  &CAL_LkHd_energy);
-    addItem("CalLkHdEneErr",  &CAL_LkHd_energyErr);
+    addItem("CalLkHdEnergy", &CAL_LkHd_energy);
+    addItem("CalLkHdEneErr", &CAL_LkHd_energyErr);
+
+    addItem("CalRmsLayerE",  &CAL_rmsLayerE);
+    addItem("CalRmsLayerEBack",  &CAL_rmsLayerEBack);
+    addItem("CalNLayersRmsBack", &CAL_nLayersRmsBack);
+    addItem("CalEAveBack", &CAL_eAveBack);
+    addItem("CalLayer0Ratio", &CAL_layer0Ratio);
 
     zeroVals();
 
@@ -429,10 +474,10 @@ StatusCode CalValsTool::calculate()
     SmartDataPtr<Event::CalXtalRecCol> 
         pxtalrecs(m_pEventSvc,EventModel::CalRecon::CalXtalRecCol);
 
-	// Recover pointer to CalEventEnergy info  
+    // Recover pointer to CalEventEnergy info  
 #ifdef PRE_CALMOD
     Event::CalEventEnergy* calEventEnergy = 
-                 SmartDataPtr<Event::CalEventEnergy>(m_pEventSvc, EventModel::CalRecon::CalEventEnergy);
+        SmartDataPtr<Event::CalEventEnergy>(m_pEventSvc, EventModel::CalRecon::CalEventEnergy);
 #else
     Event::CalEventEnergyCol * calEventEnergyCol = 
         SmartDataPtr<Event::CalEventEnergyCol>(m_pEventSvc,EventModel::CalRecon::CalEventEnergyCol) ;
@@ -472,6 +517,9 @@ StatusCode CalValsTool::calculate()
 
                 CAL_x0 = corResult["CalTopX0"];
                 CAL_y0 = corResult["CalTopY0"];
+
+                CAL_RmsE = corResult["RmsE"];
+                CAL_numLayersRms = corResult["NumLayersRms"];
             }
             else if (corResult.getCorrectionName() == "CalFullProfileTool")
             {
@@ -489,7 +537,7 @@ StatusCode CalValsTool::calculate()
                 CAL_tkl_energy    = corResult.getParams().getEnergy();
                 CAL_tkl_energyErr = corResult.getParams().getEnergyErr();
             }
-			else if (corResult.getCorrectionName() == "CalLikelihoodManagerTool")
+            else if (corResult.getCorrectionName() == "CalLikelihoodManagerTool")
             {
                 CAL_LkHd_energy    = corResult.getParams().getEnergy();
                 CAL_LkHd_energyErr = corResult.getParams().getEnergyErr();
@@ -615,10 +663,12 @@ StatusCode CalValsTool::calculate()
     Vector t1, t2; 
 
     if(pTracks) num_tracks = pTracks->size();
+    Event::TkrTrack* track_1;
+
     if(num_tracks > 0) { 
         // Get the first track
         Event::TkrTrackColConPtr pTrack1 = pTracks->begin();
-        Event::TkrTrack* track_1 = *pTrack1;
+        track_1 = *pTrack1;
 
         // Get the start and direction 
         x1 = track_1->getInitialPosition();
@@ -723,6 +773,91 @@ StatusCode CalValsTool::calculate()
     // Ratios of rad. len. in material other then CsI
     CAL_DeadTot_Rat = m_radLen_Stuff/std::max(minRadLen, CAL_Tot_RLn*1.);
     CAL_DeadCnt_Rat = m_radLen_CntrStuff/std::max(minRadLen, CAL_Cntr_RLn*1.); 
+
+    // Here we do the CAL_RmsE calculation
+
+    // get the last point on the best track
+    Event::TkrTrackHitVecConItr hitIter = (*track_1).end();
+    hitIter--;
+    const Event::TkrTrackHit* hit = *hitIter;
+    Point xEnd = hit->getPoint(Event::TkrTrackHit::SMOOTHED);
+    Vector tEnd = hit->getDirection(Event::TkrTrackHit::SMOOTHED);
+    double eCosTheta = fabs(tEnd.z());
+
+    // find the parameters to start the swim
+    double deltaZ = xEnd.z() - m_calZBot;
+    double arclen   = fabs(deltaZ/eCosTheta);
+
+    // do the swim
+    m_G4PropTool->setStepStart(xEnd, tEnd);
+    m_G4PropTool->step(arclen);  
+
+    // collect the radlens by layer
+    int numSteps = m_G4PropTool->getNumberSteps();
+    std::vector<double> rlCsI(8, 0.0);
+    std::vector<bool>   useLayer(8, true);
+    idents::VolumeIdentifier volId;
+    idents::VolumeIdentifier prefix = m_detSvc->getIDPrefix();
+    int istep  = 0;
+    for(; istep < numSteps; ++istep) {
+        volId = m_G4PropTool->getStepVolumeId(istep);
+        volId.prepend(prefix);
+        bool inXtal = ( volId.size()>7 && volId[0]==0 
+            && volId[3]==0 && volId[7]==0 ? true : false );
+        if(inXtal) {
+            int layer = volId[4];
+            double radLen_step = m_G4PropTool->getStepRadLength(istep);
+            rlCsI[layer] += radLen_step;
+        }
+    }
+
+    double eTot = 0;
+    double eNorm0 = 0;
+    double e2   = 0;
+    int CAL_nLayersRms = 0;
+    int layer;
+
+    for (layer=0; layer<8; ++layer) {
+        if (rlCsI[layer]<0.5) useLayer[layer] = false;
+        if (CAL_eLayer[layer]<0.05*CAL_EnergyRaw) useLayer[layer] = false;
+    }
+
+    for (layer=0; layer<8; ++layer) {
+        if(!useLayer[layer]) continue;
+        CAL_nLayersRms++;
+        double eNorm = CAL_eLayer[layer]/rlCsI[layer];
+        if(layer==0) { 
+            eNorm0 = eNorm;
+        } else {
+            CAL_nLayersRmsBack++;
+        }
+        eTot += eNorm;
+        e2 +=   eNorm*eNorm;
+        //std::cout << "layer " << layer << ", r.l. " << rlCsI[layer] 
+        //    << ", eLayer " << CAL_eLayer[layer] 
+        //    << ", rlNorm " << rlCsI[layer]*eCosTheta) << ", eL_norm " 
+        //    << eNorm << std::endl;
+    }
+
+    double eAve = 0;
+    double eAveBack = 0;
+    if(CAL_nLayersRms>1) {
+        eAve = eTot/CAL_nLayersRms;
+        CAL_rmsLayerE = 
+            (float)sqrt((e2 - CAL_nLayersRms*eAve*eAve)/(CAL_nLayersRms-1))/eAve;
+        //std::cout << "eRms " << CAL_rmsLayerE/eAve 
+        //    << ", " << CAL_nLayersRms << " layers" << std::endl;
+    }
+    if(CAL_nLayersRmsBack>1) {
+        eAveBack = (eTot-eNorm0)/(CAL_nLayersRmsBack);
+        CAL_rmsLayerEBack = 
+            (float) sqrt((e2 - eNorm0*eNorm0 - (CAL_nLayersRmsBack)*eAveBack*eAveBack)
+            /(CAL_nLayersRmsBack-1))/eAve;
+        //std::cout << "eRmsTrunc " << CAL_rmsLayerEBack/eAveBack 
+        //    << ", " << nLayersRmsBack << " layers"<<std::endl;
+        CAL_eAveBack = eAveBack;
+        CAL_layer0Ratio = eNorm0/eAveBack;
+    }
 
     return sc;
 }
