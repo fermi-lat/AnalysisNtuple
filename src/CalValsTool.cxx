@@ -3,7 +3,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.75 2006/07/18 02:33:01 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.76 2006/07/28 06:54:20 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -825,7 +825,9 @@ StatusCode CalValsTool::calculate()
 
         for (layer=0; layer<8; ++layer) {
             if (rlCsI[layer]<0.5) useLayer[layer] = false;
-            if (CAL_eLayer[layer]<0.05*CAL_EnergyRaw) useLayer[layer] = false;
+            if (CAL_eLayer[layer]<0.05*CAL_EnergyRaw || CAL_EnergyRaw<=0) {
+                useLayer[layer] = false;
+            }
         }
 
         for (layer=0; layer<8; ++layer) {
