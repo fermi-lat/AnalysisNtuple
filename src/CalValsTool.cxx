@@ -3,7 +3,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.74 2006/04/06 01:19:24 burnett Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.75 2006/07/18 02:33:01 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -518,8 +518,8 @@ StatusCode CalValsTool::calculate()
                 CAL_x0 = corResult["CalTopX0"];
                 CAL_y0 = corResult["CalTopY0"];
 
-                CAL_RmsE = corResult["RmsE"];
-                CAL_numLayersRms = corResult["NumLayersRms"];
+                //CAL_RmsE = corResult["RmsE"];
+                //CAL_numLayersRms = corResult["NumLayersRms"];
             }
             else if (corResult.getCorrectionName() == "CalFullProfileTool")
             {
@@ -663,11 +663,13 @@ StatusCode CalValsTool::calculate()
     Vector t1, t2; 
 
     if(pTracks) num_tracks = pTracks->size();
+
+    Event::TkrTrackColConPtr pTrack1;
     Event::TkrTrack* track_1;
 
     if(num_tracks > 0) { 
         // Get the first track
-        Event::TkrTrackColConPtr pTrack1 = pTracks->begin();
+        pTrack1 = pTracks->begin();
         track_1 = *pTrack1;
 
         // Get the start and direction 
@@ -675,6 +677,16 @@ StatusCode CalValsTool::calculate()
         t1 = track_1->getInitialDirection();
         x0 = x1; 
         t0 = t1;
+
+        // Find the distance for energy centroid to track axis
+        /* old calculation
+        Vector x_diff = x0 - cal_pos;
+        double x_diff_sq = x_diff*x_diff;
+        double x_diff_t0 = x_diff*t0;
+        CAL_Track_DOCA = sqrt(std::max(0.0, x_diff_sq - x_diff_t0*x_diff_t0));
+        */
+        Doca track1(x1, t1);
+        CAL_Track_DOCA = (float)track1.docaOfPoint(cal_pos);
 
         if(num_tracks > 1) { 
             // Get the second track
@@ -691,79 +703,72 @@ StatusCode CalValsTool::calculate()
 
 
         // If vertexed - use first vertex
-        if(pVerts) {
+        if(pVerts && pVerts->size()>0) {
             Event::TkrVertex* vertex = *(pVerts->begin()); 
             x0 = vertex->getPosition();
             t0 = vertex->getDirection();
         }
-    }
-
-    // Find the distance for energy centroid to track axis
-    //Vector x_diff = x0 - cal_pos;
-    //double x_diff_sq = x_diff*x_diff;
-    //double x_diff_t0 = x_diff*t0;
-    //CAL_Track_DOCA = sqrt(std::max(0.0, x_diff_sq - x_diff_t0*x_diff_t0));
-    Doca track1(x1, t1);
-    CAL_Track_DOCA = (float)track1.docaOfPoint(cal_pos);
 
     // try Bill's new vars... 
-    if (pxtalrecs) {
-        //make a map of xtal energy by doca
-        std::multimap<double, double> docaMap;
-        std::multimap<double, double>::iterator mapIter;
+        if (pxtalrecs) {
+            //make a map of xtal energy by doca
+            std::multimap<double, double> docaMap;
+            std::multimap<double, double>::iterator mapIter;
 
-        for( jlog=pxtalrecs->begin(); jlog != pxtalrecs->end(); ++jlog) {
-            const Event::CalXtalRecData& recLog = **jlog;    
-            Point pos = recLog.getPosition();
-            double doca = track1.docaOfPoint(pos);
-            double energy = recLog.getEnergy();
-            std::pair<double, double> docaPair(doca, energy);
-            docaMap.insert(docaPair);           
-        }
+            for( jlog=pxtalrecs->begin(); jlog != pxtalrecs->end(); ++jlog) {
+                const Event::CalXtalRecData& recLog = **jlog;    
+                Point pos = recLog.getPosition();
+                double doca = track1.docaOfPoint(pos);
+                double energy = recLog.getEnergy();
+                std::pair<double, double> docaPair(doca, energy);
+                docaMap.insert(docaPair);           
+            }
 
-        unsigned int mapSize = docaMap.size();
-        int truncSize = std::min((int)((mapSize*truncFraction)+0.5),(int) mapSize);
+            unsigned int mapSize = docaMap.size();
+            int truncSize = std::min((int)((mapSize*truncFraction)+0.5),(int) mapSize);
 
-        // make up the vars by iterating over the map
-        // for the truncated var, stop after truncFraction of the xtals
-        int mapCount = 0;
-        // 4 measures of the Track-Cal RMS
-        float totalE1 = 0.0;
-        float totalE2 = 0.0;
-        for(mapIter=docaMap.begin(); mapIter!=docaMap.end();++mapIter) {
-            ++mapCount;
-            double doca = mapIter->first;
-            double ene  = mapIter->second;
-            double docaSq = doca*doca;
-            CAL_track_rms += (float) doca*doca;
-            CAL_track_E_rms += (float) docaSq*ene;
-            totalE1 += (float) ene;
-            if (mapCount<=truncSize) {
-                CAL_track_rms_trunc += (float) docaSq;
-                CAL_track_E_rms_trunc += (float) docaSq*ene;
-                totalE2 += (float) ene;
-            }     
-        }
-        CAL_track_rms = sqrt(CAL_track_rms/mapSize);
-        if (totalE1>0.0) {
-            CAL_track_E_rms = 
-                sqrt(std::max(0.0f, CAL_track_E_rms)/totalE1);
-        }
-        CAL_track_rms_trunc = sqrt(CAL_track_rms_trunc/truncSize);
-        if (totalE2>0.0) {
-            CAL_track_E_rms_trunc = 
-                sqrt(std::max(0.0f, CAL_track_E_rms_trunc)/totalE2);
+            // make up the vars by iterating over the map
+            // for the truncated var, stop after truncFraction of the xtals
+            int mapCount = 0;
+            // 4 measures of the Track-Cal RMS
+            float totalE1 = 0.0;
+            float totalE2 = 0.0;
+            for(mapIter=docaMap.begin(); mapIter!=docaMap.end();++mapIter) {
+                ++mapCount;
+                double doca = mapIter->first;
+                double ene  = mapIter->second;
+                double docaSq = doca*doca;
+                CAL_track_rms += (float) doca*doca;
+                CAL_track_E_rms += (float) docaSq*ene;
+                totalE1 += (float) ene;
+                if (mapCount<=truncSize) {
+                    CAL_track_rms_trunc += (float) docaSq;
+                    CAL_track_E_rms_trunc += (float) docaSq*ene;
+                    totalE2 += (float) ene;
+                }     
+            }
+            CAL_track_rms = sqrt(CAL_track_rms/mapSize);
+            if (totalE1>0.0) {
+                CAL_track_E_rms = 
+                    sqrt(std::max(0.0f, CAL_track_E_rms)/totalE1);
+            }
+            CAL_track_rms_trunc = sqrt(CAL_track_rms_trunc/truncSize);
+            if (totalE2>0.0) {
+                CAL_track_E_rms_trunc = 
+                    sqrt(std::max(0.0f, CAL_track_E_rms_trunc)/totalE2);
+            }
         }
     }
 
     // Find angle between Track and Cal. Moment axis
     // Note: the direction in Cal is opposite to tracking!
-    if(fabs(cal_dir.x()) < 1.) {
+    if(num_tracks>0 && fabs(cal_dir.x()) < 1.) {
         double cosCalt0 = std::min(1., -t0*cal_dir); 
         cosCalt0 = std::max(cosCalt0, -1.);  // just in case...
         CAL_Track_Angle = acos(cosCalt0);
+    } else {
+        CAL_Track_Angle = -.1f; 
     }
-    else CAL_Track_Angle = -.1f; 
 
     // Energy compared to muon 
     CAL_MIP_Diff    = CAL_EnergyRaw- 12.07*CAL_CsI_RLn;
@@ -777,86 +782,88 @@ StatusCode CalValsTool::calculate()
     // Here we do the CAL_RmsE calculation
 
     // get the last point on the best track
-    Event::TkrTrackHitVecConItr hitIter = (*track_1).end();
-    hitIter--;
-    const Event::TkrTrackHit* hit = *hitIter;
-    Point xEnd = hit->getPoint(Event::TkrTrackHit::SMOOTHED);
-    Vector tEnd = hit->getDirection(Event::TkrTrackHit::SMOOTHED);
-    double eCosTheta = fabs(tEnd.z());
+    if(num_tracks>0) {
+        Event::TkrTrackHitVecConItr hitIter = (*track_1).end();
+        hitIter--;
+        const Event::TkrTrackHit* hit = *hitIter;
+        Point xEnd = hit->getPoint(Event::TkrTrackHit::SMOOTHED);
+        Vector tEnd = hit->getDirection(Event::TkrTrackHit::SMOOTHED);
+        double eCosTheta = fabs(tEnd.z());
 
-    // find the parameters to start the swim
-    double deltaZ = xEnd.z() - m_calZBot;
-    double arclen   = fabs(deltaZ/eCosTheta);
+        // find the parameters to start the swim
+        double deltaZ = xEnd.z() - m_calZBot;
+        double arclen   = fabs(deltaZ/eCosTheta);
 
-    // do the swim
-    m_G4PropTool->setStepStart(xEnd, tEnd);
-    m_G4PropTool->step(arclen);  
+        // do the swim
+        m_G4PropTool->setStepStart(xEnd, tEnd);
+        m_G4PropTool->step(arclen);  
 
-    // collect the radlens by layer
-    int numSteps = m_G4PropTool->getNumberSteps();
-    std::vector<double> rlCsI(8, 0.0);
-    std::vector<bool>   useLayer(8, true);
-    idents::VolumeIdentifier volId;
-    idents::VolumeIdentifier prefix = m_detSvc->getIDPrefix();
-    int istep  = 0;
-    for(; istep < numSteps; ++istep) {
-        volId = m_G4PropTool->getStepVolumeId(istep);
-        volId.prepend(prefix);
-        bool inXtal = ( volId.size()>7 && volId[0]==0 
-            && volId[3]==0 && volId[7]==0 ? true : false );
-        if(inXtal) {
-            int layer = volId[4];
-            double radLen_step = m_G4PropTool->getStepRadLength(istep);
-            rlCsI[layer] += radLen_step;
+        // collect the radlens by layer
+        int numSteps = m_G4PropTool->getNumberSteps();
+        std::vector<double> rlCsI(8, 0.0);
+        std::vector<bool>   useLayer(8, true);
+        idents::VolumeIdentifier volId;
+        idents::VolumeIdentifier prefix = m_detSvc->getIDPrefix();
+        int istep  = 0;
+        for(; istep < numSteps; ++istep) {
+            volId = m_G4PropTool->getStepVolumeId(istep);
+            volId.prepend(prefix);
+            bool inXtal = ( volId.size()>7 && volId[0]==0 
+                && volId[3]==0 && volId[7]==0 ? true : false );
+            if(inXtal) {
+                int layer = volId[4];
+                double radLen_step = m_G4PropTool->getStepRadLength(istep);
+                rlCsI[layer] += radLen_step;
+            }
         }
-    }
 
-    double eTot = 0;
-    double eNorm0 = 0;
-    double e2   = 0;
-    int CAL_nLayersRms = 0;
-    int layer;
+        double eTot = 0;
+        double eNorm0 = 0;
+        double e2   = 0;
+        int CAL_nLayersRms = 0;
+        int layer;
 
-    for (layer=0; layer<8; ++layer) {
-        if (rlCsI[layer]<0.5) useLayer[layer] = false;
-        if (CAL_eLayer[layer]<0.05*CAL_EnergyRaw) useLayer[layer] = false;
-    }
-
-    for (layer=0; layer<8; ++layer) {
-        if(!useLayer[layer]) continue;
-        CAL_nLayersRms++;
-        double eNorm = CAL_eLayer[layer]/rlCsI[layer];
-        if(layer==0) { 
-            eNorm0 = eNorm;
-        } else {
-            CAL_nLayersRmsBack++;
+        for (layer=0; layer<8; ++layer) {
+            if (rlCsI[layer]<0.5) useLayer[layer] = false;
+            if (CAL_eLayer[layer]<0.05*CAL_EnergyRaw) useLayer[layer] = false;
         }
-        eTot += eNorm;
-        e2 +=   eNorm*eNorm;
-        //std::cout << "layer " << layer << ", r.l. " << rlCsI[layer] 
-        //    << ", eLayer " << CAL_eLayer[layer] 
-        //    << ", rlNorm " << rlCsI[layer]*eCosTheta) << ", eL_norm " 
-        //    << eNorm << std::endl;
-    }
 
-    double eAve = 0;
-    double eAveBack = 0;
-    if(CAL_nLayersRms>1) {
-        eAve = eTot/CAL_nLayersRms;
-        CAL_rmsLayerE = 
-            (float)sqrt((e2 - CAL_nLayersRms*eAve*eAve)/(CAL_nLayersRms-1))/eAve;
-        //std::cout << "eRms " << CAL_rmsLayerE/eAve 
-        //    << ", " << CAL_nLayersRms << " layers" << std::endl;
-    }
-    if(CAL_nLayersRmsBack>1) {
-        eAveBack = (eTot-eNorm0)/(CAL_nLayersRmsBack);
-        CAL_rmsLayerEBack = 
-            (float) sqrt((e2 - eNorm0*eNorm0 - (CAL_nLayersRmsBack)*eAveBack*eAveBack)
-            /(CAL_nLayersRmsBack-1))/eAve;
-        //std::cout << "eRmsTrunc " << CAL_rmsLayerEBack/eAveBack 
-        //    << ", " << nLayersRmsBack << " layers"<<std::endl;
-        CAL_eAveBack = eAveBack;
-        CAL_layer0Ratio = eNorm0/eAveBack;
+        for (layer=0; layer<8; ++layer) {
+            if(!useLayer[layer]) continue;
+            CAL_nLayersRms++;
+            double eNorm = CAL_eLayer[layer]/rlCsI[layer];
+            if(layer==0) { 
+                eNorm0 = eNorm;
+            } else {
+                CAL_nLayersRmsBack++;
+            }
+            eTot += eNorm;
+            e2 +=   eNorm*eNorm;
+            //std::cout << "layer " << layer << ", r.l. " << rlCsI[layer] 
+            //    << ", eLayer " << CAL_eLayer[layer] 
+            //    << ", rlNorm " << rlCsI[layer]*eCosTheta) << ", eL_norm " 
+            //    << eNorm << std::endl;
+        }
+
+        double eAve = 0;
+        double eAveBack = 0;
+        if(CAL_nLayersRms>1) {
+            eAve = eTot/CAL_nLayersRms;
+            CAL_rmsLayerE = 
+                (float)sqrt((e2 - CAL_nLayersRms*eAve*eAve)/(CAL_nLayersRms-1))/eAve;
+            //std::cout << "eRms " << CAL_rmsLayerE/eAve 
+            //    << ", " << CAL_nLayersRms << " layers" << std::endl;
+        }
+        if(CAL_nLayersRmsBack>1) {
+            eAveBack = (eTot-eNorm0)/(CAL_nLayersRmsBack);
+            CAL_rmsLayerEBack = 
+                (float) sqrt((e2 - eNorm0*eNorm0 - (CAL_nLayersRmsBack)*eAveBack*eAveBack)
+                /(CAL_nLayersRmsBack-1))/eAve;
+            //std::cout << "eRmsTrunc " << CAL_rmsLayerEBack/eAveBack 
+            //    << ", " << nLayersRmsBack << " layers"<<std::endl;
+            CAL_eAveBack = eAveBack;
+            CAL_layer0Ratio = eNorm0/eAveBack;
+        }
     }
 
     return sc;
