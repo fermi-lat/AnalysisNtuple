@@ -2,7 +2,7 @@
 @brief common abstract inteface for all the XxxValsTools
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/AnalysisNtuple/IValsTool.h,v 1.16 2006/06/25 23:00:52 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/AnalysisNtuple/IValsTool.h,v 1.17 2006/06/26 16:00:00 lsrea Exp $
 */
 
 #ifndef _H_IValsTool
@@ -81,6 +81,8 @@ public:
             const int& value) const =0;
         virtual Visitor::eVisitorRet analysisValue(std::string varName,
             const unsigned int& value) const =0;
+        virtual Visitor::eVisitorRet analysisValue(std::string varName,
+            const char* value) const =0;
     }; 
     
     

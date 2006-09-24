@@ -3,7 +3,7 @@
 @brief Calculates the "Event" analysis variables from the other ntuple variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.28 2005/12/13 19:00:37 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.29 2006/02/08 04:10:17 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -75,6 +75,8 @@ private:
 	float EvtECalTrackAngle;
     float EvtEVtxAngle;
     float EvtEVtxDoca;
+    //test
+    //char  EvtEvtNum[20];
 
     IValsTool* m_pMcTool;
     IValsTool* m_pGltTool;
@@ -297,6 +299,9 @@ NOTE
 
     addItem("EvtEVtxAngle",     &EvtEVtxAngle);
     addItem("EvtEVtxDoca",      &EvtEVtxDoca);
+ 
+    //test
+    //addItem("EvtEvtNum",        EvtEvtNum);
 
     zeroVals();
 
@@ -324,6 +329,11 @@ StatusCode EvtValsTool::calculate()
     if(header) {
         EvtRun         = header->run();
         EvtEventId     = header->event();
+        //test
+        /*
+        if (EvtEventId%2==0) sprintf(EvtEvtNum, "%i" , EvtEventId);
+        //std::cout << "Event number: " << EvtEvtNum << std::endl;
+        */
         EvtElapsedTime = header->time();
         EvtLiveTime    = header->livetime();
     }

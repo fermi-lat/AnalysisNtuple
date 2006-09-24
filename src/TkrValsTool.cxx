@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.77 2006/06/25 23:00:52 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.78 2006/07/13 10:47:36 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -39,6 +39,8 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.77 
 #include "GlastSvc/Reco/IPropagatorSvc.h"
 #include "GaudiKernel/IToolSvc.h"
 #include "Doca.h"
+
+#include <cstring>
 
 
 // M_PI defined in ValBase.h
@@ -186,12 +188,16 @@ private:
     float Tkr_2TkrHDoca;
 
     // here's some test stuff... if it works for a couple it will work for all
-    //float Tkr_float;
-    //int   Tkr_int;
-    //float    Tkr_1Pos[3];
-    //double   Tkr_doubles[2];
-    //int      Tkr_ints[5];
-    //unsigned int Tkr_uInts[7];
+
+    /*
+    float Tkr_float;
+    int   Tkr_int;
+    float    Tkr_1Pos[3];
+    double   Tkr_doubles[2];
+    int      Tkr_ints[5];
+    unsigned int Tkr_uInts[7];
+    char Tkr_string[20];
+    */
 };
 
 namespace 
@@ -604,15 +610,17 @@ The definitions should be fairly stable.
     addItem("Tkr2TkrHDoca",         &Tkr_2TkrHDoca); 
 
     // for test, uncomment these statements:
-
-    //addItem("TkrFloat", &Tkr_float);
-    //addItem("TkrInt",   &Tkr_int);
+    /*
+    addItem("TkrFloat", &Tkr_float);
+    addItem("TkrInt",   &Tkr_int);
     //try just aliasing it to the first of the three items
     //  is it guaranteed to work?
-    //addItem("Tkr1Pos[3]",        &Tkr_1_x0);
-    //addItem("TkrIntArray[5]",    Tkr_ints);
-    //addItem("TkrDoubleArray[2]", Tkr_doubles);
-    //addItem("TkrUIntArray[7]",   Tkr_uInts);
+    addItem("Tkr1Pos[3]",        &Tkr_1_x0);
+    addItem("TkrIntArray[5]",    Tkr_ints);
+    addItem("TkrDoubleArray[2]", Tkr_doubles);
+    addItem("TkrUIntArray[7]",   Tkr_uInts);
+    addItem("TkrString",           Tkr_string);
+    */
 
     zeroVals();
 
@@ -734,15 +742,26 @@ StatusCode TkrValsTool::calculate()
         std::cout << "Tkr1Pos[1] " << fVal << std::endl;
         getVal("Tkr1Pos[2]", fVal, -1);
         std::cout << "Tkr1Pos[2] " << fVal << std::endl;
-        getVal("Tkr1Pos[3]", fVal, -1);
-        std::cout << "Tkr1Pos[3] " << fVal << std::endl;
-        getVal("Tkr1Pos[3", fVal, -1);
-        std::cout << "Tkr1Pos[2] " << fVal << std::endl;
+        //getVal("Tkr1Pos[3]", fVal, -1);                   // illegal argument
+        //std::cout << "Tkr1Pos[3] " << fVal << std::endl; 
+        //getVal("Tkr1Pos[3", fVal, -1);                    // malformed (missing "]")
+
+        //getVal("TkrFoo", fVal, -1);                       // doesn't exist
 
         int i;
         for (i=0; i<5;++i) {Tkr_ints[i] = i;}
         for (i=0; i<2;++i) {Tkr_doubles[i] = i+1;}
         for (i=0; i<7;++i) {Tkr_uInts[i] = i+1;}
+        
+
+        //std::cout << "xdir = " << Tkr_1_xdir<< ", Before: " << Tkr_string << std::endl;
+        std::string tempStr;
+        tempStr = ((Tkr_1_xdir>0) ?
+            tempStr = "positive num, but way too long for the field" : "neg");
+            //Tkr_string[19] = 0;
+        strncpy(Tkr_string, tempStr.c_str(), 20);
+        Tkr_string[19] = 0;
+        //std::cout << "After: " << Tkr_string << std::endl;
         */
 
         // theta and phi are of direction of source, hence the minus sign

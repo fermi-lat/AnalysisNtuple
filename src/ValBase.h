@@ -2,7 +2,7 @@
 @brief header file for ValBase.cxx
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.h,v 1.31 2006/06/25 23:00:52 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.h,v 1.32 2006/06/26 16:00:00 lsrea Exp $
 */
 
 #ifndef ValBase_h
@@ -27,7 +27,7 @@ class IDataProviderSvc;
 
 */
 namespace {
-    enum valType {DOUBLE, FLOAT, INT, UINT};
+    enum valType {DOUBLE, FLOAT, INT, UINT, STRING};
     class TypedPointer 
     {
     public:  
@@ -73,14 +73,14 @@ public:
     virtual void addItem(std::string varName, float* pValue);
     virtual void addItem(std::string varName, int* pValue);
     virtual void addItem(std::string varName, unsigned int* pValue);
-    /// do calculation if not already done for this event
+    virtual void addItem(std::string varName, char* pValue);
     virtual StatusCode doCalcIfNotDone();
     /// get a particular value, using ntuple name default forces calculation
-    virtual StatusCode getVal(std::string varName, double& value, int check = 0);
-    virtual StatusCode getVal(std::string varName, float& value, int check = 0);
-    virtual StatusCode getVal(std::string varName, int& value, int check = 0);
-    virtual StatusCode getVal(std::string varName, unsigned int& value, int check = 0);
-    virtual StatusCode getVal(std::string varName, std::string& value, int check = 0);
+    virtual StatusCode getVal(std::string varName, double& value, int check = CALC);
+    virtual StatusCode getVal(std::string varName, float& value, int check = CALC);
+    virtual StatusCode getVal(std::string varName, int& value, int check = CALC);
+    virtual StatusCode getVal(std::string varName, unsigned int& value, int check = CALC);
+    virtual StatusCode getVal(std::string varName, std::string& value, int check = CALC);
     /// get a particular value, using ntuple name, with calc checking (called by AnaTup)
     virtual StatusCode getValCheck(std::string varName, double& value);
     virtual StatusCode getValCheck(std::string varName, float& value);

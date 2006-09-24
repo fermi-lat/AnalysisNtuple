@@ -2,6 +2,11 @@
   @brief Package AnalysisNtule
   @verbatim
 
+ v2r15p8 24-Sep-06   LSR  Add character array to the supported Root datatypes
+                          I don't have getVal() working for this type yet, but 
+                             it can be written out. Don't write out a null string; Root
+                             doesn't like it!
+                          Arrays of character arrays are not supported in Root
  v2r15p7 27-Jul-06   LSR  And a bit more protection
  v2r15p6 27-Jul-06   LSR  Protect code against no-track events!!
  v2r15p5 17-Jul-06   LSR  Add some variables to tag up-going heavy ions

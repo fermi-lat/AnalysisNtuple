@@ -2,7 +2,7 @@
 @brief Uses the XxxValsTools to produce a comprehensive ntuple
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.29 2006/06/25 23:00:52 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.30 2006/06/26 16:00:00 lsrea Exp $
 */
 
 // Gaudi system includes
@@ -41,6 +41,8 @@ public:
         analysisValue(std::string varName, const int& value) const;
     virtual IValsTool::Visitor::eVisitorRet 
         analysisValue(std::string varName, const unsigned int& value) const;
+    virtual IValsTool::Visitor::eVisitorRet 
+        analysisValue(std::string varName, const char* value) const;
     virtual ~NtupleVisitor() {}
     
 private:
@@ -89,6 +91,16 @@ IValsTool::Visitor::eVisitorRet NtupleVisitor::analysisValue(std::string varName
     StatusCode sc;
     if (m_ntupleSvc) {
         sc = m_ntupleSvc->addItem(m_ntupleName,  varName, &value );
+        if (sc.isFailure()) return IValsTool::Visitor::ERROR;
+    }    
+    return IValsTool::Visitor::CONT;
+}
+IValsTool::Visitor::eVisitorRet NtupleVisitor::analysisValue(std::string varName,
+                                                             const char* value) const
+{ 
+    StatusCode sc;
+    if (m_ntupleSvc) {
+        sc = m_ntupleSvc->addItem(m_ntupleName,  varName, value );
         if (sc.isFailure()) return IValsTool::Visitor::ERROR;
     }    
     return IValsTool::Visitor::CONT;
