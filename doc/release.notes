@@ -2,9 +2,9 @@
   @brief Package AnalysisNtule
   @verbatim
 
- v2r15p9 15-Oct-06   LSR  New CalValsTool vars: Cal[X/Y]PosRmsLL
+ v2r16   15-Oct-06   LSR  New CalValsTool vars: Cal[X/Y]PosRmsLL
                           Energy-weighted position rms in the last layer (layer 7)
-                            For upgoing proton debris
+                            For upgoing debris
  v2r15p8 24-Sep-06   LSR  Add character array to the supported Root datatypes
                           I don't have getVal() working for this type yet, but 
                              it can be written out. Don't write out a null string; Root
