@@ -3,7 +3,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.76 2006/07/28 06:54:20 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.77 2006/07/28 07:11:08 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -172,6 +172,9 @@ private:
     int   CAL_nLayersRmsBack;
     float CAL_eAveBack;
     float CAL_layer0Ratio;
+    float CAL_xPosRmsLastLayer;
+    float CAL_yPosRmsLastLayer;
+
 };
 namespace {
     // this is the test distance for the CAL_EdgeEnergy variable
@@ -370,6 +373,10 @@ StatusCode CalValsTool::initialize()
     <tr><td> CalLayer0Ratio
     <td>F<td>   Ratio of layer0 normalized eDep to the average of the remaining layers, 
     cuts as for CalRmsLayerE above
+    <tr><td> Cal[X/Y]PosRmsLL
+    <td>F<td>   Energy Weighted Rms of the hit crystals in the last layer
+    (layer 7). X is measured across the width of the crystals,
+    Y across the length.
     </table>
 
     */
@@ -452,6 +459,8 @@ StatusCode CalValsTool::initialize()
     addItem("CalNLayersRmsBack", &CAL_nLayersRmsBack);
     addItem("CalEAveBack", &CAL_eAveBack);
     addItem("CalLayer0Ratio", &CAL_layer0Ratio);
+    addItem("CalXPosRmsLL", &CAL_xPosRmsLastLayer);
+    addItem("CalYPosRmsLL", &CAL_yPosRmsLastLayer);
 
     zeroVals();
 
@@ -545,21 +554,23 @@ StatusCode CalValsTool::calculate()
         }
     }
 
-    //Make sure we have valid cluster data
+    //Make sure we have valid cluster data and some energy
     if (!pCals) return sc;
     if (pCals->empty()) return sc;
-
     Event::CalCluster* calCluster = pCals->front();
-
     CAL_EnergyRaw  = calCluster->getCalParams().getEnergy();
+    if(CAL_EnergyRaw<1.0) return sc;
+
     for(int i = 0; i<8; i++) CAL_eLayer[i] = (*calCluster)[i].getEnergy();
 
     CAL_Trans_Rms = sqrt(calCluster->getRmsTrans()/CAL_EnergyRaw);
+
+    float logRLn = 0; 
     if ((CAL_LAT_RLn - CAL_Cntr_RLn) > 0.0) {
-        CAL_Long_Rms  = sqrt(calCluster->getRmsLong()/CAL_EnergyRaw) / 
-            log(CAL_LAT_RLn - CAL_Cntr_RLn);
-    } else {
-        CAL_Long_Rms = 0;
+        logRLn = log(CAL_LAT_RLn - CAL_Cntr_RLn);
+    }
+    if (logRLn > 0.0) {
+        CAL_Long_Rms  = sqrt(calCluster->getRmsLong()/CAL_EnergyRaw) / logRLn;
     }
     CAL_LRms_Asym = calCluster->getRmsLongAsym();
 
@@ -712,18 +723,51 @@ StatusCode CalValsTool::calculate()
     // try Bill's new vars... 
         if (pxtalrecs) {
             //make a map of xtal energy by doca
+            // we need this so that we can drop the largest entries for the truncated calc.
             std::multimap<double, double> docaMap;
             std::multimap<double, double>::iterator mapIter;
+
+            // while we're at it, get the info for the last-layer rms
+            double eRmsLL = 0;
+            double xLL = 0;
+            double xSqLL = 0;
+            double yLL = 0;
+            double ySqLL = 0;
+            int    nRmsLL = 0;
 
             for( jlog=pxtalrecs->begin(); jlog != pxtalrecs->end(); ++jlog) {
                 const Event::CalXtalRecData& recLog = **jlog;    
                 Point pos = recLog.getPosition();
                 double doca = track1.docaOfPoint(pos);
                 double energy = recLog.getEnergy();
+
                 std::pair<double, double> docaPair(doca, energy);
-                docaMap.insert(docaPair);           
+                docaMap.insert(docaPair); 
+
+                // for last-layer rms
+                idents::CalXtalId id = recLog.getPackedId();
+                int layer = id.getLayer();
+                if (layer==7 && energy>0) {
+                    nRmsLL++;
+                    eRmsLL += energy;
+                    double x = pos.x();
+                    double y = pos.y();
+                    xLL  += energy*x;
+                    yLL  += energy*y;
+                    xSqLL += energy*x*x;
+                    ySqLL += energy*y*y;
+                }
             }
 
+            // lets get the last-layer rms out of the way! 
+            if(nRmsLL>1) {
+                double xAveLL = xLL/eRmsLL;
+                double xVarLL = (xSqLL/eRmsLL - xAveLL*xAveLL);
+                double yAveLL = yLL/eRmsLL;
+                double yVarLL = (ySqLL/eRmsLL - yAveLL*yAveLL);
+                CAL_xPosRmsLastLayer = (float) sqrt( xVarLL*nRmsLL/(nRmsLL-1));
+                CAL_yPosRmsLastLayer = (float) sqrt( yVarLL*nRmsLL/(nRmsLL-1));
+            }
             unsigned int mapSize = docaMap.size();
             int truncSize = std::min((int)((mapSize*truncFraction)+0.5),(int) mapSize);
 
@@ -738,7 +782,7 @@ StatusCode CalValsTool::calculate()
                 double doca = mapIter->first;
                 double ene  = mapIter->second;
                 double docaSq = doca*doca;
-                CAL_track_rms += (float) doca*doca;
+                CAL_track_rms += (float) docaSq;
                 CAL_track_E_rms += (float) docaSq*ene;
                 totalE1 += (float) ene;
                 if (mapCount<=truncSize) {
