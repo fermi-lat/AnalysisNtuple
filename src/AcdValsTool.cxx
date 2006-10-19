@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.24 2006/05/02 23:54:33 echarles Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.25 2006/05/23 19:06:25 heather Exp $
 */
 
 #include "ValBase.h"
@@ -64,7 +64,9 @@ private:
     float ACD_DOCA_Energy;
     float ACD_ActiveDist;
     float ACD_ActiveDist3D;
+    float ACD_ActiveDist3D_Down;
     float ACD_ActiveDist_Energy;
+    float ACD_ActiveDist_Energy_Down;
     float ACD_GammaDOCA; 
     float ACD_Corner_DOCA;
     float ACD_Tkr1Ribbon_Dist;
@@ -77,6 +79,10 @@ private:
     float ACD_ActDist3DR0;
     float ACD_ActDist3DR1;
     float ACD_ActDist3DR2;
+    float ACD_ActDist3DTop_Down;
+    float ACD_ActDist3DR0_Down;
+    float ACD_ActDist3DR1_Down;
+    float ACD_ActDist3DR2_Down;
     float ACD_tileTopCount;
     float ACD_tileCount0;
     float ACD_tileCount1;
@@ -224,6 +230,8 @@ StatusCode AcdValsTool::initialize()
     addItem("AcdActiveDist",   &ACD_ActiveDist);
     addItem("AcdActiveDist3D",   &ACD_ActiveDist3D);
     addItem("AcdActDistTileEnergy",   &ACD_ActiveDist_Energy);
+    addItem("AcdActiveDist3D_Down", &ACD_ActiveDist3D_Down);
+    addItem("AcdActDistTileEnergy_Down", &ACD_ActiveDist_Energy_Down);
     addItem("AcdGammaDoca",    &ACD_GammaDOCA);
     addItem("AcdCornerDoca",    &ACD_Corner_DOCA);
     addItem("AcdTkrRibbonDist",    &ACD_TkrRibbon_Dist);
@@ -238,6 +246,11 @@ StatusCode AcdValsTool::initialize()
     addItem("AcdActDist3DSideRow0",&ACD_ActDist3DR0);
     addItem("AcdActDist3DSideRow1",&ACD_ActDist3DR1);
     addItem("AcdActDist3DSideRow2",&ACD_ActDist3DR2);
+
+    addItem("AcdActDist3DTop_Down",&ACD_ActDist3DTop_Down);
+    addItem("AcdActDist3DSideRow0_Down",&ACD_ActDist3DR0_Down);
+    addItem("AcdActDist3DSideRow1_Down",&ACD_ActDist3DR1_Down);
+    addItem("AcdActDist3DSideRow2_Down",&ACD_ActDist3DR2_Down);
 
     addItem("AcdNoTop",        &ACD_tileTopCount);
     addItem("AcdNoSideRow0",   &ACD_tileCount0);
@@ -298,6 +311,9 @@ StatusCode AcdValsTool::calculate()
         ACD_ActiveDist    = pACD->getActiveDist();
         ACD_ActiveDist3D    = pACD->getActiveDist3D();
         ACD_ActiveDist_Energy = energyIdMap[tileId];
+        ACD_ActiveDist3D_Down = pACD->getActiveDist3D_Down();
+        idents::AcdId tileId_Down = pACD->getMaxActDist3DId_Down();
+        ACD_ActiveDist_Energy_Down = energyIdMap[tileId_Down];
 
         ACD_GammaDOCA     = pACD->getGammaDoca();
         ACD_Corner_DOCA   = pACD->getCornerDoca();
@@ -345,6 +361,12 @@ StatusCode AcdValsTool::calculate()
         ACD_ActDist3DR0 = adist3D[1];
         ACD_ActDist3DR1 = adist3D[2];
         ACD_ActDist3DR2 = adist3D[3];
+
+        const std::vector<double> & adist3D_Down = pACD->getRowActDist3DCol_Down();
+        ACD_ActDist3DTop_Down = adist3D_Down[0];
+        ACD_ActDist3DR0_Down = adist3D_Down[1];
+        ACD_ActDist3DR1_Down = adist3D_Down[2];
+        ACD_ActDist3DR2_Down = adist3D_Down[3];
 
         //Code from meritAlg.... 
         // get the map of energy vs tile id: have to construct from two parallel vectors
