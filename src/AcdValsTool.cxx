@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.25 2006/05/23 19:06:25 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.26 2006/10/19 21:24:16 heather Exp $
 */
 
 #include "ValBase.h"
@@ -60,21 +60,26 @@ private:
     float ACD_Total_Ribbon_Energy;
     float ACD_Tile_Count; 
     float ACD_Ribbon_Count;
-    float ACD_DOCA;
-    float ACD_DOCA_Energy;
     float ACD_ActiveDist;
     float ACD_ActiveDist3D;
     float ACD_ActiveDist3D_Down;
     float ACD_ActiveDist_Energy;
     float ACD_ActiveDist_Energy_Down;
+  
+    float ACD_Tkr1ActiveDist;
+    float ACD_Tkr1ActiveDist_Down;
+    float ACD_Tkr1ActiveDist_Energy;
+    float ACD_Tkr1ActiveDist_EnergyDown;
+
+    float ACD_VtxActiveDist;
+    float ACD_VtxActiveDist_Down;
+    float ACD_VtxActiveDist_Energy;
+    float ACD_VtxActiveDist_EnergyDown;
+
     float ACD_GammaDOCA; 
     float ACD_Corner_DOCA;
     float ACD_Tkr1Ribbon_Dist;
     float ACD_TkrRibbon_Dist;
-    float ACD_ActDistTop;
-    float ACD_ActDistR0;
-    float ACD_ActDistR1;
-    float ACD_ActDistR2;
     float ACD_ActDist3DTop;
     float ACD_ActDist3DR0;
     float ACD_ActDist3DR1;
@@ -185,14 +190,34 @@ StatusCode AcdValsTool::initialize()
 <td>F<td>   Total energy deposited in ACD
 <tr><td> AcdTileCount 
 <td>F<td>   Number of tiles fired
-<tr><td> AcdDoca 
-<td>F<td>   Nearest distance of any track from the center of any tile 
-<tr><td> AcdDocaTileEnergy   
-<td>F<td>   The deposited MC energy in the corresponding hit tile 
-<tr><td> AcdActiveDist 	
+<tr><td> AcdActiveDist3D 	
 <td>F<td>   Largest active distance of any track to the edge of any tile 
 <tr><td> AcdActDistTileEnergy 
 <td>F<td>   The deposited MC energy in the corresponding hit tile 
+
+<tr><td> AcdActiveDist3D_Down	
+<td>F<td>   Largest active distance of any track to the edge of any tile, down going side of tracks
+<tr><td> AcdActDistTileEnergy_Down 
+<td>F<td>   The deposited MC energy in the corresponding hit tile, down going side of tracks
+
+<tr><td>AcdTkr1ActiveDist
+<td>F<td>   Largest active distance from track 1 to the edge of any tile
+<tr><td>AcdTkr1ActiveDist_Down
+<td>F<td>   Largest active distance from track 1 to the edge of any tile, down going side of tracks
+<tr><td>AcdTkr1ActDistTileEnergy
+<td>F<td>   The deposited MC energy in the corresponding hit tile
+<tr><td>AcdTkr1ActDistTileEnergy_Down
+<td>F<td>   The deposited MC energy in the corresponding hit tile, down going side of tracks
+
+<tr><td>AcdVtxActiveDist
+<td>F<td>   Largest active distance from vertex extrapolation to the edge of any tile
+<tr><td>AcdVtxActiveDist_Down
+<td>F<td>   Largest active distance from vertex extrapolation to the edge of any tile, down going side of tracks
+<tr><td>AcdVtxActDistTileEnergy
+<td>F<td>   The deposited MC energy in the corresponding hit tile
+<tr><td>AcdVtxActDistTileEnergy_Down
+<td>F<td>   The deposited MC energy in the corresponding hit tile, down going side of tracks
+
 <tr><td> AcdGammaDoca 
 <td>F<td>   Distance of Gamma to the center of the nearest tile 
 <tr><td> AcdCornerDoca 
@@ -225,22 +250,26 @@ StatusCode AcdValsTool::initialize()
     addItem("AcdRibbonEnergy", &ACD_Total_Ribbon_Energy);
     addItem("AcdRibbonCount", &ACD_Ribbon_Count);
     addItem("AcdTileCount",    &ACD_Tile_Count);
-    addItem("AcdDoca",         &ACD_DOCA);
-    addItem("AcdDocaTileEnergy",         &ACD_DOCA_Energy);
-    addItem("AcdActiveDist",   &ACD_ActiveDist);
+
     addItem("AcdActiveDist3D",   &ACD_ActiveDist3D);
     addItem("AcdActDistTileEnergy",   &ACD_ActiveDist_Energy);
     addItem("AcdActiveDist3D_Down", &ACD_ActiveDist3D_Down);
     addItem("AcdActDistTileEnergy_Down", &ACD_ActiveDist_Energy_Down);
+
     addItem("AcdGammaDoca",    &ACD_GammaDOCA);
     addItem("AcdCornerDoca",    &ACD_Corner_DOCA);
     addItem("AcdTkrRibbonDist",    &ACD_TkrRibbon_Dist);
     addItem("AcdTkr1RibbonDist",    &ACD_Tkr1Ribbon_Dist);
 
-    addItem("AcdActDistTop",&ACD_ActDistTop);
-    addItem("AcdActDistSideRow0",&ACD_ActDistR0);
-    addItem("AcdActDistSideRow1",&ACD_ActDistR1);
-    addItem("AcdActDistSideRow2",&ACD_ActDistR2);
+    addItem("AcdTkr1ActiveDist", &ACD_Tkr1ActiveDist);
+    addItem("AcdTkr1ActiveDist_Down", &ACD_Tkr1ActiveDist_Down);
+    addItem("AcdTkr1ActDistTileEnergy", &ACD_Tkr1ActiveDist_Energy);
+    addItem("AcdTkr1ActDistTileEnergy_Down", &ACD_Tkr1ActiveDist_EnergyDown);
+
+    addItem("AcdVtxActiveDist", &ACD_VtxActiveDist);
+    addItem("AcdVtxActiveDist_Down", &ACD_VtxActiveDist_Down);
+    addItem("AcdVtxActDistTileEnergy", &ACD_VtxActiveDist_Energy);
+    addItem("AcdVtxActDistTileEnergy_Down", &ACD_VtxActiveDist_EnergyDown);
 
     addItem("AcdActDist3DTop",&ACD_ActDist3DTop);
     addItem("AcdActDist3DSideRow0",&ACD_ActDist3DR0);
@@ -304,11 +333,8 @@ StatusCode AcdValsTool::calculate()
         ACD_Ribbon_Count  = pACD->getRibbonCount();
 
         idents::AcdId tileId = pACD->getMinDocaId();
-        ACD_DOCA          = pACD->getDoca();
-        ACD_DOCA_Energy   = energyIdMap[tileId];
 
         tileId            = pACD->getMaxActDist3DId();
-        ACD_ActiveDist    = pACD->getActiveDist();
         ACD_ActiveDist3D    = pACD->getActiveDist3D();
         ACD_ActiveDist_Energy = energyIdMap[tileId];
         ACD_ActiveDist3D_Down = pACD->getActiveDist3D_Down();
@@ -350,12 +376,66 @@ StatusCode AcdValsTool::calculate()
 	  }	  
 	}
 
-        const std::vector<double> & adist = pACD->getRowActDistCol();
-        ACD_ActDistTop = adist[0];
-        ACD_ActDistR0 = adist[1];
-        ACD_ActDistR1 = adist[2];
-        ACD_ActDistR2 = adist[3];
 
+	ACD_Tkr1ActiveDist = -2000;
+	ACD_Tkr1ActiveDist_Energy = 0;
+	ACD_Tkr1ActiveDist_Down = -2000;
+	ACD_Tkr1ActiveDist_EnergyDown= 0;
+	ACD_VtxActiveDist = -2000;
+	ACD_VtxActiveDist_Energy= 0;
+	ACD_VtxActiveDist_Down = -2000;
+	ACD_VtxActiveDist_EnergyDown= 0;
+	
+	int filledTypeMask(0);
+
+
+	// loop over AcdTkrHitPoca & get least distance sutff
+	const Event::AcdTkrHitPocaCol& pocas = pACD->getAcdTkrHitPocaCol();
+	for ( Event::AcdTkrHitPocaCol::const_iterator itrPoca = pocas.begin(); 
+	      itrPoca != pocas.end(); itrPoca++ ) {
+
+	  // if already fill all 4 types, break
+	  if ( filledTypeMask == 15 ) break;
+	  
+	  // only take tiles
+	  if ( ! (*itrPoca)->getId().tile() ) continue;
+	  
+	  // only take vertex (-1) and best track (0) 
+	  if ( (*itrPoca)->trackIndex() > 0 ) continue;
+	  
+	  // check up-going v. down going and 
+	  int fillType(0);
+	  if ( (*itrPoca)->getArcLength() < 0. ) fillType += 1; // down going
+	  if ( (*itrPoca)->trackIndex() == -1 ) fillType += 2; // vertices
+
+	  // check to see if we already have an activeDistance of that type
+	  int checkFilled = filledTypeMask & ( 1 < fillType );
+	  if ( checkFilled != 0 ) continue;
+	  checkFilled &= ( 1 < fillType );
+
+	  idents::AcdId theId = (*itrPoca)->getId();
+
+	  // fill the right kind of activeDistance
+	  switch ( fillType ) {
+	  case 0:
+	    ACD_Tkr1ActiveDist = (*itrPoca)->getDoca();
+	    ACD_Tkr1ActiveDist_Energy = energyIdMap[theId];
+	    break;
+	  case 1:
+	    ACD_Tkr1ActiveDist_Down  = (*itrPoca)->getDoca();
+	    ACD_Tkr1ActiveDist_EnergyDown  = energyIdMap[theId];
+	    break;
+	  case 2:
+	    ACD_VtxActiveDist  = (*itrPoca)->getDoca();
+	    ACD_VtxActiveDist_Energy  = energyIdMap[theId];
+	    break;
+	  case 3:
+	    ACD_VtxActiveDist_Down  = (*itrPoca)->getDoca();
+	    ACD_VtxActiveDist_EnergyDown = energyIdMap[theId];
+	    break;
+	  }
+	}
+    
         const std::vector<double> & adist3D = pACD->getRowActDist3DCol();
         ACD_ActDist3DTop = adist3D[0];
         ACD_ActDist3DR0 = adist3D[1];
@@ -471,7 +551,7 @@ void AcdValsTool::tkrHitsCount() {
         }
     }
 
-
+    
     return;
 }
 
