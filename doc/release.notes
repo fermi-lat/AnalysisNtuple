@@ -2,6 +2,7 @@
   @brief Package AnalysisNtule
   @verbatim
 
+ v2r17p1 28-Oct-06   EAC  Protect from missing ActDist collections in AcdRecon
  v2r17   21-Oct-06   EAC  Added AcdAcdDist vars that 1) take direction into account, 2) use vertex info
  v2r16   15-Oct-06   LSR  Same as v2r15p9, but new release number
  v2r15p9 15-Oct-06   LSR  New CalValsTool vars: Cal[X/Y]PosRmsLL
