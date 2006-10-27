@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.26 2006/10/19 21:24:16 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.27 2006/10/24 22:23:23 echarles Exp $
 */
 
 #include "ValBase.h"
@@ -437,16 +437,20 @@ StatusCode AcdValsTool::calculate()
 	}
     
         const std::vector<double> & adist3D = pACD->getRowActDist3DCol();
-        ACD_ActDist3DTop = adist3D[0];
-        ACD_ActDist3DR0 = adist3D[1];
-        ACD_ActDist3DR1 = adist3D[2];
-        ACD_ActDist3DR2 = adist3D[3];
+	if ( adist3D.size() >= 3 ) {
+	  ACD_ActDist3DTop = adist3D[0];
+	  ACD_ActDist3DR0 = adist3D[1];
+	  ACD_ActDist3DR1 = adist3D[2];
+	  ACD_ActDist3DR2 = adist3D[3];
+	}
 
         const std::vector<double> & adist3D_Down = pACD->getRowActDist3DCol_Down();
-        ACD_ActDist3DTop_Down = adist3D_Down[0];
-        ACD_ActDist3DR0_Down = adist3D_Down[1];
-        ACD_ActDist3DR1_Down = adist3D_Down[2];
-        ACD_ActDist3DR2_Down = adist3D_Down[3];
+        if ( adist3D_Down.size() >= 3 ) {
+	  ACD_ActDist3DTop_Down = adist3D_Down[0];
+	  ACD_ActDist3DR0_Down = adist3D_Down[1];
+	  ACD_ActDist3DR1_Down = adist3D_Down[2];
+	  ACD_ActDist3DR2_Down = adist3D_Down[3];
+	}
 
         //Code from meritAlg.... 
         // get the map of energy vs tile id: have to construct from two parallel vectors
