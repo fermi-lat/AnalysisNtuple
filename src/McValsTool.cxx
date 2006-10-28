@@ -2,7 +2,7 @@
 @brief Calculates the Mc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.28 2006/03/06 02:32:43 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.29 2006/03/21 01:43:50 usher Exp $
 */
 // Include files
 
@@ -58,6 +58,7 @@ private:
     
     //Pure MC Tuple Items
     float MC_SourceId;
+    char  MC_SourceName[80];
     float MC_NumIncident;
     float MC_Id;
     float MC_Charge;
@@ -135,6 +136,8 @@ StatusCode McValsTool::initialize()
 <tr><td> McSourceId 
 <td>F<td>   Unique integer associated with each MC source type; 
             from McEvent header replaces Mc_src_Id in merit ntuple 
+<tr><td> McSourceName 
+<td>S<td>   c-string containing the name of the MC source
 <tr><td> McNumIncident
 <td>F<td>   Number of incident particles, usually 1
             can be zero to N for test beam
@@ -174,7 +177,8 @@ StatusCode McValsTool::initialize()
 
 
     addItem("McSourceId",     &MC_SourceId);
-    addItem("McNumIncident", &MC_NumIncident);
+    addItem("McSourceName",    MC_SourceName);
+    addItem("McNumIncident",  &MC_NumIncident);
     addItem("McId",           &MC_Id);  
     addItem("McCharge",       &MC_Charge);
     addItem("McEnergy",       &MC_Energy);  
@@ -221,6 +225,7 @@ StatusCode McValsTool::calculate()
     
     if(pMcEvent) {
         MC_SourceId = pMcEvent->getSourceId();
+        strncpy(MC_SourceName, pMcEvent->getSourceName().c_str(),80);
     }
     
     MC_Energy = -1;
