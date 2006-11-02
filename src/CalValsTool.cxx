@@ -3,7 +3,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.77 2006/07/28 07:11:08 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.78 2006/10/16 00:25:07 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -85,6 +85,8 @@ private:
     double m_towerPitch;
     int    m_xNum;
     int    m_yNum;
+    int    m_nLayers;
+    int    m_nCsI;
 
     /// gets the CAL info from detModel
     StatusCode getCalInfo();
@@ -212,6 +214,9 @@ StatusCode CalValsTool::initialize()
             log << MSG::ERROR << "Couldn't find the GlastDetSvc!" << endreq;
             return StatusCode::FAILURE;
         }
+
+        m_detSvc->getNumericConstByName("CALnLayer", &m_nLayers);
+        m_detSvc->getNumericConstByName("nCsIPerLayer", &m_nCsI);
 
         // find TkrGeometrySvc service
         if (service("TkrGeometrySvc", m_tkrGeom, true).isFailure()){
@@ -561,7 +566,7 @@ StatusCode CalValsTool::calculate()
     CAL_EnergyRaw  = calCluster->getCalParams().getEnergy();
     if(CAL_EnergyRaw<1.0) return sc;
 
-    for(int i = 0; i<8; i++) CAL_eLayer[i] = (*calCluster)[i].getEnergy();
+    for(int i = 0; i<m_nLayers; i++) CAL_eLayer[i] = (*calCluster)[i].getEnergy();
 
     CAL_Trans_Rms = sqrt(calCluster->getRmsTrans()/CAL_EnergyRaw);
 
@@ -576,9 +581,11 @@ StatusCode CalValsTool::calculate()
 
     if(CAL_EnergyRaw>0.0) {
         CAL_Lyr0_Ratio  = CAL_eLayer[0]/CAL_EnergyRaw;
-        CAL_Lyr7_Ratio  = CAL_eLayer[7]/CAL_EnergyRaw;
-        CAL_BkHalf_Ratio = (CAL_eLayer[4]+CAL_eLayer[5]+
-            CAL_eLayer[6]+CAL_eLayer[7])/CAL_EnergyRaw;
+        if(m_nLayers==8) {
+            CAL_Lyr7_Ratio  = CAL_eLayer[7]/CAL_EnergyRaw;
+            CAL_BkHalf_Ratio = (CAL_eLayer[4]+CAL_eLayer[5]+
+                CAL_eLayer[6]+CAL_eLayer[7])/CAL_EnergyRaw;
+        }
     }
 
     int no_xtals=0;
@@ -734,6 +741,7 @@ StatusCode CalValsTool::calculate()
             double yLL = 0;
             double ySqLL = 0;
             int    nRmsLL = 0;
+            bool   doLL = (m_nLayers>1 && m_nCsI>1); // true for Glast, false for EGRET
 
             for( jlog=pxtalrecs->begin(); jlog != pxtalrecs->end(); ++jlog) {
                 const Event::CalXtalRecData& recLog = **jlog;    
@@ -747,7 +755,7 @@ StatusCode CalValsTool::calculate()
                 // for last-layer rms
                 idents::CalXtalId id = recLog.getPackedId();
                 int layer = id.getLayer();
-                if (layer==7 && energy>0) {
+                if (energy>0 && layer==m_nLayers-1 && doLL) {
                     nRmsLL++;
                     eRmsLL += energy;
                     double x = pos.x();
@@ -844,8 +852,8 @@ StatusCode CalValsTool::calculate()
 
         // collect the radlens by layer
         int numSteps = m_G4PropTool->getNumberSteps();
-        std::vector<double> rlCsI(8, 0.0);
-        std::vector<bool>   useLayer(8, true);
+        std::vector<double> rlCsI(m_nLayers, 0.0);
+        std::vector<bool>   useLayer(m_nLayers, true);
         idents::VolumeIdentifier volId;
         idents::VolumeIdentifier prefix = m_detSvc->getIDPrefix();
         int istep  = 0;
@@ -867,14 +875,14 @@ StatusCode CalValsTool::calculate()
         int CAL_nLayersRms = 0;
         int layer;
 
-        for (layer=0; layer<8; ++layer) {
+        for (layer=0; layer<m_nLayers; ++layer) {
             if (rlCsI[layer]<0.5) useLayer[layer] = false;
             if (CAL_eLayer[layer]<0.05*CAL_EnergyRaw || CAL_EnergyRaw<=0) {
                 useLayer[layer] = false;
             }
         }
 
-        for (layer=0; layer<8; ++layer) {
+        for (layer=0; layer<m_nLayers; ++layer) {
             if(!useLayer[layer]) continue;
             CAL_nLayersRms++;
             double eNorm = CAL_eLayer[layer]/rlCsI[layer];
