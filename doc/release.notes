@@ -2,6 +2,7 @@
   @brief Package AnalysisNtule
   @verbatim
 
+ v2r18p2 03-Nov-06   LSR  Protect sqrt in CalValsTool.. will this fix Tom's problem?
  v2r18p1 02-Nov-06   LSR  Cleanup in CalValsTool--removed some hard-coded numbers
  v2r18   27-Oct-06   LSR  Added McSourceName to the ntuple
  v2r17p1 27-Oct-06   EAC  Protect from missing ActDist collections in AcdRecon

@@ -3,7 +3,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.78 2006/10/16 00:25:07 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.79 2006/11/02 23:09:52 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -770,9 +770,9 @@ StatusCode CalValsTool::calculate()
             // lets get the last-layer rms out of the way! 
             if(nRmsLL>1) {
                 double xAveLL = xLL/eRmsLL;
-                double xVarLL = (xSqLL/eRmsLL - xAveLL*xAveLL);
+                double xVarLL = std::max(0.0, xSqLL/eRmsLL - xAveLL*xAveLL);
                 double yAveLL = yLL/eRmsLL;
-                double yVarLL = (ySqLL/eRmsLL - yAveLL*yAveLL);
+                double yVarLL = std::max(0.0, ySqLL/eRmsLL - yAveLL*yAveLL);
                 CAL_xPosRmsLastLayer = (float) sqrt( xVarLL*nRmsLL/(nRmsLL-1));
                 CAL_yPosRmsLastLayer = (float) sqrt( yVarLL*nRmsLL/(nRmsLL-1));
             }
