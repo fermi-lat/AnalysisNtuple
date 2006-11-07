@@ -3,7 +3,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.79 2006/11/02 23:09:52 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.80 2006/11/03 23:00:26 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -636,17 +636,42 @@ StatusCode CalValsTool::calculate()
     double dX = std::max(calXLo-CAL_x0, CAL_x0-calXHi);
     double dY = std::max(calYLo-CAL_y0, CAL_y0-calYHi);
     CAL_LATEdge = -std::max(dX, dY);
+
     // collect the CAL edge energy
     // the edge is larger of the width and length of the layer
     // we can do better if this is at all useful.
     if (pxtalrecs) {
+
+        // do the Cal[X/Y]PosRmsLL here
+        double eRmsLL = 0;
+        double xLL = 0;
+        double xSqLL = 0;
+        double yLL = 0;
+        double ySqLL = 0;
+        int    nRmsLL = 0;
+        bool   doLL = (m_nLayers>1 && m_nCsI>1); // true for Glast, false for EGRET
+
         for( jlog=pxtalrecs->begin(); jlog != pxtalrecs->end(); ++jlog) {
             const Event::CalXtalRecData& recLog = **jlog;    
             Point pos = recLog.getPosition();
+                double eneLog = recLog.getEnergy();
             double xPos = pos.x(); double yPos = pos.y();
             double minX, minY;
             minX = std::min(fabs(xPos-calXLo),fabs(xPos-calXHi));
             minY = std::min(fabs(yPos-calYLo),fabs(yPos-calYHi));
+
+            // for last-layer rms
+            idents::CalXtalId id = recLog.getPackedId();
+            int layer = id.getLayer();
+            if (eneLog>0 && layer==m_nLayers-1 && doLL) {
+                nRmsLL++;
+                eRmsLL += eneLog;
+                xLL  += eneLog*xPos;
+                yLL  += eneLog*yPos;
+                xSqLL += eneLog*xPos*xPos;
+                ySqLL += eneLog*yPos*yPos;
+            }
+
             // for later... no time to check this out now!
             /*
             idents::CalXtalId id = recLog.getPackedId();
@@ -664,6 +689,16 @@ StatusCode CalValsTool::calculate()
                 double eneLog = recLog.getEnergy();
                 CAL_EdgeEnergy += eneLog;
             }
+        }
+
+        // finish last-layer rms 
+        if(nRmsLL>1) {
+            double xAveLL = xLL/eRmsLL;
+            double xVarLL = std::max(0.0, xSqLL/eRmsLL - xAveLL*xAveLL);
+            double yAveLL = yLL/eRmsLL;
+            double yVarLL = std::max(0.0, ySqLL/eRmsLL - yAveLL*yAveLL);
+            CAL_xPosRmsLastLayer = (float) sqrt( xVarLL*nRmsLL/(nRmsLL-1));
+            CAL_yPosRmsLastLayer = (float) sqrt( yVarLL*nRmsLL/(nRmsLL-1));
         }
     }
 
@@ -734,15 +769,6 @@ StatusCode CalValsTool::calculate()
             std::multimap<double, double> docaMap;
             std::multimap<double, double>::iterator mapIter;
 
-            // while we're at it, get the info for the last-layer rms
-            double eRmsLL = 0;
-            double xLL = 0;
-            double xSqLL = 0;
-            double yLL = 0;
-            double ySqLL = 0;
-            int    nRmsLL = 0;
-            bool   doLL = (m_nLayers>1 && m_nCsI>1); // true for Glast, false for EGRET
-
             for( jlog=pxtalrecs->begin(); jlog != pxtalrecs->end(); ++jlog) {
                 const Event::CalXtalRecData& recLog = **jlog;    
                 Point pos = recLog.getPosition();
@@ -751,31 +777,8 @@ StatusCode CalValsTool::calculate()
 
                 std::pair<double, double> docaPair(doca, energy);
                 docaMap.insert(docaPair); 
-
-                // for last-layer rms
-                idents::CalXtalId id = recLog.getPackedId();
-                int layer = id.getLayer();
-                if (energy>0 && layer==m_nLayers-1 && doLL) {
-                    nRmsLL++;
-                    eRmsLL += energy;
-                    double x = pos.x();
-                    double y = pos.y();
-                    xLL  += energy*x;
-                    yLL  += energy*y;
-                    xSqLL += energy*x*x;
-                    ySqLL += energy*y*y;
-                }
             }
 
-            // lets get the last-layer rms out of the way! 
-            if(nRmsLL>1) {
-                double xAveLL = xLL/eRmsLL;
-                double xVarLL = std::max(0.0, xSqLL/eRmsLL - xAveLL*xAveLL);
-                double yAveLL = yLL/eRmsLL;
-                double yVarLL = std::max(0.0, ySqLL/eRmsLL - yAveLL*yAveLL);
-                CAL_xPosRmsLastLayer = (float) sqrt( xVarLL*nRmsLL/(nRmsLL-1));
-                CAL_yPosRmsLastLayer = (float) sqrt( yVarLL*nRmsLL/(nRmsLL-1));
-            }
             unsigned int mapSize = docaMap.size();
             int truncSize = std::min((int)((mapSize*truncFraction)+0.5),(int) mapSize);
 
