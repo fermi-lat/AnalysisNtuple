@@ -2,7 +2,7 @@
 @brief Calculates the Mc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.29 2006/03/21 01:43:50 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.30 2006/10/28 00:50:32 lsrea Exp $
 */
 // Include files
 
@@ -31,6 +31,10 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.29 2
 #include "Event/Recon/TkrRecon/TkrTrack.h"
 #include "Event/Recon/TkrRecon/TkrVertex.h"
 
+#include "Event/Recon/AcdRecon/AcdTkrHitPoca.h"
+#include "Event/Recon/AcdRecon/AcdTkrPoint.h"
+
+
 /*! @class McValsTool
 @brief calculates Monte Carlo values
 
@@ -55,6 +59,9 @@ private:
     
     //Attempt to calculate the energy exiting the tracker
     double getEnergyExitingTkr(Event::McParticle* mcPart);
+
+    //Function to parse the stuff we get from AcdReconAlg
+    void getAcdReconVars();
     
     //Pure MC Tuple Items
     float MC_SourceId;
@@ -78,6 +85,8 @@ private:
     float MC_zdir;
     
     //MC - Compared to Recon Items
+
+    // TKR
     float MC_x_err; 
     float MC_y_err;
     float MC_z_err;
@@ -89,6 +98,14 @@ private:
     float MC_dir_err;
     float MC_TKR1_dir_err;
     float MC_TKR2_dir_err;
+
+    // ACD
+    float MC_AcdXEnter;
+    float MC_AcdYEnter;
+    float MC_AcdZEnter;
+
+    float MC_AcdActiveDist3D;
+    float MC_AcdActDistTileId;
 
     // to decode the particle charge
     IParticlePropertySvc* m_ppsvc;    
@@ -172,6 +189,12 @@ StatusCode McValsTool::initialize()
 <td>F<td>   Angle between found direction and Mc direction (radians )
 <tr><td> McTkr[1/2]DirErr 
 <td>F<td>   Angle between direction of [best/second] track and Mc direction (radians) 
+<tr><td> McAcd[X/Y/Z]Enter
+<td>F<td>   Position where MC particle enters volume surrounded by ACD
+<tr><td> McAcdActiveDist3D
+<td>F<td>   Largest active distance from MC particle relative to ACD hit tiles
+<tr><td> McAcdActDistTileId
+<td>F<td>   ID of tile with the largest active distance
 </table>
     */
 
@@ -205,6 +228,13 @@ StatusCode McValsTool::initialize()
     addItem("McDirErr",       &MC_dir_err);      
     addItem("McTkr1DirErr",   &MC_TKR1_dir_err); 
     addItem("McTkr2DirErr",   &MC_TKR2_dir_err);   
+
+    addItem("McAcdXEnter",     &MC_AcdXEnter);
+    addItem("McAcdYEnter",     &MC_AcdYEnter);    
+    addItem("McAcdZEnter",     &MC_AcdZEnter);
+
+    addItem("McAcdActiveDist3D", &MC_AcdActiveDist3D);
+    addItem("McAcdActDistTileId", &MC_AcdActDistTileId);
     
     zeroVals();
     
@@ -241,6 +271,9 @@ StatusCode McValsTool::calculate()
         // if there are no incident particles
         if (MC_NumIncident==0) return sc;
 
+	// ok, go ahead and call the ACD stuff now
+	getAcdReconVars();
+
         // if there is one incident particle, it's okay to use it as before
         // if there are more than one, I don't know what to do, for now
         //     use the mother particle. That way, at least the energy will
@@ -248,9 +281,9 @@ StatusCode McValsTool::calculate()
 
         if(MC_NumIncident == 1) {
 
-            Event::McParticle::StdHepId hepid= (*pMCPrimary)->particleProperty();
-            MC_Id = (double)hepid;
-            ParticleProperty* ppty = m_ppsvc->findByStdHepID( hepid );
+	    Event::McParticle::StdHepId hepid= (*pMCPrimary)->particleProperty();
+	    MC_Id = (double)hepid;
+	    ParticleProperty* ppty = m_ppsvc->findByStdHepID( hepid );
             if (ppty) {
                 std::string name = ppty->particle(); 
                 MC_Charge = ppty->charge();          
@@ -369,6 +402,7 @@ StatusCode McValsTool::calculate()
             }
         } 
     }
+
     return sc;
 }
 
@@ -436,4 +470,51 @@ double McValsTool::getEnergyExitingTkr(Event::McParticle* mcPart)
     //This should now be the energy exiting the tracker due to those particles created 
     //in the tracker. 
     return tkrExitEne;
+}
+
+
+void McValsTool::getAcdReconVars() {
+
+  MsgStream log(msgSvc(), name());  
+
+  double bestActDist(-2000.);
+  idents::AcdId bestId;
+
+  // Here we will loop over calculated poca's to find best (largest) active distance
+  SmartDataPtr<Event::AcdTkrHitPocaCol> acdTkrHits(m_pEventSvc,EventModel::MC::McAcdTkrHitPocaCol); 
+  if ( ! acdTkrHits ) {
+    // no poca's found, set guard values.
+    log << "no AcdTkrHitPocas found on TDS" << endreq;
+    MC_AcdActiveDist3D = bestActDist;
+    MC_AcdActDistTileId = bestId.id();
+  } else {  
+    for ( Event::AcdTkrHitPocaCol::const_iterator itr = acdTkrHits->begin();
+	  itr != acdTkrHits->end(); itr++ ) {
+      const Event::AcdTkrHitPoca* aHitPoca = *itr;
+      if ( aHitPoca->getDoca() > bestActDist ) {
+	bestId = aHitPoca->getId();
+	bestActDist = aHitPoca->getDoca();
+      }
+    }  
+    // latch values
+    MC_AcdActiveDist3D = bestActDist;
+    MC_AcdActDistTileId = bestId.id();
+  }
+
+  // Here we will get the point the MC parent enters the ACD volume
+  SmartDataPtr<Event::AcdTkrPointCol> acdPoints(m_pEventSvc,EventModel::MC::McAcdTkrPointCol);
+  if ( ! acdPoints || acdPoints->size() < 1 ) {
+    // no point's found, set guard values.
+    log << "no AcdTkrPoints found on TDS" << endreq;
+    MC_AcdXEnter = MC_AcdYEnter = MC_AcdZEnter = -2000.;
+  } else {
+    const Event::AcdTkrPoint* entryPoint = (*acdPoints)[0];
+    const Point& thePoint = entryPoint->point();
+    
+    // latch values
+    MC_AcdXEnter = thePoint.x(); 
+    MC_AcdYEnter = thePoint.y(); 
+    MC_AcdZEnter = thePoint.z(); 
+  }
+
 }
