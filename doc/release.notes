@@ -2,6 +2,8 @@
   @brief Package AnalysisNtule
   @verbatim
 
+ v2r19   07-Dec-06   EAC  Added Enterance point of MC particle into ACD, also largest active dist to 
+				hit ACD tile.
  v2r18p3 07-Nov-06   LSR  Move Cal[X/Y]PosRmsLL calc, so it doesn't require a TKR track
  v2r18p2 03-Nov-06   LSR  Protect sqrt in CalValsTool.. will this fix Tom's problem?
  v2r18p1 02-Nov-06   LSR  Cleanup in CalValsTool--removed some hard-coded numbers
