@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.28 2006/10/27 15:42:42 echarles Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.29 2006/10/27 16:58:32 heather Exp $
 */
 
 #include "ValBase.h"
@@ -62,16 +62,22 @@ private:
     float ACD_Ribbon_Count;
     float ACD_ActiveDist;
     float ACD_ActiveDist3D;
+    float ACD_ActiveDist3D_ArcLen;
+
     float ACD_ActiveDist3D_Down;
     float ACD_ActiveDist_Energy;
     float ACD_ActiveDist_Energy_Down;
   
     float ACD_Tkr1ActiveDist;
+    float ACD_Tkr1ActiveDist_ArcLen;
+
     float ACD_Tkr1ActiveDist_Down;
     float ACD_Tkr1ActiveDist_Energy;
     float ACD_Tkr1ActiveDist_EnergyDown;
 
     float ACD_VtxActiveDist;
+    float ACD_VtxActiveDist_ArcLen;
+
     float ACD_VtxActiveDist_Down;
     float ACD_VtxActiveDist_Energy;
     float ACD_VtxActiveDist_EnergyDown;
@@ -252,6 +258,7 @@ StatusCode AcdValsTool::initialize()
     addItem("AcdTileCount",    &ACD_Tile_Count);
 
     addItem("AcdActiveDist3D",   &ACD_ActiveDist3D);
+    addItem("AcdActiveDist3DArcLen",   &ACD_ActiveDist3D_ArcLen); 
     addItem("AcdActDistTileEnergy",   &ACD_ActiveDist_Energy);
     addItem("AcdActiveDist3D_Down", &ACD_ActiveDist3D_Down);
     addItem("AcdActDistTileEnergy_Down", &ACD_ActiveDist_Energy_Down);
@@ -262,11 +269,15 @@ StatusCode AcdValsTool::initialize()
     addItem("AcdTkr1RibbonDist",    &ACD_Tkr1Ribbon_Dist);
 
     addItem("AcdTkr1ActiveDist", &ACD_Tkr1ActiveDist);
+    addItem("AcdTkr1ActiveDistArcLen", &ACD_Tkr1ActiveDist_ArcLen);
+
     addItem("AcdTkr1ActiveDist_Down", &ACD_Tkr1ActiveDist_Down);
     addItem("AcdTkr1ActDistTileEnergy", &ACD_Tkr1ActiveDist_Energy);
     addItem("AcdTkr1ActDistTileEnergy_Down", &ACD_Tkr1ActiveDist_EnergyDown);
 
     addItem("AcdVtxActiveDist", &ACD_VtxActiveDist);
+    addItem("AcdVtxActiveDistArcLen", &ACD_VtxActiveDist_ArcLen);
+ 
     addItem("AcdVtxActiveDist_Down", &ACD_VtxActiveDist_Down);
     addItem("AcdVtxActDistTileEnergy", &ACD_VtxActiveDist_Energy);
     addItem("AcdVtxActDistTileEnergy_Down", &ACD_VtxActiveDist_EnergyDown);
@@ -376,23 +387,39 @@ StatusCode AcdValsTool::calculate()
 	  }	  
 	}
 
-
+	ACD_ActiveDist3D_ArcLen = 0.;
+	
+	ACD_Tkr1ActiveDist_ArcLen = 0.;
 	ACD_Tkr1ActiveDist = -2000;
 	ACD_Tkr1ActiveDist_Energy = 0;
 	ACD_Tkr1ActiveDist_Down = -2000;
 	ACD_Tkr1ActiveDist_EnergyDown= 0;
+	ACD_VtxActiveDist_ArcLen = 0.;
 	ACD_VtxActiveDist = -2000;
 	ACD_VtxActiveDist_Energy= 0;
 	ACD_VtxActiveDist_Down = -2000;
 	ACD_VtxActiveDist_EnergyDown= 0;
 	
 	int filledTypeMask(0);
-
+	bool isFirst(true);
+	float checkActDist(0.);
 
 	// loop over AcdTkrHitPoca & get least distance sutff
 	const Event::AcdTkrHitPocaCol& pocas = pACD->getAcdTkrHitPocaCol();
 	for ( Event::AcdTkrHitPocaCol::const_iterator itrPoca = pocas.begin(); 
 	      itrPoca != pocas.end(); itrPoca++ ) {
+
+	  if ( isFirst && (*itrPoca)->getArcLength() > 0. && (*itrPoca)->trackIndex() >= 0 ) {
+	    isFirst = false;
+	    checkActDist = (*itrPoca)->getDoca();
+	    if ( fabs(checkActDist-ACD_ActiveDist3D) < 1e-6) {
+	      ACD_ActiveDist3D_ArcLen = (*itrPoca)->getArcLength();
+	    } else {
+	      MsgStream log(msgSvc(), name());
+	      log  << "Mismatch between active distance stored in AcdRecon object and first Poca object " 
+		   << checkActDist << ' ' << ACD_ActiveDist3D << endreq;
+	    }
+	  }
 
 	  // if already fill all 4 types, break
 	  if ( filledTypeMask == 15 ) break;
@@ -420,6 +447,7 @@ StatusCode AcdValsTool::calculate()
 	  case 0:
 	    ACD_Tkr1ActiveDist = (*itrPoca)->getDoca();
 	    ACD_Tkr1ActiveDist_Energy = energyIdMap[theId];
+	    ACD_Tkr1ActiveDist_ArcLen = (*itrPoca)->getArcLength();	    
 	    break;
 	  case 1:
 	    ACD_Tkr1ActiveDist_Down  = (*itrPoca)->getDoca();
@@ -428,6 +456,7 @@ StatusCode AcdValsTool::calculate()
 	  case 2:
 	    ACD_VtxActiveDist  = (*itrPoca)->getDoca();
 	    ACD_VtxActiveDist_Energy  = energyIdMap[theId];
+	    ACD_VtxActiveDist_ArcLen = (*itrPoca)->getArcLength();
 	    break;
 	  case 3:
 	    ACD_VtxActiveDist_Down  = (*itrPoca)->getDoca();

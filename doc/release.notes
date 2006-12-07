@@ -2,6 +2,7 @@
   @brief Package AnalysisNtule
   @verbatim
 
+ v2r19p1 07-Dec-06   EAC  Added arc lengths associated with active distances to AcdValsTool
  v2r19   07-Dec-06   EAC  Added Enterance point of MC particle into ACD, also largest active dist to 
 				hit ACD tile.
  v2r18p3 07-Nov-06   LSR  Move Cal[X/Y]PosRmsLL calc, so it doesn't require a TKR track
