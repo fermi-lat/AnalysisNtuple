@@ -15,7 +15,9 @@ Unless otherwise noted, energy is in MeV, length is in mm, and angle is in radia
 Also, unless otherwised noted, the null value, that is, the value in the ntuple when 
 there is no calculated value for a given variable, is zero.
 
-The variables may be of type <b>I</b>nt, <b>U</b>nsigned int, <b>F</b>loat, or <b>D</b>ouble or <b>S</b>tring. 
+The variables may be of type <b>I</b>nt, <b>U</b>nsigned int, <b>F</b>loat, <b>D</b>ouble or <b>S</b>tring. 
 Currently, for reasons of history, most are floats, even those that take only integer values.
 
 (A "string" is a null-terminated character array. The default value is "_".) 
+
+*/

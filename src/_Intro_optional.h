@@ -18,6 +18,8 @@ Also, unless otherwised noted, the null value, that is, the value in the ntuple 
 there is no calculated value for a given variable, is zero.
 
 
-The variables may be of type <b>I</b>nt, <b>F</b>loat, or <b>D</b>ouble. 
+The variables may be of type <b>I</b>nt, <b>U</b>nsigned int, <b>F</b>loat, <b>D</b>ouble or <b>S</b>tring. 
+
+(A "string" is a null-terminated character array. The default value is "_".) 
 
 */

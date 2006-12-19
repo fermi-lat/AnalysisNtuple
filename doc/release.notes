@@ -2,6 +2,8 @@
   @brief Package AnalysisNtule
   @verbatim
 
+ v2r19p2 19-Dec-06   LSR  Remove the 2 GCR tools from the default list and update 
+                            and from _load.cxx. Update documentation a bit.
  v2r19p1 07-Dec-06   EAC  Added arc lengths associated with active distances to AcdValsTool
  v2r19   07-Dec-06   EAC  Added Enterance point of MC particle into ACD, also largest active dist to 
 				hit ACD tile.
