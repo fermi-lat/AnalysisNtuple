@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.29 2006/10/27 16:58:32 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.30 2006/12/07 00:47:33 echarles Exp $
 */
 
 #include "ValBase.h"
@@ -198,6 +198,9 @@ StatusCode AcdValsTool::initialize()
 <td>F<td>   Number of tiles fired
 <tr><td> AcdActiveDist3D 	
 <td>F<td>   Largest active distance of any track to the edge of any tile 
+<tr><td> AcdActiveDist3DArcLen	
+<td>F<td>   Arclength from head of track at which active distance was calculated 
+
 <tr><td> AcdActDistTileEnergy 
 <td>F<td>   The deposited MC energy in the corresponding hit tile 
 
@@ -208,6 +211,8 @@ StatusCode AcdValsTool::initialize()
 
 <tr><td>AcdTkr1ActiveDist
 <td>F<td>   Largest active distance from track 1 to the edge of any tile
+<tr><td>AcdTkr1ActiveDistArcLen
+<td>F<td>   Arclength from head of track 1 at which active distance was calculated for that track
 <tr><td>AcdTkr1ActiveDist_Down
 <td>F<td>   Largest active distance from track 1 to the edge of any tile, down going side of tracks
 <tr><td>AcdTkr1ActDistTileEnergy
@@ -217,6 +222,8 @@ StatusCode AcdValsTool::initialize()
 
 <tr><td>AcdVtxActiveDist
 <td>F<td>   Largest active distance from vertex extrapolation to the edge of any tile
+<tr><td>AcdVtxActiveDistArcLen
+<td>F<td>   Arclength along vertex reconstruction at which active distance was calculated for vertex.
 <tr><td>AcdVtxActiveDist_Down
 <td>F<td>   Largest active distance from vertex extrapolation to the edge of any tile, down going side of tracks
 <tr><td>AcdVtxActDistTileEnergy
