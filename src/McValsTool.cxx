@@ -2,7 +2,7 @@
 @brief Calculates the Mc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.32 2007/03/06 01:07:56 echarles Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.33 2007/03/06 02:51:57 echarles Exp $
 */
 // Include files
 
@@ -33,8 +33,11 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.32 2
 
 #include "Event/Recon/AcdRecon/AcdTkrHitPoca.h"
 #include "Event/Recon/AcdRecon/AcdTkrPoint.h"
+
 #include "Event/Recon/AcdRecon/AcdRecon.h"
 
+// to get current position
+#include "astro/GPS.h"
 /*! @class McValsTool
 @brief calculates Monte Carlo values
 
@@ -84,6 +87,8 @@ private:
     float MC_ydir;
     float MC_zdir;
     
+    float MC_ra, MC_dec; // set by astro::GPS 
+    float MC_glon, MC_glat;
     //MC - Compared to Recon Items
 
     // TKR
@@ -214,7 +219,13 @@ StatusCode McValsTool::initialize()
     addItem("McTkrExitEne",   &MC_TkrExitEne);
     addItem("McX0",           &MC_x0);           
     addItem("McY0",           &MC_y0);           
-    addItem("McZ0",           &MC_z0);           
+    addItem("McZ0",           &MC_z0);  
+
+    addItem("McRa",           &MC_ra);
+    addItem("MCDec",          &MC_dec);
+    
+    addItem("McGlon",         &MC_glon);
+    addItem("MCGlat",         &MC_glat);
     
     addItem("McXDir",         &MC_xdir);         
     addItem("McYDir",         &MC_ydir);         
@@ -316,6 +327,17 @@ StatusCode McValsTool::calculate()
         MC_xdir   = Mc_t0.x();
         MC_ydir   = Mc_t0.y();
         MC_zdir   = Mc_t0.z();
+
+        // convert to (ra, dec)
+        double time(0);
+        static astro::GPS* gps( astro::GPS::instance() );
+        CLHEP::HepRotation R ( gps->transformToGlast(gps->time(), astro::GPS::CELESTIAL) );
+
+        astro::SkyDir mcdir( R.inverse() * Mc_t0);
+        MC_ra   = mcdir.ra();
+        MC_dec  = mcdir.dec();
+        MC_glon = mcdir.l();
+        MC_glat = mcdir.b();
 
         //Attempt to estimate energy exiting the tracker
         MC_TkrExitEne = getEnergyExitingTkr(*pMCPrimary);
