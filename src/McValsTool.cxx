@@ -2,7 +2,7 @@
 @brief Calculates the Mc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.33 2007/03/06 02:51:57 echarles Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.34 2007/03/06 16:32:31 burnett Exp $
 */
 // Include files
 
@@ -37,6 +37,8 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.33 2
 #include "Event/Recon/AcdRecon/AcdRecon.h"
 
 // to get current position
+//flux
+#include "FluxSvc/IFluxSvc.h"
 #include "astro/GPS.h"
 /*! @class McValsTool
 @brief calculates Monte Carlo values
@@ -65,6 +67,8 @@ private:
 
     //Function to parse the stuff we get from AcdReconAlg
     void getAcdReconVars();
+    IFluxSvc*   m_fluxSvc;
+
     
     //Pure MC Tuple Items
     float MC_SourceId;
@@ -140,7 +144,11 @@ StatusCode McValsTool::initialize()
     if( ValBase::initialize().isFailure()) return StatusCode::FAILURE;
   
     // get the services    
-    
+    if ( service("FluxSvc", m_fluxSvc).isFailure() ){
+        log << MSG::ERROR << "Couldn't find the FluxSvc!" << endreq;
+        return StatusCode::FAILURE;
+    }
+   
     if( serviceLocator() ) {
         if( service("ParticlePropertySvc", m_ppsvc, true).isFailure() ) {
             log << MSG::ERROR << "Service [ParticlePropertySvc] not found" << endreq;
@@ -329,11 +337,14 @@ StatusCode McValsTool::calculate()
         MC_zdir   = Mc_t0.z();
 
         // convert to (ra, dec)
-        double time(0);
-        static astro::GPS* gps( astro::GPS::instance() );
-        CLHEP::HepRotation R ( gps->transformToGlast(gps->time(), astro::GPS::CELESTIAL) );
 
-        astro::SkyDir mcdir( R.inverse() * Mc_t0);
+        // The GPS singleton has current time and orientation
+        static astro::GPS* gps = m_fluxSvc->GPSinstance();
+        double time = gps->time();
+
+        CLHEP::HepRotation R ( gps->transformToGlast(time, astro::GPS::CELESTIAL) );
+
+        astro::SkyDir mcdir( - (R.inverse() * Mc_t0 ) );
         MC_ra   = mcdir.ra();
         MC_dec  = mcdir.dec();
         MC_glon = mcdir.l();
