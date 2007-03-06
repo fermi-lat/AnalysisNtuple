@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.30 2006/12/07 00:47:33 echarles Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.31 2007/01/03 17:43:13 echarles Exp $
 */
 
 #include "ValBase.h"
@@ -28,6 +28,8 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.30 
 #include "CLHEP/Geometry/Transform3D.h"
 // Point used by TKR
 //#include "geometry/Point.h"  <=== check this
+
+#include "AcdUtil/AcdTileFuncs.h"
 
 #include <algorithm>
 #include <numeric>
@@ -60,8 +62,9 @@ private:
     float ACD_Total_Ribbon_Energy;
     float ACD_Tile_Count; 
     float ACD_Ribbon_Count;
-    float ACD_ActiveDist;
+    float ACD_ActiveDist;      
     float ACD_ActiveDist3D;
+    float ACD_ActiveDist3D_Err;
     float ACD_ActiveDist3D_ArcLen;
 
     float ACD_ActiveDist3D_Down;
@@ -69,6 +72,7 @@ private:
     float ACD_ActiveDist_Energy_Down;
   
     float ACD_Tkr1ActiveDist;
+    float ACD_Tkr1ActiveDist_Err;
     float ACD_Tkr1ActiveDist_ArcLen;
 
     float ACD_Tkr1ActiveDist_Down;
@@ -86,6 +90,9 @@ private:
     float ACD_Corner_DOCA;
     float ACD_Tkr1Ribbon_Dist;
     float ACD_TkrRibbon_Dist;
+    float ACD_Tkr1Hole_Dist;
+    float ACD_TkrHole_Dist;
+  
     float ACD_ActDist3DTop;
     float ACD_ActDist3DR0;
     float ACD_ActDist3DR1;
@@ -196,8 +203,12 @@ StatusCode AcdValsTool::initialize()
 <td>F<td>   Total energy deposited in ACD
 <tr><td> AcdTileCount 
 <td>F<td>   Number of tiles fired
+<tr><td> AcdRibbonCount 
+<td>F<td>   Number of ribbons fired
 <tr><td> AcdActiveDist3D 	
 <td>F<td>   Largest active distance of any track to the edge of any tile 
+<tr><td> AcdActiveDist3DErr	
+<td>F<td>   Error on largest active distance of any track to the edge of any tile 
 <tr><td> AcdActiveDist3DArcLen	
 <td>F<td>   Arclength from head of track at which active distance was calculated 
 
@@ -211,6 +222,8 @@ StatusCode AcdValsTool::initialize()
 
 <tr><td>AcdTkr1ActiveDist
 <td>F<td>   Largest active distance from track 1 to the edge of any tile
+<tr><td>AcdTkr1ActiveDistErr
+<td>F<td>   Error on largest active distance from track 1 to the edge of any tile
 <tr><td>AcdTkr1ActiveDistArcLen
 <td>F<td>   Arclength from head of track 1 at which active distance was calculated for that track
 <tr><td>AcdTkr1ActiveDist_Down
@@ -239,6 +252,10 @@ StatusCode AcdValsTool::initialize()
 <td>F<td>   Minimum Distance of Closest Approach of any track to any ribbons that cover gaps
 <tr><td> AcdTkr1RibbonDist
 <td>F<td>   Minimum Distance of Closest Approach to best track to any ribbons that cover gaps 
+<tr><td> AcdTkrHoleDist
+<td>F<td>   Minimum Distance of Closest Approach of any track to any of the tile screw holes
+<tr><td> AcdTkr1HoleDist
+<td>F<td>   Minimum Distance of Closest Approach to best track to any of the tile screw holes
 <tr><td> AcdActDistTop   
 <td>F<td>   Smallest active distance of any track to top tiles 
 <tr><td> AcdActDistSideRow[0...3] 	
@@ -265,6 +282,7 @@ StatusCode AcdValsTool::initialize()
     addItem("AcdTileCount",    &ACD_Tile_Count);
 
     addItem("AcdActiveDist3D",   &ACD_ActiveDist3D);
+    addItem("AcdActiveDist3DErr",   &ACD_ActiveDist3D_Err);
     addItem("AcdActiveDist3DArcLen",   &ACD_ActiveDist3D_ArcLen); 
     addItem("AcdActDistTileEnergy",   &ACD_ActiveDist_Energy);
     addItem("AcdActiveDist3D_Down", &ACD_ActiveDist3D_Down);
@@ -274,8 +292,11 @@ StatusCode AcdValsTool::initialize()
     addItem("AcdCornerDoca",    &ACD_Corner_DOCA);
     addItem("AcdTkrRibbonDist",    &ACD_TkrRibbon_Dist);
     addItem("AcdTkr1RibbonDist",    &ACD_Tkr1Ribbon_Dist);
+    addItem("AcdTkrHoleDist",    &ACD_TkrHole_Dist);
+    addItem("AcdTkr1HoleDist",    &ACD_Tkr1Hole_Dist);
 
     addItem("AcdTkr1ActiveDist", &ACD_Tkr1ActiveDist);
+    addItem("AcdTkr1ActiveDistErr", &ACD_Tkr1ActiveDist_Err);
     addItem("AcdTkr1ActiveDistArcLen", &ACD_Tkr1ActiveDist_ArcLen);
 
     addItem("AcdTkr1ActiveDist_Down", &ACD_Tkr1ActiveDist_Down);
@@ -363,9 +384,10 @@ StatusCode AcdValsTool::calculate()
         ACD_Corner_DOCA   = pACD->getCornerDoca();
         ACD_ribbon_ActiveDist = pACD->getRibbonActiveDist();
 
-	// loop over AcdGaps & get least distance between track extrapolation & ribbon
+	// loop over AcdGaps & get least distance between track extrapolation & ribbon/ hole
 	ACD_TkrRibbon_Dist = -2000.;
 	ACD_Tkr1Ribbon_Dist = -2000.;
+
 	const Event::AcdTkrGapPocaCol& gaps = pACD->getAcdTkrGapPocaCol();
 	for ( Event::AcdTkrGapPocaCol::const_iterator itrGap = gaps.begin(); 
 	      itrGap != gaps.end(); itrGap++ ) {
@@ -393,11 +415,12 @@ StatusCode AcdValsTool::calculate()
 	    ACD_TkrRibbon_Dist = (*itrGap)->getDoca();
 	  }	  
 	}
-
+	ACD_ActiveDist3D_Err = 0.;
 	ACD_ActiveDist3D_ArcLen = 0.;
 	
 	ACD_Tkr1ActiveDist_ArcLen = 0.;
 	ACD_Tkr1ActiveDist = -2000;
+	ACD_Tkr1ActiveDist_Err = 0.;
 	ACD_Tkr1ActiveDist_Energy = 0;
 	ACD_Tkr1ActiveDist_Down = -2000;
 	ACD_Tkr1ActiveDist_EnergyDown= 0;
@@ -407,20 +430,36 @@ StatusCode AcdValsTool::calculate()
 	ACD_VtxActiveDist_Down = -2000;
 	ACD_VtxActiveDist_EnergyDown= 0;
 	
+	ACD_TkrHole_Dist = -2000.;
+	ACD_Tkr1Hole_Dist = -2000.;	
+
 	int filledTypeMask(0);
 	bool isFirst(true);
 	float checkActDist(0.);
+	double holeDoca(0.), holeDocaError(0.); 
+	double planeError(0.);
+	int iHole(-1);
 
 	// loop over AcdTkrHitPoca & get least distance sutff
 	const Event::AcdTkrHitPocaCol& pocas = pACD->getAcdTkrHitPocaCol();
 	for ( Event::AcdTkrHitPocaCol::const_iterator itrPoca = pocas.begin(); 
 	      itrPoca != pocas.end(); itrPoca++ ) {
 
-	  if ( isFirst && (*itrPoca)->getArcLength() > 0. && (*itrPoca)->trackIndex() >= 0 ) {
+	  const Event::AcdTkrHitPoca* aPoca = (*itrPoca);
+	  
+	  AcdTileUtil::tileScrewHoleDoca(aPoca->getId(),aPoca->getActiveX(),aPoca->getActiveY(),
+					 aPoca->getLocalXXCov(),aPoca->getLocalYYCov(),aPoca->getLocalXYCov(),
+					 holeDoca,holeDocaError,iHole);
+	  AcdTileUtil::planeErrorProjection(aPoca->getActiveX(),aPoca->getActiveY(),
+					    aPoca->getLocalXXCov(),aPoca->getLocalYYCov(),planeError);  
+
+	  if ( isFirst && aPoca->getArcLength() > 0. && aPoca->trackIndex() >= 0 ) {
 	    isFirst = false;
-	    checkActDist = (*itrPoca)->getDoca();
+	    checkActDist = aPoca->getDoca();
 	    if ( fabs(checkActDist-ACD_ActiveDist3D) < 1e-6) {
-	      ACD_ActiveDist3D_ArcLen = (*itrPoca)->getArcLength();
+	      ACD_ActiveDist3D_ArcLen = aPoca->getArcLength();
+	      ACD_ActiveDist3D_Err= planeError;
+	      ACD_TkrHole_Dist = holeDoca;
 	    } else {
 	      MsgStream log(msgSvc(), name());
 	      log  << "Mismatch between active distance stored in AcdRecon object and first Poca object " 
@@ -432,41 +471,44 @@ StatusCode AcdValsTool::calculate()
 	  if ( filledTypeMask == 15 ) break;
 	  
 	  // only take tiles
-	  if ( ! (*itrPoca)->getId().tile() ) continue;
+	  if ( ! aPoca->getId().tile() ) continue;
 	  
 	  // only take vertex (-1) and best track (0) 
-	  if ( (*itrPoca)->trackIndex() > 0 ) continue;
+	  if ( aPoca->trackIndex() > 0 ) continue;
 	  
 	  // check up-going v. down going and 
 	  int fillType(0);
-	  if ( (*itrPoca)->getArcLength() < 0. ) fillType += 1; // down going
-	  if ( (*itrPoca)->trackIndex() == -1 ) fillType += 2; // vertices
+	  if ( aPoca->getArcLength() < 0. )  fillType += 1; // down going	    
+	  if ( aPoca->trackIndex() == -1 ) fillType += 2; // vertices
 
 	  // check to see if we already have an activeDistance of that type
 	  int checkFilled = filledTypeMask & ( 1 < fillType );
 	  if ( checkFilled != 0 ) continue;
 	  checkFilled &= ( 1 < fillType );
 
-	  idents::AcdId theId = (*itrPoca)->getId();
+	  idents::AcdId theId = aPoca->getId();
+
 
 	  // fill the right kind of activeDistance
 	  switch ( fillType ) {
-	  case 0:
-	    ACD_Tkr1ActiveDist = (*itrPoca)->getDoca();
+	  case 0:	    
+	    ACD_Tkr1ActiveDist = aPoca->getDoca();	    
+	    ACD_Tkr1ActiveDist_Err = planeError;
 	    ACD_Tkr1ActiveDist_Energy = energyIdMap[theId];
-	    ACD_Tkr1ActiveDist_ArcLen = (*itrPoca)->getArcLength();	    
+	    ACD_Tkr1ActiveDist_ArcLen = aPoca->getArcLength();	    
+	    ACD_Tkr1Hole_Dist = holeDoca;
 	    break;
 	  case 1:
-	    ACD_Tkr1ActiveDist_Down  = (*itrPoca)->getDoca();
+	    ACD_Tkr1ActiveDist_Down  = aPoca->getDoca();
 	    ACD_Tkr1ActiveDist_EnergyDown  = energyIdMap[theId];
 	    break;
 	  case 2:
-	    ACD_VtxActiveDist  = (*itrPoca)->getDoca();
+	    ACD_VtxActiveDist  = aPoca->getDoca();
 	    ACD_VtxActiveDist_Energy  = energyIdMap[theId];
-	    ACD_VtxActiveDist_ArcLen = (*itrPoca)->getArcLength();
+	    ACD_VtxActiveDist_ArcLen = aPoca->getArcLength();
 	    break;
 	  case 3:
-	    ACD_VtxActiveDist_Down  = (*itrPoca)->getDoca();
+	    ACD_VtxActiveDist_Down  = aPoca->getDoca();
 	    ACD_VtxActiveDist_EnergyDown = energyIdMap[theId];
 	    break;
 	  }
@@ -532,6 +574,7 @@ StatusCode AcdValsTool::calculate()
 
     return sc;
 }
+
 
 void AcdValsTool::tkrHitsCount() {
 

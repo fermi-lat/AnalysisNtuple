@@ -2,7 +2,7 @@
 @brief Calculates the Mc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.30 2006/10/28 00:50:32 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.31 2006/12/06 21:19:59 echarles Exp $
 */
 // Include files
 
@@ -33,7 +33,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.30 2
 
 #include "Event/Recon/AcdRecon/AcdTkrHitPoca.h"
 #include "Event/Recon/AcdRecon/AcdTkrPoint.h"
-
+#include "Event/Recon/AcdRecon/AcdRecon.h"
 
 /*! @class McValsTool
 @brief calculates Monte Carlo values
@@ -106,6 +106,7 @@ private:
 
     float MC_AcdActiveDist3D;
     float MC_AcdActDistTileId;
+    float MC_AcdActDistTileEnergy;
 
     // to decode the particle charge
     IParticlePropertySvc* m_ppsvc;    
@@ -195,6 +196,8 @@ StatusCode McValsTool::initialize()
 <td>F<td>   Largest active distance from MC particle relative to ACD hit tiles
 <tr><td> McAcdActDistTileId
 <td>F<td>   ID of tile with the largest active distance
+<tr><td> McAcdActDistTileEnergy
+<td>F<td>   Energy deposited in tile with the largest active distance
 </table>
     */
 
@@ -235,6 +238,7 @@ StatusCode McValsTool::initialize()
 
     addItem("McAcdActiveDist3D", &MC_AcdActiveDist3D);
     addItem("McAcdActDistTileId", &MC_AcdActDistTileId);
+    addItem("McAcdActDistTileEnergy", &MC_AcdActDistTileEnergy);
     
     zeroVals();
     
@@ -479,6 +483,19 @@ void McValsTool::getAcdReconVars() {
 
   double bestActDist(-2000.);
   idents::AcdId bestId;
+  std::map<idents::AcdId, double> energyIdMap;
+
+  SmartDataPtr<Event::AcdRecon>           pACD(m_pEventSvc,EventModel::AcdRecon::Event);
+  if (pACD) {
+    // Make a map relating AcdId to energy in the tile
+    const std::vector<idents::AcdId>& tileIds = pACD->getIdCol();
+    const std::vector<double>& tileEnergies   = pACD->getEnergyCol();
+    
+    int maxTiles = tileIds.size();
+    for (int i = 0; i<maxTiles; i++) {
+      energyIdMap[tileIds[i]] = tileEnergies[i];
+    }
+  }
 
   // Here we will loop over calculated poca's to find best (largest) active distance
   SmartDataPtr<Event::AcdTkrHitPocaCol> acdTkrHits(m_pEventSvc,EventModel::MC::McAcdTkrHitPocaCol); 
@@ -499,6 +516,7 @@ void McValsTool::getAcdReconVars() {
     // latch values
     MC_AcdActiveDist3D = bestActDist;
     MC_AcdActDistTileId = bestId.id();
+    MC_AcdActDistTileEnergy = energyIdMap[bestId.id()];
   }
 
   // Here we will get the point the MC parent enters the ACD volume
