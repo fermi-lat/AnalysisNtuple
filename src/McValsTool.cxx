@@ -2,7 +2,7 @@
 @brief Calculates the Mc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.31 2006/12/06 21:19:59 echarles Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.32 2007/03/06 01:07:56 echarles Exp $
 */
 // Include files
 
@@ -504,6 +504,7 @@ void McValsTool::getAcdReconVars() {
     log << "no AcdTkrHitPocas found on TDS" << endreq;
     MC_AcdActiveDist3D = bestActDist;
     MC_AcdActDistTileId = bestId.id();
+    MC_AcdActDistTileEnergy = -1.;
   } else {  
     for ( Event::AcdTkrHitPocaCol::const_iterator itr = acdTkrHits->begin();
 	  itr != acdTkrHits->end(); itr++ ) {
@@ -516,7 +517,7 @@ void McValsTool::getAcdReconVars() {
     // latch values
     MC_AcdActiveDist3D = bestActDist;
     MC_AcdActDistTileId = bestId.id();
-    MC_AcdActDistTileEnergy = energyIdMap[bestId.id()];
+    MC_AcdActDistTileEnergy = energyIdMap[bestId];
   }
 
   // Here we will get the point the MC parent enters the ACD volume
