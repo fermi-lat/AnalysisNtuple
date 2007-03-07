@@ -2,7 +2,7 @@
 @brief Calculates the Mc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.35 2007/03/06 19:40:15 burnett Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.36 2007/03/06 21:34:12 burnett Exp $
 */
 // Include files
 
@@ -93,6 +93,7 @@ private:
     
     float MC_ra, MC_dec; // set by astro::GPS 
     float MC_glon, MC_glat;
+
     //MC - Compared to Recon Items
 
     // TKR
@@ -189,7 +190,15 @@ StatusCode McValsTool::initialize()
 <tr><td> McTkrExitEne 
 <td>F<td>   Attempt to calculate the total energy <strong>leaving</strong> the tracker volume 
 <tr><td> Mc[X/Y/Z]0 
-<td>F<td>   [x/y/z] coordinate of photon conversion or charged particle origin 
+<td>F<td>   [x/y/z] coordinate of photon conversion or charged particle origin
+<tr><td> McRa
+<td>F<td>   Right ascension of initial particle
+<tr><td> McDec
+<td>F<td>   Declination of initial particle
+<tr><td> McL
+<td>F<td>   Galactic longitude of initial particle
+<tr><td> McB
+<td>F<td>   Galactic latitude of initial particle
 <tr><td> Mc[X/Y/Z]Dir 
 <td>F<td>   [x/y/z] direction cosine of primary particle 
 <tr><td> Mc[X/Y]Err 
@@ -232,8 +241,8 @@ StatusCode McValsTool::initialize()
     addItem("McRa",           &MC_ra);
     addItem("McDec",          &MC_dec);
     
-    addItem("McGlon",         &MC_glon);
-    addItem("MCGlat",         &MC_glat);
+    addItem("McL",            &MC_glon);
+    addItem("McB",            &MC_glat);
     
     addItem("McXDir",         &MC_xdir);         
     addItem("McYDir",         &MC_ydir);         
