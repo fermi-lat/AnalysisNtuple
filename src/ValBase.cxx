@@ -2,7 +2,7 @@
 @brief implements all the methods of the XxxValsTools
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.cxx,v 1.30 2006/06/26 16:00:00 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.cxx,v 1.31 2006/09/24 22:56:19 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -156,7 +156,7 @@ void ValBase::addItem(std::string varName, double* pValue)
 {
     std::string baseName;
     int dim;
-    bool hasArg = getArrayArg(varName, baseName, dim);
+    /*bool hasArg =*/ getArrayArg(varName, baseName, dim);
     TypedPointer* ptr = new TypedPointer(DOUBLE, (void*) pValue, dim);
     valPair* pair = new valPair(baseName, ptr);
 
@@ -167,7 +167,7 @@ void ValBase::addItem(std::string varName, float* pValue)
 {
     std::string baseName;
     int dim;
-    bool hasArg = getArrayArg(varName, baseName, dim);
+    /*bool hasArg =*/ getArrayArg(varName, baseName, dim);
     TypedPointer* ptr = new TypedPointer(FLOAT, (void*) pValue, dim);
     valPair* pair = new valPair(baseName, ptr);
 
@@ -177,7 +177,7 @@ void ValBase::addItem(std::string varName, int* pValue)
 {
     std::string baseName;
     int dim;
-    bool hasArg = getArrayArg(varName, baseName, dim);
+    /*bool hasArg =*/ getArrayArg(varName, baseName, dim);
     TypedPointer* ptr = new TypedPointer(INT, (void*) pValue, dim);
     valPair* pair = new valPair(baseName, ptr);
 
@@ -188,7 +188,7 @@ void ValBase::addItem(std::string varName, unsigned int* pValue)
 {
     std::string baseName;
     int dim;
-    bool hasArg = getArrayArg(varName, baseName, dim);
+    /*bool hasArg =*/ getArrayArg(varName, baseName, dim);
     TypedPointer* ptr = new TypedPointer(UINT, (void*) pValue, dim);
     valPair* pair = new valPair(baseName, ptr);
 
@@ -410,13 +410,13 @@ StatusCode ValBase::getVal(std::string varName, std::string& value, int check)
     valType type = ptr->getType();
     
     if(sc.isSuccess()) {
-        if (type==FLOAT) { sprintf(buffer, "%f", 
+        if (type==FLOAT) { sprintf(buffer, "%g", 
             *(reinterpret_cast<float*>(vPtr)+element));}
-        else if (type==DOUBLE)  { sprintf(buffer, "%d", 
+        else if (type==DOUBLE)  { sprintf(buffer, "%g", 
             *(reinterpret_cast<double*>(vPtr)+element));}
         else if (type==INT)     { sprintf(buffer, "%i", 
             *(reinterpret_cast<int*>(vPtr)+element));}
-        else if (type==UINT)    { sprintf(buffer, "%i", 
+        else if (type==UINT)    { sprintf(buffer, "%u", 
             *(reinterpret_cast<unsigned int*>(vPtr)+element));}
     }
     value = std::string(buffer);
