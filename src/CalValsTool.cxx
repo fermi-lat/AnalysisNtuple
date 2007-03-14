@@ -1,9 +1,8 @@
-
 /** @file CalValsTool.cxx
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.80 2006/11/03 23:00:26 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.81 2006/11/07 23:05:52 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 

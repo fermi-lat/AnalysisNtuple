@@ -2,7 +2,7 @@
 @brief Calculates the Mc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.37 2007/03/07 22:34:12 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.38 2007/03/12 20:31:46 lsrea Exp $
 */
 // Include files
 
@@ -68,8 +68,7 @@ private:
     //Function to parse the stuff we get from AcdReconAlg
     void getAcdReconVars();
     IFluxSvc*   m_fluxSvc;
-
-    
+   
     //Pure MC Tuple Items
     float MC_SourceId;
     char  MC_SourceName[80];
