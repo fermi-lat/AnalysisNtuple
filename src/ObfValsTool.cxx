@@ -2,7 +2,7 @@
 @brief Calculates the Onboard Filter variables
 @authors
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfValsTool.cxx,v 1.1 2007/03/14 22:11:37 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfValsTool.cxx,v 1.2 2007/03/16 06:15:49 lsrea Exp $
 */
 
 // Include files
@@ -108,7 +108,6 @@ StatusCode ObfValsTool::initialize()
 
     /** @page anatup_vars 
     @section obfvalstool ObfValsTool Variables
-    /**
 
     Here is a list of the bits in the filter word, as of March 2007:
 
@@ -158,18 +157,26 @@ StatusCode ObfValsTool::initialize()
     <td>D<td>    bits 15-31 of the filter status word (17 bits) 
     <tr><td>  FilterStatus_LO
     <td>D<td>    bits  0-14 of the filter status word (15 bits)
+    <tr><td>  FilterAngSep   
+    <td>D<td>    Filter status separation
+    <tr><td>  FilterEnergy
+    <td>D<td>    Energy as determined by onboard alg
     <tr><td>  FilterXhits
     <td>D<td>    number of hits on best track XZ slope
     <tr><td>  FilterYhits
     <td>D<td>    number of hits on best track YZ slope
     <tr><td>  FilterXZslope
-    <td>D<td>    XZ slope
+    <td>D<td>    XZ slope of the track
     <tr><td>  FilterYZslope
-    <td>D<td>    YZ slope
-    <tr><td>  FilterEnergy
-    <td>D<td>    Energy as determined by onboard alg
-    <tr><td>  FilterAngSep   
-    <td>D<td>    Filter status separation
+    <td>D<td>    YZ slope of the best track
+    <tr><td>  Filter[X/Y/Z]Dir
+    <td>D<td>    Direction cosines of the best track
+    <tr><td>  FilterRa, FilterDec
+    <td>D<td>    Ra and Dec of the best track
+    <tr><td>  FilterL, FilterB
+    <td>D<td>    l and b of the best track
+    <tr><td>  Obf[Gam/Cno/Mip]Status
+    <td>D<td>    Status bits for the Gamma, CNO and MIP filters
     </table> 
 
     */    

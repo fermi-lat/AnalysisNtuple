@@ -2,6 +2,7 @@
   @brief Package AnalysisNtule
   @verbatim
 
+ v2r20p2 16-Mar-07   LSR  Fix the doxygen for ObfValsTool
  v2r20p2 15-Mar-07   LSR  Fix the capitalization so that it works on linux too!
  v2r20p1 14-Mar-07   LSR  New ValsTool: ObfValsTool, moved from OnboardFilter/FilterAlgNtuple
                               (includes celestial coordinates for the best OBF track)
