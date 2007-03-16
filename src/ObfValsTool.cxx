@@ -2,7 +2,7 @@
 @brief Calculates the Onboard Filter variables
 @authors
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfValsTool.cxx,v 1.12 2005/12/13 19:00:37 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfValsTool.cxx,v 1.1 2007/03/14 22:11:37 lsrea Exp $
 */
 
 // Include files
@@ -21,7 +21,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfValsTool.cxx,v 1.12 
 #include "Event/TopLevel/Event.h"
 
 #include "CLHEP/Vector/Rotation.h"
-#include "Geometry/Point.h"
+#include "geometry/Vector.h"
 
 #include "OnboardFilterTds/FilterStatus.h"
 #include "OnboardFilterTds/ObfFilterStatus.h"
