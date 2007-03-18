@@ -2,6 +2,8 @@
   @brief Package AnalysisNtule
   @verbatim
 
+<<<<<<< release.notes
+ v2r20p4 17-Mar-07   LSR  Fix the doxygen for ObfValsTool, again
  v2r20p3 16-Mar-07   LSR  Fix the doxygen for ObfValsTool
  v2r20p2 15-Mar-07   LSR  Fix the capitalization so that it works on linux too!
  v2r20p1 14-Mar-07   LSR  New ValsTool: ObfValsTool, moved from OnboardFilter/FilterAlgNtuple
