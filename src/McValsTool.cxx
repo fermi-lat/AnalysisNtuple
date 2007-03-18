@@ -2,7 +2,7 @@
 @brief Calculates the Mc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.38 2007/03/12 20:31:46 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.39 2007/03/14 22:20:05 lsrea Exp $
 */
 // Include files
 
@@ -145,7 +145,7 @@ StatusCode McValsTool::initialize()
     if( ValBase::initialize().isFailure()) return StatusCode::FAILURE;
   
     // get the services    
-    if ( service("FluxSvc", m_fluxSvc).isFailure() ){
+    if ( service("FluxSvc", m_fluxSvc, true).isFailure() ){
         log << MSG::ERROR << "Couldn't find the FluxSvc!" << endreq;
         return StatusCode::FAILURE;
     }

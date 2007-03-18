@@ -1,7 +1,7 @@
 /** @file McTkrHitValsTool.cxx
     @brief declartion, implementaion of the class UserAlg
 
-    $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McTkrHitValsTool.cxx,v 1.12 2006/03/21 01:43:50 usher Exp $
+    $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McTkrHitValsTool.cxx,v 1.1 2007/03/17 00:39:22 usher Exp $
 */
 
 #include "ValBase.h"
@@ -326,6 +326,7 @@ void McTkrHitValsTool::GetTotalHits(const Event::McParticle* primary)
             Event::ClusMcPosHitVec clusHitVec = m_clusToPosHitTab->getRelBySecond(posHit);
 
             // Do we have anything? (note that this will eliminate McPositionHits from the ACD)
+           
             if (!clusHitVec.empty())
             {
                 // An McPositionHit belongs to one cluster (but a cluster can be made up of

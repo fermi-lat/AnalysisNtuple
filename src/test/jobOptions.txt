@@ -20,7 +20,8 @@ EventSelector.Input = "NONE";
 //
 
 ApplicationMgr.DLLs+= {"RootIo", "GlastSvc", "G4Propagator","G4Generator", 
-                        "TkrUtil"};
+                        "TkrUtil", "FluxSvc"};
+ApplicationMgr.ExtSvc += {"ParticlePropertySvc"};
 ApplicationMgr.DLLs+= {"AnalysisNtuple"};
 
 ApplicationMgr.DLLs   += { "CalibSvc" };
@@ -61,7 +62,8 @@ AnalysisNtupleAlg.tupleName="GLEAM";
 
 //Test of tool list, just the default
 AnalysisNtupleAlg.toolList = {"Mc", "Glt", "TkrHit", "Tkr", 
-                              "Vtx",  "Cal", "Acd", "Evt" };
+                              "Vtx",  "Cal", "Acd", "Evt", "CalMip", "Obf" };
+AnalysisNtupleAlg.enableDebugCalc = true;
 
 // Cut for the new TkrHitsCount ntuple variable
 // Using 250 mm as the default distance between clusters and center of Acd
