@@ -3,6 +3,7 @@
   @verbatim
 
 <<<<<<< release.notes
+ v2r20p6 19-Mar-07   TU   Fix ion crash in McTkrHitValsTool
  v2r20p5 17-Mar-07   LSR  Fixes to get unit test running
  v2r20p4 17-Mar-07   LSR  Fix the doxygen for ObfValsTool, again
  v2r20p3 16-Mar-07   LSR  Fix the doxygen for ObfValsTool
