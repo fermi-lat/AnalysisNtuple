@@ -1,7 +1,7 @@
 /** @file McTkrHitValsTool.cxx
     @brief declartion, implementaion of the class UserAlg
 
-    $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McTkrHitValsTool.cxx,v 1.1 2007/03/17 00:39:22 usher Exp $
+    $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McTkrHitValsTool.cxx,v 1.2 2007/03/18 05:02:45 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -240,8 +240,8 @@ StatusCode McTkrHitValsTool::calculate()
         m_primNumHits = mcPartHitMap[primary];
 
         // Get some of the primary's characteristics
-        ParticleProperty* ppty     = m_ppsvc->findByStdHepID(m_primType);
-        std::string       partName = ppty->particle(); 
+//        ParticleProperty* ppty     = m_ppsvc->findByStdHepID(m_primType);
+//        std::string       partName = ppty->particle(); 
 
         // We will need pointers to the "two" daughters to determine shared hits
         const Event::McParticle* daughter1 = 0;
