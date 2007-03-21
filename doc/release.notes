@@ -2,7 +2,7 @@
   @brief Package AnalysisNtule
   @verbatim
 
-<<<<<<< release.notes
+ v2r20p8 21-Mar-07   LSR  change the sign of the celestial coordinates in ObfValsTool
  v2r20p7 21-Mar-07   TU   Protection against a null pointer in McTkrHitValsTool shared hit counting
  v2r20p6 19-Mar-07   TU   Fix ion crash in McTkrHitValsTool
  v2r20p5 17-Mar-07   LSR  Fixes to get unit test running

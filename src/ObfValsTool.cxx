@@ -2,7 +2,7 @@
 @brief Calculates the Onboard Filter variables
 @authors
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfValsTool.cxx,v 1.3 2007/03/16 23:21:15 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfValsTool.cxx,v 1.4 2007/03/18 00:35:07 lsrea Exp $
 */
 
 // Include files
@@ -252,7 +252,9 @@ StatusCode ObfValsTool::calculate()
 
             CLHEP::HepRotation R ( gps->transformToGlast(time, astro::GPS::CELESTIAL) );
 
-            astro::SkyDir skydir( - (R.inverse() * filtDir ) );
+            // no minus sign... filter tracks already point up!
+
+            astro::SkyDir skydir( R.inverse() * filtDir );
             OBF_ra   = skydir.ra();
             OBF_dec  = skydir.dec();
             OBF_glon = skydir.l();
