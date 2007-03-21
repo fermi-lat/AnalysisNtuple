@@ -1,7 +1,7 @@
 /** @file McTkrHitValsTool.cxx
     @brief declartion, implementaion of the class UserAlg
 
-    $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McTkrHitValsTool.cxx,v 1.2 2007/03/18 05:02:45 lsrea Exp $
+    $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McTkrHitValsTool.cxx,v 1.3 2007/03/19 15:32:26 usher Exp $
 */
 
 #include "ValBase.h"
@@ -502,7 +502,8 @@ int McTkrHitValsTool::GetSharedHits(const Event::McParticle* daughter1, const Ev
                 {
                     Event::McPositionHit* relPosHit = (*relHitIter)->getSecond();
 
-                    if (relPosHit->mcParticle() == daughter1)
+                    // Check that a valid pointer exists and see if it matches the first daughter
+                    if (relPosHit && relPosHit->mcParticle() == daughter1)
                     {
                         numShared++;
                         break;
