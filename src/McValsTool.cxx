@@ -2,7 +2,7 @@
 @brief Calculates the Mc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.39 2007/03/14 22:20:05 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.40 2007/03/18 05:02:45 lsrea Exp $
 */
 // Include files
 
@@ -90,9 +90,9 @@ private:
     float MC_ydir;
     float MC_zdir;
     
-    float MC_ra, MC_dec; // set by astro::GPS 
-    float MC_glon, MC_glat;
-    float MC_zenithTheta, MC_earthAzimuth;
+    //float MC_ra, MC_dec; // set by astro::GPS 
+    //float MC_glon, MC_glat;
+    //float MC_zenithTheta, MC_earthAzimuth;
 
     //MC - Compared to Recon Items
 
@@ -241,14 +241,14 @@ StatusCode McValsTool::initialize()
     addItem("McY0",           &MC_y0);           
     addItem("McZ0",           &MC_z0);  
 
-    addItem("McRa",           &MC_ra);
-    addItem("McDec",          &MC_dec);
+    //addItem("McxRa",           &MC_ra);
+    //addItem("McxDec",          &MC_dec);
     
-    addItem("McL",            &MC_glon);
-    addItem("McB",            &MC_glat);
+    //addItem("McxL",            &MC_glon);
+    //addItem("McxB",            &MC_glat);
 
-    addItem("McZenithTheta",  &MC_zenithTheta);
-    addItem("McEarthAzimuth", &MC_earthAzimuth);
+    //addItem("McxZenithTheta",  &MC_zenithTheta);
+    //addItem("McxEarthAzimuth", &MC_earthAzimuth);
     
     addItem("McXDir",         &MC_xdir);         
     addItem("McYDir",         &MC_ydir);         
@@ -354,6 +354,8 @@ StatusCode McValsTool::calculate()
         // convert to (ra, dec)
 
         // The GPS singleton has current time and orientation
+        // moved to McCoordsAlg to accomodate Interleave
+        /*
         static astro::GPS* gps = m_fluxSvc->GPSinstance();
         double time = gps->time();
 
@@ -370,6 +372,7 @@ StatusCode McValsTool::calculate()
         MC_zenithTheta  = (float) zenith.theta()*180./M_PI;
         MC_earthAzimuth = (float) zenith.phi()*180./M_PI;
         if(MC_earthAzimuth<0) MC_earthAzimuth += 360.;
+        */
 
         //Attempt to estimate energy exiting the tracker
         MC_TkrExitEne = getEnergyExitingTkr(*pMCPrimary);

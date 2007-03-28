@@ -2,7 +2,7 @@
 @brief Calculates the Onboard Filter variables
 @authors
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfValsTool.cxx,v 1.4 2007/03/18 00:35:07 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfValsTool.cxx,v 1.5 2007/03/21 19:55:39 lsrea Exp $
 */
 
 // Include files
@@ -62,8 +62,8 @@ private:
     double m_filterAlgStatus;
     double m_filtxdir,m_filtydir ,m_filtzdir;
 
-    float OBF_ra, OBF_dec; // set by astro::GPS 
-    float OBF_glon, OBF_glat;
+    //float OBF_ra, OBF_dec; // set by astro::GPS 
+    //float OBF_glon, OBF_glat;
 
     float m_energy;
     double m_slopeYZ,m_slopeXZ;
@@ -161,7 +161,7 @@ StatusCode ObfValsTool::initialize()
     <td>D<td>    Filter status separation
     <tr><td>  FilterEnergy
     <td>F<td>    Energy as determined by onboard alg
-    <tr><td>  FilterXhits
+    <tr><td>  Filter
     <td>I<td>    number of hits on best track XZ slope
     <tr><td>  FilterYhits
     <td>I<td>    number of hits on best track YZ slope
@@ -171,10 +171,6 @@ StatusCode ObfValsTool::initialize()
     <td>D<td>    YZ slope of the best track
     <tr><td>  Filter[X/Y/Z]Dir
     <td>D<td>    Direction cosines of the best track
-    <tr><td>  FilterRa, FilterDec
-    <td>F<td>    Ra and Dec of the best track
-    <tr><td>  FilterL, FilterB
-    <td>F<td>    l and b of the best track
     <tr><td>  Obf[Gam/Cno/Mip]Status
     <td>I<td>    Status bits for the Gamma, CNO and MIP filters
     </table> 
@@ -194,10 +190,10 @@ StatusCode ObfValsTool::initialize()
     addItem("FilterYDir",      &m_filtydir );
     addItem("FilterZDir",      &m_filtzdir );
 
-    addItem("FilterRa",        &OBF_ra);
-    addItem("FilterDec",       &OBF_dec); 
-    addItem("FilterL",         &OBF_glon);
-    addItem("FilterB",         &OBF_glat);
+    //addItem("FilterxRa",        &OBF_ra);
+    //addItem("FilterxDec",       &OBF_dec); 
+    //addItem("FilterxL",         &OBF_glon);
+    //addItem("FilterxB",         &OBF_glat);
 
     addItem("ObfGamStatus",    &m_gamStatus);
     addItem("ObfCnoStatus",    &m_cnoStatus);
@@ -242,6 +238,8 @@ StatusCode ObfValsTool::calculate()
             m_filtydir = sin(alpha)*sin(beta);
             m_filtzdir = cos(beta);
 
+            // moved to ObfCoordsAlg to accomodate Interleave
+            /*
             Vector filtDir(m_filtxdir, m_filtydir, m_filtzdir);
 
             // convert to (ra, dec)
@@ -259,6 +257,7 @@ StatusCode ObfValsTool::calculate()
             OBF_dec  = skydir.dec();
             OBF_glon = skydir.l();
             OBF_glat = skydir.b();
+            */
         }
         m_slopeYZ=slopeYZ;
         m_slopeXZ=slopeXZ;
