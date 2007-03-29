@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.33 2007/03/26 18:36:46 echarles Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.34 2007/03/29 14:18:08 heather Exp $
 */
 
 #include "ValBase.h"
@@ -278,7 +278,9 @@ StatusCode AcdValsTool::initialize()
 <tr><td> AcdTkrHitsCountR[0...3] 
 <td>F<td>   ditto for ACD tiles in side row [0...3] 
 <tr><td> AcdIdRecon
-<td>I<td> Detector identifier that was pierced by the reconstructed track
+<td>I<td> Detector identifier that was pierced by the reconstructed track.  
+          A value of 899 (N/A) is the default and denotes that no ACD detector was 
+		  intersected by a reconstructed track.
 </table>
     */
 
