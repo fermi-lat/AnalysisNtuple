@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.32 2007/03/06 01:07:56 echarles Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.33 2007/03/26 18:36:46 echarles Exp $
 */
 
 #include "ValBase.h"
@@ -54,6 +54,10 @@ public:
     StatusCode calculate();
 
     void tkrHitsCount();
+
+    void findId(const std::vector<Event::AcdTkrIntersection*> vec, idents::AcdId &retId);
+
+    void reconId(const Event::AcdRecon *pACD);
 
 private:
 
@@ -109,6 +113,7 @@ private:
     float ACD_ribbon_ActiveDist;
     float ACD_TkrHitsCountTop;
     float ACD_TkrHitsCountRows[4];
+    unsigned int ACD_IdRecon;
 
     IGlastDetSvc *m_detSvc;
     double m_vetoThresholdMeV;
@@ -272,6 +277,8 @@ StatusCode AcdValsTool::initialize()
             (default: 250 mm) of the center of the hit top ACD tiles. 
 <tr><td> AcdTkrHitsCountR[0...3] 
 <td>F<td>   ditto for ACD tiles in side row [0...3] 
+<tr><td> AcdIdRecon
+<td>I<td> Detector identifier that was pierced by the reconstructed track
 </table>
     */
 
@@ -332,6 +339,7 @@ StatusCode AcdValsTool::initialize()
     addItem("AcdTkrHitsCountR1", &ACD_TkrHitsCountRows[1]);
     addItem("AcdTkrHitsCountR2", &ACD_TkrHitsCountRows[2]);
     addItem("AcdTkrHitsCountR3", &ACD_TkrHitsCountRows[3]);
+    addItem("AcdIdRecon", &ACD_IdRecon);
 
     zeroVals();
 
@@ -345,6 +353,7 @@ StatusCode AcdValsTool::calculate()
 
     tkrHitsCount();
 
+
     SmartDataPtr<Event::AcdRecon>           pACD(m_pEventSvc,EventModel::AcdRecon::Event);
 
     // Recover Track associated info. (not currently used 
@@ -355,6 +364,9 @@ StatusCode AcdValsTool::calculate()
     //Make sure we have valid ACD data
     if (pACD)
     {
+        reconId(pACD);
+
+
         // Make a map relating AcdId to energy in the tile
         std::map<idents::AcdId, double> energyIdMap;
 
@@ -650,3 +662,156 @@ void AcdValsTool::tkrHitsCount() {
     return;
 }
 
+
+void AcdValsTool::reconId(const Event::AcdRecon *pACD) {
+    std::vector<Event::AcdTkrIntersection*> bestTrackUp, bestTrackDown, vertexUp, vertexDown;
+
+    Event::AcdTkrIntersectionCol::const_iterator itrTrackIntersect; 
+
+    idents::AcdId resetId;
+    resetId.na(1);
+    ACD_IdRecon = resetId.id();
+
+    // loop over the AcdTrackIntersections
+    const Event::AcdTkrIntersectionCol& trackIntersectCol = pACD->getAcdTkrIntersectionCol();
+    for ( itrTrackIntersect = trackIntersectCol.begin(); 
+        itrTrackIntersect != trackIntersectCol.end(); itrTrackIntersect++ ) {
+
+            if ((*itrTrackIntersect)->getTrackIndex() > 0 ) continue;  // could be vertex (-1) or best track (0)
+           
+            double arcLen = (*itrTrackIntersect)->getArcLengthToIntersection();
+
+            if (((*itrTrackIntersect)->getTrackIndex() == 0)){ // tracks
+                if (arcLen > 0) // upward track
+                    bestTrackUp.push_back(*itrTrackIntersect);
+                else  // downward track
+                    bestTrackDown.push_back(*itrTrackIntersect);
+            } else if ( ((*itrTrackIntersect)->getTrackIndex() == -1)) { // vertices 
+                if (arcLen > 0)
+                    vertexUp.push_back(*itrTrackIntersect);
+                else 
+                    vertexDown.push_back(*itrTrackIntersect);
+            }
+        }
+
+        idents::AcdId vUpId, vDownId, tUpId, tDownId;
+        vUpId.na(1);
+        vDownId.na(1);
+        tUpId.na(1);
+        tDownId.na(1);
+        findId(vertexUp, vUpId);
+        findId(vertexDown, vDownId);
+        findId(bestTrackUp, tUpId);
+        findId(bestTrackDown, tDownId);
+       
+        // Prefer vertices over tracks
+        // up versus down
+        // and tiles over ribbons
+        bool foundTile = false;
+        bool found = false;
+        if (!vUpId.na()) {
+            ACD_IdRecon = vUpId.id();
+            if (vUpId.tile()) foundTile = true; 
+            found = true;
+        } 
+        if (!tUpId.na()) {
+            if (vUpId.na()) 
+                ACD_IdRecon = tUpId.id();
+            else if ( (!foundTile) && (tUpId.tile()) )
+                ACD_IdRecon = tUpId.id();
+            found = true;
+        }
+
+        // no upward intersections found - check downward
+        if (!found) {
+            if (!vDownId.na()) {
+                ACD_IdRecon = vDownId.id();
+                if (vDownId.tile()) foundTile = true; 
+            }
+            if (!tDownId.na()) {
+                if (vDownId.na())
+                    ACD_IdRecon =tDownId.id();
+                else if ( (!foundTile) && (tDownId.tile()) )
+                    ACD_IdRecon = tUpId.id();
+
+            }
+        }
+
+        bestTrackUp.clear();
+        bestTrackDown.clear();
+        vertexUp.clear();
+        vertexDown.clear();
+}
+
+
+void AcdValsTool::findId(const std::vector<Event::AcdTkrIntersection*> vec, idents::AcdId &retId) {
+
+    Point tilePos, ribbonPos;
+    int tileIndex = -1, ribIndex = -1;
+
+    idents::AcdId tileId, ribId;
+    tileId.na(1);
+    ribId.na(1);
+
+    if (vec.size() <= 0) {
+        retId = tileId;
+        return;
+    }
+
+    if (vec[0]->getTileId().tile()) {
+        tileIndex = 0;
+        tileId = vec[0]->getTileId();
+    } else {
+        ribIndex = 0;
+        ribId = vec[0]->getTileId();
+    }
+
+    // If there is only one TkrIntesection object, then we can return the one id we have
+    if (vec.size() == 1) {
+        if (tileIndex >= 0)
+            retId = tileId;
+        else 
+            retId = ribId;
+        return;
+    }
+
+    // otherwise, loop over the remaining TkrIntesection objects
+    unsigned int ind=1;
+    Event::AcdTkrIntersectionCol::const_iterator itrTrackIntersect; 
+    for ( itrTrackIntersect = ++vec.begin(); 
+        itrTrackIntersect != vec.end(); itrTrackIntersect++ ) {
+            idents::AcdId id = (*itrTrackIntersect)->getTileId();
+            if (id.tile()) {
+                if (tileIndex < 0) {  // haven't seen another tile yet
+                    tileIndex = ind;
+                    tileId = id;
+                } else { // there was another tile found already
+                    // use Z coordinates to choose if one of the found tiles is a "top" tile
+                    // chose the greater Z value
+                    if ( (tileId.top()) || (id.top()) ) {
+                        if (vec[tileIndex]->getGlobalPosition().z() < (*itrTrackIntersect)->getGlobalPosition().z()) {
+                            tileId = (*itrTrackIntersect)->getTileId();
+                            tileIndex = ind;
+                        }
+                    }   
+                    // assume side tiles do not overlap in Gleam, so no worries about handling that case right now
+                    // right now we just pick up the tile we find first
+                }
+            } else { // ribbon
+                if (ribIndex < 0) { // first ribbon intersection found
+                    ribIndex = ind;
+                    ribId = id;
+                } 
+                // don't worry about overlapping ribbons, just pick up the first ribbon we find
+            }
+
+            ind++;
+        }
+
+        if (tileIndex >= 0)
+            retId = tileId;
+        else
+            retId = ribId;
+
+        return;
+}
