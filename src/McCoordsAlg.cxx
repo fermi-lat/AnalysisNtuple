@@ -1,7 +1,7 @@
 /** @file McCoordsAlg.cxx
 @brief Declaration and implementation of Gaudi algorithm McCoordsAlg
 
-$Header: /nfs/slac/g/glast/ground/cvs/merit/src/meritAlg/McCoordsAlg.cxx,v 1.16 2006/11/27 22:58:39 burnett Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McCoordsAlg.cxx,v 1.1 2007/03/28 16:59:58 lsrea Exp $
 */
 // Include files
 
@@ -21,17 +21,14 @@ $Header: /nfs/slac/g/glast/ground/cvs/merit/src/meritAlg/McCoordsAlg.cxx,v 1.16 
 #include <map>
 
 // forward declatation of the worker
-class McCoordsworker;
+class McCworker;
 
 namespace { // anonymous namespace for file-global
-    //INTupleWriterSvc* rootTupleSvc;
     IFluxSvc* fluxSvc;
     unsigned int nbOfEvtsInFile(100000);
     std::string treename("MeritTuple");
 #include "Item.h"
-
 }
-
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /** @class McCoordsAlg
@@ -47,7 +44,7 @@ public:
     StatusCode finalize();
 private:
     /// this guy does the work!
-    McCoordsworker * m_worker;
+    McCworker * m_worker;
     //counter
     int m_count;
 };
@@ -59,71 +56,13 @@ const IAlgFactory& McCoordsAlgFactory = Factory;
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-class McCoordsworker{ 
+class McCworker{ 
 public:
-    McCoordsworker();
+    McCworker();
 
     void evaluate();
 
 private:
-    //std::map<std::string, double> getCelestialCoords(const Event::Exposure& exp,
-    //    const CLHEP::Hep3Vector glastDir);
-
-    bool useVertex(){ //TODO: implement
-        return false;
-    }
-/*
-    template <typename T>
-        void addItem(std::string name, const T & value)
-    {
-        rootTupleSvc->addItem(treename, name, &value);
-    }
-*/
-    /*
-    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    class Item {
-    public:
-        Item(std::string name, char typecode=' ')
-        {
-            std::string type = rootTupleSvc->getItem(treename, name, m_pvalue);
-            if( typecode==' ') {
-                m_isFloat = type==rootType('F');
-                if( !m_isFloat && type!=rootType('D')){
-                    throw std::invalid_argument("McCoordsAlg: type of "+name+ " is not "+ rootType('F')+" or "+rootType('D'));
-                }
-            }else if( type!= rootType(typecode) ){
-                throw std::invalid_argument("McCoordsAlg: type of "+name+ " is not "+ rootType(typecode));
-            }
-        }
-        // Item behaves like a double
-        operator double()const
-        {
-            return m_isFloat? *(float*)m_pvalue : *(double*)m_pvalue;
-        }
-
-        static std::string rootType(char code){
-            if( code=='i') return "UInt_t";
-            if( code=='I') return "Int_t";
-            if( code=='F') return "Float_t";
-            if( code=='D') return "Double_t";
-            // todo: add more?
-            return "unknown";
-        }
-        void* m_pvalue;
-        bool m_isFloat;
-    };
-    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    template<typename T, char  typecode>
-    class TypedItem : public Item {
-    public:
-        TypedItem(std::string name): Item(name, typecode){}
-        T value() const{ return *static_cast<T*>(m_pvalue); }
-        operator T()const{return value();}
-    };
-
-    */
-    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
     // tuple items expect to find
     //TypedItem<unsigned int, 'i'> EvtRun, EvtEventId;
 
@@ -160,7 +99,7 @@ StatusCode McCoordsAlg::initialize()
         log << MSG::ERROR << " failed to get the RootTupleSvc" << endreq;
         return sc;
     }
-    m_worker = new McCoordsworker();
+    m_worker = new McCworker();
 
     service("FluxSvc", fluxSvc, true);
 
@@ -191,7 +130,7 @@ StatusCode McCoordsAlg::finalize()
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-McCoordsworker::McCoordsworker()
+McCworker::McCworker()
 // initialize pointers to current items
 : McXDir("McXDir")
 , McYDir("McYDir")
@@ -222,7 +161,7 @@ McCoordsworker::McCoordsworker()
 }
 
 
-void McCoordsworker::evaluate()
+void McCworker::evaluate()
 {
     // convert to (ra, dec)
 
@@ -243,6 +182,7 @@ void McCoordsworker::evaluate()
     CLHEP::HepRotation Rzen ( gps->transformToGlast(time, astro::GPS::ZENITH) );
     Vector zenith = -(Rzen.inverse() * Mc_t0);
     m_mcZen  = (float) zenith.theta()*180./M_PI;
+    // zero azimuth points north!
     m_mcAzim = -(float) zenith.phi()*180./M_PI + 90.0;
     if(m_mcAzim<0) m_mcAzim += 360.;
 

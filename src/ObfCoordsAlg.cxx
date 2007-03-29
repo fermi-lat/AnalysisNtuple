@@ -1,7 +1,7 @@
 /** @file ObfCoordsAlg.cxx
 @brief Declaration and implementation of Gaudi algorithm ObfCoordsAlg
 
-$Header: /nfs/slac/g/glast/ground/cvs/merit/src/meritAlg/ObfCoordsAlg.cxx,v 1.16 2006/11/27 22:58:39 burnett Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfCoordsAlg.cxx,v 1.1 2007/03/28 16:59:58 lsrea Exp $
 */
 // Include files
 
@@ -20,10 +20,9 @@ $Header: /nfs/slac/g/glast/ground/cvs/merit/src/meritAlg/ObfCoordsAlg.cxx,v 1.16
 #include <map>
 
 // forward declatation of the worker
-class ObfCoordsworker;
+class ObfCworker;
 
 namespace { // anonymous namespace for file-global
-    //INTupleWriterSvc* rootTupleSvc;
     IFluxSvc* fluxSvc;
     unsigned int nbOfEvtsInFile(100000);
     std::string treename("MeritTuple");
@@ -44,7 +43,7 @@ public:
     StatusCode finalize();
 private:
     /// this guy does the work!
-    ObfCoordsworker * m_worker;
+    ObfCworker * m_worker;
     //counter
     int m_count;
 };
@@ -56,70 +55,13 @@ const IAlgFactory& ObfCoordsAlgFactory = Factory;
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-class ObfCoordsworker{ 
+class ObfCworker{ 
 public:
-    ObfCoordsworker();
+    ObfCworker();
 
     void evaluate();
 
 private:
-    //std::map<std::string, double> getCelestialCoords(const Event::Exposure& exp,
-    //    const CLHEP::Hep3Vector glastDir);
-
-    bool useVertex(){ //TODO: implement
-        return false;
-    }
-/*
-    template <typename T>
-        void addItem(std::string name, const T & value)
-    {
-        rootTupleSvc->addItem(treename, name, &value);
-    }
-*/
-    /*
-    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    class Item {
-    public:
-        Item(std::string name, char typecode=' ')
-        {
-            std::string type = rootTupleSvc->getItem(treename, name, m_pvalue);
-            if( typecode==' ') {
-                m_isFloat = type==rootType('F');
-                if( !m_isFloat && type!=rootType('D')){
-                    throw std::invalid_argument("ObfCoordsAlg: type of "+name+ " is not "+ rootType('F')+" or "+rootType('D'));
-                }
-            }else if( type!= rootType(typecode) ){
-                throw std::invalid_argument("ObfCoordsAlg: type of "+name+ " is not "+ rootType(typecode));
-            }
-        }
-        // Item behaves like a double
-        operator double()const
-        {
-            return m_isFloat? *(float*)m_pvalue : *(double*)m_pvalue;
-        }
-
-        static std::string rootType(char code){
-            if( code=='i') return "UInt_t";
-            if( code=='I') return "Int_t";
-            if( code=='F') return "Float_t";
-            if( code=='D') return "Double_t";
-            // todo: add more?
-            return "unknown";
-        }
-        void* m_pvalue;
-        bool m_isFloat;
-    };
-    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    template<typename T, char  typecode>
-    class TypedItem : public Item {
-    public:
-        TypedItem(std::string name): Item(name, typecode){}
-        T value() const{ return *static_cast<T*>(m_pvalue); }
-        operator T()const{return value();}
-    };
-    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*/
-
     // tuple items expect to find
     //TypedItem<unsigned int, 'i'> EvtRun, EvtEventId;
 
@@ -156,7 +98,7 @@ StatusCode ObfCoordsAlg::initialize()
         log << MSG::ERROR << " failed to get the RootTupleSvc" << endreq;
         return sc;
     }
-    m_worker = new ObfCoordsworker();
+    m_worker = new ObfCworker();
 
     service("FluxSvc", fluxSvc, true);
 
@@ -187,7 +129,7 @@ StatusCode ObfCoordsAlg::finalize()
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-ObfCoordsworker::ObfCoordsworker()
+ObfCworker::ObfCworker()
 // initialize pointers to current items
 : FilterXDir("FilterXDir")
 , FilterYDir("FilterYDir")
@@ -218,7 +160,7 @@ ObfCoordsworker::ObfCoordsworker()
 }
 
 
-void ObfCoordsworker::evaluate()
+void ObfCworker::evaluate()
 {
 
     m_obfRa = m_obfDec = m_obfL = m_obfB = 0;
