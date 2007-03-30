@@ -2,6 +2,10 @@
   @brief Package AnalysisNtule
   @verbatim
 
+ v2r21   30-Mar-07   LSR  Reorg: FT1Alg moved here
+                                 ObfValsTool was FilterAlgTuple in OnboardFilter
+                                 ObfCoordsAlg and McCoordsAlg does celestial coordinates
+                                    (needs to be separated for Interleave)
                      HMK  Add AcdIdRecon to identify the AcdId crossed by
                           the reconstructed track.
  v2r20p9 26-Mar-07   EAC  Fix a bug in the AcdValTools that was messing up AcdTkr1* variables
