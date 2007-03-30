@@ -1,7 +1,7 @@
 /** @file McCoordsAlg.cxx
 @brief Declaration and implementation of Gaudi algorithm McCoordsAlg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McCoordsAlg.cxx,v 1.1 2007/03/28 16:59:58 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McCoordsAlg.cxx,v 1.2 2007/03/29 15:45:01 lsrea Exp $
 */
 // Include files
 
@@ -25,7 +25,6 @@ class McCworker;
 
 namespace { // anonymous namespace for file-global
     IFluxSvc* fluxSvc;
-    unsigned int nbOfEvtsInFile(100000);
     std::string treename("MeritTuple");
 #include "Item.h"
 }
@@ -81,8 +80,6 @@ McCoordsAlg::McCoordsAlg(const std::string& name, ISvcLocator* pSvcLocator) :
 Algorithm(name, pSvcLocator)
 {
     declareProperty("TreeName",  treename="MeritTuple");
-    declareProperty("NbOfEvtsInFile", nbOfEvtsInFile=100000);
-
 }
 
 StatusCode McCoordsAlg::initialize()
