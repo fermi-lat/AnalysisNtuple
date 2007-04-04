@@ -1,7 +1,7 @@
 /** @file McTkrHitValsTool.cxx
     @brief declartion, implementaion of the class UserAlg
 
-    $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McTkrHitValsTool.cxx,v 1.3 2007/03/19 15:32:26 usher Exp $
+    $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McTkrHitValsTool.cxx,v 1.4 2007/03/21 17:14:25 usher Exp $
 */
 
 #include "ValBase.h"
@@ -26,6 +26,9 @@
 #include "Event/MonteCarlo/McRelTableDefs.h"
 
 #include "Event/Digi/TkrDigi.h"
+
+// Volume identifier stuff
+#include "idents/VolumeIdentifier.h"
 
 #include <algorithm>
 #include <set>
@@ -53,8 +56,9 @@ public:
 private:
     // Internal functions
     int  GetTrackHits(const Event::McParticle* paricle);
-    void GetTotalHits(const Event::McParticle* primary);
+    void CntTotalHits(const Event::McParticle* primary);
     int  GetSharedHits(const Event::McParticle* daught1, const Event::McParticle* daught2);
+    void CntMcPosHits(const Event::McParticle* primary);
 
     // Variables for primary track
     int          m_primType;          // Particle type of primary
@@ -68,6 +72,12 @@ private:
     // Variables for second daughter
     int          m_dght2Type;         // Particle type of "next" daughter track
     int          m_dght2NumHits;      // "Next" daughter number of track hits
+
+    // McPositionHit/particle counts
+    int          m_posHitPrimary;     // Number of McPositionHits associated to primary
+    int          m_posHitElectrons;   // Number of McPositionHits not primary due to electrons
+    int          m_posHitPositrons;   // Number of McPositionHits not primary due to positrons
+    int          m_posHitOthers;      // Number of McPositionHits none of the above
 
     // Other variables
     int          m_process;           // Decay process for primary (if one)
@@ -131,6 +141,10 @@ StatusCode McTkrHitValsTool::initialize()
 <tr><td> McTHDght1NumHits <td> I <td> Daughter 1 number of Tracker hits
 <tr><td> McTHDght2Type <td> I <td> Daughter 2 (most hits) particle type (id)
 <tr><td> McTHDght2NumHits <td> I <td> Daughter 2 number of Tracker hits
+<tr><td> mcTHPosHitPrimary <td> I <td> Number of McPositionHits associated to primary 
+<tr><td> mcTHPosHitElectron <td> I <td> Number of McPositionHits not primary due to electrons
+<tr><td> mcTHPosHitPositron <td> I <td> Total Number of McPositionHits not primary due to positrons
+<tr><td> mcTHPosHitOthers <td> I <td> Number of McPositionHits none of the above
 <tr><td> mcTHTotalHits <td> I <td> Total number of MC generated Tracker hits 
 </table>
 
@@ -143,6 +157,10 @@ StatusCode McTkrHitValsTool::initialize()
 	addItem("McTHDght1NumHits",   &m_dght1NumHits);
 	addItem("McTHDght2Type",      &m_dght2Type);
 	addItem("McTHDght2NumHits",   &m_dght2NumHits);
+    addItem("McTHPosHitPrimary",  &m_posHitPrimary);
+    addItem("McTHPosHitElectron", &m_posHitElectrons);
+    addItem("McTHPosHitPositron", &m_posHitPositrons);
+    addItem("McTHPosHitOthers",   &m_posHitOthers);
     addItem("McTHTotalHits",      &m_totalHits);
     addItem("McTHTotPrmHits",     &m_totalPrimHits);
     addItem("McTHTotPrmClusHits", &m_totalPrimClusHits);
@@ -215,7 +233,10 @@ StatusCode McTkrHitValsTool::calculate()
     {
         // We now count the total number of hits in the Tracker and the number
         // due to the primary and its products
-        GetTotalHits(primary);
+        CntTotalHits(primary);
+
+        // Count the number of McPositionHits due to primary, electrons and positrons
+        CntMcPosHits(primary);
 
         // Next up is to get the number of hits for each of McParticles in the list
         // Set up the map to hold the results
@@ -297,7 +318,7 @@ StatusCode McTkrHitValsTool::calculate()
 }
 
 
-void McTkrHitValsTool::GetTotalHits(const Event::McParticle* primary)
+void McTkrHitValsTool::CntTotalHits(const Event::McParticle* primary)
 {
     m_totalHits     = 0;
     m_totalPrimHits = 0;
@@ -514,4 +535,53 @@ int McTkrHitValsTool::GetSharedHits(const Event::McParticle* daughter1, const Ev
     }
 
     return numShared;
+}
+
+void McTkrHitValsTool::CntMcPosHits(const Event::McParticle* primary)
+{
+    // Define codes for electrons and positrons
+    static Event::McParticle::StdHepId electron =  11;
+    static Event::McParticle::StdHepId positron = -11;
+
+    // Clear counters
+    m_posHitPrimary   = 0;
+    m_posHitElectrons = 0;
+    m_posHitPositrons = 0;
+    m_posHitOthers    = 0;
+
+    // First task is to recover the McParticle Collection and categorize the event
+    SmartDataPtr<Event::McPositionHitCol> positionHitCol(m_pEventSvc, EventModel::MC::McPositionHitCol);
+
+    // If collection then proceed
+    if (positionHitCol)
+    {
+        // Loop over the collection of McPositionHits
+        for(Event::McPositionHitCol::iterator posHitIter = positionHitCol->begin();
+            posHitIter != positionHitCol->end(); posHitIter++)
+        {
+            Event::McPositionHit* posHit = *posHitIter;
+
+            // Check the volume identifier to cut on tracker hits
+            idents::VolumeIdentifier volId = posHit->volumeID();
+
+            // Do not count ACD hits
+            if (volId[0] != 0) continue;
+
+            // Get parent information
+            const Event::McParticle* particle = posHit->mcParticle();
+            const Event::McParticle* mother   = 0;
+            
+            if (particle) mother = particle->getMother();
+
+            // What generated the McPositionHit?
+            if      (particle                  == primary)  m_posHitPrimary++;
+            else if (mother                    == primary)  m_posHitPrimary++;
+            else if (posHit->getMcParticleId() == electron) m_posHitElectrons++;
+            else if (posHit->getMcParticleId() == positron) m_posHitPositrons++;
+            else                                            m_posHitOthers++;
+        }
+    }
+
+
+    return;
 }
