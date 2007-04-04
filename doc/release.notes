@@ -2,8 +2,8 @@
   @brief Package AnalysisNtule
   @verbatim
 
-                      TU  Update McTkrValsTool to output four more ntuple variables for Bill
-                     HMK Update AcdValTool to store both AcdTileIdRecon and AcdRibbonIdRecon
+ v2r22    4-Apr-07    TU  Update McTkrValsTool to output four more ntuple variables for Bill
+                     HMK  Update AcdValTool to store both AcdTileIdRecon and AcdRibbonIdRecon
  v2r21   30-Mar-07   LSR  Reorg: FT1Alg moved here
                                  ObfValsTool was FilterAlgTuple in OnboardFilter
                                  ObfCoordsAlg and McCoordsAlg does celestial coordinates
