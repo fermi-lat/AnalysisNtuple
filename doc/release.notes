@@ -2,6 +2,7 @@
   @brief Package AnalysisNtule
   @verbatim
 
+                     HMK Update AcdValTool to store both AcdTileIdRecon and AcdRibbonIdRecon
  v2r21   30-Mar-07   LSR  Reorg: FT1Alg moved here
                                  ObfValsTool was FilterAlgTuple in OnboardFilter
                                  ObfCoordsAlg and McCoordsAlg does celestial coordinates
