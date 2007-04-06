@@ -2,7 +2,7 @@
 @brief Calculates the Mc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.40 2007/03/18 05:02:45 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.41 2007/03/28 16:59:58 lsrea Exp $
 */
 // Include files
 
@@ -89,10 +89,9 @@ private:
     float MC_xdir;
     float MC_ydir;
     float MC_zdir;
+  
+    // celestial coordinates now set in McCoordsAlg
     
-    //float MC_ra, MC_dec; // set by astro::GPS 
-    //float MC_glon, MC_glat;
-    //float MC_zenithTheta, MC_earthAzimuth;
 
     //MC - Compared to Recon Items
 
@@ -191,17 +190,6 @@ StatusCode McValsTool::initialize()
 <td>F<td>   Attempt to calculate the total energy <strong>leaving</strong> the tracker volume 
 <tr><td> Mc[X/Y/Z]0 
 <td>F<td>   [x/y/z] coordinate of photon conversion or charged particle origin
-<tr><td> McRa
-<td>F<td>   Right ascension of initial particle
-<tr><td> McDec
-<td>F<td>   Declination of initial particle
-<tr><td> McL
-<td>F<td>   Galactic longitude of initial particle
-<tr><td> McZenithTheta
-<td>F<td>   Zenith angle of the initial particle
-<tr><td> McEarthAzimuth
-<td>F<td>   Earth azimuth of the initial particle
-<tr><td> McB
 <tr><td> Mc[X/Y/Z]Dir 
 <td>F<td>   [x/y/z] direction cosine of primary particle 
 <tr><td> Mc[X/Y]Err 
@@ -240,15 +228,6 @@ StatusCode McValsTool::initialize()
     addItem("McX0",           &MC_x0);           
     addItem("McY0",           &MC_y0);           
     addItem("McZ0",           &MC_z0);  
-
-    //addItem("McxRa",           &MC_ra);
-    //addItem("McxDec",          &MC_dec);
-    
-    //addItem("McxL",            &MC_glon);
-    //addItem("McxB",            &MC_glat);
-
-    //addItem("McxZenithTheta",  &MC_zenithTheta);
-    //addItem("McxEarthAzimuth", &MC_earthAzimuth);
     
     addItem("McXDir",         &MC_xdir);         
     addItem("McYDir",         &MC_ydir);         
@@ -352,28 +331,8 @@ StatusCode McValsTool::calculate()
         MC_zdir   = Mc_t0.z();
 
         // convert to (ra, dec)
-
-        // The GPS singleton has current time and orientation
         // moved to McCoordsAlg to accomodate Interleave
-        /*
-        static astro::GPS* gps = m_fluxSvc->GPSinstance();
-        double time = gps->time();
-
-        CLHEP::HepRotation R ( gps->transformToGlast(time, astro::GPS::CELESTIAL) );
-
-        astro::SkyDir mcdir( - (R.inverse() * Mc_t0 ) );
-        MC_ra   = mcdir.ra();
-        MC_dec  = mcdir.dec();
-        MC_glon = mcdir.l();
-        MC_glat = mcdir.b();
-
-        CLHEP::HepRotation Rzen ( gps->transformToGlast(time, astro::GPS::ZENITH) );
-        Vector zenith = -(Rzen.inverse() * Mc_t0);
-        MC_zenithTheta  = (float) zenith.theta()*180./M_PI;
-        MC_earthAzimuth = (float) zenith.phi()*180./M_PI;
-        if(MC_earthAzimuth<0) MC_earthAzimuth += 360.;
-        */
-
+ 
         //Attempt to estimate energy exiting the tracker
         MC_TkrExitEne = getEnergyExitingTkr(*pMCPrimary);
 
