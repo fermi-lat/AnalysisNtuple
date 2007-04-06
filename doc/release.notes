@@ -2,6 +2,7 @@
   @brief Package AnalysisNtule
   @verbatim
 
+ v2r22p1  5-Apr-07    TU  Slight mods to Bill's MC hit counting, add one more variable to ntuple
  v2r22    4-Apr-07    TU  Update McTkrValsTool to output four more ntuple variables for Bill
                      HMK  Update AcdValTool to store both AcdTileIdRecon and AcdRibbonIdRecon
  v2r21   30-Mar-07   LSR  Reorg: FT1Alg moved here
