@@ -1,7 +1,7 @@
 /** @file McTkrHitValsTool.cxx
     @brief declartion, implementaion of the class UserAlg
 
-    $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McTkrHitValsTool.cxx,v 1.4 2007/03/21 17:14:25 usher Exp $
+    $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McTkrHitValsTool.cxx,v 1.5 2007/04/04 22:00:22 usher Exp $
 */
 
 #include "ValBase.h"
@@ -75,6 +75,7 @@ private:
 
     // McPositionHit/particle counts
     int          m_posHitPrimary;     // Number of McPositionHits associated to primary
+    int          m_posHitGammas;      // Number of McPositionHits from gammas
     int          m_posHitElectrons;   // Number of McPositionHits not primary due to electrons
     int          m_posHitPositrons;   // Number of McPositionHits not primary due to positrons
     int          m_posHitOthers;      // Number of McPositionHits none of the above
@@ -142,8 +143,9 @@ StatusCode McTkrHitValsTool::initialize()
 <tr><td> McTHDght2Type <td> I <td> Daughter 2 (most hits) particle type (id)
 <tr><td> McTHDght2NumHits <td> I <td> Daughter 2 number of Tracker hits
 <tr><td> mcTHPosHitPrimary <td> I <td> Number of McPositionHits associated to primary 
-<tr><td> mcTHPosHitElectron <td> I <td> Number of McPositionHits not primary due to electrons
-<tr><td> mcTHPosHitPositron <td> I <td> Total Number of McPositionHits not primary due to positrons
+<tr><td> mcTHPosHitGamma <td> I <td> Total Number of McPositionHits due to gammas
+<tr><td> mcTHPosHitElectron <td> I <td> Number of McPositionHits due to electrons
+<tr><td> mcTHPosHitPositron <td> I <td> Total Number of McPositionHits due to positrons
 <tr><td> mcTHPosHitOthers <td> I <td> Number of McPositionHits none of the above
 <tr><td> mcTHTotalHits <td> I <td> Total number of MC generated Tracker hits 
 </table>
@@ -158,6 +160,7 @@ StatusCode McTkrHitValsTool::initialize()
 	addItem("McTHDght2Type",      &m_dght2Type);
 	addItem("McTHDght2NumHits",   &m_dght2NumHits);
     addItem("McTHPosHitPrimary",  &m_posHitPrimary);
+    addItem("McTHPosHitGamma",    &m_posHitGammas);
     addItem("McTHPosHitElectron", &m_posHitElectrons);
     addItem("McTHPosHitPositron", &m_posHitPositrons);
     addItem("McTHPosHitOthers",   &m_posHitOthers);
@@ -540,11 +543,13 @@ int McTkrHitValsTool::GetSharedHits(const Event::McParticle* daughter1, const Ev
 void McTkrHitValsTool::CntMcPosHits(const Event::McParticle* primary)
 {
     // Define codes for electrons and positrons
+    static Event::McParticle::StdHepId gamma    =  22;
     static Event::McParticle::StdHepId electron =  11;
     static Event::McParticle::StdHepId positron = -11;
 
     // Clear counters
     m_posHitPrimary   = 0;
+    m_posHitGammas    = 0;
     m_posHitElectrons = 0;
     m_posHitPositrons = 0;
     m_posHitOthers    = 0;
@@ -573,9 +578,12 @@ void McTkrHitValsTool::CntMcPosHits(const Event::McParticle* primary)
             
             if (particle) mother = particle->getMother();
 
-            // What generated the McPositionHit?
+            // Check to see if hit is associated to primary or immediate daughters
             if      (particle                  == primary)  m_posHitPrimary++;
             else if (mother                    == primary)  m_posHitPrimary++;
+
+            // What kind of particle made the hit?
+            if      (posHit->getMcParticleId() == gamma)    m_posHitGammas++;
             else if (posHit->getMcParticleId() == electron) m_posHitElectrons++;
             else if (posHit->getMcParticleId() == positron) m_posHitPositrons++;
             else                                            m_posHitOthers++;
