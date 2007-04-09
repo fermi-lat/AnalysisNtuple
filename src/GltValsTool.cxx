@@ -2,7 +2,7 @@
 @brief Calculates the Trigger analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.31 2006/03/21 01:43:50 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.32 2007/03/28 17:22:50 burnett Exp $
 */
 
 // Include files
@@ -72,6 +72,7 @@ private:
     float Trig_type; // was: 1= corner, 2 = side, 3 = core, now number of exposed sides (0-4)
     float Trig_moment; 
     float Trig_zDir; 
+    int   Trig_engine;
 
     ITkrQueryClustersTool* m_clusTool;
 };
@@ -168,6 +169,8 @@ StatusCode GltValsTool::initialize()
 <td>F<td>   Do not use 
 <tr><td> GltZDir 
 <td>F<td>   Do not use 
+<tr><td> GltEngine 
+<td>I<td>   The engine number corresponding to GltWord  
 </table>
     */
 
@@ -184,6 +187,7 @@ StatusCode GltValsTool::initialize()
     addItem("GltType",       &Trig_type);  
     addItem("GltMoment",     &Trig_moment);
     addItem("GltZDir",       &Trig_zDir);  
+    addItem("GltEngine",     &Trig_engine);  
 
     zeroVals();
 
@@ -222,10 +226,12 @@ StatusCode GltValsTool::calculate()
     unsigned int word = ( pEvent==0? 0 : pEvent->trigger());
 
     // This is the same as the old GltWord
-    // actually only 6 bits, but no harm (I think!)    
-    Trig_word = word & enums::GEM_mask; 
+    // actually only 6 bits, but no harm (I think!)  
+    // note that the trigger word from the header has 3 GEM_offset fields that we unpack here:
+    Trig_word = word & enums::GEM_mask;  // the GltWord, set for simulation from hits or digis
 
-    Trig_GemSummary = (word >> enums::GEM_offset) & enums::GEM_mask;
+    Trig_GemSummary = (word >> enums::GEM_offset) & enums::GEM_mask; // the GEM condition word, same as previous if simulation
+    Trig_engine = (word >> (2*enums::GEM_offset)) & enums::GEM_mask; // the trigger engine number
 
     SmartDataPtr<LdfEvent::EventSummaryData> 
         eventSummary(m_pEventSvc, "/Event/EventSummary"); 
