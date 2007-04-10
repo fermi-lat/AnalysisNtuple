@@ -2,7 +2,7 @@
 @brief Calculates the Onboard Filter variables
 @authors
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfValsTool.cxx,v 1.5 2007/03/21 19:55:39 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfValsTool.cxx,v 1.6 2007/03/28 16:59:58 lsrea Exp $
 */
 
 // Include files
@@ -70,7 +70,7 @@ private:
     int m_xHits, m_yHits;
 
     int m_gamStatus;
-    int m_cnoStatus;
+    int m_hfcStatus;
     int m_mipStatus;
 
     int m_warnNoFilterStatus;
@@ -171,8 +171,8 @@ StatusCode ObfValsTool::initialize()
     <td>D<td>    YZ slope of the best track
     <tr><td>  Filter[X/Y/Z]Dir
     <td>D<td>    Direction cosines of the best track
-    <tr><td>  Obf[Gam/Cno/Mip]Status
-    <td>I<td>    Status bits for the Gamma, CNO and MIP filters
+    <tr><td>  Obf[Gam/Hfc/Mip]Status
+    <td>I<td>    Status bits for the Gamma, HFC and MIP filters
     </table> 
 
     */    
@@ -196,7 +196,7 @@ StatusCode ObfValsTool::initialize()
     //addItem("FilterxB",         &OBF_glat);
 
     addItem("ObfGamStatus",    &m_gamStatus);
-    addItem("ObfCnoStatus",    &m_cnoStatus);
+    addItem("ObfHfcStatus",    &m_hfcStatus);
     addItem("ObfMipStatus",    &m_mipStatus);
 
     zeroVals();
@@ -294,10 +294,10 @@ StatusCode ObfValsTool::calculate()
             obfStatus->getFilterStatus(OnboardFilterTds::ObfFilterStatus::GammaFilter);
         m_gamStatus = obfResult ? obfResult->getStatus32() : -1;
 
-        // Start with CNO Filter
+        // Start with HFC Filter
         obfResult   = 
-            obfStatus->getFilterStatus(OnboardFilterTds::ObfFilterStatus::CNOFilter);
-        m_cnoStatus = obfResult ? obfResult->getStatus32() : -1;
+            obfStatus->getFilterStatus(OnboardFilterTds::ObfFilterStatus::HFCFilter);
+        m_hfcStatus = obfResult ? obfResult->getStatus32() : -1;
 
         // Start with Gamma Filter
         obfResult   = 
