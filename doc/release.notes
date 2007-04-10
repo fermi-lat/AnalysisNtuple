@@ -2,6 +2,7 @@
   @brief Package AnalysisNtule
   @verbatim
 
+ v2r23   10-Apr-07    TU  Change from "CNO" to "HFC" in OnboardFilter stuff
  v2r22p2  9-Apr-07   THB  Add GltEngine, value of engine number (if TriggerAlg calculates it) 
  v2r22p1  5-Apr-07    TU  Slight mods to Bill's MC hit counting, add one more variable to ntuple
  v2r22    4-Apr-07    TU  Update McTkrValsTool to output four more ntuple variables for Bill
