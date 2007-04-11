@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.35 2007/03/29 17:40:56 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.36 2007/04/04 16:54:16 heather Exp $
 */
 
 #include "ValBase.h"
@@ -511,7 +511,7 @@ StatusCode AcdValsTool::calculate()
 	  // check to see if we already have an activeDistance of that type
 	  int checkFilled = filledTypeMask & ( 1 < fillType );
 	  if ( checkFilled != 0 ) continue;
-	  filledTypeMask &= ( 1 < fillType );
+	  filledTypeMask |= ( 1 < fillType );
 
 	  idents::AcdId theId = aPoca->getId();
 
