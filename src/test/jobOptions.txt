@@ -48,7 +48,7 @@ digiRootReaderAlg.digiRootFile="$(ROOTTESTDATAROOT)/data/default/digi.root";
 
 reconRootReaderAlg.ReconRootFile="$(ROOTTESTDATAROOT)/data/default/recon.root";
 
-ApplicationMgr.DLLs   += { "RootHistCnv", "ntupleWriterSvc"};
+ApplicationMgr.DLLs   += { "ntupleWriterSvc"};
 ApplicationMgr.HistogramPersistency = "ROOT";
 ApplicationMgr.ExtSvc += { "RootTupleSvc"};
 
