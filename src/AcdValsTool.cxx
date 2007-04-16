@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.37 2007/04/11 19:23:10 echarles Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.38 2007/04/13 00:07:10 echarles Exp $
 */
 
 #include "ValBase.h"
@@ -226,12 +226,12 @@ StatusCode AcdValsTool::initialize()
 <td>F<td>   Arclength from head of track at which active distance was calculated 
 
 <tr><td> AcdActDistTileEnergy 
-<td>F<td>   The deposited MC energy in the corresponding hit tile 
+<td>F<td>   The deposited energy in the corresponding hit tile 
 
 <tr><td> AcdActiveDist3D_Down	
 <td>F<td>   Largest active distance of any track to the edge of any tile, down going side of tracks
 <tr><td> AcdActDistTileEnergy_Down 
-<td>F<td>   The deposited MC energy in the corresponding hit tile, down going side of tracks
+<td>F<td>   The deposited energy in the corresponding hit tile, down going side of tracks
 
 <tr><td>AcdTkr1ActiveDist
 <td>F<td>   Largest active distance from track 1 to the edge of any tile
@@ -242,7 +242,7 @@ StatusCode AcdValsTool::initialize()
 <tr><td>AcdTkr1ActiveDist_Down
 <td>F<td>   Largest active distance from track 1 to the edge of any tile, down going side of tracks
 <tr><td>AcdTkr1ActDistTileEnergy
-<td>F<td>   The deposited MC energy in the corresponding hit tile
+<td>F<td>   The deposited energy in the corresponding hit tile
 <tr><td>AcdTkr1ActDistTileEnergy_Down
 <td>F<td>   The deposited MC energy in the corresponding hit tile, down going side of tracks
 
@@ -253,9 +253,9 @@ StatusCode AcdValsTool::initialize()
 <tr><td>AcdVtxActiveDist_Down
 <td>F<td>   Largest active distance from vertex extrapolation to the edge of any tile, down going side of tracks
 <tr><td>AcdVtxActDistTileEnergy
-<td>F<td>   The deposited MC energy in the corresponding hit tile
+<td>F<td>   The deposited energy in the corresponding hit tile
 <tr><td>AcdVtxActDistTileEnergy_Down
-<td>F<td>   The deposited MC energy in the corresponding hit tile, down going side of tracks
+<td>F<td>   The deposited energy in the corresponding hit tile, down going side of tracks
 
 <tr><td> AcdGammaDoca 
 <td>F<td>   Distance of Gamma to the center of the nearest tile 
@@ -385,16 +385,33 @@ StatusCode AcdValsTool::calculate()
         // Make a map relating AcdId to energy in the tile
         std::map<idents::AcdId, double> energyIdMap;
 
-        const std::vector<idents::AcdId> tileIds = pACD->getIdCol();
-        const std::vector<double> tileEnergies   = pACD->getEnergyCol();
+	const Event::AcdHitCol& hitCol = pACD->getAcdHitCol();
+	int nHit = hitCol.size();
 
-        int maxTiles = tileIds.size();
-        for (int i = 0; i<maxTiles; i++) {
-            energyIdMap[tileIds[i]] = tileEnergies[i];
-        }
+	static const float MeVMipTile10 = 1.9;
+	static const float MeVMipTile12 = 2.28;
+	static const float MeVMipRibbon = 0.5;
+	
+	ACD_Total_Energy = 0.;
+	ACD_Total_Ribbon_Energy = 0.;
 
-        ACD_Total_Energy  = pACD->getEnergy();
-        ACD_Total_Ribbon_Energy = pACD->getRibbonEnergy();
+	for (int iHit(0); iHit < nHit; iHit++ ){
+	  const Event::AcdHit* aHit = hitCol[iHit];
+	  const idents::AcdId& id = aHit->getAcdId();
+	  if ( id.na() ) continue;
+	  float mips = aHit->mips();
+	  float MeVMip = id.ribbon() ? MeVMipRibbon : 
+	    ( id.top() && id.column() == 2 ) ? MeVMipTile12 : MeVMipTile10;
+	  float MeV = mips * MeVMip;
+
+	  if ( id.ribbon() ) {
+	    ACD_Total_Ribbon_Energy += MeV;
+	  } else {
+	    ACD_Total_Energy += MeV;
+	  }
+	  energyIdMap[id] = MeV;
+	}
+	
         ACD_Tile_Count    = pACD->getTileCount(); 
         ACD_Ribbon_Count  = pACD->getRibbonCount();
 
