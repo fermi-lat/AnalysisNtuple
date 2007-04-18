@@ -2,6 +2,7 @@
   @brief Package AnalysisNtule
   @verbatim
 
+ v2r23p6 18-Apr-07   LSR  Fix bug in VtxValsTools introduced on 14 March
  v2r23p5 17-Apr-07   EAC  Change Acd*Energy to use recon energy instead of MC truth Energy
  v2r23p4 15-Apr-07   HMK  Patch unit test JO file to skip load of RootHistCnv
                      That really shouldn't be necessary anymore
