@@ -1,7 +1,7 @@
 /** @file FT1Alg.cxx
 @brief Declaration and implementation of Gaudi algorithm FT1Alg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.1 2007/03/28 16:59:58 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.2 2007/03/29 15:45:01 lsrea Exp $
 */
 // Include files
 
@@ -58,7 +58,7 @@ class FT1worker{
 public:
     FT1worker();
 
-    void evaluate(const Event::Exposure& exp);
+    void evaluate(const Event::Exposure* exp);
 
 private:
     std::map<std::string, double> getCelestialCoords(const Event::Exposure& exp,
@@ -67,7 +67,7 @@ private:
     bool useVertex(){ //TODO: implement
         return false;
     }
-    
+
     // tuple items expect to find
     TypedItem<unsigned int, 'i'> EvtRun, EvtEventId;
 
@@ -119,7 +119,7 @@ StatusCode FT1Alg::initialize()
     m_worker = new FT1worker();
 
     m_count = 0;
-    
+
     return sc;
 }
 
@@ -131,21 +131,21 @@ StatusCode FT1Alg::execute()
 
     m_count++;
     //First get the coordinates from the ExposureCol
+
+    const Event::Exposure* exp(0);
+
     Event::ExposureCol* elist = 0;
     eventSvc()->retrieveObject("/Event/MC/ExposureCol",(DataObject *&)elist);
     if ( elist==0 ) {
         if(m_count<6) {
-            log << MSG::INFO << "No ExposureCol found, just return" << endreq;
+            log << MSG::INFO << "No ExposureCol found" << endreq;
         }
         else if (m_count==6) {
             log << MSG::INFO << "Message suppressed after 5 events" << endreq;
         }
-        return sc;
+    }else {
+        exp = *(*elist).begin();
     }
-    // the assert was removed... just a bit too drastic
-    //assert( elist!=0); // should not happen, but make sure ok.
-    const Event::Exposure& exp = **(*elist).begin();
-
     // now have the worker do it
     m_worker->evaluate(exp);
 
@@ -185,15 +185,15 @@ FT1worker::FT1worker()
 , CTBBestYDir("CTBBestYDir")  
 , CTBBestZDir("CTBBestZDir")
 {
-   //now create new items 
+    //now create new items 
     /** @page anatup_vars 
-    
+
     @section FT1  FT1 Variables
 
 
     see <a href="http://glast.gsfc.nasa.gov/ssc/dev/fits_def/definitionFT1.html">FT1 definition</a>
 
-<table>
+    <table>
     <tr><th> Variable <th> Type <th> Description
     <tr><td> FT1EventId  
     <td>UI<td>  RunNumber*100000 + EventNumber  
@@ -211,11 +211,11 @@ FT1worker::FT1worker()
     <td>F<td>  (s) Cumulative live time, from start of run, or mission
     <tr><td> FT1ConvLayer 
     <td>F<td>  Starting layer of the best track found in the tracker 
-               (Layer 0 is the one closest to the calorimeter.)
+    (Layer 0 is the one closest to the calorimeter.)
     <tr><td> FT1ConvPoint[X/Y/Z] 
     <td>F<td>  <b>Do not use; no longer filled!</b>
-</table> 
-*/
+    </table> 
+    */
 
     addItem( "FT1EventId",       m_ft1eventid);
     addItem( "FT1Energy",        m_ft1energy);
@@ -235,10 +235,10 @@ FT1worker::FT1worker()
 }
 
 
-void FT1worker::evaluate(const Event::Exposure& exp)
+void FT1worker::evaluate(const Event::Exposure* exp)
 {
 
- 
+
     //eventId and Time are always defined 
     m_ft1eventid =  nbOfEvtsInFile *EvtRun.value()  + EvtEventId.value();
 
@@ -268,8 +268,10 @@ void FT1worker::evaluate(const Event::Exposure& exp)
 
     glastDir = - glastDir.unit();
 
+    if( exp==0 ) return; // do not fill in orientation-dependent stuff if no pointing info
+
     // celestial coords in degree
-    std::map<std::string,double> cel_coords = getCelestialCoords(exp, glastDir);
+    std::map<std::string,double> cel_coords = getCelestialCoords(*exp, glastDir);
     m_ft1ra   = cel_coords["RA"];
     m_ft1dec  = cel_coords["DEC"];
     astro::SkyDir my_dir(m_ft1ra, m_ft1dec);
