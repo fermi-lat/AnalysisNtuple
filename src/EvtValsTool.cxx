@@ -3,7 +3,7 @@
 @brief Calculates the "Event" analysis variables from the other ntuple variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.29 2006/02/08 04:10:17 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.30 2006/09/24 22:56:19 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -221,7 +221,7 @@ NOTE
 <tr><td> EvtTkrEdgeAngle 
 <td>F<td>   Obsolete; replaced by Tkr1TwrGap 
 <tr><td> EvtLogEnergy 
-<td>F<td>   log10 of EvtEnergySumOpt, pegged between log10(20) and log10(50,000). Was EvtLogESum 
+<td>F<td>   log10 of EvtEnergyCorr, pegged between log10(20) and log10(50,000). Was EvtLogESum 
 <tr><td> EvtTkr1EFrac 
 <td>F<td>   Tkr1ConE/EvtEnergyCorr, roughly, fraction of energy carried by best track 
 <tr><td> EvtVtxKin 
