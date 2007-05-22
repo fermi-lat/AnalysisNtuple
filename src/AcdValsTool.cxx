@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.38 2007/04/13 00:07:10 echarles Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.39 2007/04/16 20:03:42 echarles Exp $
 */
 
 #include "ValBase.h"
@@ -73,7 +73,6 @@ private:
     float ACD_Total_Ribbon_Energy;
     float ACD_Tile_Count; 
     float ACD_Ribbon_Count;
-    float ACD_ActiveDist;      
     float ACD_ActiveDist3D;
     float ACD_ActiveDist3D_Err;
     float ACD_ActiveDist3D_ArcLen;
@@ -97,29 +96,13 @@ private:
     float ACD_VtxActiveDist_Energy;
     float ACD_VtxActiveDist_EnergyDown;
 
-    float ACD_GammaDOCA; 
     float ACD_Corner_DOCA;
     float ACD_Tkr1Ribbon_Dist;
     float ACD_TkrRibbon_Dist;
     float ACD_Tkr1Hole_Dist;
     float ACD_TkrHole_Dist;
   
-    float ACD_ActDist3DTop;
-    float ACD_ActDist3DR0;
-    float ACD_ActDist3DR1;
-    float ACD_ActDist3DR2;
-    float ACD_ActDist3DTop_Down;
-    float ACD_ActDist3DR0_Down;
-    float ACD_ActDist3DR1_Down;
-    float ACD_ActDist3DR2_Down;
-    float ACD_tileTopCount;
-    float ACD_tileCount0;
-    float ACD_tileCount1;
-    float ACD_tileCount2;
-    float ACD_tileCount3;
     float ACD_ribbon_ActiveDist;
-    float ACD_TkrHitsCountTop;
-    float ACD_TkrHitsCountRows[4];
     unsigned int ACD_TileIdRecon;
     unsigned int ACD_RibbonIdRecon;
 
@@ -257,8 +240,6 @@ StatusCode AcdValsTool::initialize()
 <tr><td>AcdVtxActDistTileEnergy_Down
 <td>F<td>   The deposited energy in the corresponding hit tile, down going side of tracks
 
-<tr><td> AcdGammaDoca 
-<td>F<td>   Distance of Gamma to the center of the nearest tile 
 <tr><td> AcdCornerDoca 
 <td>F<td>   Minimum Distance of Closest Approach of best track to the corner side gaps 
 <tr><td> AcdTkrRibbonDist
@@ -269,22 +250,9 @@ StatusCode AcdValsTool::initialize()
 <td>F<td>   Minimum Distance of Closest Approach of any track to any of the tile screw holes
 <tr><td> AcdTkr1HoleDist
 <td>F<td>   Minimum Distance of Closest Approach to best track to any of the tile screw holes
-<tr><td> AcdActDistTop   
-<td>F<td>   Smallest active distance of any track to top tiles 
-<tr><td> AcdActDistSideRow[0...3] 	
-<td>F<td>   Smallest active distance of any track to tiles in side row [0...3] 
-<tr><td> AcdNoTop 
-<td>F<td>   hit tile count for top 
-<tr><td> AcdNoSideRow[0...3] 
-<td>F<td>   Hit Tile count for side row [0...3] 
 <tr><td> AcdRibbonActDist   
 <td>F<td>   Smallest active distance to any ribbon 
             (considered as a straight line of no thickness) 
-<tr><td> AcdTkrHitsCountTop 	
-<td>F<td>   Count of the number of TkrClusters within a pre-defined distance 
-            (default: 250 mm) of the center of the hit top ACD tiles. 
-<tr><td> AcdTkrHitsCountR[0...3] 
-<td>F<td>   ditto for ACD tiles in side row [0...3] 
 <tr><td> AcdTileIdRecon
 <td>I<td> Tile identifier that was pierced by the reconstructed track.  
           A value of 899 (N/A) is the default and denotes that no ACD tile was 
@@ -309,7 +277,6 @@ StatusCode AcdValsTool::initialize()
     addItem("AcdActiveDist3D_Down", &ACD_ActiveDist3D_Down);
     addItem("AcdActDistTileEnergy_Down", &ACD_ActiveDist_Energy_Down);
 
-    addItem("AcdGammaDoca",    &ACD_GammaDOCA);
     addItem("AcdCornerDoca",    &ACD_Corner_DOCA);
     addItem("AcdTkrRibbonDist",    &ACD_TkrRibbon_Dist);
     addItem("AcdTkr1RibbonDist",    &ACD_Tkr1Ribbon_Dist);
@@ -331,28 +298,7 @@ StatusCode AcdValsTool::initialize()
     addItem("AcdVtxActDistTileEnergy", &ACD_VtxActiveDist_Energy);
     addItem("AcdVtxActDistTileEnergy_Down", &ACD_VtxActiveDist_EnergyDown);
 
-    addItem("AcdActDist3DTop",&ACD_ActDist3DTop);
-    addItem("AcdActDist3DSideRow0",&ACD_ActDist3DR0);
-    addItem("AcdActDist3DSideRow1",&ACD_ActDist3DR1);
-    addItem("AcdActDist3DSideRow2",&ACD_ActDist3DR2);
-
-    addItem("AcdActDist3DTop_Down",&ACD_ActDist3DTop_Down);
-    addItem("AcdActDist3DSideRow0_Down",&ACD_ActDist3DR0_Down);
-    addItem("AcdActDist3DSideRow1_Down",&ACD_ActDist3DR1_Down);
-    addItem("AcdActDist3DSideRow2_Down",&ACD_ActDist3DR2_Down);
-
-    addItem("AcdNoTop",        &ACD_tileTopCount);
-    addItem("AcdNoSideRow0",   &ACD_tileCount0);
-    addItem("AcdNoSideRow1",   &ACD_tileCount1);
-    addItem("AcdNoSideRow2",   &ACD_tileCount2);   
-    addItem("AcdNoSideRow3",   &ACD_tileCount3);   
     addItem("AcdRibbonActDist", &ACD_ribbon_ActiveDist);
-
-    addItem("AcdTkrHitsCountTop", &ACD_TkrHitsCountTop);
-    addItem("AcdTkrHitsCountR0", &ACD_TkrHitsCountRows[0]);
-    addItem("AcdTkrHitsCountR1", &ACD_TkrHitsCountRows[1]);
-    addItem("AcdTkrHitsCountR2", &ACD_TkrHitsCountRows[2]);
-    addItem("AcdTkrHitsCountR3", &ACD_TkrHitsCountRows[3]);
     addItem("AcdTileIdRecon", &ACD_TileIdRecon);
     addItem("AcdRibbonIdRecon", &ACD_RibbonIdRecon);
 
@@ -424,7 +370,6 @@ StatusCode AcdValsTool::calculate()
         idents::AcdId tileId_Down = pACD->getMaxActDist3DId_Down();
         ACD_ActiveDist_Energy_Down = energyIdMap[tileId_Down];
 
-        ACD_GammaDOCA     = pACD->getGammaDoca();
         ACD_Corner_DOCA   = pACD->getCornerDoca();
         ACD_ribbon_ActiveDist = pACD->getRibbonActiveDist();
 
@@ -490,7 +435,7 @@ StatusCode AcdValsTool::calculate()
 	      itrPoca != pocas.end(); itrPoca++ ) {
 
 	  const Event::AcdTkrHitPoca* aPoca = (*itrPoca);
-	  
+
 	  AcdTileUtil::tileScrewHoleDoca(aPoca->getId(),aPoca->getActiveX(),aPoca->getActiveY(),
 					 aPoca->getLocalXXCov(),aPoca->getLocalYYCov(),aPoca->getLocalXYCov(),
 					 holeDoca,holeDocaError,iHole);
@@ -524,6 +469,7 @@ StatusCode AcdValsTool::calculate()
 	  int fillType(0);
 	  if ( aPoca->getArcLength() < 0. )  fillType += 1; // down going	    
 	  if ( aPoca->trackIndex() == -1 ) fillType += 2; // vertices
+	
 
 	  // check to see if we already have an activeDistance of that type
 	  int checkFilled = filledTypeMask & ( 1 << fillType );
@@ -531,7 +477,6 @@ StatusCode AcdValsTool::calculate()
 	  filledTypeMask |= ( 1 << fillType );
 
 	  idents::AcdId theId = aPoca->getId();
-
 
 	  // fill the right kind of activeDistance
 	  switch ( fillType ) {
@@ -556,61 +501,7 @@ StatusCode AcdValsTool::calculate()
 	    ACD_VtxActiveDist_EnergyDown = energyIdMap[theId];
 	    break;
 	  }
-	}
-    
-        const std::vector<double> & adist3D = pACD->getRowActDist3DCol();
-	if ( adist3D.size() >= 4 ) {
-	  ACD_ActDist3DTop = adist3D[0];
-	  ACD_ActDist3DR0 = adist3D[1];
-	  ACD_ActDist3DR1 = adist3D[2];
-	  ACD_ActDist3DR2 = adist3D[3];
-	} else { // otherwise set to default value
-	  ACD_ActDist3DTop = -2000.;
-	  ACD_ActDist3DR0 = -2000.;
-	  ACD_ActDist3DR1 = -2000.;
-	  ACD_ActDist3DR2 = -2000.;
-        }
-
-
-
-        const std::vector<double> & adist3D_Down = pACD->getRowActDist3DCol_Down();
-        if ( adist3D_Down.size() >= 4 ) {
-	  ACD_ActDist3DTop_Down = adist3D_Down[0];
-	  ACD_ActDist3DR0_Down = adist3D_Down[1];
-	  ACD_ActDist3DR1_Down = adist3D_Down[2];
-	  ACD_ActDist3DR2_Down = adist3D_Down[3];
-	} else {  // otherwise just set to defaut value
-          ACD_ActDist3DTop_Down = -2000.;
-          ACD_ActDist3DR0_Down = -2000.;
-          ACD_ActDist3DR1_Down = -2000.;
-          ACD_ActDist3DR2_Down = -2000.;
-        }
-
-        //Code from meritAlg.... 
-        // get the map of energy vs tile id: have to construct from two parallel vectors
-        float m_acd_tileCount[5];
-        const std::vector<double> energies = pACD->getEnergyCol();
-        const std::vector<idents::AcdId>& ids = pACD->getIdCol();
-        std::vector<double>::const_iterator eit = energies.begin();
-
-        std::map<idents::AcdId, double> emap;
-        for( std::vector<idents::AcdId>::const_iterator idit = ids.begin(); 
-            idit != ids.end() && eit !=energies.end(); ++idit, ++ eit){
-                emap[*idit]=*eit;
-            }
-
-        // use acd_row predicate to count number of top tiles
-        m_acd_tileCount[0] = std::count_if(emap.begin(), emap.end(), acd_row(-1) );
-
-        // use acd_row predicate to count number of tiles per side row
-        if(true)for( int row = 0; row<=3; ++row){ 
-            m_acd_tileCount[row+1] = std::count_if(emap.begin(), emap.end(), acd_row(row) );
-        }
-        ACD_tileTopCount = m_acd_tileCount[0];
-        ACD_tileCount0 = m_acd_tileCount[1];
-        ACD_tileCount1 = m_acd_tileCount[2];
-        ACD_tileCount2 = m_acd_tileCount[3];       
-        ACD_tileCount3 = m_acd_tileCount[4];       
+	}      
 
     } else {
         return StatusCode::FAILURE;
@@ -618,7 +509,6 @@ StatusCode AcdValsTool::calculate()
 
     return sc;
 }
-
 
 void AcdValsTool::tkrHitsCount() {
 
@@ -629,6 +519,8 @@ void AcdValsTool::tkrHitsCount() {
     // The ACD tile and the TkrCluster.  If the distance is below m_tkrHitsCountCut
     // Then count this hit, either as top, R0, R1, R2, R3, depending upon what
     // type of ACD tile this is.
+
+    /*  RIP 07-05-21  
 
     MsgStream log(msgSvc(), name());
     if (!m_detSvc) return;
@@ -690,7 +582,7 @@ void AcdValsTool::tkrHitsCount() {
         }
     }
 
-    
+    */
     return;
 }
 
