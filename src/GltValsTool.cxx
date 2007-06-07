@@ -2,11 +2,10 @@
 @brief Calculates the Trigger analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.32 2007/03/28 17:22:50 burnett Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.33 2007/04/09 21:04:21 burnett Exp $
 */
 
 // Include files
-
 
 #include "ValBase.h"
 
@@ -77,6 +76,63 @@ private:
     ITkrQueryClustersTool* m_clusTool;
 };
 
+/** @page anatup_vars 
+@section gltvalstool GltValsTool Variables
+(Glt = GLAST Trigger)
+
+<table>
+<tr><th> Variable <th> Type <th> Description
+<tr><td> GltWord 
+<td>F<td>   Trigger word from the event header, based on digi information (null value: -1)
+The definition of the bits can be found in TriggerBits.h in the enums package.
+
+@verbatim
+b_ROI  =    0x01  ///>  Trottle bit
+b_Track=    0x02  ///>  3 consecutive x-y layers hit
+b_LO_CAL=   0x04  ///>  single log above low threshold
+b_HI_CAL=   0x08  ///>  single log above high threshold
+b_CNO  =    0x10  ///>  cover or side veto, high threshold ("CNO")
+b_trottle=  0x20  ///>  temporary copy of the ROI bit, for backward compatibilty
+b_ACDL =    0x40  ///> set if cover or side veto, low threshold
+@endverbatim
+<tr><td> GltGemSummary 
+<td>F<td>   For Data, a copy of the GEM condtion summary; for MC, 
+the same as calculated from the trigger (digi) information (null value: -1) 
+The bits are defined in GemConditionsSummary.h in the enums package.
+
+Here are the definitions as of GlastRelease v7r2 (They are not expected to change.):
+@verbatim
+ROI   = 0x01         CNO       =  0x10
+TKR   = 0x02         PERIODIC  =  0x20
+CALLE = 0x04         SOLICITED =  0x40
+CALHE = 0x08         EXTERNAL  =  0x80
+@endverbatim
+<tr><td>  GltEventFlags  
+<td>F<td>   Event flags from Ebf 
+<tr><td> GltTower 
+<td>F<td>   Id of tower that triggered; if more than one, 
+choose the tower with the highest triggered layer (null value: -1) 
+<tr><td> Glt[X/Y]Tower 
+<td>F<td>   [x/y] index of GltTower (null value = -1) 
+<tr><td> GltTotal 
+<td>F<td>   Number of possible triggers (a straight-through track in a single tower 
+produces 13 potential triggers 
+<tr><td> GltNumTowers 
+<td>F<td>   Number of towers which trigger (crossing track) 
+<tr><td> GltType 
+<td>F<td>   Number of exposed sides for the triggered tower, 
+i.e. 0 = central tower, 1 = side tower, 2 = edge edge tower, 
+4 = any single-tower setup 	
+<tr><td> GltMoment 
+<td>F<td>   Do not use 
+<tr><td> GltZDir 
+<td>F<td>   Do not use 
+<tr><td> GltEngine 
+<td>I<td>   The engine number corresponding to GltWord  
+</table>
+*/
+
+
 // Static factory for instantiation of algtool objects
 static ToolFactory<GltValsTool> s_factory;
 const IToolFactory& GltValsToolFactory = s_factory;
@@ -116,64 +172,6 @@ StatusCode GltValsTool::initialize()
     }
 
     // load up the map
-
-
-    /** @page anatup_vars 
-    @section gltvalstool GltValsTool Variables
-    (Glt = GLAST Trigger)
-
-<table>
-<tr><th> Variable <th> Type <th> Description
-<tr><td> GltWord 
-<td>F<td>   Trigger word from the event header, based on digi information (null value: -1)
-            The definition of the bits can be found in TriggerBits.h in the enums package.
-
-@verbatim
-  b_ROI  =    0x01  ///>  Trottle bit
-  b_Track=    0x02  ///>  3 consecutive x-y layers hit
-  b_LO_CAL=   0x04  ///>  single log above low threshold
-  b_HI_CAL=   0x08  ///>  single log above high threshold
-  b_CNO  =    0x10  ///>  cover or side veto, high threshold ("CNO")
-  b_trottle=  0x20  ///>  temporary copy of the ROI bit, for backward compatibilty
-  b_ACDL =    0x40  ///> set if cover or side veto, low threshold
-@endverbatim
-<tr><td> GltGemSummary 
-<td>F<td>   For Data, a copy of the GEM condtion summary; for MC, 
-            the same as calculated from the trigger (digi) information (null value: -1) 
-            The bits are defined in GemConditionsSummary.h in the enums package.
-
-            Here are the definitions as of GlastRelease v7r2 (They are not expected to change.):
-@verbatim
-  ROI   = 0x01         CNO       =  0x10
-  TKR   = 0x02         PERIODIC  =  0x20
-  CALLE = 0x04         SOLICITED =  0x40
-  CALHE = 0x08         EXTERNAL  =  0x80
-@endverbatim
-<tr><td>  GltEventFlags  
-<td>F<td>   Event flags from Ebf 
-<tr><td> GltTower 
-<td>F<td>   Id of tower that triggered; if more than one, 
-            choose the tower with the highest triggered layer (null value: -1) 
-<tr><td> Glt[X/Y]Tower 
-<td>F<td>   [x/y] index of GltTower (null value = -1) 
-<tr><td> GltTotal 
-<td>F<td>   Number of possible triggers (a straight-through track in a single tower 
-            produces 13 potential triggers 
-<tr><td> GltNumTowers 
-<td>F<td>   Number of towers which trigger (crossing track) 
-<tr><td> GltType 
-<td>F<td>   Number of exposed sides for the triggered tower, 
-            i.e. 0 = central tower, 1 = side tower, 2 = edge edge tower, 
-            4 = any single-tower setup 	
-<tr><td> GltMoment 
-<td>F<td>   Do not use 
-<tr><td> GltZDir 
-<td>F<td>   Do not use 
-<tr><td> GltEngine 
-<td>I<td>   The engine number corresponding to GltWord  
-</table>
-    */
-
 
     addItem("GltWord",       &Trig_word);
     addItem("GltGemSummary", &Trig_GemSummary);

@@ -3,7 +3,7 @@
 @brief Calculates the Cal Mip analysis variables
 @author F. Piron
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalMipValsTool.cxx,v 1.7 2005/12/13 19:00:37 lsrea Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalMipValsTool.cxx,v 1.8 2007/06/06 10:00:03 guiriec Exp $
 */
 
 // Include files
@@ -88,6 +88,36 @@ private:
   //2007-04-05 Sylvain Guiriec End 
 };
   
+/** @page anatup_vars
+    @section calmipvalstool CalMipValsTool Variables
+
+<table>
+<tr><th> Variable <th> Type <th> Description
+<tr><td> CalMipNum  
+<td>F<td>    Total number of found mip-like tracks in the Cal
+<tr><td> CalMip[X/Y/Z]0  
+<td>F<td>    [x/y/z] coordinates of the energy centroid of the best track
+<tr><td> CalMip[X/Y/Z]Dir  
+<td>F<td>    [x/y/z] direction cosines of the best track
+<tr><td> CalMipD2edge  
+<td>F<td>    Distance of the best track from the nearest edge of the Cal
+<tr><td> CalMipArcLen  
+<td>F<td>    Length of the best track (mm)
+<tr><td> CalMipEcor  
+<td>F<td>    Mean vertical-eq1uvalent energy (MeV) of the best track,
+obtained by averaging the pathlength-corrected energies in each layer
+<tr><td> CalMipEcorRms  
+<td>F<td>    RMS of CalMipEcor
+<tr><td> CalMipChi2  
+<td>F<td>    Chi-squared of the direction fit for the best track
+(combination of least squares in XZ and YZ planes)
+<tr><td> CalMipErm 
+<td>F<td>    total energy (MeV) contained in a cylinder of 1 Moliere radius 
+around the best track
+</table>
+
+*/
+
 // Static factory for instantiation of algtool objects
 static ToolFactory<CalMipValsTool> s_factory;
 const IToolFactory& CalMipValsToolFactory = s_factory;
@@ -109,36 +139,6 @@ StatusCode CalMipValsTool::initialize()
     MsgStream log(msgSvc(), name());
     
     if( ValBase::initialize().isFailure()) return StatusCode::FAILURE;
-
-    /** @page anatup_vars
-    @section calmipvalstool CalMipValsTool Variables
-
-    <table>
-    <tr><th> Variable <th> Type <th> Description
-    <tr><td> CalMipNum  
-    <td>F<td>    Total number of found mip-like tracks in the Cal
-    <tr><td> CalMip[X/Y/Z]0  
-    <td>F<td>    [x/y/z] coordinates of the energy centroid of the best track
-    <tr><td> CalMip[X/Y/Z]Dir  
-    <td>F<td>    [x/y/z] direction cosines of the best track
-    <tr><td> CalMipD2edge  
-    <td>F<td>    Distance of the best track from the nearest edge of the Cal
-    <tr><td> CalMipArcLen  
-    <td>F<td>    Length of the best track (mm)
-    <tr><td> CalMipEcor  
-    <td>F<td>    Mean vertical-eq1uvalent energy (MeV) of the best track,
-                 obtained by averaging the pathlength-corrected energies in each layer
-    <tr><td> CalMipEcorRms  
-    <td>F<td>    RMS of CalMipEcor
-    <tr><td> CalMipChi2  
-    <td>F<td>    Chi-squared of the direction fit for the best track
-                 (combination of least squares in XZ and YZ planes)
-    <tr><td> CalMipErm 
-    <td>F<td>    total energy (MeV) contained in a cylinder of 1 Moliere radius 
-                 around the best track
-    </table>
-
-    */
 
     
     addItem("CalMipNum",     &m_num);      
@@ -175,7 +175,7 @@ StatusCode CalMipValsTool::calculate()
 
     SmartDataPtr<Event::CalMipTrackCol> p_calMipTrackCol(m_pEventSvc, EventModel::CalRecon::CalMipTrackCol); 
 
-    Vector point(-1.,-1.,-1.);
+    Point  point(-1.,-1.,-1.);
     Vector dir(-1.,-1.,-1.);
     double d2c=-6.;
     double d2edge=-6.;

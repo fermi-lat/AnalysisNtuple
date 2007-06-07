@@ -1,7 +1,7 @@
 /** @file McTkrHitValsTool.cxx
     @brief declartion, implementaion of the class UserAlg
 
-    $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McTkrHitValsTool.cxx,v 1.5 2007/04/04 22:00:22 usher Exp $
+    $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McTkrHitValsTool.cxx,v 1.6 2007/04/06 15:19:55 usher Exp $
 */
 
 #include "ValBase.h"
@@ -114,25 +114,9 @@ McTkrHitValsTool::McTkrHitValsTool(const std::string& type,
     declareInterface<IValsTool>(this); 
 }
 
-StatusCode McTkrHitValsTool::initialize()
-{
-    StatusCode sc = StatusCode::SUCCESS;
-    
-    MsgStream log(msgSvc(), name());
 
-    if( ValBase::initialize().isFailure()) return StatusCode::FAILURE;
-  
-    // get the services    
-    if( serviceLocator() ) {
-        if( service("ParticlePropertySvc", m_ppsvc, true).isFailure() ) {
-            log << MSG::ERROR << "Service [ParticlePropertySvc] not found" << endreq;
-        }
-    } else {
-        return StatusCode::FAILURE;
-    }
-
-    /** @page anatup_vars_optional 
-    @section McTkrHitValstool McTkrHitValsTool Variables
+/** @page anatup_vars_optional 
+@section McTkrHitValstool McTkrHitValsTool Variables
 
 <table>
 <tr><th> Variable <th> Type <th> Description
@@ -151,6 +135,24 @@ StatusCode McTkrHitValsTool::initialize()
 </table>
 
 */
+
+
+StatusCode McTkrHitValsTool::initialize()
+{
+    StatusCode sc = StatusCode::SUCCESS;
+    
+    MsgStream log(msgSvc(), name());
+
+    if( ValBase::initialize().isFailure()) return StatusCode::FAILURE;
+  
+    // get the services    
+    if( serviceLocator() ) {
+        if( service("ParticlePropertySvc", m_ppsvc, true).isFailure() ) {
+            log << MSG::ERROR << "Service [ParticlePropertySvc] not found" << endreq;
+        }
+    } else {
+        return StatusCode::FAILURE;
+    }
  
 	addItem("McTHPrimType",       &m_primType);
     addItem("McTHProcess",        &m_process);
@@ -173,7 +175,6 @@ StatusCode McTkrHitValsTool::initialize()
     
     return sc;
 }
-
 
 StatusCode McTkrHitValsTool::calculate()
 {

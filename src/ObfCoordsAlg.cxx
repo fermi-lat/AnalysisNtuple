@@ -1,7 +1,7 @@
 /** @file ObfCoordsAlg.cxx
 @brief Declaration and implementation of Gaudi algorithm ObfCoordsAlg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfCoordsAlg.cxx,v 1.2 2007/03/29 15:45:01 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfCoordsAlg.cxx,v 1.3 2007/03/30 12:53:48 lsrea Exp $
 */
 // Include files
 
@@ -126,6 +126,20 @@ StatusCode ObfCoordsAlg::finalize()
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+/** @page anatup_vars 
+
+@section ObfCoords  Celestial Coordinates of the Best OnboardFilter Track
+
+<table>
+<tr><th> Variable <th> Type <th> Description
+<tr><td> FilterRa, FilterDec 
+<td>F<td>  (deg) reconstructed direction in equatorial coordinates       
+<tr><td> FilterL, FilterB 
+<td>F<td>  (deg) galactic longitude and latitude of reconstructed direction
+</table> 
+*/
+
+
 ObfCworker::ObfCworker()
 // initialize pointers to current items
 : FilterXDir("FilterXDir")
@@ -135,18 +149,6 @@ ObfCworker::ObfCworker()
 //, FilterYhits("FilterYhits")
 {
     //now create new items 
-    /** @page anatup_vars 
-
-    @section ObfCoords  Celestial Coordinates of the Best OnboardFilter Track
-
-    <table>
-    <tr><th> Variable <th> Type <th> Description
-    <tr><td> FilterRa, FilterDec 
-    <td>F<td>  (deg) reconstructed direction in equatorial coordinates       
-    <tr><td> FilterL, FilterB 
-    <td>F<td>  (deg) galactic longitude and latitude of reconstructed direction
-    </table> 
-    */
 
     addItem( "FilterRa",            m_obfRa);
     addItem( "FilterDec",           m_obfDec);

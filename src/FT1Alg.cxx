@@ -1,7 +1,7 @@
 /** @file FT1Alg.cxx
 @brief Declaration and implementation of Gaudi algorithm FT1Alg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.2 2007/03/29 15:45:01 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.3 2007/05/01 21:05:10 burnett Exp $
 */
 // Include files
 
@@ -186,36 +186,6 @@ FT1worker::FT1worker()
 , CTBBestZDir("CTBBestZDir")
 {
     //now create new items 
-    /** @page anatup_vars 
-
-    @section FT1  FT1 Variables
-
-
-    see <a href="http://glast.gsfc.nasa.gov/ssc/dev/fits_def/definitionFT1.html">FT1 definition</a>
-
-    <table>
-    <tr><th> Variable <th> Type <th> Description
-    <tr><td> FT1EventId  
-    <td>UI<td>  RunNumber*100000 + EventNumber  
-    <tr><td> FT1Energy   
-    <td>F<td>  (MeV) estimate for energy  
-    <tr><td> FT1Theta, FT1Phi 
-    <td>F<td>  (deg) reconstructed direction with respect to instrument coordinate system      
-    <tr><td> FT1Ra, FT1Dec 
-    <td>F<td>  (deg) reconstructed direction in equatorial coordinates       
-    <tr><td> FT1ZenithTheta, FT1EarthAzimuth 
-    <td>F<td>  (deg) reconstucted direction with respect to local zenith system
-    <tr><td> FT1L, FT1B 
-    <td>F<td>  (deg) galactic longitude and latitude of reconstructed direction
-    <tr><td> FT1Livetime 
-    <td>F<td>  (s) Cumulative live time, from start of run, or mission
-    <tr><td> FT1ConvLayer 
-    <td>F<td>  Starting layer of the best track found in the tracker 
-    (Layer 0 is the one closest to the calorimeter.)
-    <tr><td> FT1ConvPoint[X/Y/Z] 
-    <td>F<td>  <b>Do not use; no longer filled!</b>
-    </table> 
-    */
 
     addItem( "FT1EventId",       m_ft1eventid);
     addItem( "FT1Energy",        m_ft1energy);
@@ -234,6 +204,35 @@ FT1worker::FT1worker()
     addItem( "FT1Livetime",      m_ft1livetime);
 }
 
+/** @page anatup_vars 
+
+@section FT1  FT1 Variables
+
+see <a href="http://glast.gsfc.nasa.gov/ssc/dev/fits_def/definitionFT1.html">FT1 definition</a>
+
+<table>
+<tr><th> Variable <th> Type <th> Description
+<tr><td> FT1EventId  
+<td>UI<td>  RunNumber*100000 + EventNumber  
+<tr><td> FT1Energy   
+<td>F<td>  (MeV) estimate for energy  
+<tr><td> FT1Theta, FT1Phi 
+<td>F<td>  (deg) reconstructed direction with respect to instrument coordinate system      
+<tr><td> FT1Ra, FT1Dec 
+<td>F<td>  (deg) reconstructed direction in equatorial coordinates       
+<tr><td> FT1ZenithTheta, FT1EarthAzimuth 
+<td>F<td>  (deg) reconstucted direction with respect to local zenith system
+<tr><td> FT1L, FT1B 
+<td>F<td>  (deg) galactic longitude and latitude of reconstructed direction
+<tr><td> FT1Livetime 
+<td>F<td>  (s) Cumulative live time, from start of run, or mission
+<tr><td> FT1ConvLayer 
+<td>F<td>  Starting layer of the best track found in the tracker 
+(Layer 0 is the one closest to the calorimeter.)
+<tr><td> FT1ConvPoint[X/Y/Z] 
+<td>F<td>  <b>Do not use; no longer filled!</b>
+</table> 
+*/
 
 void FT1worker::evaluate(const Event::Exposure* exp)
 {

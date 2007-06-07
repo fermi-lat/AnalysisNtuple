@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.78 2006/07/13 10:47:36 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.79 2006/09/24 22:56:19 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -222,57 +222,6 @@ TkrValsTool::TkrValsTool(const std::string& type,
     // Declare additional interface
     declareInterface<IValsTool>(this); 
 }
-
-StatusCode TkrValsTool::initialize()
-{
-    StatusCode sc   = StatusCode::SUCCESS;
-    StatusCode fail = StatusCode::FAILURE;
-
-    MsgStream log(msgSvc(), name());
-
-    if((ValBase::initialize()).isFailure()) return StatusCode::FAILURE;
-
-    // get the services
-
-    if( serviceLocator() ) {
-
-        if(service( "TkrGeometrySvc", m_tkrGeom, true ).isFailure()) {
-            log << MSG::ERROR << "Could not find TkrGeometrySvc" << endreq;
-            return fail;
-        }
-
-        m_towerPitch = m_tkrGeom->towerPitch();
-        m_xNum       = m_tkrGeom->numXTowers();
-        m_yNum       = m_tkrGeom->numYTowers();
-        m_activeWidth = m_tkrGeom->nWaferAcross()*m_tkrGeom->waferPitch() + 
-            (m_tkrGeom->nWaferAcross()-1)*m_tkrGeom->ladderGap();
-
-        // find GlastDevSvc service
-        if (service("GlastDetSvc", m_detSvc, true).isFailure()){
-            log << MSG::ERROR << "Couldn't find the GlastDetSvc!" << endreq;
-            return StatusCode::FAILURE;
-        }
-
-        IToolSvc* toolSvc = 0;
-        if(service("ToolSvc", toolSvc, true).isFailure()) {
-            log << MSG::ERROR << "Couldn't find the ToolSvc!" << endreq;
-            return StatusCode::FAILURE;
-        }
-        if(!toolSvc->retrieveTool("G4PropagationTool", m_G4PropTool)) {
-            log << MSG::ERROR << "Couldn't find the ToolSvc!" << endreq;
-            return StatusCode::FAILURE;
-        }
-
-    } else {
-        return fail;
-    }
-
-    if (toolSvc()->retrieveTool("TkrQueryClustersTool", pQueryClusters).isFailure()) {
-        log << MSG::ERROR << "Couldn't retrieve TkrQueryClusterTool" << endreq;
-        return fail;
-    }
-
-    // load up the map
 
 /** @page anatup_vars 
     @section tkrvalstool TkrValsTool Variables
@@ -503,7 +452,59 @@ The definitions should be fairly stable.
 <td>F<td>   Minimum distance to any LAT edge of the head of the best track
 </table>
 
-    */
+*/
+
+
+StatusCode TkrValsTool::initialize()
+{
+    StatusCode sc   = StatusCode::SUCCESS;
+    StatusCode fail = StatusCode::FAILURE;
+
+    MsgStream log(msgSvc(), name());
+
+    if((ValBase::initialize()).isFailure()) return StatusCode::FAILURE;
+
+    // get the services
+
+    if( serviceLocator() ) {
+
+        if(service( "TkrGeometrySvc", m_tkrGeom, true ).isFailure()) {
+            log << MSG::ERROR << "Could not find TkrGeometrySvc" << endreq;
+            return fail;
+        }
+
+        m_towerPitch = m_tkrGeom->towerPitch();
+        m_xNum       = m_tkrGeom->numXTowers();
+        m_yNum       = m_tkrGeom->numYTowers();
+        m_activeWidth = m_tkrGeom->nWaferAcross()*m_tkrGeom->waferPitch() + 
+            (m_tkrGeom->nWaferAcross()-1)*m_tkrGeom->ladderGap();
+
+        // find GlastDevSvc service
+        if (service("GlastDetSvc", m_detSvc, true).isFailure()){
+            log << MSG::ERROR << "Couldn't find the GlastDetSvc!" << endreq;
+            return StatusCode::FAILURE;
+        }
+
+        IToolSvc* toolSvc = 0;
+        if(service("ToolSvc", toolSvc, true).isFailure()) {
+            log << MSG::ERROR << "Couldn't find the ToolSvc!" << endreq;
+            return StatusCode::FAILURE;
+        }
+        if(!toolSvc->retrieveTool("G4PropagationTool", m_G4PropTool)) {
+            log << MSG::ERROR << "Couldn't find the ToolSvc!" << endreq;
+            return StatusCode::FAILURE;
+        }
+
+    } else {
+        return fail;
+    }
+
+    if (toolSvc()->retrieveTool("TkrQueryClustersTool", pQueryClusters).isFailure()) {
+        log << MSG::ERROR << "Couldn't retrieve TkrQueryClusterTool" << endreq;
+        return fail;
+    }
+
+    // load up the map
 
     addItem("TkrNumTracks",   &Tkr_No_Tracks);
     addItem("TkrSumKalEne",   &Tkr_Sum_KalEne);

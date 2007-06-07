@@ -3,7 +3,7 @@
 @brief Calculates the Vtx analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.23 2007/03/07 22:34:12 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.24 2007/04/18 20:46:31 lsrea Exp $
 */
 
 // Include files
@@ -125,24 +125,7 @@ VtxValsTool::VtxValsTool(const std::string& type,
 	declareInterface<IValsTool>(this); 
 }
 
-StatusCode VtxValsTool::initialize()
-{
-	StatusCode sc = StatusCode::SUCCESS;
-
-	MsgStream log(msgSvc(), name());
-
-	if( ValBase::initialize().isFailure()) return StatusCode::FAILURE;
-
-	// get the services    
-
-	if( serviceLocator() ) {        
-	} else {
-		return StatusCode::FAILURE;
-	}
-
-	// load up the map
-
-    /** @page anatup_vars 
+/** @page anatup_vars 
     @section vtxvalstool VtxValsTool Variables
 
 In what follows below, whenever the first 2 vertices are referenced, they will be called "Vtx" and
@@ -217,7 +200,25 @@ In what follows below, whenever the first 2 vertices are referenced, they will b
 <td>F<td>   The additional radiation lengths prior to the first measured silicon 
             strip hit at the vertex location. <em>New!</em> 
 </table>
-    */
+*/
+
+
+StatusCode VtxValsTool::initialize()
+{
+	StatusCode sc = StatusCode::SUCCESS;
+
+	MsgStream log(msgSvc(), name());
+
+	if( ValBase::initialize().isFailure()) return StatusCode::FAILURE;
+
+	// get the services    
+
+	if( serviceLocator() ) {        
+	} else {
+		return StatusCode::FAILURE;
+	}
+
+	// load up the map
 
 	// Pair reconstruction
     addItem("VtxNumVertices", &VTX_numVertices);

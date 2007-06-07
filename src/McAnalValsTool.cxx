@@ -1,7 +1,7 @@
 /** @file McAnalValsTool.cxx
     @brief declartion, implementaion of the class UserAlg
 
-    $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McAnalValsTool.cxx,v 1.11 2005/12/13 21:23:08 lsrea Exp $
+    $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McAnalValsTool.cxx,v 1.12 2006/03/21 01:43:50 usher Exp $
 */
 
 #include "ValBase.h"
@@ -162,44 +162,8 @@ McAnalValsTool::McAnalValsTool(const std::string& type,
     declareInterface<IValsTool>(this); 
 }
 
-StatusCode McAnalValsTool::initialize()
-{
-    StatusCode sc = StatusCode::SUCCESS;
-    
-    MsgStream log(msgSvc(), name());
-
-    if( ValBase::initialize().isFailure()) return StatusCode::FAILURE;
-  
-    // get the services    
-    if( serviceLocator() ) {
-        if( service("ParticlePropertySvc", m_ppsvc, true).isFailure() ) {
-            log << MSG::ERROR << "Service [ParticlePropertySvc] not found" << endreq;
-        }
-    } else {
-        return StatusCode::FAILURE;
-    }
-
-    // TO DO here: gracefully return if tools not located, set up to NOT run the tool
-    m_mcEvent = 0;
-    sc = toolSvc()->retrieveTool("McGetEventInfoTool", m_mcEvent);
-    if (sc.isFailure()) {
-        log << MSG::INFO << " McGetEventInfoTool not found" << endreq;
-        log << MSG::INFO << " Will not generate McAnalVals" << endreq;
-        return StatusCode::SUCCESS;
-    }
-
-    m_mcTracks = 0;
-    sc = toolSvc()->retrieveTool("McGetTrackInfoTool", m_mcTracks);
-    if (sc.isFailure()) {
-        log << MSG::INFO << " McGetTrackInfoTool not found!" << endreq;
-        log << MSG::INFO << " Will not generate McAnalVals" << endreq;
-        return StatusCode::SUCCESS;
-    }
-    
-    // load up the map
-
-    /** @page anatup_vars_optional 
-    @section mcanalvalstool McAnalValsTool Variables
+/** @page anatup_vars_optional 
+@section mcanalvalstool McAnalValsTool Variables
 
 <table>
 <tr><th> Variable <th> Type <th> Description
@@ -264,7 +228,43 @@ StatusCode McAnalValsTool::initialize()
 </table>
 
 */
- 
+
+
+StatusCode McAnalValsTool::initialize()
+{
+    StatusCode sc = StatusCode::SUCCESS;
+    
+    MsgStream log(msgSvc(), name());
+
+    if( ValBase::initialize().isFailure()) return StatusCode::FAILURE;
+  
+    // get the services    
+    if( serviceLocator() ) {
+        if( service("ParticlePropertySvc", m_ppsvc, true).isFailure() ) {
+            log << MSG::ERROR << "Service [ParticlePropertySvc] not found" << endreq;
+        }
+    } else {
+        return StatusCode::FAILURE;
+    }
+
+    // TO DO here: gracefully return if tools not located, set up to NOT run the tool
+    m_mcEvent = 0;
+    sc = toolSvc()->retrieveTool("McGetEventInfoTool", m_mcEvent);
+    if (sc.isFailure()) {
+        log << MSG::INFO << " McGetEventInfoTool not found" << endreq;
+        log << MSG::INFO << " Will not generate McAnalVals" << endreq;
+        return StatusCode::SUCCESS;
+    }
+
+    m_mcTracks = 0;
+    sc = toolSvc()->retrieveTool("McGetTrackInfoTool", m_mcTracks);
+    if (sc.isFailure()) {
+        log << MSG::INFO << " McGetTrackInfoTool not found!" << endreq;
+        log << MSG::INFO << " Will not generate McAnalVals" << endreq;
+        return StatusCode::SUCCESS;
+    }
+    
+    // load up the map
 
 	addItem("McaNumCalls",       &m_numCalls);
 	addItem("McaPrmEnergy",      &m_prmEnergy);

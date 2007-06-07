@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.39 2007/04/16 20:03:42 echarles Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.40 2007/05/22 18:17:15 echarles Exp $
 */
 
 #include "ValBase.h"
@@ -109,81 +109,8 @@ private:
     IGlastDetSvc *m_detSvc;
     double m_vetoThresholdMeV;
     double m_tkrHitsCountCut;
-
-
 };
-namespace {
 
-    // predicate to identify top, (row -1) or  side  (row 0-2)
-    class acd_row { 
-    public:
-        acd_row(int row):m_row(row){}
-        bool operator() ( std::pair<idents::AcdId ,double> entry){
-            return m_row==-1? entry.first.face() == 0 : entry.first.row()==m_row;
-        }
-        int m_row;
-    };
-    // used by accumulate to get maximum for a given row
-    class acd_max_energy { 
-    public:
-        acd_max_energy(int row):m_row(row), m_acd_row(row){}
-        double operator()(double energy, std::pair<idents::AcdId ,double> entry) {
-            return m_acd_row(entry)? std::max(energy, entry.second) : energy;
-        }
-        int m_row;
-        acd_row m_acd_row;
-    };
-}
-// Static factory for instantiation of algtool objects
-static ToolFactory<AcdValsTool> s_factory;
-const IToolFactory& AcdValsToolFactory = s_factory;
-
-// Standard Constructor
-AcdValsTool::AcdValsTool(const std::string& type, 
-                         const std::string& name, 
-                         const IInterface* parent)
-                         : ValBase( type, name, parent )
-{    
-    // Declare additional interface
-    declareInterface<IValsTool>(this); 
-
-    // in mm
-    declareProperty("tkrHitsCountCut", m_tkrHitsCountCut=250.0);
-}
-
-StatusCode AcdValsTool::initialize()
-{
-    StatusCode sc = StatusCode::SUCCESS;
-
-    MsgStream log(msgSvc(), name());
-
-    if( ValBase::initialize().isFailure()) return StatusCode::FAILURE;
-
-    setProperties();
-    // get the services
-
-    // use the pointer from ValBase
-
-    if( serviceLocator() ) {
-
-        // find GlastDevSvc service
-        if (service("GlastDetSvc", m_detSvc, true).isFailure()){
-            log << MSG::INFO << "Couldn't find the GlastDetSvc!" << endreq;
-            log << MSG::INFO << "Will be unable to calculate ACD_TkrHitsCount" << endreq;
-            m_vetoThresholdMeV = 0.4;
-        } else {
-            StatusCode sc = m_detSvc->getNumericConstByName("acd.vetoThreshold", &m_vetoThresholdMeV);
-            if (sc.isFailure()) {
-                log << MSG::INFO << "Unable to retrieve threshold, setting the value to 0.4 MeV" << endreq;
-                m_vetoThresholdMeV = 0.4;
-
-            }
-        }
-    } else {
-        return StatusCode::FAILURE;
-    }
-
-    // load up the map
 
 /** @page anatup_vars
     @section adcvalstool AdCValsTool Variables
@@ -264,6 +191,78 @@ StatusCode AcdValsTool::initialize()
 </table>
     */
 
+namespace {
+
+    // predicate to identify top, (row -1) or  side  (row 0-2)
+    class acd_row { 
+    public:
+        acd_row(int row):m_row(row){}
+        bool operator() ( std::pair<idents::AcdId ,double> entry){
+            return m_row==-1? entry.first.face() == 0 : entry.first.row()==m_row;
+        }
+        int m_row;
+    };
+    // used by accumulate to get maximum for a given row
+    class acd_max_energy { 
+    public:
+        acd_max_energy(int row):m_row(row), m_acd_row(row){}
+        double operator()(double energy, std::pair<idents::AcdId ,double> entry) {
+            return m_acd_row(entry)? std::max(energy, entry.second) : energy;
+        }
+        int m_row;
+        acd_row m_acd_row;
+    };
+}
+// Static factory for instantiation of algtool objects
+static ToolFactory<AcdValsTool> s_factory;
+const IToolFactory& AcdValsToolFactory = s_factory;
+
+// Standard Constructor
+AcdValsTool::AcdValsTool(const std::string& type, 
+                         const std::string& name, 
+                         const IInterface* parent)
+                         : ValBase( type, name, parent )
+{    
+    // Declare additional interface
+    declareInterface<IValsTool>(this); 
+
+    // in mm
+    declareProperty("tkrHitsCountCut", m_tkrHitsCountCut=250.0);
+}
+
+StatusCode AcdValsTool::initialize()
+{
+    StatusCode sc = StatusCode::SUCCESS;
+
+    MsgStream log(msgSvc(), name());
+
+    if( ValBase::initialize().isFailure()) return StatusCode::FAILURE;
+
+    setProperties();
+    // get the services
+
+    // use the pointer from ValBase
+
+    if( serviceLocator() ) {
+
+        // find GlastDevSvc service
+        if (service("GlastDetSvc", m_detSvc, true).isFailure()){
+            log << MSG::INFO << "Couldn't find the GlastDetSvc!" << endreq;
+            log << MSG::INFO << "Will be unable to calculate ACD_TkrHitsCount" << endreq;
+            m_vetoThresholdMeV = 0.4;
+        } else {
+            StatusCode sc = m_detSvc->getNumericConstByName("acd.vetoThreshold", &m_vetoThresholdMeV);
+            if (sc.isFailure()) {
+                log << MSG::INFO << "Unable to retrieve threshold, setting the value to 0.4 MeV" << endreq;
+                m_vetoThresholdMeV = 0.4;
+
+            }
+        }
+    } else {
+        return StatusCode::FAILURE;
+    }
+
+    // load up the map
 
     addItem("AcdTotalEnergy", &ACD_Total_Energy);
     addItem("AcdRibbonEnergy", &ACD_Total_Ribbon_Energy);
