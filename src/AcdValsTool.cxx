@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.38 2007/04/13 00:07:10 echarles Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.39 2007/04/16 20:03:42 echarles Exp $
 */
 
 #include "ValBase.h"
@@ -401,7 +401,7 @@ StatusCode AcdValsTool::calculate()
 	  if ( id.na() ) continue;
 	  float mips = aHit->mips();
 	  float MeVMip = id.ribbon() ? MeVMipRibbon : 
-	    ( id.top() && id.column() == 2 ) ? MeVMipTile12 : MeVMipTile10;
+	    ( id.top() && id.row() == 2 ) ? MeVMipTile12 : MeVMipTile10;
 	  float MeV = mips * MeVMip;
 
 	  if ( id.ribbon() ) {
