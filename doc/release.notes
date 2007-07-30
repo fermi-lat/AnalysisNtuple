@@ -2,6 +2,10 @@
   @brief Package AnalysisNtule
   @verbatim
 
+ v2r24   30-Jul-07   EAC  Re-organize AcdValsTool.  Added several ribbon related variables, 
+                          removed unused arclength varialbes (better suited for svac ntuple)
+                          ressurected AcdNoTop and siblings as they were needed for pass 4 
+                          analysis.  
  v2r23p7 01-May-07   THB  Modify FT1Alg to fill in non-pointing stuff if can't find pointing info
  v2r23p6 18-Apr-07   LSR  Fix bug in VtxValsTools introduced on 14 March
  v2r23p5 17-Apr-07   EAC  Change Acd*Energy to use recon energy instead of MC truth Energy
