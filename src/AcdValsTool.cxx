@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.41 2007/06/07 17:00:13 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.42 2007/07/30 19:07:24 echarles Exp $
 */
 
 #include "ValBase.h"
@@ -559,7 +559,7 @@ StatusCode AcdValsTool::calculate()
 	  bool isCornerGap = false;
 
 	  // for now we ignore vertex and down going
-	  if ( isVertex or ! isUpGoing ) continue;
+	  if ( isVertex || (! isUpGoing) ) continue;
 
 	  // Classify gap type
 	  switch ( (*itrGap)->getId().gapType() ) {

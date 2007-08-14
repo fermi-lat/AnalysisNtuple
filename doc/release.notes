@@ -2,6 +2,7 @@
   @brief Package AnalysisNtule
   @verbatim
 
+ v2r24p1 14-Aug-07   HMK  Patch for windows, use || rather than or
  v2r24   30-Jul-07   EAC  Re-organize AcdValsTool.  Added several ribbon related variables, 
                           removed unused arclength varialbes (better suited for svac ntuple)
                           ressurected AcdNoTop and siblings as they were needed for pass 4 
