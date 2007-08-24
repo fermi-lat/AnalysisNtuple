@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.42 2007/07/30 19:07:24 echarles Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.43 2007/08/14 16:00:30 heather Exp $
 */
 
 #include "ValBase.h"
@@ -453,9 +453,9 @@ StatusCode AcdValsTool::calculate()
 	      if ( ACD_ActiveDist3D < -1999.99 ) {
 		if ( ! doneHole ) {
 		  doneHole = true;
-		  AcdTileUtil::tileScrewHoleDoca(aPoca->getId(),aPoca->getActiveX(),aPoca->getActiveY(),
-						 aPoca->getLocalXXCov(),aPoca->getLocalYYCov(),aPoca->getLocalXYCov(),
-						 holeDoca,holeDocaError,iHole);
+		  //AcdTileUtil::tileScrewHoleDoca(,aPoca->getActiveX(),aPoca->getActiveY(),
+		  //				 aPoca->getLocalXXCov(),aPoca->getLocalYYCov(),aPoca->getLocalXYCov(),
+		  //				 holeDoca,holeDocaError,iHole);
 		}
 		if ( ! donePlaneError ) {
 		  donePlaneError = true;
@@ -489,9 +489,9 @@ StatusCode AcdValsTool::calculate()
 		if ( ACD_Tkr1ActiveDist < -1999.99 ) {
 		  if ( ! doneHole ) {
 		    doneHole = true;
-		    AcdTileUtil::tileScrewHoleDoca(aPoca->getId(),aPoca->getActiveX(),aPoca->getActiveY(),
-						   aPoca->getLocalXXCov(),aPoca->getLocalYYCov(),aPoca->getLocalXYCov(),
-						   holeDoca,holeDocaError,iHole);
+		    //AcdTileUtil::tileScrewHoleDoca(aPoca->getId(),aPoca->getActiveX(),aPoca->getActiveY(),
+		    //				   aPoca->getLocalXXCov(),aPoca->getLocalYYCov(),aPoca->getLocalXYCov(),
+		    //				   holeDoca,holeDocaError,iHole);
 		  }
 		  if ( ! donePlaneError ) {
 		    donePlaneError = true;
