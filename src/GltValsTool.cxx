@@ -2,7 +2,7 @@
 @brief Calculates the Trigger analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.33 2007/04/09 21:04:21 burnett Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.34 2007/06/07 17:00:13 lsrea Exp $
 */
 
 // Include files
@@ -72,6 +72,7 @@ private:
     float Trig_moment; 
     float Trig_zDir; 
     int   Trig_engine;
+    int   Trig_gemengine;
 
     ITkrQueryClustersTool* m_clusTool;
 };
@@ -129,6 +130,8 @@ i.e. 0 = central tower, 1 = side tower, 2 = edge edge tower,
 <td>F<td>   Do not use 
 <tr><td> GltEngine 
 <td>I<td>   The engine number corresponding to GltWord  
+<td><td> GltGemEngine
+<td>I<td>   The engine number corresponding to the GltGemSummary
 </table>
 */
 
@@ -186,6 +189,7 @@ StatusCode GltValsTool::initialize()
     addItem("GltMoment",     &Trig_moment);
     addItem("GltZDir",       &Trig_zDir);  
     addItem("GltEngine",     &Trig_engine);  
+    addItem("GltGemEngine",  &Trig_gemengine);
 
     zeroVals();
 
@@ -230,6 +234,7 @@ StatusCode GltValsTool::calculate()
 
     Trig_GemSummary = (word >> enums::GEM_offset) & enums::GEM_mask; // the GEM condition word, same as previous if simulation
     Trig_engine = (word >> (2*enums::GEM_offset)) & enums::GEM_mask; // the trigger engine number
+    Trig_gemengine = (word >> (3*enums::GEM_offset)) & enums::GEM_mask; // GEM trigger engine number
 
     SmartDataPtr<LdfEvent::EventSummaryData> 
         eventSummary(m_pEventSvc, "/Event/EventSummary"); 
