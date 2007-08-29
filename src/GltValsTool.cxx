@@ -2,7 +2,7 @@
 @brief Calculates the Trigger analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.34 2007/06/07 17:00:13 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.35 2007/08/28 04:30:33 heather Exp $
 */
 
 // Include files
@@ -226,6 +226,9 @@ StatusCode GltValsTool::calculate()
     SmartDataPtr<Event::EventHeader> 
         pEvent(m_pEventSvc, EventModel::EventHeader);
     unsigned int word = ( pEvent==0? 0 : pEvent->trigger());
+    /// if no header, set the word such that both engines are "unset"
+    unsigned int unset = ((unsigned int) -1);
+    unsigned int word2 = ( pEvent==0 ? unset : pEvent->triggerWordTwo());
 
     // This is the same as the old GltWord
     // actually only 6 bits, but no harm (I think!)  
@@ -233,8 +236,13 @@ StatusCode GltValsTool::calculate()
     Trig_word = word & enums::GEM_mask;  // the GltWord, set for simulation from hits or digis
 
     Trig_GemSummary = (word >> enums::GEM_offset) & enums::GEM_mask; // the GEM condition word, same as previous if simulation
+    
     Trig_engine = (word >> (2*enums::GEM_offset)) & enums::GEM_mask; // the trigger engine number
-    Trig_gemengine = (word >> (3*enums::GEM_offset)) & enums::GEM_mask; // GEM trigger engine number
+
+    unsigned int Trig_gltengine = word2 & enums::ENGINE_mask;
+    // If the engine number is set, then we will store this one from the TrgConfigSvc in the tuple
+    if (Trig_gltengine != enums::ENGINE_unset) Trig_engine = Trig_gltengine;
+    Trig_gemengine = ((word2 >> enums::ENGINE_offset) & enums::ENGINE_mask); // GEM trigger engine number
 
     SmartDataPtr<LdfEvent::EventSummaryData> 
         eventSummary(m_pEventSvc, "/Event/EventSummary"); 
