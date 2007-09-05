@@ -2,6 +2,7 @@
   @brief Package AnalysisNtule
   @verbatim
 
+ v2r26   05-Sep-07   LSR  Redefine Tkr1SSDVeto, and add diagnostics
  v2r25   28-Aug-07   HMK  Add GltGemEngine to GltValsTool
  v2r24p2 24-Aug-07   EAC  Temporarily disable HoleDoca calculation until holes are in right places and this has been checked.  
  v2r24p1 14-Aug-07   HMK  Patch for windows, use || rather than or
