@@ -2,7 +2,7 @@
 @brief Calculates the Mc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.43 2007/06/01 23:49:12 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.44 2007/06/07 17:00:13 lsrea Exp $
 */
 // Include files
 
@@ -105,6 +105,7 @@ private:
     float MC_zdir_err;
     
     float MC_dir_err;
+	float MC_dir_errN;
     float MC_TKR1_dir_err;
     float MC_TKR2_dir_err;
 
@@ -179,6 +180,8 @@ McValsTool::McValsTool(const std::string& type,
 <td>F<td>   Angle between found direction and Mc direction (radians )
 <tr><td> McTkr[1/2]DirErr 
 <td>F<td>   Angle between direction of [best/second] track and Mc direction (radians) 
+<tr><td> McDirErrN
+<tr>F<td>   Angle between direction of neutral "vertex" and Mc direction (radians)
 <tr><td> McAcd[X/Y/Z]Enter
 <td>F<td>   Position where MC particle enters volume surrounded by ACD
 <tr><td> McAcdActiveDist3D
@@ -243,7 +246,8 @@ StatusCode McValsTool::initialize()
     
     addItem("McDirErr",       &MC_dir_err);      
     addItem("McTkr1DirErr",   &MC_TKR1_dir_err); 
-    addItem("McTkr2DirErr",   &MC_TKR2_dir_err);   
+    addItem("McTkr2DirErr",   &MC_TKR2_dir_err); 
+	addItem("McDirErrN",      &MC_dir_errN); 
 
     addItem("McAcdXEnter",     &MC_AcdXEnter);
     addItem("McAcdYEnter",     &MC_AcdYEnter);    
@@ -400,6 +404,16 @@ StatusCode McValsTool::calculate()
             MC_xdir_err = t0.x()-Mc_t0.x(); 
             MC_ydir_err = t0.y()-Mc_t0.y();
             MC_zdir_err = t0.z()-Mc_t0.z();
+
+			for(;pVtxr != pVerts->end(); pVtxr++) {
+		        unsigned int NEUTRALVTX = 0x0008;
+                Event::TkrVertex* vtxN = *pVtxr; 
+				if(vtxN->getStatusBits()& NEUTRALVTX) {
+					Vector tN = vtxN->getDirection();
+                    double costNtMC = tN*Mc_t0;
+					MC_dir_errN  = acos(costNtMC);
+			}   }
+
             
             double cost0tMC = t0*Mc_t0;
             

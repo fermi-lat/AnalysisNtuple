@@ -3,7 +3,7 @@
 @brief Calculates the Vtx analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.24 2007/04/18 20:46:31 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.25 2007/06/07 17:00:13 lsrea Exp $
 */
 
 // Include files
@@ -108,6 +108,14 @@ private:
 	float VTX2_Head_Sep;
     float VTX2_Status;
 
+    float VTXN_xdir;
+	float VTXN_ydir;
+	float VTXN_zdir;
+
+	float VTXN_Sxx;
+    float VTXN_Sxy;
+    float VTXN_Syy;
+
 
 };
 
@@ -183,6 +191,7 @@ In what follows below, whenever the first 2 vertices are referenced, they will b
     ONETKRVTX = 0x0001,  //Set if single track vertex
     TWOTKRVTX = 0x0002,  //Set if 2 track vertex
     MULTKRVTX = 0x0004,  //Set if >2 track vertex
+    NEUTRALVTX = 0x0008  // Set for the vertex made from the best vtx and the neutral energy "vertex"
     DOCAVTX   = 0x0010,  //Set if vertex location set by DOCA point
     FIRSTHIT  = 0x0020,  //Set if two tracks share first hit
     STAGVTX   = 0x0040,  //Set if tracks don't start in same plane (staggered)
@@ -199,6 +208,10 @@ In what follows below, whenever the first 2 vertices are referenced, they will b
 <tr><td> VtxAddedRL 
 <td>F<td>   The additional radiation lengths prior to the first measured silicon 
             strip hit at the vertex location. <em>New!</em> 
+<tr><td> VtxNeutX/Y/ZDir
+<tr>F<td>   The direction cosines of the vertex made of the best vertex with the neutral "vertex" direction added in
+<tr><td> VtxNeutS/XX/XY/YY
+<tr>F<td>   The xx, xy, and xx elements of the neutral vertex covariance matrix; square of the errors, and covariance
 </table>
 */
 
@@ -275,6 +288,13 @@ StatusCode VtxValsTool::initialize()
 	addItem("Vtx2HeadSep",   &VTX2_Head_Sep);
     addItem("Vtx2Status",    &VTX2_Status);
 
+	addItem("VtxNeutXDir" , &VTXN_xdir);
+	addItem("VtxNeutYDir" , &VTXN_ydir);
+	addItem("VtxNeutZDir" , &VTXN_zdir);
+	addItem("VtxNeutSXX",   &VTXN_Sxx);
+    addItem("VtxNeutSXY",   &VTXN_Sxy);
+    addItem("VtxNeutSYY",   &VTXN_Syy);
+
 	zeroVals();
 
 	return sc;
@@ -316,7 +336,7 @@ StatusCode VtxValsTool::calculate()
 	if (VTX_Phi<0.0f) VTX_Phi += static_cast<float>(2*M_PI);
 	VTX_Theta     = (-t0).theta();
 
-    const Event::TkrTrackParams& VTX_Cov = track_1->front()->getTrackParams(Event::TkrTrackHit::SMOOTHED);
+    const Event::TkrTrackParams& VTX_Cov = gamma->getVertexParams();
     VTX_Sxx         = VTX_Cov.getxSlpxSlp();
     VTX_Sxy         = VTX_Cov.getxSlpySlp();
     VTX_Syy         = VTX_Cov.getySlpySlp();
@@ -374,7 +394,10 @@ StatusCode VtxValsTool::calculate()
 	}
 
     if(pVerts->size()>1) {
+	    unsigned int NEUTRALVTX = 0x0008;
         Event::TkrVertex*   vtx2 = *pVtxr++; 
+
+		if(!vtx2->getStatusBits()& NEUTRALVTX) {
 
 	    Point  x2 = vtx2->getPosition();
 	    Vector t2 = vtx2->getDirection();
@@ -417,7 +440,30 @@ StatusCode VtxValsTool::calculate()
  		    // Set a rogue value here in case this is a single 
 		    if(VTX2_xdir == t1.x() && VTX2_ydir == t1.y()) VTX2_Angle = -.1f;
        }
-    }
+		}}
+
+	//Neutral Vertex section
+   	Event::TkrVertexConPtr pVtxN = pVerts->begin(); 
+	Event::TkrVertex*   vtxN; 
+	for(; pVtxN != pVerts->end(); pVtxN++)
+    {	   
+        vtxN = *pVtxN; 
+        if(vtxN->getStatusBits()& Event::TkrVertex::NEUTRALVTX) break;
+	}
+	if(vtxN) {
+	    Vector tN = vtxN->getDirection();
+
+	    VTXN_xdir      = tN.x();
+	    VTXN_ydir      = tN.y();
+	    VTXN_zdir      = tN.z();
+
+		const Event::TkrTrackParams& VTXN_Cov = vtxN->getVertexParams();
+        VTXN_Sxx         = VTXN_Cov.getxSlpxSlp();
+        VTXN_Sxy         = VTXN_Cov.getxSlpySlp();
+        VTXN_Syy         = VTXN_Cov.getySlpySlp();
+	}
+
+
    
 	return sc;
 }
