@@ -3,7 +3,7 @@
 @brief Calculates the Vtx analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.25 2007/06/07 17:00:13 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.26 2007/09/10 04:11:09 lsrea Exp $
 */
 
 // Include files
@@ -165,6 +165,7 @@ In what follows below, whenever the first 2 vertices are referenced, they will b
             the vertex are nearly parallel, 
             the coordinates of the vertex may become very large. 
 <tr><td> Vtx2TransDoca
+<td>F<td>   ....
 <tr><td> Vtx[/2]Angle 
 <td>F<td>   Angle between the two tracks of the vertex (radians);             
             the first vertex is "Vtx"; the 2nd, if present, is "Vtx2".  
@@ -209,9 +210,9 @@ In what follows below, whenever the first 2 vertices are referenced, they will b
 <td>F<td>   The additional radiation lengths prior to the first measured silicon 
             strip hit at the vertex location. <em>New!</em> 
 <tr><td> VtxNeutX/Y/ZDir
-<tr>F<td>   The direction cosines of the vertex made of the best vertex with the neutral "vertex" direction added in
+<td>F<td>   The direction cosines of the vertex made of the best vertex with the neutral "vertex" direction added in
 <tr><td> VtxNeutS/XX/XY/YY
-<tr>F<td>   The xx, xy, and xx elements of the neutral vertex covariance matrix; square of the errors, and covariance
+<td>F<td>   The xx, xy, and xx elements of the neutral vertex covariance matrix; square of the errors, and covariance
 </table>
 */
 

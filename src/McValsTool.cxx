@@ -2,7 +2,7 @@
 @brief Calculates the Mc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.44 2007/06/07 17:00:13 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.45 2007/09/10 04:11:09 lsrea Exp $
 */
 // Include files
 
@@ -181,7 +181,7 @@ McValsTool::McValsTool(const std::string& type,
 <tr><td> McTkr[1/2]DirErr 
 <td>F<td>   Angle between direction of [best/second] track and Mc direction (radians) 
 <tr><td> McDirErrN
-<tr>F<td>   Angle between direction of neutral "vertex" and Mc direction (radians)
+<td>F<td>   Angle between direction of neutral "vertex" and Mc direction (radians)
 <tr><td> McAcd[X/Y/Z]Enter
 <td>F<td>   Position where MC particle enters volume surrounded by ACD
 <tr><td> McAcdActiveDist3D
