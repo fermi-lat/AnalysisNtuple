@@ -1,7 +1,7 @@
 /** @file FT1Alg.cxx
 @brief Declaration and implementation of Gaudi algorithm FT1Alg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.3 2007/05/01 21:05:10 burnett Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.4 2007/06/07 17:00:13 lsrea Exp $
 */
 // Include files
 
@@ -74,6 +74,7 @@ private:
     // these all float or double
     Item EvtLiveTime;
     Item EvtEnergyCorr;
+    Item EvtElapsedTime;
     Item VtxXDir, VtxYDir, VtxZDir;
     Item VtxX0, VtxY0, VtxZ0;
     Item TkrNumTracks;
@@ -137,12 +138,16 @@ StatusCode FT1Alg::execute()
     Event::ExposureCol* elist = 0;
     eventSvc()->retrieveObject("/Event/MC/ExposureCol",(DataObject *&)elist);
     if ( elist==0 ) {
+#if 1
+
+#else
         if(m_count<6) {
             log << MSG::INFO << "No ExposureCol found" << endreq;
         }
         else if (m_count==6) {
             log << MSG::INFO << "Message suppressed after 5 events" << endreq;
         }
+#endif
     }else {
         exp = *(*elist).begin();
     }
@@ -164,6 +169,7 @@ FT1worker::FT1worker()
 // initialize pointers to current items
 : EvtRun("EvtRun")
 , EvtEventId("EvtEventId")
+, EvtElapsedTime("EvtElapsedTime")
 , EvtLiveTime("EvtLiveTime")
 , EvtEnergyCorr("EvtEnergyCorr")
 , TkrNumTracks("TkrNumTracks")

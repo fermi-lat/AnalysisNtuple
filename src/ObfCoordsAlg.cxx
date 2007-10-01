@@ -1,7 +1,7 @@
 /** @file ObfCoordsAlg.cxx
 @brief Declaration and implementation of Gaudi algorithm ObfCoordsAlg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfCoordsAlg.cxx,v 1.3 2007/03/30 12:53:48 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfCoordsAlg.cxx,v 1.4 2007/06/07 17:00:13 lsrea Exp $
 */
 // Include files
 
@@ -166,6 +166,9 @@ void ObfCworker::evaluate()
 
     // convert to (ra, dec)
 
+    if( ! fluxSvc ){
+        return;
+    }
     // The GPS singleton has current time and orientation
     static astro::GPS* gps = fluxSvc->GPSinstance();
     double time = gps->time();
