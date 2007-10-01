@@ -3,7 +3,7 @@
 @brief Calculates the "Event" analysis variables from the other ntuple variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.31 2007/05/01 16:49:28 cohen Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.32 2007/06/07 17:00:13 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -222,8 +222,8 @@ StatusCode EvtValsTool::initialize()
     m_pMcTool = 0;
     sc = pToolSvc->retrieveTool("McValsTool", m_pMcTool);
     if( sc.isFailure() ) {
-        log << MSG::ERROR << "Unable to find tool: " "McValsTool" << endreq;
-        return sc;
+        log << MSG::INFO << "Unable to find tool: " "McValsTool" << endreq;
+        log << "Will carry on anyway, EvtDeltaEoE will not be calculated" << endreq;
     }
     m_pGltTool = 0;
     sc = pToolSvc->retrieveTool("GltValsTool", m_pGltTool);
@@ -379,21 +379,27 @@ StatusCode EvtValsTool::calculate()
     float eCalSumCorr = -1.0;
     if(    m_pCalTool->getVal("CalEnergyCorr", eCalSumCorr, nextCheck).isSuccess()
 		//&& m_pCalTool->getVal("CalEnergyLLCorr", eCalEneLLCorr, nextCheck).isSuccess()
-		) { // NOTE: THIS IS STILL LARGELY UNDESIDED WHAT TO DO HERE....!!!!!!!  
-    //    if(CAL_Type == 0) EvtEnergyCorr = eTkrBest;
-	//	else {
-		//	if(eCalEneLLCorr > 0) EvtEnergyCorr = eCalEneLLCorr; //This is wrong! LL has comp.for TkrEne!
-		//	else { 
-				EvtEnergyCorr = (eTkr + eCalSumCorr);
-		//	}
-	//	}
+		)
+    {       // NOTE: IT IS STILL LARGELY UNDECIDED WHAT TO DO HERE....!!!!!!!  
+            //    if(CAL_Type == 0) EvtEnergyCorr = eTkrBest;
+            //	else {
+            //	if(eCalEneLLCorr > 0) EvtEnergyCorr = eCalEneLLCorr; //This is wrong! LL has comp.for TkrEne!
+            //	else { 
+        EvtEnergyCorr = (eTkr + eCalSumCorr);
+            //	}
+            //	}
     }
-    
+
     float mcEnergy;
-    if(m_pMcTool->getVal("McEnergy", mcEnergy, firstCheck).isSuccess()){
-        if (mcEnergy>0) { EvtDeltaEoE = (EvtEnergyCorr - mcEnergy)/(mcEnergy);}
-        else {EvtDeltaEoE = -2.0;} 
+    EvtDeltaEoE = -2.0;
+    if(m_pMcTool!=NULL) {
+        if(m_pMcTool->getVal("McEnergy", mcEnergy, firstCheck).isSuccess()){
+            if (mcEnergy>0) { 
+                EvtDeltaEoE = (EvtEnergyCorr - mcEnergy)/(mcEnergy);
+            }
+        } 
     }
+
     // Model simple for PSF(68%) 
     EvtPSFModel = sqrt(pow((.061/pow((std::max(EvtEnergyCorr*1.,1.)/100),.8)),2) + (.001745*.001745));
 

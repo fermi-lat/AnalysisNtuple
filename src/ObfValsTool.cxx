@@ -2,7 +2,7 @@
 @brief Calculates the Onboard Filter variables
 @authors
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfValsTool.cxx,v 1.7 2007/04/10 15:39:45 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfValsTool.cxx,v 1.8 2007/06/07 17:00:13 lsrea Exp $
 */
 
 // Include files
@@ -29,8 +29,8 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfValsTool.cxx,v 1.7 2
 
 // to get current position
 //flux
-#include "FluxSvc/IFluxSvc.h"
-#include "astro/GPS.h"
+//#include "FluxSvc/IFluxSvc.h"
+//#include "astro/GPS.h"
 
 /*! @class ObfValsTool
 @brief calculates Obf values
@@ -75,7 +75,7 @@ private:
 
     int m_warnNoFilterStatus;
 
-    IFluxSvc*   m_fluxSvc;
+    //IFluxSvc*   m_fluxSvc;
 };
 
 // Static factory for instantiation of algtool objects
@@ -173,10 +173,10 @@ StatusCode ObfValsTool::initialize()
     if( ValBase::initialize().isFailure()) return StatusCode::FAILURE;
 
     // get the services    
-    if ( service("FluxSvc", m_fluxSvc).isFailure() ){
-        log << MSG::ERROR << "Couldn't find the FluxSvc!" << endreq;
-        return StatusCode::FAILURE;
-    }
+    //if ( service("FluxSvc", m_fluxSvc).isFailure() ){
+    //    log << MSG::ERROR << "Couldn't find the FluxSvc!" << endreq;
+    //    return StatusCode::FAILURE;
+    //}
 
     addItem("FilterStatus_HI", &m_statusHi);
     addItem("FilterStatus_LO", &m_statusLo );
@@ -239,7 +239,7 @@ StatusCode ObfValsTool::calculate()
             m_filtydir = sin(alpha)*sin(beta);
             m_filtzdir = cos(beta);
 
-            // moved to ObfCoordsAlg to accomodate Interleave
+            // code below moved to ObfCoordsAlg to accomodate Interleave
             /*
             Vector filtDir(m_filtxdir, m_filtydir, m_filtzdir);
 
