@@ -1,7 +1,7 @@
 /** @file PtValsAlg.cxx
 @brief declaration and definition of the class PtValsAlg
 
-$Header: /nfs/slac/g/glast/ground/cvs/FluxSvc/src/PtValsAlg.cxx,v 1.5 2006/11/11 22:01:59 burnett Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/PtValsAlg.cxx,v 1.1 2007/10/01 21:56:58 burnett Exp $
 
 */
 
@@ -29,6 +29,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/FluxSvc/src/PtValsAlg.cxx,v 1.5 2006/11/11
 
 #include "astro/JulianDate.h"
 #include "astro/PointingHistory.h"
+#include "astro/Quaternion.h"
 
 //
 #include "AnalysisNtuple/PointingInfo.h"
@@ -42,7 +43,6 @@ using namespace AnalysisNtuple;
 * \brief This is an Algorithm designed to store pointing information in the tuple
 * \author Toby Burnett
 * 
-* $Header: /nfs/slac/g/glast/ground/cvs/FluxSvc/src/PtValsAlg.cxx,v 1.5 2006/11/11 22:01:59 burnett Exp $
 */
 
 
@@ -66,6 +66,7 @@ private:
     IDataProviderSvc* m_pEventSvc;
 
     astro::PointingHistory* m_history;
+    bool m_horizontal;
 
 };
 //------------------------------------------------------------------------
@@ -77,7 +78,7 @@ const IAlgFactory& PtValsAlgFactory = Factory;
 //------------------------------------------------------------------------
 //! ctor
 PtValsAlg::PtValsAlg(const std::string& name, ISvcLocator* pSvcLocator)
-:Algorithm(name, pSvcLocator) 
+:Algorithm(name, pSvcLocator) , m_horizontal(false)
 {
     // declare properties with setProperties calls
 
@@ -115,7 +116,6 @@ StatusCode PtValsAlg::initialize(){
     std::string filename(m_pointingHistory.value()[0]);
     facilities::Util::expandEnvVar(&filename);
     double offset = 0;
-    bool horizontalflag(false);
     if( m_pointingHistory.value().size()>1){
         std::string field(m_pointingHistory.value()[1]);
         if(! field.empty() ) { // allow null string
@@ -126,12 +126,14 @@ StatusCode PtValsAlg::initialize(){
 
     if( m_pointingHistory.value().size()>2){
         std::string field(m_pointingHistory.value()[2]);
-        horizontalflag =! field.empty();
+        m_horizontal =! field.empty();
     }
-    log << MSG::INFO << "Loading Pointing History File : " << filename 
-        << " with MET offset "<< offset <<  endreq;
-    if( horizontalflag){
-        log << MSG::INFO << "Will override x-direction to be horizontal"<<endreq;
+    log << MSG::INFO << "Loading Pointing History File : " << filename <<endreq;
+    if( offset>0 ){
+        log << MSG::INFO   << " with MET offset "<< offset <<  endreq;
+    }
+    if( m_horizontal){
+        log << MSG::INFO << "   Will override x-direction to be horizontal"<<endreq;
     }
     m_history = new astro::PointingHistory(filename, offset);
 
@@ -142,9 +144,7 @@ StatusCode PtValsAlg::initialize(){
         return sc;
     }
     m_pEventSvc = eventsvc;
-
-
-    
+   
     return sc;
 }
 
@@ -159,15 +159,27 @@ StatusCode PtValsAlg::execute()
  
    SmartDataPtr<Event::EventHeader> header(m_pEventSvc, EventModel::EventHeader);
 
-   double etime(header->time());
-    m_pointing_info.set(etime, (*m_history)(etime));
+   // get event time from header and look up position info from the history
+    double etime(header->time());
+    astro::PointingInfo info((*m_history)(etime));
 
-   
+    if(m_horizontal){
+        // adjust x-axis to be horizontal -- this code from GPS::update
+        astro::EarthCoordinate earth (info.earthCoord());
+        CLHEP::Hep3Vector pos (info.position() )
+            ,vertical(pos.unit())
+            ,zAxis(info.zAxis()())
+            ,horizontal(vertical.cross(zAxis).unit());
+        info =  astro::PointingInfo(pos, astro::Quaternion(zAxis, horizontal), earth);
+    }
+
+    m_pointing_info.set(etime, info );
+
+  
     // put pointing stuff into the root tree
     if( m_rootTupleSvc!=0 && !m_root_tree.value().empty()){
         m_rootTupleSvc->storeRowFlag(this->m_root_tree.value(), m_save_tuple);
     }
-
 
     // Here the TDS receives the exposure data
     Event::ExposureCol* exposureDBase = new Event::ExposureCol;
