@@ -3,6 +3,7 @@
   @verbatim
 
  v2r29   30-Oct-07   HMK  Use gr_app
+                     THB  Copy in Atwood changes
  v2r28p1 02-Oct-07   LSR  Add McKludgeValsTool to supply bogus values for downstream use
  v2r28   01-Oct-07   THB  Add algorithm to allow indpendence from MC and FluxSvc
  v2r27p2 01-Oct-07   LSR  Neuter the Mc stuff in EvtValsTool
