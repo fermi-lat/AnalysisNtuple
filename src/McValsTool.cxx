@@ -2,7 +2,7 @@
 @brief Calculates the Mc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.46 2007/09/11 02:27:59 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.44 2007/06/07 17:00:13 lsrea Exp $
 */
 // Include files
 
@@ -38,8 +38,8 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.46 2
 
 // to get current position
 //flux
-//#include "FluxSvc/IFluxSvc.h"
-//#include "astro/GPS.h"
+#include "FluxSvc/IFluxSvc.h"
+#include "astro/GPS.h"
 /*! @class McValsTool
 @brief calculates Monte Carlo values
 
@@ -67,7 +67,7 @@ private:
 
     //Function to parse the stuff we get from AcdReconAlg
     void getAcdReconVars();
-    //IFluxSvc*   m_fluxSvc;
+    IFluxSvc*   m_fluxSvc;
    
     //Pure MC Tuple Items
     float MC_SourceId;
@@ -106,6 +106,7 @@ private:
     
     float MC_dir_err;
 	float MC_dir_errN;
+	float MC_dir_errN1;
     float MC_TKR1_dir_err;
     float MC_TKR2_dir_err;
 
@@ -180,8 +181,6 @@ McValsTool::McValsTool(const std::string& type,
 <td>F<td>   Angle between found direction and Mc direction (radians )
 <tr><td> McTkr[1/2]DirErr 
 <td>F<td>   Angle between direction of [best/second] track and Mc direction (radians) 
-<tr><td> McDirErrN
-<td>F<td>   Angle between direction of neutral "vertex" and Mc direction (radians)
 <tr><td> McAcd[X/Y/Z]Enter
 <td>F<td>   Position where MC particle enters volume surrounded by ACD
 <tr><td> McAcdActiveDist3D
@@ -203,10 +202,10 @@ StatusCode McValsTool::initialize()
     if( ValBase::initialize().isFailure()) return StatusCode::FAILURE;
   
     // get the services    
-    //if ( service("FluxSvc", m_fluxSvc, true).isFailure() ){
-    //    log << MSG::ERROR << "Couldn't find the FluxSvc!" << endreq;
-    //    return StatusCode::FAILURE;
-    //}
+    if ( service("FluxSvc", m_fluxSvc, true).isFailure() ){
+        log << MSG::ERROR << "Couldn't find the FluxSvc!" << endreq;
+        return StatusCode::FAILURE;
+    }
    
     if( serviceLocator() ) {
         if( service("ParticlePropertySvc", m_ppsvc, true).isFailure() ) {
@@ -248,6 +247,7 @@ StatusCode McValsTool::initialize()
     addItem("McTkr1DirErr",   &MC_TKR1_dir_err); 
     addItem("McTkr2DirErr",   &MC_TKR2_dir_err); 
 	addItem("McDirErrN",      &MC_dir_errN); 
+	addItem("McDirErrN1",      &MC_dir_errN1); 
 
     addItem("McAcdXEnter",     &MC_AcdXEnter);
     addItem("McAcdYEnter",     &MC_AcdYEnter);    
@@ -405,14 +405,18 @@ StatusCode McValsTool::calculate()
             MC_ydir_err = t0.y()-Mc_t0.y();
             MC_zdir_err = t0.z()-Mc_t0.z();
 
+			bool VTX_set = false;
 			for(;pVtxr != pVerts->end(); pVtxr++) {
-		        unsigned int NEUTRALVTX = 0x0008;
                 Event::TkrVertex* vtxN = *pVtxr; 
-				if(vtxN->getStatusBits()& NEUTRALVTX) {
+				if(vtxN->getStatusBits()& Event::TkrVertex::NEUTRALVTX) {
 					Vector tN = vtxN->getDirection();
-                    double costNtMC = tN*Mc_t0;
-					MC_dir_errN  = acos(costNtMC);
-			}   }
+                    double acostNtMC = acos(tN*Mc_t0);
+					if(!(VTX_set)) {
+						MC_dir_errN  = acostNtMC;
+						VTX_set = true;
+					}
+					MC_dir_errN1 = acostNtMC; // Assumes last VTX is 1Tkr Neutral Vtx
+			}   }	
 
             
             double cost0tMC = t0*Mc_t0;

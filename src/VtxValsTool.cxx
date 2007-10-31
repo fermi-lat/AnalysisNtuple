@@ -3,7 +3,7 @@
 @brief Calculates the Vtx analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.26 2007/09/10 04:11:09 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.25 2007/06/07 17:00:13 lsrea Exp $
 */
 
 // Include files
@@ -116,7 +116,13 @@ private:
     float VTXN_Sxy;
     float VTXN_Syy;
 
+	float VTXN1_xdir;
+	float VTXN1_ydir;
+	float VTXN1_zdir;
 
+	float VTXN1_Sxx;
+    float VTXN1_Sxy;
+    float VTXN1_Syy;
 };
 
 // Static factory for instantiation of algtool objects
@@ -165,7 +171,6 @@ In what follows below, whenever the first 2 vertices are referenced, they will b
             the vertex are nearly parallel, 
             the coordinates of the vertex may become very large. 
 <tr><td> Vtx2TransDoca
-<td>F<td>   ....
 <tr><td> Vtx[/2]Angle 
 <td>F<td>   Angle between the two tracks of the vertex (radians);             
             the first vertex is "Vtx"; the 2nd, if present, is "Vtx2".  
@@ -192,7 +197,7 @@ In what follows below, whenever the first 2 vertices are referenced, they will b
     ONETKRVTX = 0x0001,  //Set if single track vertex
     TWOTKRVTX = 0x0002,  //Set if 2 track vertex
     MULTKRVTX = 0x0004,  //Set if >2 track vertex
-    NEUTRALVTX = 0x0008  // Set for the vertex made from the best vtx and the neutral energy "vertex"
+	NEUTRALVTX = 0x0008,  //Set if vertex includes neutral energy vector
     DOCAVTX   = 0x0010,  //Set if vertex location set by DOCA point
     FIRSTHIT  = 0x0020,  //Set if two tracks share first hit
     STAGVTX   = 0x0040,  //Set if tracks don't start in same plane (staggered)
@@ -209,10 +214,6 @@ In what follows below, whenever the first 2 vertices are referenced, they will b
 <tr><td> VtxAddedRL 
 <td>F<td>   The additional radiation lengths prior to the first measured silicon 
             strip hit at the vertex location. <em>New!</em> 
-<tr><td> VtxNeutX/Y/ZDir
-<td>F<td>   The direction cosines of the vertex made of the best vertex with the neutral "vertex" direction added in
-<tr><td> VtxNeutS/XX/XY/YY
-<td>F<td>   The xx, xy, and xx elements of the neutral vertex covariance matrix; square of the errors, and covariance
 </table>
 */
 
@@ -295,6 +296,14 @@ StatusCode VtxValsTool::initialize()
 	addItem("VtxNeutSXX",   &VTXN_Sxx);
     addItem("VtxNeutSXY",   &VTXN_Sxy);
     addItem("VtxNeutSYY",   &VTXN_Syy);
+
+	addItem("VtxNeut1XDir" , &VTXN1_xdir);
+	addItem("VtxNeut1YDir" , &VTXN1_ydir);
+	addItem("VtxNeut1ZDir" , &VTXN1_zdir);
+	addItem("VtxNeut1SXX",   &VTXN1_Sxx);
+    addItem("VtxNeut1SXY",   &VTXN1_Sxy);
+    addItem("VtxNeut1SYY",   &VTXN1_Syy);
+
 
 	zeroVals();
 
@@ -395,10 +404,9 @@ StatusCode VtxValsTool::calculate()
 	}
 
     if(pVerts->size()>1) {
-	    unsigned int NEUTRALVTX = 0x0008;
         Event::TkrVertex*   vtx2 = *pVtxr++; 
 
-		if(!vtx2->getStatusBits()& NEUTRALVTX) {
+		if(!(vtx2->getStatusBits()& Event::TkrVertex::NEUTRALVTX)) {
 
 	    Point  x2 = vtx2->getPosition();
 	    Vector t2 = vtx2->getDirection();
@@ -446,25 +454,39 @@ StatusCode VtxValsTool::calculate()
 	//Neutral Vertex section
    	Event::TkrVertexConPtr pVtxN = pVerts->begin(); 
 	Event::TkrVertex*   vtxN; 
+	bool VTX_Set = false; 
 	for(; pVtxN != pVerts->end(); pVtxN++)
-    {	   
+    {	    
         vtxN = *pVtxN; 
-        if(vtxN->getStatusBits()& Event::TkrVertex::NEUTRALVTX) break;
-	}
-	if(vtxN) {
-	    Vector tN = vtxN->getDirection();
-
-	    VTXN_xdir      = tN.x();
-	    VTXN_ydir      = tN.y();
-	    VTXN_zdir      = tN.z();
-
 		const Event::TkrTrackParams& VTXN_Cov = vtxN->getVertexParams();
-        VTXN_Sxx         = VTXN_Cov.getxSlpxSlp();
-        VTXN_Sxy         = VTXN_Cov.getxSlpySlp();
-        VTXN_Syy         = VTXN_Cov.getySlpySlp();
-	}
+		if(vtxN->getStatusBits()& Event::TkrVertex::NEUTRALVTX) {
+			Vector tN = vtxN->getDirection();
 
+			if(vtxN->getStatusBits()& Event::TkrVertex::ONETKRVTX){
+				if(!VTX_Set) {
+					VTXN_xdir      = tN.x();
+					VTXN_ydir      = tN.y();
+					VTXN_zdir      = tN.z();
+					VTXN_Sxx       = VTXN_Cov.getxSlpxSlp();
+					VTXN_Sxy       = VTXN_Cov.getxSlpySlp();
+					VTXN_Syy       = VTXN_Cov.getySlpySlp();
+					VTX_Set = true;
+				}
+				VTXN1_xdir      = tN.x();
+				VTXN1_ydir      = tN.y();
+				VTXN1_zdir      = tN.z();
+				VTXN1_Sxx       = VTXN_Cov.getxSlpxSlp();
+				VTXN1_Sxy       = VTXN_Cov.getxSlpySlp();
+				VTXN1_Syy       = VTXN_Cov.getySlpySlp();
+			} else {
+				VTXN_xdir      = tN.x();
+				VTXN_ydir      = tN.y();
+				VTXN_zdir      = tN.z();
+				VTXN_Sxx       = VTXN_Cov.getxSlpxSlp();
+				VTXN_Sxy       = VTXN_Cov.getxSlpySlp();
+				VTXN_Syy       = VTXN_Cov.getySlpySlp();
+				VTX_Set = true;
+	}   }	}
 
-   
 	return sc;
 }
