@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.82 2007/03/14 22:20:05 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.83 2007/06/07 17:00:13 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -121,6 +121,7 @@ private:
     float CAL_zdir;
     float CAL_x0;
     float CAL_y0;
+	float CAL_Top_Gap_Dist;
 
     float CAL_Gap_Fraction;  
     float CAL_TwrEdgeCntr;
@@ -297,7 +298,9 @@ minimum-ionizing particle
 <tr><td> Cal[X/Y/Z]Dir 
 <td>F<td>   [x/y/z] direction cosine of CAL "track" 
 <tr><td> Cal[X/Y]0 
-<td>F<td>   [x/y] position of CAL "track" measured at the energy centroid 
+<td>F<td>   [x/y] position of where the first track hits TOP of Calorimeter
+<tr><td> CalTopGapDist 
+<td>F<td>   Distance of TOP position from an intermodule gap
 <tr><td> CalTrkXtalRms
 <td>F<td>   For this and the next three variables, a measure of the rms spread
 of the crystals in the calorimeter around the projection of the first
@@ -446,6 +449,7 @@ StatusCode CalValsTool::initialize()
     addItem("CalZDir",       &CAL_zdir);
     addItem("CalX0",         &CAL_x0);
     addItem("CalY0",         &CAL_y0);
+	addItem("CalTopGapDist", &CAL_Top_Gap_Dist);
 
     addItem("CalTrkXtalRms",       &CAL_track_rms);
     addItem("CalTrkXtalRmsE",      &CAL_track_E_rms);
@@ -532,8 +536,8 @@ StatusCode CalValsTool::calculate()
                 CAL_deltaT  = corResult["DeltaCntr"];
                 CAL_Tot_RLn = corResult["CALRLn"];
 
-                CAL_x0 = corResult["CalTopX0"];
-                CAL_y0 = corResult["CalTopY0"];
+               // CAL_x0 = corResult["CalTopX0"]; See below under Imaging Calorimeter Top
+               // CAL_y0 = corResult["CalTopY0"];
 
                 //CAL_RmsE = corResult["RmsE"];
                 //CAL_numLayersRms = corResult["NumLayersRms"];
@@ -743,6 +747,28 @@ StatusCode CalValsTool::calculate()
         */
         Doca track1(x1, t1);
         CAL_Track_DOCA = (float)track1.docaOfPoint(cal_pos);
+
+		// Image the top of the Calorimeter - use last hit FILTERED
+		const Event::TkrTrackParams& tkr1_params = track_1->back()->getTrackParams(Event::TkrTrackHit::FILTERED);
+		double xSlp = tkr1_params.getxSlope();
+		double ySlp = tkr1_params.getySlope();
+		Vector LastDir = Vector(-xSlp, -ySlp, -1).unit();
+		Point LastHit = track_1->back()->getPoint(Event::TkrTrackHit::FILTERED);
+		
+		double calZTop = -46.;
+		double deltaZ  = calZTop - LastHit.z();
+		double topArcLength = deltaZ/LastDir.z();
+		Vector calTopLoc = LastHit + topArcLength*LastDir; 
+		CAL_x0 = calTopLoc.x();
+		CAL_y0 = calTopLoc.y(); 
+
+		// Now create an active distance type variable using 375mm tower pitch
+		double integer_part;
+		double deltaX_crack = modf(fabs(CAL_x0)/375., &integer_part); 
+		if(deltaX_crack > .5) deltaX_crack = 1. - deltaX_crack;
+		double deltaY_crack = modf(fabs(CAL_y0)/375., &integer_part);
+		if(deltaY_crack > .5) deltaY_crack = 1. - deltaY_crack;
+		CAL_Top_Gap_Dist = 375.*std::min(deltaX_crack, deltaY_crack);
 
         if(num_tracks > 1) { 
             // Get the second track

@@ -2,6 +2,8 @@
   @brief Package AnalysisNtule
   @verbatim
 
+ v2r29p1 30-Nov-07   LSR  Better calculation of intersection of track with top of CAL
+                             (can we fix some of the hard-wired constants?)
  v2r29   30-Oct-07   HMK  Use gr_app
                      THB  Copy in Atwood changes
  v2r28p1 02-Oct-07   LSR  Add McKludgeValsTool to supply bogus values for downstream use
