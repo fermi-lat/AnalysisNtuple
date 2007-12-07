@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.83 2007/06/07 17:00:13 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.84 2007/11/30 22:55:11 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -755,20 +755,20 @@ StatusCode CalValsTool::calculate()
 		Vector LastDir = Vector(-xSlp, -ySlp, -1).unit();
 		Point LastHit = track_1->back()->getPoint(Event::TkrTrackHit::FILTERED);
 		
-		double calZTop = -46.;
-		double deltaZ  = calZTop - LastHit.z();
+		//double calZTop = -46.;
+		double deltaZ  = m_calZTop - LastHit.z();
 		double topArcLength = deltaZ/LastDir.z();
-		Vector calTopLoc = LastHit + topArcLength*LastDir; 
+		Point calTopLoc = LastHit + topArcLength*LastDir; 
 		CAL_x0 = calTopLoc.x();
 		CAL_y0 = calTopLoc.y(); 
 
-		// Now create an active distance type variable using 375mm tower pitch
+		// Now create an active distance type variable using the tower pitch
 		double integer_part;
-		double deltaX_crack = modf(fabs(CAL_x0)/375., &integer_part); 
+		double deltaX_crack = modf(fabs(CAL_x0)/m_towerPitch, &integer_part); 
 		if(deltaX_crack > .5) deltaX_crack = 1. - deltaX_crack;
-		double deltaY_crack = modf(fabs(CAL_y0)/375., &integer_part);
+		double deltaY_crack = modf(fabs(CAL_y0)/m_towerPitch, &integer_part);
 		if(deltaY_crack > .5) deltaY_crack = 1. - deltaY_crack;
-		CAL_Top_Gap_Dist = 375.*std::min(deltaX_crack, deltaY_crack);
+		CAL_Top_Gap_Dist = m_towerPitch*std::min(deltaX_crack, deltaY_crack);
 
         if(num_tracks > 1) { 
             // Get the second track

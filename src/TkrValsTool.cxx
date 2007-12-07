@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.80 2007/06/07 17:00:13 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.81 2007/09/05 00:07:49 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -815,7 +815,7 @@ StatusCode TkrValsTool::calculate()
         Tkr_1_FirstGaps    = track_1->getNumXFirstGaps() + track_1->getNumYFirstGaps();
         Tkr_1_Qual         = track_1->getQuality();
         Tkr_1_Type         = track_1->getStatusBits();
-        Tkr_1_Hits         = track_1->getNumHits();
+        Tkr_1_Hits         = track_1->getNumFitHits();
         Tkr_1_FirstHits    = track_1->getNumSegmentPoints();
         Tkr_1_FirstLayer   = m_tkrGeom->getLayer(track_1->front()->getTkrId());
         Tkr_1_LastLayer    = m_tkrGeom->getLayer(track_1->back()->getTkrId());
@@ -1268,7 +1268,7 @@ StatusCode TkrValsTool::calculate()
             Tkr_2_FirstGaps      = track_2->getNumXFirstGaps() + track_2->getNumYFirstGaps();
             Tkr_2_Qual         = track_2->getQuality();
             Tkr_2_Type         = track_2->getStatusBits();
-            Tkr_2_Hits         = track_2->getNumHits();
+            Tkr_2_Hits         = track_2->getNumFitHits();
             Tkr_2_FirstHits    = track_2->getNumSegmentPoints();
             Tkr_2_FirstLayer   = m_tkrGeom->getLayer(track_2->front()->getTkrId());
             Tkr_2_LastLayer    = m_tkrGeom->getLayer(track_2->back()->getTkrId());
