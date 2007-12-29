@@ -2,6 +2,7 @@
   @brief Package AnalysisNtule
   @verbatim
 
+ v2r30p0 29-Dec-07    TU  Added new item: ObfDfcStatus, to hold results of diagnostic filter
  v2r29p2 07-Dec-07   LSR  TkrValsTool: Use getNumFitHits() instead of getNumHits()
                           CalValsTool: Fix a couple of hard-wired constants
  v2r29p1 30-Nov-07   LSR  Better calculation of intersection of track with top of CAL
