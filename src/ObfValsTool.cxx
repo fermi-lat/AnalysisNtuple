@@ -2,7 +2,7 @@
 @brief Calculates the Onboard Filter variables
 @authors
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfValsTool.cxx,v 1.8 2007/06/07 17:00:13 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfValsTool.cxx,v 1.9 2007/10/01 17:15:17 lsrea Exp $
 */
 
 // Include files
@@ -19,6 +19,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfValsTool.cxx,v 1.8 2
 
 #include "Event/TopLevel/EventModel.h"
 #include "Event/TopLevel/Event.h"
+#include "Event/MonteCarlo/McParticle.h"
 
 #include "CLHEP/Vector/Rotation.h"
 #include "geometry/Vector.h"
@@ -72,6 +73,7 @@ private:
     int m_gamStatus;
     int m_hfcStatus;
     int m_mipStatus;
+    int m_dfcStatus;
 
     int m_warnNoFilterStatus;
 
@@ -199,6 +201,7 @@ StatusCode ObfValsTool::initialize()
     addItem("ObfGamStatus",    &m_gamStatus);
     addItem("ObfHfcStatus",    &m_hfcStatus);
     addItem("ObfMipStatus",    &m_mipStatus);
+    addItem("ObfDfcStatus",    &m_dfcStatus);
 
     zeroVals();
 
@@ -215,26 +218,33 @@ StatusCode ObfValsTool::calculate()
     // Old school output
     SmartDataPtr<OnboardFilterTds::FilterStatus> 
         filterStatus(m_pEventSvc, "/Event/Filter/FilterStatus");
-    if( filterStatus ){
-        m_statusHi=filterStatus->getHigh();
-        m_statusLo=filterStatus->getLow();
-        m_separation=filterStatus->getSeparation();
-        m_energy=filterStatus->getCalEnergy();
-        m_xHits = 0;
-        m_yHits = 0;
-        m_filtxdir=m_filtydir=m_filtzdir=0;
+    if( filterStatus )
+    {
+        m_statusHi   = filterStatus->getHigh();
+        m_statusLo   = filterStatus->getLow();
+        m_separation = filterStatus->getSeparation();
+        m_energy     = filterStatus->getCalEnergy();
+        m_xHits      = 0;
+        m_yHits      = 0;
+        m_filtxdir   = m_filtydir = m_filtzdir = 0;
+
         double slopeXZ = 0.0;
         double slopeYZ = 0.0;
         double intXZ = 0.0;
         double intYZ = 0.0;
+
         filterStatus->getBestTrack(m_xHits,m_yHits,slopeXZ,slopeYZ,intXZ,intYZ);
-        if(m_xHits>0&&m_yHits>0){
+        
+        if(m_xHits > 0 && m_yHits > 0)
+        {
             float alpha = atan2(slopeYZ,slopeXZ);
-            if(alpha < 0) {
+            if(alpha < 0) 
+            {
                 alpha = alpha+2.0*3.1415;
             }
             float m_slope = sqrt(pow(slopeXZ,2) + pow(slopeYZ,2));
-            float beta = atan(m_slope);
+            float beta    = atan(m_slope);
+
             m_filtxdir = cos(alpha)*sin(beta);
             m_filtydir = sin(alpha)*sin(beta);
             m_filtzdir = cos(beta);
@@ -259,9 +269,29 @@ StatusCode ObfValsTool::calculate()
             OBF_glon = skydir.l();
             OBF_glat = skydir.b();
             */
+            // If running Monte Carlo, determine FilterAngSep here
+            SmartDataPtr<Event::McParticleCol> mcParticleCol(m_pEventSvc, EventModel::MC::McParticleCol);
+
+            if (mcParticleCol)
+            {
+                // We only care about incident particle direction here, so can use the first particle
+                // in the McParticleCol
+                Event::McParticle* mcPart = *(mcParticleCol->begin());
+
+                CLHEP::HepLorentzVector Mc_p0 = mcPart->initialFourMomentum();
+                Vector                  Mc_t0 = Vector(Mc_p0.x(),Mc_p0.y(), Mc_p0.z()).unit();
+                Vector                  filtDir(-m_filtxdir, -m_filtydir, -m_filtzdir);
+
+                double cosTheta = filtDir.dot(Mc_t0);
+
+                m_separation = acos(cosTheta);
+
+                int j = 0;
+            }
         }
-        m_slopeYZ=slopeYZ;
-        m_slopeXZ=slopeXZ;
+
+        m_slopeYZ = slopeYZ;
+        m_slopeXZ = slopeXZ;
     }else {
         m_statusHi = m_statusLo = 0;
 
@@ -295,15 +325,20 @@ StatusCode ObfValsTool::calculate()
             obfStatus->getFilterStatus(OnboardFilterTds::ObfFilterStatus::GammaFilter);
         m_gamStatus = obfResult ? obfResult->getStatus32() : -1;
 
-        // Start with HFC Filter
+        // HFC Filter results
         obfResult   = 
             obfStatus->getFilterStatus(OnboardFilterTds::ObfFilterStatus::HFCFilter);
         m_hfcStatus = obfResult ? obfResult->getStatus32() : -1;
 
-        // Start with Gamma Filter
+        // MIP Filter results
         obfResult   = 
             obfStatus->getFilterStatus(OnboardFilterTds::ObfFilterStatus::MipFilter);
         m_mipStatus = obfResult ? obfResult->getStatus32() : -1;
+
+        // DFC Filter results
+        obfResult   = 
+            obfStatus->getFilterStatus(OnboardFilterTds::ObfFilterStatus::DFCFilter);
+        m_dfcStatus = obfResult ? obfResult->getStatus32() : -1;
     }
 
     return sc;
