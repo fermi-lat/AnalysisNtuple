@@ -2,7 +2,7 @@
 @brief Calculates the Onboard Filter variables
 @authors
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfValsTool.cxx,v 1.9 2007/10/01 17:15:17 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfValsTool.cxx,v 1.10 2007/12/29 18:48:29 usher Exp $
 */
 
 // Include files
@@ -62,20 +62,31 @@ private:
     double m_separation;
     double m_filterAlgStatus;
     double m_filtxdir,m_filtydir ,m_filtzdir;
+    double m_grbXdir;
+    double m_grbYdir;
+    double m_grbZdir;
+    double m_grbAngSep;
 
     //float OBF_ra, OBF_dec; // set by astro::GPS 
     //float OBF_glon, OBF_glat;
 
-    float m_energy;
-    double m_slopeYZ,m_slopeXZ;
-    int m_xHits, m_yHits;
+    float  m_energy;
+    double m_slopeYZ;
+    double m_slopeXZ;
+    int    m_xHits;
+    int    m_yHits;
 
-    int m_gamStatus;
-    int m_hfcStatus;
-    int m_mipStatus;
-    int m_dfcStatus;
+    double m_grbSlpX;
+    double m_grbSlpY;
+    int    m_nGrbHitsX;
+    int    m_nGrbHitsY;
 
-    int m_warnNoFilterStatus;
+    int    m_gamStatus;
+    int    m_hfcStatus;
+    int    m_mipStatus;
+    int    m_dfcStatus;
+
+    int    m_warnNoFilterStatus;
 
     //IFluxSvc*   m_fluxSvc;
 };
@@ -193,6 +204,15 @@ StatusCode ObfValsTool::initialize()
     addItem("FilterYDir",      &m_filtydir );
     addItem("FilterZDir",      &m_filtzdir );
 
+    addItem("GrbXHits",        &m_nGrbHitsX);
+    addItem("GrbYHits",        &m_nGrbHitsY);
+    addItem("GrbSlpX",         &m_grbSlpX);
+    addItem("GrbSlpY",         &m_grbSlpY);
+    addItem("GrbXDir",         &m_grbXdir);
+    addItem("GrbYDir",         &m_grbYdir);
+    addItem("GrbZDir",         &m_grbZdir);
+    addItem("GrbMcAngSep",     &m_grbAngSep);
+
     //addItem("FilterxRa",        &OBF_ra);
     //addItem("FilterxDec",       &OBF_dec); 
     //addItem("FilterxL",         &OBF_glon);
@@ -228,12 +248,46 @@ StatusCode ObfValsTool::calculate()
         m_yHits      = 0;
         m_filtxdir   = m_filtydir = m_filtzdir = 0;
 
-        double slopeXZ = 0.0;
-        double slopeYZ = 0.0;
-        double intXZ = 0.0;
-        double intYZ = 0.0;
+        double slopeXZ  = 0.0;
+        double slopeYZ  = 0.0;
+        double intXZ    = 0.0;
+        double intYZ    = 0.0;
 
-        filterStatus->getBestTrack(m_xHits,m_yHits,slopeXZ,slopeYZ,intXZ,intYZ);
+        filterStatus->getBestTrack(m_xHits,m_yHits,slopeXZ,slopeYZ,intXZ,intYZ, m_nGrbHitsX, m_nGrbHitsY, m_grbSlpX, m_grbSlpY);
+
+        // Look up the McParticle collection in case its there... 
+        SmartDataPtr<Event::McParticleCol> mcParticleCol(m_pEventSvc, EventModel::MC::McParticleCol);
+
+        // Calculate direction cosines for GRB track first
+        if (m_nGrbHitsX > 0 && m_nGrbHitsY > 0)
+        {
+            double alpha = atan2(m_grbSlpY, m_grbSlpX);
+
+            if (alpha < 0.) alpha += 2. * M_PI;
+
+            double slope = sqrt(pow(m_grbSlpX,2) + pow(m_grbSlpY,2));
+            double beta  = atan(slope);
+
+            m_grbXdir = cos(alpha)*sin(beta);
+            m_grbYdir = sin(alpha)*sin(beta);
+            m_grbZdir = cos(beta);
+
+            // If running Monte Carlo, determine FilterAngSep here
+            if (mcParticleCol)
+            {
+                // We only care about incident particle direction here, so can use the first particle
+                // in the McParticleCol
+                Event::McParticle* mcPart = *(mcParticleCol->begin());
+
+                CLHEP::HepLorentzVector Mc_p0 = mcPart->initialFourMomentum();
+                Vector                  Mc_t0 = Vector(Mc_p0.x(),Mc_p0.y(), Mc_p0.z()).unit();
+                Vector                  filtDir(-m_grbXdir, -m_grbYdir, -m_grbZdir);
+
+                double cosTheta = filtDir.dot(Mc_t0);
+
+                m_grbAngSep = acos(cosTheta);
+            }
+        }
         
         if(m_xHits > 0 && m_yHits > 0)
         {
@@ -269,9 +323,8 @@ StatusCode ObfValsTool::calculate()
             OBF_glon = skydir.l();
             OBF_glat = skydir.b();
             */
-            // If running Monte Carlo, determine FilterAngSep here
-            SmartDataPtr<Event::McParticleCol> mcParticleCol(m_pEventSvc, EventModel::MC::McParticleCol);
 
+            // If running Monte Carlo, determine FilterAngSep here
             if (mcParticleCol)
             {
                 // We only care about incident particle direction here, so can use the first particle
@@ -285,8 +338,6 @@ StatusCode ObfValsTool::calculate()
                 double cosTheta = filtDir.dot(Mc_t0);
 
                 m_separation = acos(cosTheta);
-
-                int j = 0;
             }
         }
 
