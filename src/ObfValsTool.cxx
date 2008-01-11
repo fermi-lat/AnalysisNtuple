@@ -2,7 +2,7 @@
 @brief Calculates the Onboard Filter variables
 @authors
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfValsTool.cxx,v 1.10 2007/12/29 18:48:29 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfValsTool.cxx,v 1.11 2008/01/09 21:02:32 usher Exp $
 */
 
 // Include files
@@ -85,6 +85,8 @@ private:
     int    m_hfcStatus;
     int    m_mipStatus;
     int    m_dfcStatus;
+
+    int    m_statusBytes;
 
     int    m_warnNoFilterStatus;
 
@@ -222,6 +224,7 @@ StatusCode ObfValsTool::initialize()
     addItem("ObfHfcStatus",    &m_hfcStatus);
     addItem("ObfMipStatus",    &m_mipStatus);
     addItem("ObfDfcStatus",    &m_dfcStatus);
+    addItem("ObfStatusBytes",  &m_statusBytes);
 
     zeroVals();
 
@@ -372,24 +375,40 @@ StatusCode ObfValsTool::calculate()
         const OnboardFilterTds::IObfStatus* obfResult = 0;
 
         // Start with Gamma Filter
-        obfResult   = 
-            obfStatus->getFilterStatus(OnboardFilterTds::ObfFilterStatus::GammaFilter);
-        m_gamStatus = obfResult ? obfResult->getStatus32() : -1;
+        if (obfResult   = 
+                obfStatus->getFilterStatus(OnboardFilterTds::ObfFilterStatus::GammaFilter))
+        {
+            m_gamStatus    = obfResult->getStatus32();
+            m_statusBytes |= (obfResult->getFiltersb() >> 4) << (4 * OnboardFilterTds::ObfFilterStatus::GammaFilter);
+        }
+        else m_gamStatus = -1;
 
         // HFC Filter results
-        obfResult   = 
-            obfStatus->getFilterStatus(OnboardFilterTds::ObfFilterStatus::HFCFilter);
-        m_hfcStatus = obfResult ? obfResult->getStatus32() : -1;
+        if (obfResult   = 
+                obfStatus->getFilterStatus(OnboardFilterTds::ObfFilterStatus::HFCFilter))
+        {
+            m_hfcStatus    = obfResult->getStatus32();
+            m_statusBytes |= (obfResult->getFiltersb() >> 4) << (4 * OnboardFilterTds::ObfFilterStatus::HFCFilter);
+        }
+        else m_hfcStatus = -1;
 
         // MIP Filter results
-        obfResult   = 
-            obfStatus->getFilterStatus(OnboardFilterTds::ObfFilterStatus::MipFilter);
-        m_mipStatus = obfResult ? obfResult->getStatus32() : -1;
+        if (obfResult   = 
+                obfStatus->getFilterStatus(OnboardFilterTds::ObfFilterStatus::MipFilter))
+        {
+            m_mipStatus    = obfResult->getStatus32();
+            m_statusBytes |= (obfResult->getFiltersb() >> 4) << (4 * OnboardFilterTds::ObfFilterStatus::MipFilter);
+        }
+        else m_mipStatus = -1;
 
         // DFC Filter results
-        obfResult   = 
-            obfStatus->getFilterStatus(OnboardFilterTds::ObfFilterStatus::DFCFilter);
-        m_dfcStatus = obfResult ? obfResult->getStatus32() : -1;
+        if (obfResult   = 
+                obfStatus->getFilterStatus(OnboardFilterTds::ObfFilterStatus::DFCFilter))
+        {
+            m_dfcStatus    = obfResult ? obfResult->getStatus32() : -1;
+            m_statusBytes |= (obfResult->getFiltersb() >> 4) << (4 * OnboardFilterTds::ObfFilterStatus::DFCFilter);
+        }
+        else m_dfcStatus = -1;
     }
 
     return sc;
