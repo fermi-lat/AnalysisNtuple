@@ -2,6 +2,7 @@
   @brief Package AnalysisNtule
   @verbatim
 
+ v2r31p0 15-Jan-08   LSR  Add Auditor to do event-by-event timing
  v2r30p2 11-Jan-08    TU  Add packed word containing status byte info from each filter (ObfStatusBytes)
  v2r30p1  9-Jan-08    TU  Added new variables, prefixed by "Grb", to output ntuple for GRB obf 
  v2r30p0 29-Dec-07    TU  Added new item: ObfDfcStatus, to hold results of diagnostic filter
