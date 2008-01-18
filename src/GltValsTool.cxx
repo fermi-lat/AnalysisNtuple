@@ -2,7 +2,7 @@
 @brief Calculates the Trigger analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.35 2007/08/28 04:30:33 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.36 2007/08/29 13:21:50 heather Exp $
 */
 
 // Include files
@@ -73,6 +73,9 @@ private:
     float Trig_zDir; 
     int   Trig_engine;
     int   Trig_gemengine;
+    int   Trig_gltprescale;
+    int   Trig_gemprescale;
+    int   Trig_prescaleexpired;
 
     ITkrQueryClustersTool* m_clusTool;
 };
@@ -132,6 +135,12 @@ i.e. 0 = central tower, 1 = side tower, 2 = edge edge tower,
 <td>I<td>   The engine number corresponding to GltWord  
 <td><td> GltGemEngine
 <td>I<td>   The engine number corresponding to the GltGemSummary
+<td><td> GltEnginePrescale
+<td>I<td>   The GLT prescale factor for the event
+<td><td> GltGemEnginePrescale
+<td>I<td>   The GEM prescale factor for the event
+<td><td> GltPrescaleExpired
+<td>I<td>   true if the prescale counter expired for this event
 </table>
 */
 
@@ -190,6 +199,9 @@ StatusCode GltValsTool::initialize()
     addItem("GltZDir",       &Trig_zDir);  
     addItem("GltEngine",     &Trig_engine);  
     addItem("GltGemEngine",  &Trig_gemengine);
+    addItem("GltEnginePrescale",  &Trig_gltprescale);
+    addItem("GltGemEnginePrescale",  &Trig_gemprescale);
+    addItem("GltPrescaleExpired",  &Trig_prescaleexpired);
 
     zeroVals();
 
@@ -243,6 +255,9 @@ StatusCode GltValsTool::calculate()
     // If the engine number is set, then we will store this one from the TrgConfigSvc in the tuple
     if (Trig_gltengine != enums::ENGINE_unset) Trig_engine = Trig_gltengine;
     Trig_gemengine = ((word2 >> enums::ENGINE_offset) & enums::ENGINE_mask); // GEM trigger engine number
+    Trig_gemprescale= pEvent==0 ? unset : pEvent->gemPrescale();
+    Trig_gltprescale= pEvent==0 ? unset : pEvent->gltPrescale();
+    Trig_prescaleexpired= pEvent==0 ? unset : pEvent->prescaleExpired();
 
     SmartDataPtr<LdfEvent::EventSummaryData> 
         eventSummary(m_pEventSvc, "/Event/EventSummary"); 
