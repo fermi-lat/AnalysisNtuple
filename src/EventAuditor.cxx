@@ -15,7 +15,7 @@
 *
 * Experiment the monitoring of algorithms.
 *
-* $Header: /nfs/slac/g/glast/ground/cvs/TkrRecon/src/Utilities/EventAuditor.cxx,v 1.1 2006/11/27 18:40:53 chamont Exp $
+* $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EventAuditor.cxx,v 1.1 2008/01/15 19:17:11 lsrea Exp $
 */
 
 class EventAuditor : virtual public Auditor
@@ -96,8 +96,17 @@ StatusCode EventAuditor::initialize()
 
     setProperties();
     std::vector<std::string>& algoNames = m_algoNames;
+    // make sure that Event is one of the monitored algs
+    // this is so that we know when there's a new event
+    // and can set the times to a default value (-1 sec)
+    std::vector< std::string >::const_iterator algoName ;
+    algoName = std::find(algoNames.begin(), algoNames.end(), "Event");
+    if(algoName==algoNames.end()) {
+        algoNames.insert(algoNames.begin(),1,"Event");
+    }
+
     m_nAlgs = algoNames.size();
-    m_timeVals.resize(m_nAlgs);
+    m_timeVals.assign(m_nAlgs, -1.0);
 
     // message stream
     IMessageSvc * messageSvc ;
@@ -154,6 +163,10 @@ StatusCode EventAuditor::beforeExecute( IAlgorithm * algo )
     std::map< IAlgorithm *, bool >::iterator itr ;
     itr = m_algoStatus.find(algo) ;
     std::string thisName = algo->name();
+    if(thisName=="Event") {
+        // initialize the timers
+        m_timeVals.assign(m_nAlgs, -1.0);
+    }
     if ( itr == m_algoStatus.end() )
     {
         const std::vector< std::string > & algoNames = m_algoNames ;
@@ -166,9 +179,6 @@ StatusCode EventAuditor::beforeExecute( IAlgorithm * algo )
             return StatusCode::SUCCESS ;
         } else {
             m_algoStatus[algo] = true ;
-            // get the index into the time array... should this be a map?
-            int i = algoName - algoNames.begin();
-            m_timeVals[i] = -100.0;
         }
     }
 
