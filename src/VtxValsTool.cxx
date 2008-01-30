@@ -3,7 +3,7 @@
 @brief Calculates the Vtx analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.25 2007/06/07 17:00:13 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.28 2007/10/31 05:57:05 burnett Exp $
 */
 
 // Include files
@@ -143,15 +143,26 @@ VtxValsTool::VtxValsTool(const std::string& type,
     @section vtxvalstool VtxValsTool Variables
 
 In what follows below, whenever the first 2 vertices are referenced, they will be called "Vtx" and
-"Vtx2". This is to maintain backward compatibility with existing code.
+"Vtx2". (This is denoted by "Vtx[/2]Xxx".) This is to maintain backward compatibility with existing code.
+If there is no second vertex in the event, the Vtx2 quanitities are set to zero.
+
+We've added some variables associated with a new kind of vertex: the "neutral" vertex.
+This vertex is made by combining the direction of a simple "charged" vertex with the direction of the line
+between the vertex point and the centroid of the CAL energy, weighted by the covariance matrices and by
+an empirical factor involving the energy, chi-squareds, opening angle, etc. In the table below, "VtxNeut"
+refers to the neutral vertex made from the first ("best") charged vertex, and "VtxNeut1" to a the neutral vertex made
+from the best track. (For 1-track vertices, these would be the same.)
+
+("Vtx[/Neut/Neut1]XXX" means that there are 3 variables: VtxXxx, VtxNeutXxx, and VtxNeut1Xxx.)
 
 <table>
 <tr><th> Variable <th> Type <th> Description
 <tr><td> VtxNumVertices
 <td>I<td>   Number of vertices in the event
-<tr><td> Vtx[/2][X/Y/Z]Dir 
+<tr><td> Vtx[/2/Neut/Neut1][X/Y/Z]Dir 
 <td>F<td>   [x/y/z] direction cosine of the vertex: 
-            the first is "Vtx"; the 2nd, if present, is "Vtx2". 
+            the first is "Vtx"; the 2nd is "Vtx2".
+            For Neut and Neut1, see above. 
 <tr><td> VtxPhi 
 <td>F<td>   Azimuthal angle of vertex, radians 
             (direction of source, not flight direction!) Range: (0,2pi) 
@@ -161,25 +172,25 @@ In what follows below, whenever the first 2 vertices are referenced, they will b
 <td>F<td>   Error on the measurement of theta  
 <tr><td> VtxPhiErr  
 <td>F<td>   Error on the measurement of phi.  
-<tr><td> VtxS[XX/YY]  
+<tr><td> Vtx[/Neut/Neut1]S[XX/YY]  
 <td>F<td>   [x-x/y-y] element of the covariance matrix; square of error on [x/y]  
-<tr><td> VtxSXY  
+<tr><td> Vtx[/Neut/Neut1]SXY  
 <td>F<td>   x-y element of the covariance matrix; covariance  
 <tr><td> Vtx[/2][X/Y/Z]0 
 <td>F<td>   [x/y/z] coordinate of vertex The first vertex is "Vtx"; 
-            the 2nd, if present, is "Vtx2". If the two tracks making up 
+            the 2nd is "Vtx2". If the two tracks making up 
             the vertex are nearly parallel, 
             the coordinates of the vertex may become very large. 
 <tr><td> Vtx2TransDoca
 <tr><td> Vtx[/2]Angle 
 <td>F<td>   Angle between the two tracks of the vertex (radians);             
-            the first vertex is "Vtx"; the 2nd, if present, is "Vtx2".  
+            the first vertex is "Vtx"; the 2nd is "Vtx2".  
 <tr><td> Vtx[/2]DOCA 
 <td>F<td>   Distance of closest approach between the two tracks; 
-            the first vertex is "Vtx"; the 2nd, if present, is "Vtx2". 
+            the first vertex is "Vtx"; the 2nd is "Vtx2". 
 <tr><td> Vtx[/2]HeadSep 
 <td>F<td>   Distance between the heads of the two tracks; 
-            the first vertex is "Vtx"; the 2nd, if present, is "Vtx2".
+            the first vertex is "Vtx"; the 2nd is "Vtx2".
 <tr><td> Vtx2LongDoca
 <td>F<td>   Longitudinal distance of the 2nd vertex along the axis of the first vertex;
             positive if the 2nd vertex is below the first.
