@@ -2,7 +2,7 @@
 @brief header file for ValBase.cxx
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.h,v 1.32 2006/06/26 16:00:00 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.h,v 1.33.180.1 2008/02/06 20:47:11 heather Exp $
 */
 
 #ifndef ValBase_h
@@ -60,7 +60,7 @@ public:
     typedef std::vector<valPair*> valMap;
     typedef valMap::iterator mapIter;
     typedef valMap::const_iterator constMapIter;
-    
+
     ValBase(const std::string& type, 
         const std::string& name, 
         const IInterface* parent);
@@ -151,6 +151,10 @@ protected:
 
     /// count calls to tools
     int m_calcCount;
+
+    /// Obvious "bad" value if an exception occurs whild computing output
+    /// variables
+    static const int s_badVal;
 
 
 };
