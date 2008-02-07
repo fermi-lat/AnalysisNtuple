@@ -2,6 +2,8 @@
   @brief Package AnalysisNtule
   @verbatim
  v2r32p1 18-Jan-08   LSR  Initialize timers better, fix doc in GltValsTool
+ v2r32gr1 06-Feb-08  HMK  Exception handling for CalValsTool and TkrValsTool
+                     for the getStepVolId call
  v2r32   18-Jan-08   MLK  Added trigger prescales to GltValsTool
  v2r31p0 15-Jan-08   LSR  Add EventAuditor to do event-by-event timing
  v2r30p2 11-Jan-08    TU  Add packed word containing status byte info from each filter (ObfStatusBytes)

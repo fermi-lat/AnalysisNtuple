@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.81 2007/09/05 00:07:49 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.82.32.1 2008/02/06 20:56:49 heather Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -1119,6 +1119,7 @@ StatusCode TkrValsTool::calculate()
         double arcLen = m_G4PropTool->getStepArcLen(0);
         bool isFirstPlane = true;
 
+     try {
         for(int istep = 1; istep < numSteps; ++istep) { 
             volId = m_G4PropTool->getStepVolumeId(istep);
             volId.prepend(prefix);
@@ -1227,6 +1228,46 @@ StatusCode TkrValsTool::calculate()
                 } // end diagnostics
             } // end no hit 
         } // end loop over steps
+
+    } catch( std::exception& e) {
+      SmartDataPtr<Event::EventHeader> header(m_pEventSvc, EventModel::EventHeader);
+      unsigned long evtId = (header) ? header->event() : 0;
+      long runId = (header) ? header->run() : -1;
+      log << MSG::WARNING << "Caught exception (run,event): ( "
+          << runId << ", " << evtId << " ) " << e.what()
+          << " Skipping the TKR calculations" << endreq;
+
+      Tkr_1_VetoPlaneCrossed = s_badVal; 
+      Tkr_1_VetoTrials = s_badVal;
+      Tkr_1_SSDVeto = s_badVal;
+      Tkr_1_SSDVetoOld = s_badVal;
+      Tkr_1_VetoUnknown = s_badVal;
+      Tkr_1_VetoDeadPlane = s_badVal;
+      Tkr_1_VetoTruncated = s_badVal; 
+      Tkr_1_VetoTower = s_badVal;   
+      Tkr_1_VetoGapCorner = s_badVal;
+      Tkr_1_VetoGapEdge = s_badVal;   
+      Tkr_1_VetoBadCluster = s_badVal;
+
+    } catch (...) {
+      SmartDataPtr<Event::EventHeader> header(m_pEventSvc, EventModel::EventHeader);
+      unsigned long evtId = (header) ? header->event() : 0;
+      long runId = (header) ? header->run() : -1;
+      log << MSG::WARNING << "Caught exception (run,event): ( "
+          << runId << ", " << evtId << " ) " 
+          << " Skipping the TKR calculations" << endreq;
+      Tkr_1_VetoPlaneCrossed = s_badVal; 
+      Tkr_1_VetoTrials = s_badVal;
+      Tkr_1_SSDVeto = s_badVal;
+      Tkr_1_SSDVetoOld = s_badVal;
+      Tkr_1_VetoUnknown = s_badVal;
+      Tkr_1_VetoDeadPlane = s_badVal;
+      Tkr_1_VetoTruncated = s_badVal; 
+      Tkr_1_VetoTower = s_badVal;   
+      Tkr_1_VetoGapCorner = s_badVal;
+      Tkr_1_VetoGapEdge = s_badVal;   
+      Tkr_1_VetoBadCluster = s_badVal;
+    }
 
         // minimum distance from any edge, measured from the edge of the active area
         double deltaEdge = 0.5*(m_towerPitch - m_tkrGeom->trayWidth()) 
