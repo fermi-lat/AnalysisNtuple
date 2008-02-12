@@ -1,7 +1,7 @@
 /** @file ObfCoordsAlg.cxx
 @brief Declaration and implementation of Gaudi algorithm ObfCoordsAlg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfCoordsAlg.cxx,v 1.4 2007/06/07 17:00:13 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfCoordsAlg.cxx,v 1.5 2007/10/01 21:56:58 burnett Exp $
 */
 // Include files
 
@@ -171,14 +171,15 @@ void ObfCworker::evaluate()
     }
     // The GPS singleton has current time and orientation
     static astro::GPS* gps = fluxSvc->GPSinstance();
-    double time = gps->time();
+    //double time = gps->time();
 
     Vector filtDir(FilterXDir, FilterYDir, FilterZDir);
     if(filtDir.mag()==0) return;
 
-    CLHEP::HepRotation R ( gps->transformToGlast(time, astro::GPS::CELESTIAL) );
+    //CLHEP::HepRotation R ( gps->transformToGlast(time, astro::GPS::CELESTIAL) );
+    //astro::SkyDir skydir( (R.inverse() * filtDir ) );
 
-    astro::SkyDir skydir( (R.inverse() * filtDir ) );
+    astro::SkyDir skydir = gps->toSky( -filtDir );
     m_obfRa   = skydir.ra();
     m_obfDec  = skydir.dec();
     m_obfL = skydir.l();
