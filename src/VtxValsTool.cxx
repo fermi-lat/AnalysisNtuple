@@ -3,7 +3,7 @@
 @brief Calculates the Vtx analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.25 2007/06/07 17:00:13 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.29 2008/01/30 19:51:20 lsrea Exp $
 */
 
 // Include files
@@ -115,6 +115,8 @@ private:
 	float VTXN_Sxx;
     float VTXN_Sxy;
     float VTXN_Syy;
+	float VTXN_ChgWt;
+	float VTXN_NeutWt;
 
 	float VTXN1_xdir;
 	float VTXN1_ydir;
@@ -123,6 +125,8 @@ private:
 	float VTXN1_Sxx;
     float VTXN1_Sxy;
     float VTXN1_Syy;
+    float VTXN1_ChgWt;
+	float VTXN1_NeutWt;
 };
 
 // Static factory for instantiation of algtool objects
@@ -143,15 +147,26 @@ VtxValsTool::VtxValsTool(const std::string& type,
     @section vtxvalstool VtxValsTool Variables
 
 In what follows below, whenever the first 2 vertices are referenced, they will be called "Vtx" and
-"Vtx2". This is to maintain backward compatibility with existing code.
+"Vtx2". (This is denoted by "Vtx[/2]Xxx".) This is to maintain backward compatibility with existing code.
+If there is no second vertex in the event, the Vtx2 quanitities are set to zero.
+
+We've added some variables associated with a new kind of vertex: the "neutral" vertex.
+This vertex is made by combining the direction of a simple "charged" vertex with the direction of the line
+between the vertex point and the centroid of the CAL energy, weighted by the covariance matrices and by
+an empirical factor involving the energy, chi-squareds, opening angle, etc. In the table below, "VtxNeut"
+refers to the neutral vertex made from the first ("best") charged vertex, and "VtxNeut1" to a the neutral vertex made
+from the best track. (For 1-track vertices, these would be the same.)
+
+("Vtx[/Neut/Neut1]XXX" means that there are 3 variables: VtxXxx, VtxNeutXxx, and VtxNeut1Xxx.)
 
 <table>
 <tr><th> Variable <th> Type <th> Description
 <tr><td> VtxNumVertices
 <td>I<td>   Number of vertices in the event
-<tr><td> Vtx[/2][X/Y/Z]Dir 
+<tr><td> Vtx[/2/Neut/Neut1][X/Y/Z]Dir 
 <td>F<td>   [x/y/z] direction cosine of the vertex: 
-            the first is "Vtx"; the 2nd, if present, is "Vtx2". 
+            the first is "Vtx"; the 2nd is "Vtx2".
+            For Neut and Neut1, see above. 
 <tr><td> VtxPhi 
 <td>F<td>   Azimuthal angle of vertex, radians 
             (direction of source, not flight direction!) Range: (0,2pi) 
@@ -161,25 +176,25 @@ In what follows below, whenever the first 2 vertices are referenced, they will b
 <td>F<td>   Error on the measurement of theta  
 <tr><td> VtxPhiErr  
 <td>F<td>   Error on the measurement of phi.  
-<tr><td> VtxS[XX/YY]  
+<tr><td> Vtx[/Neut/Neut1]S[XX/YY]  
 <td>F<td>   [x-x/y-y] element of the covariance matrix; square of error on [x/y]  
-<tr><td> VtxSXY  
+<tr><td> Vtx[/Neut/Neut1]SXY  
 <td>F<td>   x-y element of the covariance matrix; covariance  
 <tr><td> Vtx[/2][X/Y/Z]0 
 <td>F<td>   [x/y/z] coordinate of vertex The first vertex is "Vtx"; 
-            the 2nd, if present, is "Vtx2". If the two tracks making up 
+            the 2nd is "Vtx2". If the two tracks making up 
             the vertex are nearly parallel, 
             the coordinates of the vertex may become very large. 
 <tr><td> Vtx2TransDoca
 <tr><td> Vtx[/2]Angle 
 <td>F<td>   Angle between the two tracks of the vertex (radians);             
-            the first vertex is "Vtx"; the 2nd, if present, is "Vtx2".  
+            the first vertex is "Vtx"; the 2nd is "Vtx2".  
 <tr><td> Vtx[/2]DOCA 
 <td>F<td>   Distance of closest approach between the two tracks; 
-            the first vertex is "Vtx"; the 2nd, if present, is "Vtx2". 
+            the first vertex is "Vtx"; the 2nd is "Vtx2". 
 <tr><td> Vtx[/2]HeadSep 
 <td>F<td>   Distance between the heads of the two tracks; 
-            the first vertex is "Vtx"; the 2nd, if present, is "Vtx2".
+            the first vertex is "Vtx"; the 2nd is "Vtx2".
 <tr><td> Vtx2LongDoca
 <td>F<td>   Longitudinal distance of the 2nd vertex along the axis of the first vertex;
             positive if the 2nd vertex is below the first.
@@ -296,6 +311,8 @@ StatusCode VtxValsTool::initialize()
 	addItem("VtxNeutSXX",   &VTXN_Sxx);
     addItem("VtxNeutSXY",   &VTXN_Sxy);
     addItem("VtxNeutSYY",   &VTXN_Syy);
+    addItem("VtxNeutChgWt",   &VTXN_ChgWt);
+    addItem("VtxNeutNeutWt",   &VTXN_NeutWt);
 
 	addItem("VtxNeut1XDir" , &VTXN1_xdir);
 	addItem("VtxNeut1YDir" , &VTXN1_ydir);
@@ -303,7 +320,8 @@ StatusCode VtxValsTool::initialize()
 	addItem("VtxNeut1SXX",   &VTXN1_Sxx);
     addItem("VtxNeut1SXY",   &VTXN1_Sxy);
     addItem("VtxNeut1SYY",   &VTXN1_Syy);
-
+    addItem("VtxNeut1ChgWt",   &VTXN1_ChgWt);
+    addItem("VtxNeut1NeutWt",   &VTXN1_NeutWt);
 
 	zeroVals();
 
@@ -461,6 +479,8 @@ StatusCode VtxValsTool::calculate()
 		const Event::TkrTrackParams& VTXN_Cov = vtxN->getVertexParams();
 		if(vtxN->getStatusBits()& Event::TkrVertex::NEUTRALVTX) {
 			Vector tN = vtxN->getDirection();
+			float chrg_wt = vtxN->getTkr1ArcLen();
+			float neut_wt = vtxN->getTkr2ArcLen();
 
 			if(vtxN->getStatusBits()& Event::TkrVertex::ONETKRVTX){
 				if(!VTX_Set) {
@@ -470,6 +490,8 @@ StatusCode VtxValsTool::calculate()
 					VTXN_Sxx       = VTXN_Cov.getxSlpxSlp();
 					VTXN_Sxy       = VTXN_Cov.getxSlpySlp();
 					VTXN_Syy       = VTXN_Cov.getySlpySlp();
+					VTXN_ChgWt     = chrg_wt;
+					VTXN_NeutWt    = neut_wt;
 					VTX_Set = true;
 				}
 				VTXN1_xdir      = tN.x();
@@ -478,6 +500,8 @@ StatusCode VtxValsTool::calculate()
 				VTXN1_Sxx       = VTXN_Cov.getxSlpxSlp();
 				VTXN1_Sxy       = VTXN_Cov.getxSlpySlp();
 				VTXN1_Syy       = VTXN_Cov.getySlpySlp();
+				VTXN1_ChgWt     = chrg_wt;
+				VTXN1_NeutWt    = neut_wt;
 			} else {
 				VTXN_xdir      = tN.x();
 				VTXN_ydir      = tN.y();
@@ -485,6 +509,8 @@ StatusCode VtxValsTool::calculate()
 				VTXN_Sxx       = VTXN_Cov.getxSlpxSlp();
 				VTXN_Sxy       = VTXN_Cov.getxSlpySlp();
 				VTXN_Syy       = VTXN_Cov.getySlpySlp();
+				VTXN_ChgWt     = chrg_wt;
+				VTXN_NeutWt    = neut_wt;
 				VTX_Set = true;
 	}   }	}
 
