@@ -2,21 +2,24 @@
 @brief Inserts sentinel values for several variables needed by ClassifyAlg
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McKludgeValsTool.cxx,v 1.47 2007/10/01 17:15:17 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McKludgeValsTool.cxx,v 1.1.54.1 2008/02/18 22:35:05 lsrea Exp $
 */
 // Include files
 
 #include "ValBase.h"
 
+// for the moment, this code doesn't need any external data
+// so I've commented out most of the includes
+
 #include "GaudiKernel/MsgStream.h"
-#include "GaudiKernel/IDataProviderSvc.h"
-#include "GaudiKernel/SmartDataPtr.h"
-#include "GaudiKernel/SmartDataLocator.h"
-#include "GaudiKernel/AlgTool.h"
+//#include "GaudiKernel/IDataProviderSvc.h"
+//#include "GaudiKernel/SmartDataPtr.h"
+//#include "GaudiKernel/SmartDataLocator.h"
+//#include "GaudiKernel/AlgTool.h"
 #include "GaudiKernel/ToolFactory.h"
 #include "GaudiKernel/IToolSvc.h"
-#include "GaudiKernel/IParticlePropertySvc.h"
-#include "GaudiKernel/ParticleProperty.h"
+//#include "GaudiKernel/IParticlePropertySvc.h"
+//#include "GaudiKernel/ParticleProperty.h"
 
 
 /*! @class McKludgeValsTool
@@ -46,9 +49,11 @@ private:
     float MC_Tkr1DirErr;
     float MC_Energy;
     float MC_DirErr;
+    float MC_DirErrN;
+    float MC_DirErrN1;
 
     // to decode the particle charge
-    IParticlePropertySvc* m_ppsvc;    
+    //IParticlePropertySvc* m_ppsvc;    
 };
 
 // Static factory for instantiation of algtool objects
@@ -81,6 +86,10 @@ ClassifyAlg doesn't crash when it finds them missing
 <td>F<td>   set to -1
 <tr><td> McTkr1DirErr 
 <td>F<td>   set to -1 
+<tr><td> McDirErrN 
+<td>F<td>   set to -1 
+<tr><td> McDirErrN1 
+<td>F<td>   set to -1 
 </table>
 */
 
@@ -109,6 +118,8 @@ StatusCode McKludgeValsTool::initialize()
     addItem("McEnergy",       &MC_Energy);  
     addItem("McDirErr",       &MC_DirErr);      
     addItem("McTkr1DirErr",   &MC_Tkr1DirErr); 
+    addItem("McDirErrN",      &MC_DirErrN);      
+    addItem("McDirErrN1",     &MC_DirErrN1);      
     
     zeroVals();
     
@@ -124,6 +135,8 @@ StatusCode McKludgeValsTool::calculate()
     MC_Energy     = -1.0f;
     MC_DirErr     = -1.0f;
     MC_Tkr1DirErr = -1.0f;
+    MC_DirErrN    = -1.0f;
+    MC_DirErrN1   = -1.0f;
    
     return sc;
 }

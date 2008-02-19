@@ -3,7 +3,7 @@
 @brief Calculates the Vtx analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.28 2007/10/31 05:57:05 burnett Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.28.34.1 2008/02/18 22:35:05 lsrea Exp $
 */
 
 // Include files
@@ -115,6 +115,8 @@ private:
 	float VTXN_Sxx;
     float VTXN_Sxy;
     float VTXN_Syy;
+	float VTXN_ChgWt;
+	float VTXN_NeutWt;
 
 	float VTXN1_xdir;
 	float VTXN1_ydir;
@@ -123,6 +125,8 @@ private:
 	float VTXN1_Sxx;
     float VTXN1_Sxy;
     float VTXN1_Syy;
+    float VTXN1_ChgWt;
+	float VTXN1_NeutWt;
 };
 
 // Static factory for instantiation of algtool objects
@@ -307,6 +311,8 @@ StatusCode VtxValsTool::initialize()
 	addItem("VtxNeutSXX",   &VTXN_Sxx);
     addItem("VtxNeutSXY",   &VTXN_Sxy);
     addItem("VtxNeutSYY",   &VTXN_Syy);
+    addItem("VtxNeutChgWt",   &VTXN_ChgWt);
+    addItem("VtxNeutNeutWt",   &VTXN_NeutWt);
 
 	addItem("VtxNeut1XDir" , &VTXN1_xdir);
 	addItem("VtxNeut1YDir" , &VTXN1_ydir);
@@ -314,7 +320,8 @@ StatusCode VtxValsTool::initialize()
 	addItem("VtxNeut1SXX",   &VTXN1_Sxx);
     addItem("VtxNeut1SXY",   &VTXN1_Sxy);
     addItem("VtxNeut1SYY",   &VTXN1_Syy);
-
+    addItem("VtxNeut1ChgWt",   &VTXN1_ChgWt);
+    addItem("VtxNeut1NeutWt",   &VTXN1_NeutWt);
 
 	zeroVals();
 
@@ -472,6 +479,8 @@ StatusCode VtxValsTool::calculate()
 		const Event::TkrTrackParams& VTXN_Cov = vtxN->getVertexParams();
 		if(vtxN->getStatusBits()& Event::TkrVertex::NEUTRALVTX) {
 			Vector tN = vtxN->getDirection();
+			float chrg_wt = vtxN->getTkr1ArcLen();
+			float neut_wt = vtxN->getTkr2ArcLen();
 
 			if(vtxN->getStatusBits()& Event::TkrVertex::ONETKRVTX){
 				if(!VTX_Set) {
@@ -481,6 +490,8 @@ StatusCode VtxValsTool::calculate()
 					VTXN_Sxx       = VTXN_Cov.getxSlpxSlp();
 					VTXN_Sxy       = VTXN_Cov.getxSlpySlp();
 					VTXN_Syy       = VTXN_Cov.getySlpySlp();
+					VTXN_ChgWt     = chrg_wt;
+					VTXN_NeutWt    = neut_wt;
 					VTX_Set = true;
 				}
 				VTXN1_xdir      = tN.x();
@@ -489,6 +500,8 @@ StatusCode VtxValsTool::calculate()
 				VTXN1_Sxx       = VTXN_Cov.getxSlpxSlp();
 				VTXN1_Sxy       = VTXN_Cov.getxSlpySlp();
 				VTXN1_Syy       = VTXN_Cov.getySlpySlp();
+				VTXN1_ChgWt     = chrg_wt;
+				VTXN1_NeutWt    = neut_wt;
 			} else {
 				VTXN_xdir      = tN.x();
 				VTXN_ydir      = tN.y();
@@ -496,6 +509,8 @@ StatusCode VtxValsTool::calculate()
 				VTXN_Sxx       = VTXN_Cov.getxSlpxSlp();
 				VTXN_Sxy       = VTXN_Cov.getxSlpySlp();
 				VTXN_Syy       = VTXN_Cov.getySlpySlp();
+				VTXN_ChgWt     = chrg_wt;
+				VTXN_NeutWt    = neut_wt;
 				VTX_Set = true;
 	}   }	}
 
