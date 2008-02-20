@@ -2,7 +2,7 @@
 @brief implements all the methods of the XxxValsTools
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.cxx,v 1.31 2006/09/24 22:56:19 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.cxx,v 1.32 2007/03/14 22:12:21 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -17,6 +17,8 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.cxx,v 1.31 2006
 
 #include <algorithm>
 #include <cassert>
+
+const int ValBase::s_badVal = -9999;
 
 ValBase::ValBase(const std::string& type, 
                          const std::string& name, 

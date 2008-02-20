@@ -2,7 +2,7 @@
 @brief header file for ValBase.cxx
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.h,v 1.32 2006/06/26 16:00:00 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.h,v 1.33 2006/09/24 22:56:19 lsrea Exp $
 */
 
 #ifndef ValBase_h
@@ -151,6 +151,10 @@ protected:
 
     /// count calls to tools
     int m_calcCount;
+
+    /// Obvious "bad" value if an exception occurs whild computing output
+    /// variables
+    static const int s_badVal;
 
 
 };

@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.84 2007/11/30 22:55:11 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.85 2007/12/07 21:34:28 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -865,6 +865,7 @@ StatusCode CalValsTool::calculate()
 
     // Here we do the CAL_RmsE calculation
 
+    try {
     // get the last point on the best track
     if(num_tracks>0) {
         Event::TkrTrackHitVecConItr hitIter = (*track_1).end();
@@ -950,6 +951,31 @@ StatusCode CalValsTool::calculate()
             CAL_eAveBack = eAveBack;
             CAL_layer0Ratio = eNorm0/eAveBack;
         }
+    }
+} catch( std::exception& e ) {
+      MsgStream log(msgSvc(), name());
+      SmartDataPtr<Event::EventHeader> header(m_pEventSvc, EventModel::EventHeader);
+      unsigned long evtId = (header) ? header->event() : 0;
+      long runId = (header) ? header->run() : -1;
+      log << MSG::WARNING << "Caught exception (run,event): ( " 
+          << runId << ", " << evtId << " ) " << e.what() 
+          << " Skipping the Cal_rmsE calculation and resetting" << endreq;
+
+      CAL_layer0Ratio = s_badVal;
+      CAL_eAveBack = s_badVal;
+      CAL_nLayersRmsBack = s_badVal;
+    
+    } catch(...) {
+      MsgStream log(msgSvc(), name());
+      SmartDataPtr<Event::EventHeader> header(m_pEventSvc, EventModel::EventHeader);
+      unsigned long evtId = (header) ? header->event() : 0;
+      long runId = (header) ? header->run() : -1;
+      log << MSG::WARNING << "Caught unknown exception (run,event): ( " 
+          << runId << ", " << evtId << " ) "
+          << " Skipping the Cal_rmsE calculation" << endreq;
+      CAL_layer0Ratio = s_badVal;
+      CAL_eAveBack = s_badVal;
+      CAL_nLayersRmsBack = s_badVal; 
     }
 
     return sc;
