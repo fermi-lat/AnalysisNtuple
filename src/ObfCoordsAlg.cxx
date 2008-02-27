@@ -1,7 +1,7 @@
 /** @file ObfCoordsAlg.cxx
 @brief Declaration and implementation of Gaudi algorithm ObfCoordsAlg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfCoordsAlg.cxx,v 1.6 2008/02/12 23:47:46 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfCoordsAlg.cxx,v 1.7 2008/02/27 20:11:50 burnett Exp $
 */
 // Include files
 
@@ -101,9 +101,9 @@ StatusCode ObfCoordsAlg::initialize()
     // get the GPS instance: either from FluxSvc or local, non-MC mode
     IFluxSvc* fluxSvc(0);
     if( service("FluxSvc", fluxSvc, true).isFailure() ){
-        gps = fluxSvc->GPSinstance();
-    }else{
         gps = astro::GPS::instance();
+    }else{
+        gps = fluxSvc->GPSinstance();
     }
     return sc;
 }
