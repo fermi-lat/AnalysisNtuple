@@ -2,7 +2,7 @@
 @brief Calculates the Mc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.44 2007/06/07 17:00:13 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.48 2007/10/31 05:57:05 burnett Exp $
 */
 // Include files
 
@@ -68,6 +68,7 @@ private:
     //Function to parse the stuff we get from AcdReconAlg
     void getAcdReconVars();
     IFluxSvc*   m_fluxSvc;
+    astro::GPS* m_gps;
    
     //Pure MC Tuple Items
     float MC_SourceId;
@@ -203,8 +204,11 @@ StatusCode McValsTool::initialize()
   
     // get the services    
     if ( service("FluxSvc", m_fluxSvc, true).isFailure() ){
-        log << MSG::ERROR << "Couldn't find the FluxSvc!" << endreq;
-        return StatusCode::FAILURE;
+        // not found: not using FluxSvc
+        m_gps = astro::GPS::instance();
+    }else{
+        // FluxSvc is available: use its instance
+        m_gps = m_fluxSvc->GPSinstance();
     }
    
     if( serviceLocator() ) {

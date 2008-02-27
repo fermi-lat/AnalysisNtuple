@@ -1,6 +1,8 @@
 /** @file release.notes
   @brief Package AnalysisNtule
   @verbatim
+ v2r34   27-Feb-08   THB  Modify pointing computation to be independent of FluxSvc, 
+                          use astro::GPS::toSky()  consistently
  v2r33   19-Feb-08   LSR  add new files from GRv13r9 branch: McKludgeValsTool, VtxValsTool
  v2r32p1 18-Jan-08   LSR  Initialize timers better, fix doc in GltValsTool
  v2r32gr1 06-Feb-08  HMK  Exception handling for CalValsTool and TkrValsTool
