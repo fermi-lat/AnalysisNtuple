@@ -1,7 +1,7 @@
 /** @file PtValsAlg.cxx
 @brief declaration and definition of the class PtValsAlg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/PtValsAlg.cxx,v 1.2 2007/10/02 02:59:28 burnett Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/PtValsAlg.cxx,v 1.3 2008/02/27 20:11:50 burnett Exp $
 
 */
 
@@ -65,7 +65,6 @@ private:
     PointingInfo m_pointing_info;
 
     StringProperty m_root_tree;
-    BooleanProperty m_save_tuple; // set true to save
     StringArrayProperty m_pointingHistory;///< history file name and launch date
 
     INTupleWriterSvc* m_rootTupleSvc;
@@ -89,7 +88,6 @@ PtValsAlg::PtValsAlg(const std::string& name, ISvcLocator* pSvcLocator)
     // declare properties with setProperties calls
 
     declareProperty("pointing_info_tree_name",  m_root_tree="MeritTuple");
-    declareProperty("save_pointing_info",  m_save_tuple=false);
     declareProperty("PointingHistory",   m_pointingHistory); // doublet, filename and launch date
 
 }
