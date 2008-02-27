@@ -1,7 +1,7 @@
 /** @file FT1Alg.cxx
 @brief Declaration and implementation of Gaudi algorithm FT1Alg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.5 2007/10/01 21:56:58 burnett Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.6 2007/10/02 02:59:28 burnett Exp $
 */
 // Include files
 
@@ -10,9 +10,14 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.5 2007/1
 #include "GaudiKernel/AlgFactory.h"
 #include "GaudiKernel/SmartDataPtr.h"
 
-#include "astro/PointingTransform.h"
 
-#include "Event/MonteCarlo/Exposure.h"
+// Event for access to time
+#include "Event/TopLevel/EventModel.h"
+#include "Event/TopLevel/Event.h"
+
+#include "astro/GPS.h"
+
+#include "FluxSvc/IFluxSvc.h"
 
 #include "ntupleWriterSvc/INTupleWriterSvc.h"
 
@@ -25,6 +30,8 @@ class FT1worker;
 namespace { // anonymous namespace for file-global
     unsigned int nbOfEvtsInFile(100000);
     std::string treename("MeritTuple");
+
+    astro::GPS* gps(0);  // pointer to relevant GPS entry
 #include "Item.h"
 }
 
@@ -45,6 +52,8 @@ private:
     FT1worker * m_worker;
     //counter
     int m_count;
+    IDataProviderSvc* m_pEventSvc;
+
 };
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -58,16 +67,7 @@ class FT1worker{
 public:
     FT1worker();
 
-    void evaluate(const Event::Exposure* exp);
-
-private:
-    std::map<std::string, double> getCelestialCoords(const Event::Exposure& exp,
-        const CLHEP::Hep3Vector glastDir);
-
-    bool useVertex(){ //TODO: implement
-        return false;
-    }
-
+    void evaluate();
     // tuple items expect to find
     TypedItem<unsigned int, 'i'> EvtRun, EvtEventId;
 
@@ -95,12 +95,12 @@ private:
 };
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-FT1Alg::FT1Alg(const std::string& name, ISvcLocator* pSvcLocator) :
-Algorithm(name, pSvcLocator)
+FT1Alg::FT1Alg(const std::string& name, ISvcLocator* pSvcLocator) 
+: Algorithm(name, pSvcLocator)
+, m_count(0)
 {
     declareProperty("TreeName",  treename="MeritTuple");
     declareProperty("NbOfEvtsInFile", nbOfEvtsInFile=100000);
-
 }
 
 StatusCode FT1Alg::initialize()
@@ -112,15 +112,30 @@ StatusCode FT1Alg::initialize()
     // Use the Job options service to get the Algorithm's parameters
     setProperties();
 
+    IDataProviderSvc* eventsvc = 0;
+    sc = serviceLocator()->service( "EventDataSvc", eventsvc, true );
+    if(sc.isFailure()){
+        log << MSG::ERROR << "Could not find EventDataSvc" << std::endl;
+        return sc;
+    }
+    m_pEventSvc = eventsvc;
+
+
     // get a pointer to RootTupleSvc 
     if( (sc = service("RootTupleSvc", rootTupleSvc, true) ). isFailure() ) {
         log << MSG::ERROR << " failed to get the RootTupleSvc" << endreq;
         return sc;
     }
-    m_worker = new FT1worker();
 
-    m_count = 0;
+    m_worker =  new FT1worker();
 
+    // get the GPS instance: either from FluxSvc or local, non-MC mode
+    IFluxSvc* fluxSvc(0);
+    if( service("FluxSvc", fluxSvc, true).isFailure() ){
+        gps = astro::GPS::instance();
+    }else{
+        gps = fluxSvc->GPSinstance();
+    }
     return sc;
 }
 
@@ -129,27 +144,14 @@ StatusCode FT1Alg::execute()
     StatusCode sc = StatusCode::SUCCESS;
 
     MsgStream log(msgSvc(), name());
-
     m_count++;
-    //First get the coordinates from the ExposureCol
+   SmartDataPtr<Event::EventHeader> header(m_pEventSvc, EventModel::EventHeader);
 
-    const Event::Exposure* exp(0);
+    // get event time from header, and make sure gps is in sync 
+    double etime(header->time());
+    gps->time(etime); 
 
-    Event::ExposureCol* elist = 0;
-    eventSvc()->retrieveObject("/Event/MC/ExposureCol",(DataObject *&)elist);
-    if ( elist==0 ) {
-        if(m_count<6) {
-            log << MSG::INFO << "No ExposureCol found" << endreq;
-        }
-        else if (m_count==6) {
-            log << MSG::INFO << "Message suppressed after 5 events" << endreq;
-        }
-    }else {
-        exp = *(*elist).begin();
-    }
-    // now have the worker do it
-    m_worker->evaluate(exp);
-
+    m_worker->evaluate();
     return sc;
 }
 
@@ -235,10 +237,14 @@ see <a href="http://glast.gsfc.nasa.gov/ssc/dev/fits_def/definitionFT1.html">FT1
 <td>F<td>  <b>Do not use; no longer filled!</b>
 </table> 
 */
-
+#if 0
 void FT1worker::evaluate(const Event::Exposure* exp)
+#else
+void FT1worker::evaluate()
+#endif
 {
-
+    using CLHEP::Hep3Vector;
+    using astro::SkyDir;
 
     //eventId and Time are always defined 
     m_ft1eventid =  nbOfEvtsInFile *EvtRun.value()  + EvtEventId.value();
@@ -256,62 +262,34 @@ void FT1worker::evaluate(const Event::Exposure* exp)
     m_ft1livetime = EvtLiveTime;
 
     if( TkrNumTracks==0) return;
-
-    CLHEP::Hep3Vector convPoint;
-    CLHEP::Hep3Vector glastDir;
-    if( CTBBestZDir!=0){ // check that this was set
-        glastDir= CLHEP::Hep3Vector(CTBBestXDir, CTBBestYDir, CTBBestZDir);
-    }else{
-        glastDir= CLHEP::Hep3Vector(Tkr1XDir, Tkr1YDir, Tkr1ZDir);
-    }
-
     m_ft1convlayer   = Tkr1FirstLayer;
 
-    glastDir = - glastDir.unit();
+    Hep3Vector glastDir;
+    if( CTBBestZDir!=0){ // check that this was set
+        glastDir= Hep3Vector(CTBBestXDir, CTBBestYDir, CTBBestZDir);
+    }else{
+        glastDir= Hep3Vector(Tkr1XDir, Tkr1YDir, Tkr1ZDir);
+    }
 
-    if( exp==0 ) return; // do not fill in orientation-dependent stuff if no pointing info
+    // instrument coords
 
-    // celestial coords in degree
-    std::map<std::string,double> cel_coords = getCelestialCoords(*exp, glastDir);
-    m_ft1ra   = cel_coords["RA"];
-    m_ft1dec  = cel_coords["DEC"];
-    astro::SkyDir my_dir(m_ft1ra, m_ft1dec);
-    m_ft1l = my_dir.l();
-    m_ft1b = my_dir.b();
-    m_ft1zen  = cel_coords["ZENITH_THETA"];
-    m_ft1azim = cel_coords["EARTH_AZIMUTH"];
-
-    // instrument coords in degree
-    m_ft1theta = glastDir.theta()*180/M_PI;
-    double phi_deg = glastDir.phi(); 
+    m_ft1theta = (-glastDir).theta()*180/M_PI;
+    double phi_deg = (-glastDir).phi(); 
     if( phi_deg<0 ) phi_deg += 2*M_PI;
     m_ft1phi =  phi_deg*180/M_PI;
 
-}
-//------------------------------------------------------------------------------
-std::map<std::string, double> 
-FT1worker::getCelestialCoords(const Event::Exposure& exp, const CLHEP::Hep3Vector glastDir)
-{
-    using namespace astro;
-    using CLHEP::Hep3Vector;
+    // celestial coordinates
 
-    std::map<std::string, double> fields;
+    // transform 
+    SkyDir sdir( gps->toSky(glastDir) ); 
+    m_ft1ra  = sdir.ra();
+    m_ft1dec = sdir.dec();
+    m_ft1l   = sdir.l();
+    m_ft1b   = sdir.b();
 
+    // local Zenith coordinates
 
-    // create a transformation object -- first get local directions
-    SkyDir zsky( exp.RAZ(), exp.DECZ() );
-    SkyDir xsky( exp.RAX(), exp.DECX() );
-    // orthogonalize, since interpolation and transformations destory orthogonality (limit is 10E-8)
-    Hep3Vector xhat = xsky() -  xsky().dot(zsky()) * zsky() ;
-    PointingTransform toSky( zsky, xhat );
-
-    // make zenith (except for oblateness correction) unit vector
-    Hep3Vector position( exp.posX(),  exp.posY(),  exp.posZ() );
-    SkyDir zenith(position.unit());
-
-    SkyDir sdir = toSky.gDir(glastDir);
-
-    //zenith_theta and earth_azimuth
+    SkyDir zenith(gps->zenithDir());  // pointing direction
     double zenith_theta = sdir.difference(zenith); 
     if( fabs(zenith_theta)<1e-8) zenith_theta=0;
 
@@ -324,12 +302,8 @@ FT1worker::getCelestialCoords(const Event::Exposure& exp, const CLHEP::Hep3Vecto
     if( earth_azimuth <0) earth_azimuth += 2*M_PI; // to 0-360 deg.
     if( fabs(earth_azimuth)<1e-8) earth_azimuth=0;
 
-    fields["RA"]            = sdir.ra();
-    fields["DEC"]           = sdir.dec();
-    fields["ZENITH_THETA"]  = zenith_theta*180/M_PI;
-    fields["EARTH_AZIMUTH"] = earth_azimuth*180/M_PI;
+    m_ft1zen  = zenith_theta*180/M_PI;;
+    m_ft1azim = earth_azimuth*180/M_PI;
 
-    return fields;
 }
-
 
