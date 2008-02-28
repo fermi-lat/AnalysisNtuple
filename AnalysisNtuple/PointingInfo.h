@@ -1,5 +1,5 @@
 /** @file PointingInfo.h
-// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/AnalysisNtuple/PointingInfo.h,v 1.1 2007/10/01 21:56:58 burnett Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/AnalysisNtuple/PointingInfo.h,v 1.2 2008/02/27 21:58:14 burnett Exp $
 */
 
 #ifndef PointingInfo_h
@@ -16,7 +16,7 @@ namespace astro { class GPS;}
 
 Manage the data in the FT2 definition
 
-/
+*/
 namespace AnalysisNtuple {
 
 class PointingInfo {
