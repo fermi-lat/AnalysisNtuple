@@ -3,7 +3,7 @@
 @brief Calculates the "Event" analysis variables from the other ntuple variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.32 2007/06/07 17:00:13 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.34 2008/02/28 21:42:51 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -225,6 +225,8 @@ StatusCode EvtValsTool::initialize()
         log << MSG::INFO << "Unable to find tool: " "McValsTool" << endreq;
         log << "Will carry on anyway, EvtDeltaEoE will not be calculated" << endreq;
     }
+        
+    /*    
     m_pGltTool = 0;
     sc = pToolSvc->retrieveTool("GltValsTool", m_pGltTool);
     if( sc.isFailure() ) {
@@ -237,34 +239,39 @@ StatusCode EvtValsTool::initialize()
         log << MSG::ERROR << "Unable to find tool: " "TkrHitValsTool" << endreq;
         return sc;
     }
+    */
+
     m_pTkrTool = 0;
     sc = pToolSvc->retrieveTool("TkrValsTool", m_pTkrTool);
     if( sc.isFailure() ) {
         log << MSG::ERROR << "Unable to find tool: " "TkrValsTool" << endreq;
         return sc;
     }
+
     m_pVtxTool = 0;
     sc = pToolSvc->retrieveTool("VtxValsTool", m_pVtxTool);
     if( sc.isFailure() ) {
         log << MSG::ERROR << "Unable to find tool: " "VtxValsTool" << endreq;
         return sc;
     }
+
     m_pCalTool = 0;
     sc = pToolSvc->retrieveTool("CalValsTool", m_pCalTool);
     if( sc.isFailure() ) {
         log << MSG::ERROR << "Unable to find tool: " "CalValsTool" << endreq;
         return sc;
     }
+
+    /*
     m_pAcdTool = 0;
     sc = pToolSvc->retrieveTool("AcdValsTool", m_pAcdTool);
     if( sc.isFailure() ) {
         log << MSG::ERROR << "Unable to find tool: " "AcdValsTool" << endreq;
         return sc;
     }
-
-
+    */
+    
     // load up the map
-
 
     addItem("EvtRun",           &EvtRun);
     addItem("EvtEventId",       &EvtEventId);
@@ -318,12 +325,17 @@ StatusCode EvtValsTool::calculate()
     // we may want to add TDS stuff to this method, but we haven't needed it yet.
 
     int firstCheck = m_check;
-    int nextCheck = -1;
+    int nextCheck = NOCALC;
+
 
     // since we know what's happening here, we can plan a little
     // the idea is to call the first check of each tool with the called check value,
     // and the rest with the no-calc value
     // so be careful when adding calls or moving stuff around!!!!
+
+    // So far, we're only using Tkr, Cal, Vtx and Mc quantities. 
+    // The corresponding ValsTools have already been called, 
+    // so we can use nextCheck throughout. 
 
     SmartDataPtr<Event::EventHeader> header(m_pEventSvc, EventModel::EventHeader);
 
@@ -340,15 +352,15 @@ StatusCode EvtValsTool::calculate()
     }
 
     float eCalSum = -1.0, eTkr = -1.0;
-    if(    m_pCalTool->getVal("CalEnergyRaw", eCalSum, firstCheck).isSuccess()
-        && m_pTkrTool->getVal("TkrEnergyCorr", eTkr, firstCheck).isSuccess()) {
+    if(    m_pCalTool->getVal("CalEnergyRaw", eCalSum, nextCheck).isSuccess()
+        && m_pTkrTool->getVal("TkrEnergyCorr", eTkr, nextCheck).isSuccess()) {
         EvtEnergyRaw = eTkr + eCalSum;
     }
 
     float eTkrKalEne, eCalRLn, eTkrBest; //, eCal
     int CAL_Type;
-    if (   m_pCalTool->getVal("CalCsIRLn", eCalRLn, firstCheck).isSuccess()
-        && m_pTkrTool->getVal("TkrSumKalEne", eTkrKalEne, firstCheck).isSuccess()) 
+    if (   m_pCalTool->getVal("CalCsIRLn", eCalRLn, nextCheck).isSuccess()
+        && m_pTkrTool->getVal("TkrSumKalEne", eTkrKalEne, nextCheck).isSuccess()) 
     {
         eTkrBest = std::max(eTkr+eCalSum, eTkrKalEne);
         if(eCalSum < 350 || eCalRLn < 4) {
@@ -392,8 +404,9 @@ StatusCode EvtValsTool::calculate()
 
     float mcEnergy;
     EvtDeltaEoE = -2.0;
-    if(m_pMcTool!=NULL) {
-        if(m_pMcTool->getVal("McEnergy", mcEnergy, firstCheck).isSuccess()){
+
+    if(m_pMcTool!=NULL&&m_pMcTool->isLoaded()) {
+        if(m_pMcTool->getVal("McEnergy", mcEnergy, nextCheck).isSuccess()){
             if (mcEnergy>0) { 
                 EvtDeltaEoE = (EvtEnergyCorr - mcEnergy)/(mcEnergy);
             }
@@ -425,7 +438,7 @@ StatusCode EvtValsTool::calculate()
 
 	// Vtx kinematic variable:  angle * event energy / Track_1 energy fraction
     float vtxAngle;
-    if (m_pVtxTool->getVal("VtxAngle", vtxAngle, firstCheck).isSuccess()) {
+    if (m_pVtxTool->getVal("VtxAngle", vtxAngle, nextCheck).isSuccess()) {
         if (tkr1ConE>0.0) EvtVtxKin = vtxAngle*EvtEnergyCorr/EvtTkr1EFrac;
     }
 
@@ -513,7 +526,7 @@ StatusCode EvtValsTool::calculate()
 		                                       /(1.95+2.36*tkr1ZDir+1.3*tkr1ZDir2);
 
     float vtxDoca;
-    if (m_pVtxTool->getVal("VtxDOCA", vtxDoca, firstCheck).isSuccess()) {
+    if (m_pVtxTool->getVal("VtxDOCA", vtxDoca, nextCheck).isSuccess()) {
         EvtEVtxDoca = vtxDoca/(1.55 - .685*logE+ .0851*logE2) 
                                 / (2.21 + 3.01*tkr1ZDir + 1.59*tkr1ZDir2);
     }

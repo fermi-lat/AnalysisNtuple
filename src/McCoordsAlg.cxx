@@ -1,7 +1,7 @@
 /** @file McCoordsAlg.cxx
 @brief Declaration and implementation of Gaudi algorithm McCoordsAlg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McCoordsAlg.cxx,v 1.3 2007/03/30 12:53:48 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McCoordsAlg.cxx,v 1.6 2008/02/27 21:21:15 burnett Exp $
 */
 // Include files
 
@@ -26,6 +26,7 @@ class McCworker;
 namespace { // anonymous namespace for file-global
     IFluxSvc* fluxSvc;
     std::string treename("MeritTuple");
+    astro::GPS* gps;
 #include "Item.h"
 }
 
@@ -98,7 +99,13 @@ StatusCode McCoordsAlg::initialize()
     }
     m_worker = new McCworker();
 
-    service("FluxSvc", fluxSvc, true);
+    // get the GPS instance: either from FluxSvc or local, non-MC mode
+    IFluxSvc* fluxSvc(0);
+    if( service("FluxSvc", fluxSvc, true).isFailure() ){
+        gps = astro::GPS::instance();
+    }else{
+        gps = fluxSvc->GPSinstance();
+    }
 
     m_count = 0;
 
@@ -161,22 +168,16 @@ void McCworker::evaluate()
 {
     // convert to (ra, dec)
 
-    // The GPS singleton has current time and orientation
-    static astro::GPS* gps = fluxSvc->GPSinstance();
-    double time = gps->time();
-
     Vector Mc_t0(McXDir, McYDir, McZDir);
 
-    CLHEP::HepRotation R ( gps->transformToGlast(time, astro::GPS::CELESTIAL) );
-
-    astro::SkyDir mcdir( - (R.inverse() * Mc_t0 ) );
+    astro::SkyDir mcdir = gps->toSky( Mc_t0 );
     m_mcRa   = mcdir.ra();
     m_mcDec  = mcdir.dec();
     m_mcL = mcdir.l();
     m_mcB = mcdir.b();
 
-    CLHEP::HepRotation Rzen ( gps->transformToGlast(time, astro::GPS::ZENITH) );
-    Vector zenith = -(Rzen.inverse() * Mc_t0);
+    //CLHEP::HepRotation Rzen ( gps->transformToGlast(time, astro::GPS::ZENITH) );
+    Vector zenith = -(Mc_t0);
     m_mcZen  = (float) zenith.theta()*180./M_PI;
     // zero azimuth points north!
     m_mcAzim = -(float) zenith.phi()*180./M_PI + 90.0;

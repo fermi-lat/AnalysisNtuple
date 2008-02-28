@@ -2,7 +2,7 @@
 @brief Calculates the Mc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.44 2007/06/07 17:00:13 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.50 2008/02/28 21:42:51 lsrea Exp $
 */
 // Include files
 
@@ -36,10 +36,6 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.44 2
 
 #include "Event/Recon/AcdRecon/AcdRecon.h"
 
-// to get current position
-//flux
-#include "FluxSvc/IFluxSvc.h"
-#include "astro/GPS.h"
 /*! @class McValsTool
 @brief calculates Monte Carlo values
 
@@ -67,7 +63,6 @@ private:
 
     //Function to parse the stuff we get from AcdReconAlg
     void getAcdReconVars();
-    IFluxSvc*   m_fluxSvc;
    
     //Pure MC Tuple Items
     float MC_SourceId;
@@ -200,13 +195,7 @@ StatusCode McValsTool::initialize()
     MsgStream log(msgSvc(), name());
 
     if( ValBase::initialize().isFailure()) return StatusCode::FAILURE;
-  
-    // get the services    
-    if ( service("FluxSvc", m_fluxSvc, true).isFailure() ){
-        log << MSG::ERROR << "Couldn't find the FluxSvc!" << endreq;
-        return StatusCode::FAILURE;
-    }
-   
+     
     if( serviceLocator() ) {
         if( service("ParticlePropertySvc", m_ppsvc, true).isFailure() ) {
             log << MSG::ERROR << "Service [ParticlePropertySvc] not found" << endreq;

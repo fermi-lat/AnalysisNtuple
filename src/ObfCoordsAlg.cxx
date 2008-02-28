@@ -1,7 +1,7 @@
 /** @file ObfCoordsAlg.cxx
 @brief Declaration and implementation of Gaudi algorithm ObfCoordsAlg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfCoordsAlg.cxx,v 1.4 2007/06/07 17:00:13 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfCoordsAlg.cxx,v 1.8 2008/02/27 21:21:15 burnett Exp $
 */
 // Include files
 
@@ -23,8 +23,8 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfCoordsAlg.cxx,v 1.4 
 class ObfCworker;
 
 namespace { // anonymous namespace for file-global
-    IFluxSvc* fluxSvc;
     std::string treename("MeritTuple");
+    astro::GPS* gps(0);
 #include "Item.h"
 }
 
@@ -75,8 +75,9 @@ private:
 };
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ObfCoordsAlg::ObfCoordsAlg(const std::string& name, ISvcLocator* pSvcLocator) :
-Algorithm(name, pSvcLocator)
+ObfCoordsAlg::ObfCoordsAlg(const std::string& name, ISvcLocator* pSvcLocator)
+: Algorithm(name, pSvcLocator)
+, m_count(0)
 {
     declareProperty("TreeName",  treename="MeritTuple");
 }
@@ -97,10 +98,13 @@ StatusCode ObfCoordsAlg::initialize()
     }
     m_worker = new ObfCworker();
 
-    service("FluxSvc", fluxSvc, true);
-
-    m_count = 0;
-
+    // get the GPS instance: either from FluxSvc or local, non-MC mode
+    IFluxSvc* fluxSvc(0);
+    if( service("FluxSvc", fluxSvc, true).isFailure() ){
+        gps = astro::GPS::instance();
+    }else{
+        gps = fluxSvc->GPSinstance();
+    }
     return sc;
 }
 
@@ -145,8 +149,6 @@ ObfCworker::ObfCworker()
 : FilterXDir("FilterXDir")
 , FilterYDir("FilterYDir")
 , FilterZDir("FilterZDir")
-//, FilterXhits("FilterXhits")
-//, FilterYhits("FilterYhits")
 {
     //now create new items 
 
@@ -163,32 +165,16 @@ void ObfCworker::evaluate()
 {
 
     m_obfRa = m_obfDec = m_obfL = m_obfB = 0;
-
     // convert to (ra, dec)
-
-    if( ! fluxSvc ){
-        return;
-    }
-    // The GPS singleton has current time and orientation
-    static astro::GPS* gps = fluxSvc->GPSinstance();
-    double time = gps->time();
 
     Vector filtDir(FilterXDir, FilterYDir, FilterZDir);
     if(filtDir.mag()==0) return;
-
-    CLHEP::HepRotation R ( gps->transformToGlast(time, astro::GPS::CELESTIAL) );
-
-    astro::SkyDir skydir( (R.inverse() * filtDir ) );
+    astro::SkyDir skydir( gps->toSky(-filtDir) );
     m_obfRa   = skydir.ra();
     m_obfDec  = skydir.dec();
     m_obfL = skydir.l();
     m_obfB = skydir.b();
 
-    //CLHEP::HepRotation Rzen ( gps->transformToGlast(time, astro::GPS::ZENITH) );
-    //Vector zenith = -(Rzen.inverse() * Mc_t0);
-    //m_obfZen  = (float) zenith.theta()*180./M_PI;
-    //m_obfAzim = (float) zenith.phi()*180./M_PI;
-    //if(m_obfAzim<0) m_obfAzim += 360.;
 
     return;
 }

@@ -123,6 +123,11 @@
  @param AnalysisNtupleAlg.countCalcs
   Counts the number of times that a given Tool is called for each event
   
+ @param PtValsAlg.pointing_info_tree_name ["MeritTuple"] Sets the name of the tuple to write Pt info to
+ @param PtValsAlg.PointingHistory [""]
+  name of a FT2 FITS file, or a pointing history ascii file. If not set, and FluxSvc
+  is not used, the default orbit will be used to define the pointing
+
   <hr>
  @section vars Description of the variables
  Here are the <A HREF="./anatup_vars.html"> standard</A> variables, and here are the 
