@@ -2,7 +2,7 @@
 @brief common abstract inteface for all the XxxValsTools
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/AnalysisNtuple/IValsTool.h,v 1.17 2006/06/26 16:00:00 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/AnalysisNtuple/IValsTool.h,v 1.18 2006/09/24 22:56:18 lsrea Exp $
 */
 
 #ifndef _H_IValsTool
@@ -51,6 +51,8 @@ public:
     /// return a string containing the value, as above
     virtual StatusCode getVal(std::string varName, std::string& value, int check = CALC) = 0;
     virtual StatusCode getValCheck(std::string varName, std::string& value) =0;
+    virtual void setLoadFlag() = 0;
+    virtual bool isLoaded() = 0;
     
     /** @class Visitor 
     @brief calls the client successively with the names and (ref to) values

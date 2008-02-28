@@ -2,7 +2,7 @@
 @brief implements all the methods of the XxxValsTools
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.cxx,v 1.32.158.1 2008/02/06 20:56:49 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.cxx,v 1.33 2008/02/07 17:20:04 heather Exp $
 */
 
 #include "ValBase.h"
@@ -23,7 +23,7 @@ const int ValBase::s_badVal = -9999;
 ValBase::ValBase(const std::string& type, 
                          const std::string& name, 
                          const IInterface* parent)
-  : AlgTool( type, name, parent ) { }
+                         : AlgTool( type, name, parent ), m_isLoaded(false) { }
 
 
   StatusCode ValBase::initialize()

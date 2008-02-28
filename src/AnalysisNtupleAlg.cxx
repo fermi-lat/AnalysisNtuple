@@ -2,7 +2,7 @@
 @brief Uses the XxxValsTools to produce a comprehensive ntuple
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.34 2007/03/14 22:20:05 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.35 2007/03/17 00:38:37 usher Exp $
 */
 
 // Gaudi system includes
@@ -230,6 +230,7 @@ StatusCode AnalysisNtupleAlg::initialize(){
     for (i =0; i<namesSize; ++i){
         m_toolvec.push_back(0);
         sc = pToolSvc->retrieveTool(m_toolnames[i], m_toolvec.back());
+        m_toolvec.back()->setLoadFlag();
         if( sc.isFailure() ) {
             log << MSG::ERROR << "Unable to find tool: " << m_toolnames[i] << endreq;
             return sc;
