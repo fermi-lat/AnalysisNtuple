@@ -2,7 +2,7 @@
 @brief declaration and definition of the class PointingInfo
 
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/PointingInfo.cxx,v 1.1 2007/10/01 21:56:58 burnett Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/PointingInfo.cxx,v 1.2 2008/02/27 20:11:50 burnett Exp $
 
 */
 class MsgStream;
@@ -52,18 +52,14 @@ void PointingInfo::execute( const astro::GPS& gps)
     zenith_scz = 180/M_PI* gps.zenithDir().difference(gps.zAxisDir());
 }
 
-//------------------------------------------------------------------------
-void PointingInfo::setPtTuple(INTupleWriterSvc* tuple, const std::string& tname)
-{
 
-       /** @page anatup_vars 
-       @section Pt  Pt Variables
+/** @page anatup_vars 
+    @section Pt  Pt Variables
 
-     These items are added to the merit tuple  to give the current instrument orientation 
+    These items are added to the merit tuple  to give the current instrument orientation 
 
 <table>
 <tr><th> Variable <th>Type<th> Description
-
 <tr><td> PtTime       <td>F<td> (s) Current time, same as the elapsed time
 <tr><td> PtLat,PtLon  <td>F<td> (deg) lattitude and longitude
 <tr><td> PtAlt        <td>F<td> (km) altitude
@@ -73,8 +69,11 @@ void PointingInfo::setPtTuple(INTupleWriterSvc* tuple, const std::string& tname)
 <tr><td> PtRaz,PtDecz <td>F<td> (deg) equatorial coordinates for orientation of S/C z-axis 
 <tr><td> PtSCzenith   <td>F<td> (deg) current angle between zenith and S/C z-axis
 </table>
-    */
+*/
 
+//------------------------------------------------------------------------
+void PointingInfo::setPtTuple(INTupleWriterSvc* tuple, const std::string& tname)
+{
     if( tuple==0 ) return;
     tuple->addItem(tname, "PtTime",   &start);
     tuple->addItem(tname, "PtPos[3]", sc_position);
