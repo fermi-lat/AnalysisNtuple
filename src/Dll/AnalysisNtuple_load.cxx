@@ -3,7 +3,7 @@
  @brief This is needed for forcing the linker to load all components
  of the library.
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/Dll/AnalysisNtuple_load.cxx,v 1.18 2008/01/15 19:17:11 lsrea Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/Dll/AnalysisNtuple_load.cxx,v 1.19 2008/02/27 21:58:14 burnett Exp $
 */
 
 #include "GaudiKernel/DeclareFactoryEntries.h"
@@ -15,9 +15,9 @@ DECLARE_FACTORY_ENTRIES(AnalysisNtuple) {
     DECLARE_ALGORITHM( McCoordsAlg       );
     DECLARE_ALGORITHM( ObfCoordsAlg      );
     DECLARE_ALGORITHM( PtValsAlg         );
-#if 0
+
     DECLARE_AUDITOR(   EventAuditor      );
-#endif
+
     DECLARE_TOOL(      TkrValsTool      );
     DECLARE_TOOL(      CalValsTool      );
     DECLARE_TOOL(      AcdValsTool      );
