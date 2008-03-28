@@ -1,6 +1,7 @@
 /** @file release.notes
   @brief Package AnalysisNtule
   @verbatim
+ v2r36p0 28-Mar-08    TU  Including GrbRa, GrbDec, GrbL, GrbB for Fred Keuhn and GRB studies
  v2r35p2 12-Mar-08   HMK  Make sure EventAuditor is declared in AnaTup_load
  v2r35p1 08-Mar-08   LSR  Fix up doxygen for Pt* variables
  v2r35   28-Feb-08   LSR  Clean up logic in EvtValsTool; changes IValsTool interface 
