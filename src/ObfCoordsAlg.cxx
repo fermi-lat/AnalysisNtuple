@@ -1,7 +1,7 @@
 /** @file ObfCoordsAlg.cxx
 @brief Declaration and implementation of Gaudi algorithm ObfCoordsAlg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfCoordsAlg.cxx,v 1.8 2008/02/27 21:21:15 burnett Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfCoordsAlg.cxx,v 1.9 2008/03/28 18:41:29 usher Exp $
 */
 // Include files
 
@@ -69,8 +69,14 @@ private:
     Item FilterYDir;
     Item FilterZDir;
 
+    // These will replace Filter%Dir's above
+    Item GrbXDir;
+    Item GrbYDir;
+    Item GrbZDir;
+
     //ObfCoords entries to create
     float m_obfRa,m_obfDec,m_obfL,m_obfB;
+    float m_grbRa,m_grbDec,m_grbL,m_grbB;
     //float m_obfZen,m_obfAzim;
 };
 
@@ -149,13 +155,22 @@ ObfCworker::ObfCworker()
 : FilterXDir("FilterXDir")
 , FilterYDir("FilterYDir")
 , FilterZDir("FilterZDir")
+, GrbXDir("GrbXDir")
+, GrbYDir("GrbYDir")
+, GrbZDir("GrbZDir")
 {
     //now create new items 
 
-    addItem( "FilterRa",            m_obfRa);
-    addItem( "FilterDec",           m_obfDec);
-    addItem( "FilterL",             m_obfL);
-    addItem( "FilterB",             m_obfB);
+    addItem( "FilterRa",  m_obfRa);
+    addItem( "FilterDec", m_obfDec);
+    addItem( "FilterL",   m_obfL);
+    addItem( "FilterB",   m_obfB);
+
+    addItem( "GrbRa",     m_grbRa);
+    addItem( "GrbDec",    m_grbDec);
+    addItem( "GrbL",      m_grbL);
+    addItem( "GrbB",      m_grbB);
+
     //addItem( "ObfcZenithTheta",   m_obfZen);
     //addItem( "ObfcEarthAzimuth",  m_obfAzim);
 }
@@ -165,16 +180,26 @@ void ObfCworker::evaluate()
 {
 
     m_obfRa = m_obfDec = m_obfL = m_obfB = 0;
+    m_grbRa = m_grbDec = m_grbL = m_grbB = 0;
     // convert to (ra, dec)
 
-    Vector filtDir(FilterXDir, FilterYDir, FilterZDir);
-    if(filtDir.mag()==0) return;
-    astro::SkyDir skydir( gps->toSky(-filtDir) );
-    m_obfRa   = skydir.ra();
-    m_obfDec  = skydir.dec();
-    m_obfL = skydir.l();
-    m_obfB = skydir.b();
+    // Old school stuff first
+    Vector filterDir(FilterXDir, FilterYDir, FilterZDir);
+    if (filterDir.mag()==0) return;
+    astro::SkyDir skydir( gps->toSky(-filterDir) );
+    m_obfRa  = skydir.ra();
+    m_obfDec = skydir.dec();
+    m_obfL   = skydir.l();
+    m_obfB   = skydir.b();
 
+    // New stuff now
+    Vector grbDir(GrbXDir, GrbYDir, GrbZDir);
+    if (grbDir.mag()==0) return;
+    astro::SkyDir skyGrbdir( gps->toSky(-grbDir) );
+    m_grbRa  = skyGrbdir.ra();
+    m_grbDec = skyGrbdir.dec();
+    m_grbL   = skyGrbdir.l();
+    m_grbB   = skyGrbdir.b();
 
     return;
 }
