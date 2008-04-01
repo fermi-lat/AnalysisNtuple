@@ -1,7 +1,7 @@
 /** @file PtValsAlg.cxx
 @brief declaration and definition of the class PtValsAlg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/PtValsAlg.cxx,v 1.4 2008/02/27 21:31:45 burnett Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/PtValsAlg.cxx,v 1.2.54.1 2008/02/28 23:29:15 lsrea Exp $
 
 */
 
@@ -72,6 +72,7 @@ private:
 
     astro::PointingHistory* m_history;
     bool m_horizontal;
+    bool m_fillNtuple;
 
 };
 //------------------------------------------------------------------------
@@ -89,6 +90,7 @@ PtValsAlg::PtValsAlg(const std::string& name, ISvcLocator* pSvcLocator)
 
     declareProperty("pointing_info_tree_name",  m_root_tree="MeritTuple");
     declareProperty("PointingHistory",   m_pointingHistory); // doublet, filename and launch date
+    declareProperty("FillNtuple",        m_fillNtuple=true);
 
 }
 //------------------------------------------------------------------------
@@ -107,13 +109,15 @@ StatusCode PtValsAlg::initialize(){
         sc = StatusCode::FAILURE;
     }else if( !m_root_tree.value().empty() ) {
         
-        m_pointing_info.setPtTuple(m_rootTupleSvc, m_root_tree.value());
+        if(m_fillNtuple) m_pointing_info.setPtTuple(m_rootTupleSvc, m_root_tree.value());
     }
     // get the GPS instance: either from FluxSvc or local, non-MC mode
+    // leave off "true"
     IFluxSvc* fluxSvc(0);
-    if( service("FluxSvc", fluxSvc, true).isFailure() ){
+    if( service("FluxSvc", fluxSvc).isFailure() ){
 
         // no FluxSvc available: assume recon mode, check for pointing history file
+        //log << MSG::INFO << "Will use the GPS singleton to get pointing info instead" << endreq;
         gps = astro::GPS::instance();
 
         //set the input file to be used as the pointing database, if used
@@ -124,11 +128,14 @@ StatusCode PtValsAlg::initialize(){
             std::string filename(m_pointingHistory.value()[0]);
             facilities::Util::expandEnvVar(&filename);
             double offset = 0;
+            std::string jStr;
             if( m_pointingHistory.value().size()>1){
                 std::string field(m_pointingHistory.value()[1]);
                 if(! field.empty() ) { // allow null string
                     facilities::Timestamp jt(m_pointingHistory.value()[1]);
                     offset = (astro::JulianDate(jt.getJulian())-astro::JulianDate::missionStart())*astro::JulianDate::secondsPerDay;
+                    astro::JulianDate jDate(astro::JulianDate(jt.getJulian()));
+                    jStr = jDate.getGregorianDate();
                 }
             }
 
@@ -138,8 +145,12 @@ StatusCode PtValsAlg::initialize(){
             }
             log << MSG::INFO << "Loading Pointing History File : " << filename <<endreq;
             if( offset>0 ){
-                log << MSG::INFO   << " with MET offset "<< offset <<  endreq;
-            }
+               log << MSG::INFO   << " with MET offset " ;
+               log.precision(12);
+               log << offset << " ";
+               log.precision(6);
+               log << jStr << endreq;
+           }
             if( m_horizontal){
                 log << MSG::INFO << "   Will override x-direction to be horizontal"<<endreq;
             }
@@ -176,12 +187,13 @@ StatusCode PtValsAlg::execute()
 
    // get event time from header and look up position info from the history
     double etime(header->time());
+    TimeStamp ts(etime);
 
     // Tell the  GPS object about the current time.
     gps->time(etime);
 
     // and create the tuple
-    m_pointing_info.execute( *gps );
+    if (m_fillNtuple) m_pointing_info.execute( *gps );
 
     return StatusCode::SUCCESS;
 }

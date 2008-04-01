@@ -1,7 +1,7 @@
 /** @file FT1Alg.cxx
 @brief Declaration and implementation of Gaudi algorithm FT1Alg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.7 2008/02/27 20:11:50 burnett Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.6.54.1 2008/02/28 23:29:15 lsrea Exp $
 */
 // Include files
 
@@ -131,7 +131,8 @@ StatusCode FT1Alg::initialize()
 
     // get the GPS instance: either from FluxSvc or local, non-MC mode
     IFluxSvc* fluxSvc(0);
-    if( service("FluxSvc", fluxSvc, true).isFailure() ){
+    if( service("FluxSvc", fluxSvc).isFailure() ){
+        //log << MSG::INFO << "Will use the GPS singleton to get pointing information instead" << endreq;
         gps = astro::GPS::instance();
     }else{
         gps = fluxSvc->GPSinstance();
@@ -145,10 +146,11 @@ StatusCode FT1Alg::execute()
 
     MsgStream log(msgSvc(), name());
     m_count++;
-   SmartDataPtr<Event::EventHeader> header(m_pEventSvc, EventModel::EventHeader);
+    SmartDataPtr<Event::EventHeader> header(m_pEventSvc, EventModel::EventHeader);
 
     // get event time from header, and make sure gps is in sync 
     double etime(header->time());
+
     gps->time(etime); 
 
     m_worker->evaluate();
