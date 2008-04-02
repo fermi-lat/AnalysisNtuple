@@ -1,6 +1,7 @@
 /** @file release.notes
   @brief Package AnalysisNtule
   @verbatim
+ v2r36p1 01-Apr-08   LSR  Merge mods from BigRun branch
  v2r36p0 28-Mar-08    TU  Including GrbRa, GrbDec, GrbL, GrbB for Fred Keuhn and GRB studies
  v2r35p2 12-Mar-08   HMK  Make sure EventAuditor is declared in AnaTup_load
  v2r35p1 08-Mar-08   LSR  Fix up doxygen for Pt* variables
