@@ -2,7 +2,7 @@
 @brief declaration and definition of the class PointingInfo
 
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/PointingInfo.cxx,v 1.2 2008/02/27 20:11:50 burnett Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/PointingInfo.cxx,v 1.1.54.1 2008/02/28 23:29:15 lsrea Exp $
 
 */
 class MsgStream;
@@ -52,9 +52,6 @@ void PointingInfo::execute( const astro::GPS& gps)
     zenith_scz = 180/M_PI* gps.zenithDir().difference(gps.zAxisDir());
 }
 
-//------------------------------------------------------------------------
-void PointingInfo::setPtTuple(INTupleWriterSvc* tuple, const std::string& tname)
-{
 
        /** @page anatup_vars 
        @section Pt  Pt Variables
@@ -74,6 +71,9 @@ void PointingInfo::setPtTuple(INTupleWriterSvc* tuple, const std::string& tname)
 <tr><td> PtSCzenith   <td>F<td> (deg) current angle between zenith and S/C z-axis
 </table>
     */
+//------------------------------------------------------------------------
+void PointingInfo::setPtTuple(INTupleWriterSvc* tuple, const std::string& tname)
+{
 
     if( tuple==0 ) return;
     tuple->addItem(tname, "PtTime",   &start);
