@@ -1,7 +1,7 @@
 /** @file FT1Alg.cxx
 @brief Declaration and implementation of Gaudi algorithm FT1Alg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.6.54.1 2008/02/28 23:29:15 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.6.54.2 2008/04/01 22:53:03 lsrea Exp $
 */
 // Include files
 
@@ -21,7 +21,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.6.54.1 2
 
 #include "ntupleWriterSvc/INTupleWriterSvc.h"
 
-#include <cassert>
+#include <cassert> 
 #include <map>
 
 // forward declatation of the worker
@@ -283,6 +283,9 @@ void FT1worker::evaluate()
     // celestial coordinates
 
     // transform 
+    // glastDir points down... 
+    // toSky converts a *particle* direction
+    // into a direction on the sky, so the minus-sign is taken care of!
     SkyDir sdir( gps->toSky(glastDir) ); 
     m_ft1ra  = sdir.ra();
     m_ft1dec = sdir.dec();

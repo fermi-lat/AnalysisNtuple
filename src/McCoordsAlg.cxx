@@ -1,7 +1,7 @@
 /** @file McCoordsAlg.cxx
 @brief Declaration and implementation of Gaudi algorithm McCoordsAlg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McCoordsAlg.cxx,v 1.6 2008/02/27 21:21:15 burnett Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McCoordsAlg.cxx,v 1.4.78.1 2008/02/28 23:29:15 lsrea Exp $
 */
 // Include files
 
@@ -101,7 +101,7 @@ StatusCode McCoordsAlg::initialize()
 
     // get the GPS instance: either from FluxSvc or local, non-MC mode
     IFluxSvc* fluxSvc(0);
-    if( service("FluxSvc", fluxSvc, true).isFailure() ){
+    if( service("FluxSvc", fluxSvc).isFailure() ){
         gps = astro::GPS::instance();
     }else{
         gps = fluxSvc->GPSinstance();
@@ -169,6 +169,9 @@ void McCworker::evaluate()
     // convert to (ra, dec)
 
     Vector Mc_t0(McXDir, McYDir, McZDir);
+    // Mc particle direction points down... 
+    // toSky converts a *particle* direction
+    // into a direction on the sky, so the minus-sign is taken care of!
 
     astro::SkyDir mcdir = gps->toSky( Mc_t0 );
     m_mcRa   = mcdir.ra();
@@ -176,12 +179,19 @@ void McCworker::evaluate()
     m_mcL = mcdir.l();
     m_mcB = mcdir.b();
 
-    //CLHEP::HepRotation Rzen ( gps->transformToGlast(time, astro::GPS::ZENITH) );
-    Vector zenith = -(Mc_t0);
-    m_mcZen  = (float) zenith.theta()*180./M_PI;
-    // zero azimuth points north!
-    m_mcAzim = -(float) zenith.phi()*180./M_PI + 90.0;
-    if(m_mcAzim<0) m_mcAzim += 360.;
+    // Local zenith coordinates
+    astro::SkyDir zenith(gps->zenithDir());  // pointing direction
+    double zenith_theta = mcdir.difference(zenith); 
+    if( fabs(zenith_theta)<1e-8) zenith_theta=0;
+    // all this to do the azimuth angle :-(
+    Hep3Vector north_pole(0,0,1);
+    Hep3Vector east_dir( north_pole.cross(zenith()).unit() ); // east is perp to north_pole and zenith
+    Hep3Vector north_dir( zenith().cross(east_dir));
+    double earth_azimuth=atan2( mcdir().dot(east_dir), mcdir().dot(north_dir) );
+    if( earth_azimuth <0) earth_azimuth += 2*M_PI; // to 0-360 deg.
+    if( fabs(earth_azimuth)<1e-8) earth_azimuth=0;
+    m_mcZen  = zenith_theta*180/M_PI;;
+    m_mcAzim = earth_azimuth*180/M_PI;
 
     return;
 }

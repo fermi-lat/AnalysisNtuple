@@ -2,6 +2,7 @@
   @brief Package AnalysisNtule
   @verbatim
 
+ v2r30p3gr7 10-Apr-08  LSR Fix up calculation of Mc zenith coordinates
  v2r30p3gr6 01-Apr-08  LSR Optional suppress ntuple filling for PtValsAlg
  v2r30p3gr5 31-Mar-08  HMK Put Tracy's updates for ObfCoordsAlg.cxx on big
                        run branch
