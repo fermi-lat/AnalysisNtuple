@@ -1,7 +1,7 @@
 /** @file ObfCoordsAlg.cxx
 @brief Declaration and implementation of Gaudi algorithm ObfCoordsAlg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfCoordsAlg.cxx,v 1.9 2008/03/28 18:41:29 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfCoordsAlg.cxx,v 1.10 2008/04/02 00:22:59 lsrea Exp $
 */
 // Include files
 
@@ -187,6 +187,9 @@ void ObfCworker::evaluate()
     // Old school stuff first
     Vector filterDir(FilterXDir, FilterYDir, FilterZDir);
     if (filterDir.mag()==0) return;
+    // Filter direction points up... 
+    // toSky converts a *particle* direction
+    // into a direction on the sky, so the minus-sign is needed below (twice)!
     astro::SkyDir skydir( gps->toSky(-filterDir) );
     m_obfRa  = skydir.ra();
     m_obfDec = skydir.dec();
