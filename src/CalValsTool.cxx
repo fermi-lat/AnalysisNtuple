@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.85.32.1 2008/02/06 20:56:49 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.86 2008/02/07 17:20:03 heather Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -121,7 +121,17 @@ private:
     float CAL_zdir;
     float CAL_x0;
     float CAL_y0;
-	float CAL_Top_Gap_Dist;
+    float CAL_Top_Gap_Dist;
+
+    float CAL_xEcntr2;
+    float CAL_yEcntr2;
+    float CAL_zEcntr2;
+    float CAL_xdir2;
+    float CAL_ydir2;
+    float CAL_zdir2;
+    float CAL_posdir_chisq;
+    float CAL_posdir_nlayers;
+    float CAL_nsaturated;
 
     float CAL_Gap_Fraction;  
     float CAL_TwrEdgeCntr;
@@ -145,9 +155,21 @@ private:
     float CAL_MIP_Ratio;
 
     // New variables for new energy correction tools
+    // Full profile fit
     float CAL_cfp_energy;      // Energy from Full Profile tool
     float CAL_cfp_totChiSq;    // Total ChiSquare of fit divided by 11
     float CAL_cfp_calEffRLn;   // Effective radiation lengths in the Cal
+    float CAL_cfp_tkrRLn;   // Effective radiation lengths in the tkr
+    float CAL_cfp_alpha;       // fit parameter alpha
+    float CAL_cfp_tmax;        // fit parameter tmax
+    float CAL_cfp_fiterrflg;   // fit error flag
+    // Same variables but with fit performed with cal direction
+    float CAL_cfp_calfit_energy;      // Energy from Full Profile tool
+    float CAL_cfp_calfit_totChiSq;    // Total ChiSquare of fit divided by 11
+    float CAL_cfp_calfit_calEffRLn;   // Effective radiation lengths in the Cal
+    float CAL_cfp_calfit_alpha;       // fit parameter alpha
+    float CAL_cfp_calfit_tmax;        // fit parameter tmax
+    float CAL_cfp_calfit_fiterrflg;   // fit error flag
 
     float CAL_lll_energy;      // Energy from the Last Layer Likelihood tool
     float CAL_lll_energyErr;   // Chisquare from the Last Layer Likelihood
@@ -176,6 +198,56 @@ private:
     float CAL_layer0Ratio;
     float CAL_xPosRmsLastLayer;
     float CAL_yPosRmsLastLayer;
+
+  // Used to determine transverse size using only transverse position measurement (Philippe Bruel)
+  int TSnlog;
+  int TSiused[1536];
+  int TSiorder[1536];
+  double TSdistTL[1536];
+  double TSdistT[1536];
+  double TSdist[1536];
+  double TSTS[1536];
+  double TSenergy[1536];
+  double TSefrac[1536];
+  Point TSaxisP;
+  Vector TSaxisV;
+
+  float CAL_TS_CAL_TL_68;
+  float CAL_TS_CAL_TL_90;
+  float CAL_TS_CAL_TL_95;
+  float CAL_TS_CAL_TL_99;
+  float CAL_TS_CAL_TL_100;
+  float CAL_TS_CAL_T_68;
+  float CAL_TS_CAL_T_90;
+  float CAL_TS_CAL_T_95;
+  float CAL_TS_CAL_T_99;
+  float CAL_TS_CAL_T_100;
+
+  float CAL_TS_CAL2_TL_68;
+  float CAL_TS_CAL2_TL_90;
+  float CAL_TS_CAL2_TL_95;
+  float CAL_TS_CAL2_TL_99;
+  float CAL_TS_CAL2_TL_100;
+  float CAL_TS_CAL2_T_68;
+  float CAL_TS_CAL2_T_90;
+  float CAL_TS_CAL2_T_95;
+  float CAL_TS_CAL2_T_99;
+  float CAL_TS_CAL2_T_100;
+
+  float CAL_TS_TKR_TL_68;
+  float CAL_TS_TKR_TL_90;
+  float CAL_TS_TKR_TL_95;
+  float CAL_TS_TKR_TL_99;
+  float CAL_TS_TKR_TL_100;
+  float CAL_TS_TKR_T_68;
+  float CAL_TS_TKR_T_90;
+  float CAL_TS_TKR_T_95;
+  float CAL_TS_TKR_T_99;
+  float CAL_TS_TKR_T_100;
+
+  int TSfillTSdist(Event::CalXtalRecCol *pxtalrecs);
+  int TSfillTS(int optts);
+  double TSgetinterpolationTS(double efrac);
 
 };
 
@@ -334,6 +406,52 @@ cuts as for CalRmsLayerE above
 <td>F<td>   Energy Weighted Rms of the hit crystals in the last layer
 (layer 7). X is measured across the width of the crystals,
 Y across the length.
+<tr><td> CalCfpEnergy
+<td>F<td> energy reported by the full profile fit (using the tracker direction if there is one, the cal direction otherwise)
+<tr><td> CalCfpChiSq
+<td>F<td> chi squared reported by the full profile fit (using the tracker direction if there is one, the cal direction otherwise)
+<tr><td> CalCfpEffRLn
+<td>F<td> effective amount of X0 reported by the full profile fit (using the tracker direction if there is one, the cal direction otherwise)
+<tr><td> CalCfpTkrRLn
+<td>F<td> amount of X0 in the tracker reported by the full profile fit (using the tracker direction if there is one, the cal direction otherwise)
+<tr><td> CalCfpAlpha
+<td>F<td> alpha (first parameter) reported by the full profile fit (using the tracker direction if there is one, the cal direction otherwise)
+<tr><td> CalCfpTmax
+<td>F<td> tmax (second parameter = position of maximum of shower in X0) reported by the full profile fit (using the tracker direction if there is one, the cal direction otherwise)
+<tr><td> CalCfpFitErrFlg
+<td>F<td> fit flag reported by the full profile fit (using the tracker direction if there is one, the cal direction otherwise)
+<tr><td> CalCfpCalEnergy
+<td>F<td> energy reported by the full profile fit (using the cal direction)
+<tr><td> CalCfpCalChiSq
+<td>F<td> chi squared reported by the full profile fit (using the cal direction)
+<tr><td> CalCfpCalEffRLn
+<td>F<td> effective amount of X0 reported by the full profile fit (using the cal direction)
+<tr><td> CalCfpCalAlpha
+<td>F<td> alpha (first parameter) reported by the full profile fit (using the cal direction)
+<tr><td> CalCfpCalTmax
+<td>F<td> tmax (second parameter = position of maximum of shower in X0) reported by the full profile fit (using the cal direction)
+<tr><td> CalCfpCalFitErrFlg
+<td>F<td> fit flag reported by the full profile fit (using the cal direction)
+<tr><td> Cal[X/Y/Z]Ecntr2 
+<td>F<td>   Energy centroid in [x/y/z] determined using only the crystal transverse information
+<tr><td> Cal[X/Y/Z]Dir2 
+<td>F<td>   [x/y/z] direction cosine of CAL "track" determined using only the crystal transverse information
+<tr><td> CalPosDirChisq
+<td>F<td> chisquared of fit determination of position and direction using only the crystal transverse information
+<tr><td> CalPosDirNLayers
+<td>F<td> number of layers used during fit determination of position and direction using only the crystal transverse information
+<tr><td> CalNSaturated
+<td>F<td> number of saturated crystals
+<tr><td> CalTrSizeCalT[68,90,95,99,100] 
+<td>F<td> Transverse size of shower as function of energy fraction : Cal =  using cal position and direction; T = using only crystal transverse information
+<tr><td> CalTrSizeCalTL[68,90,95,99,100] 
+<td>F<td> Transverse size of shower as function of energy fraction : Cal =  using cal position and direction; TL = using crystal transverse and longitudinal information
+<tr><td> CalTrSizeCal2T[68,90,95,99,100] 
+<td>F<td> Transverse size of shower as function of energy fraction : Cal2 =  using cal2 position and direction; T = using only crystal transverse information
+<tr><td> CalTrSizeTkrT[68,90,95,99,100] 
+<td>F<td> Transverse size of shower as function of energy fraction : Tkr =  using tkr position and direction; T = using only crystal transverse information
+<tr><td> CalTrSizeTkrTL[68,90,95,99,100] 
+<td>F<td> Transverse size of shower as function of energy fraction : Tkr =  using tkr position and direction; TL = using crystal transverse and longitudinal information
 </table>
 
 */
@@ -451,6 +569,16 @@ StatusCode CalValsTool::initialize()
     addItem("CalY0",         &CAL_y0);
     addItem("CalTopGapDist", &CAL_Top_Gap_Dist);
 
+    addItem("CalXEcntr2",     &CAL_xEcntr2);
+    addItem("CalYEcntr2",     &CAL_yEcntr2);
+    addItem("CalZEcntr2",     &CAL_zEcntr2);
+    addItem("CalXDir2",       &CAL_xdir2);
+    addItem("CalYDir2",       &CAL_ydir2);
+    addItem("CalZDir2",       &CAL_zdir2);
+    addItem("CalPosDirChisq",       &CAL_posdir_chisq);
+    addItem("CalPosDirNLayers",       &CAL_posdir_nlayers);
+    addItem("CalNSaturated",       &CAL_nsaturated);
+
     addItem("CalTrkXtalRms",       &CAL_track_rms);
     addItem("CalTrkXtalRmsE",      &CAL_track_E_rms);
     addItem("CalTrkXtalRmsTrunc",  &CAL_track_rms_trunc);
@@ -459,6 +587,16 @@ StatusCode CalValsTool::initialize()
     addItem("CalCfpEnergy",  &CAL_cfp_energy);
     addItem("CalCfpChiSq",   &CAL_cfp_totChiSq);
     addItem("CalCfpEffRLn",  &CAL_cfp_calEffRLn);
+    addItem("CalCfpTkrRLn",  &CAL_cfp_tkrRLn);
+    addItem("CalCfpAlpha",  &CAL_cfp_alpha);
+    addItem("CalCfpTmax",  &CAL_cfp_tmax);
+    addItem("CalCfpFitErrFlg",  &CAL_cfp_fiterrflg);
+    addItem("CalCfpCalEnergy",  &CAL_cfp_calfit_energy);
+    addItem("CalCfpCalChiSq",   &CAL_cfp_calfit_totChiSq);
+    addItem("CalCfpCalEffRLn",  &CAL_cfp_calfit_calEffRLn);
+    addItem("CalCfpCalAlpha",  &CAL_cfp_calfit_alpha);
+    addItem("CalCfpCalTmax",  &CAL_cfp_calfit_tmax);
+    addItem("CalCfpCalFitErrFlg",  &CAL_cfp_calfit_fiterrflg);
     addItem("CalLllEnergy",  &CAL_lll_energy);
     addItem("CalLllEneErr",  &CAL_lll_energyErr);
     addItem("CalTklEnergy",  &CAL_tkl_energy);
@@ -473,6 +611,39 @@ StatusCode CalValsTool::initialize()
     addItem("CalLayer0Ratio", &CAL_layer0Ratio);
     addItem("CalXPosRmsLL", &CAL_xPosRmsLastLayer);
     addItem("CalYPosRmsLL", &CAL_yPosRmsLastLayer);
+
+    addItem("CalTrSizeCalT68",&CAL_TS_CAL_T_68);
+    addItem("CalTrSizeCalT90",&CAL_TS_CAL_T_90);
+    addItem("CalTrSizeCalT95",&CAL_TS_CAL_T_95);
+    addItem("CalTrSizeCalT99",&CAL_TS_CAL_T_99);
+    addItem("CalTrSizeCalT100",&CAL_TS_CAL_T_100);
+    addItem("CalTrSizeCalTL68",&CAL_TS_CAL_TL_68);
+    addItem("CalTrSizeCalTL90",&CAL_TS_CAL_TL_90);
+    addItem("CalTrSizeCalTL95",&CAL_TS_CAL_TL_95);
+    addItem("CalTrSizeCalTL99",&CAL_TS_CAL_TL_99);
+    addItem("CalTrSizeCalTL100",&CAL_TS_CAL_TL_100);
+
+    addItem("CalTrSizeCal2T68",&CAL_TS_CAL2_T_68);
+    addItem("CalTrSizeCal2T90",&CAL_TS_CAL2_T_90);
+    addItem("CalTrSizeCal2T95",&CAL_TS_CAL2_T_95);
+    addItem("CalTrSizeCal2T99",&CAL_TS_CAL2_T_99);
+    addItem("CalTrSizeCal2T100",&CAL_TS_CAL2_T_100);
+//     addItem("CalTrSizeCal2TL68",&CAL_TS_CAL2_TL_68);
+//     addItem("CalTrSizeCal2TL90",&CAL_TS_CAL2_TL_90);
+//     addItem("CalTrSizeCal2TL95",&CAL_TS_CAL2_TL_95);
+//     addItem("CalTrSizeCal2TL99",&CAL_TS_CAL2_TL_99);
+//     addItem("CalTrSizeCal2TL100",&CAL_TS_CAL2_TL_100);
+
+    addItem("CalTrSizeTkrT68",&CAL_TS_TKR_T_68);
+    addItem("CalTrSizeTkrT90",&CAL_TS_TKR_T_90);
+    addItem("CalTrSizeTkrT95",&CAL_TS_TKR_T_95);
+    addItem("CalTrSizeTkrT99",&CAL_TS_TKR_T_99);
+    addItem("CalTrSizeTkrT100",&CAL_TS_TKR_T_100);
+    addItem("CalTrSizeTkrTL68",&CAL_TS_TKR_TL_68);
+    addItem("CalTrSizeTkrTL90",&CAL_TS_TKR_TL_90);
+    addItem("CalTrSizeTkrTL95",&CAL_TS_TKR_TL_95);
+    addItem("CalTrSizeTkrTL99",&CAL_TS_TKR_TL_99);
+    addItem("CalTrSizeTkrTL100",&CAL_TS_TKR_TL_100);
 
     zeroVals();
 
@@ -547,6 +718,16 @@ StatusCode CalValsTool::calculate()
                 CAL_cfp_energy    = corResult.getParams().getEnergy();
                 CAL_cfp_totChiSq  = corResult["totchisq"];
                 CAL_cfp_calEffRLn = corResult["cal_eff_RLn"];
+                CAL_cfp_tkrRLn = corResult["tkr_RLn"];
+                CAL_cfp_alpha = corResult["alpha"];
+                CAL_cfp_tmax = corResult["tmax"];
+                CAL_cfp_fiterrflg = corResult["fitflag"];
+                CAL_cfp_calfit_energy    = corResult["calfit_fit_energy"];
+                CAL_cfp_calfit_totChiSq  = corResult["calfit_totchisq"];
+                CAL_cfp_calfit_calEffRLn = corResult["calfit_cal_eff_RLn"];
+                CAL_cfp_calfit_alpha = corResult["calfit_alpha"];
+                CAL_cfp_calfit_tmax = corResult["calfit_tmax"];
+                CAL_cfp_calfit_fiterrflg = corResult["calfit_fitflag"];
             }
             else if (corResult.getCorrectionName() == "CalLastLayerLikelihoodTool")
             {
@@ -625,6 +806,17 @@ StatusCode CalValsTool::calculate()
     CAL_xdir        = cal_dir.x();
     CAL_ydir        = cal_dir.y();
     CAL_zdir        = cal_dir.z();
+
+    // Get pos and dir determined using only the transverse position information
+    CAL_xEcntr2 = calCluster->getCalParams().getxPosxPos();
+    CAL_yEcntr2 = calCluster->getCalParams().getyPosyPos();
+    CAL_zEcntr2 = calCluster->getCalParams().getzPoszPos();
+    CAL_posdir_chisq = calCluster->getCalParams().getxPosyPos();
+    CAL_posdir_nlayers = calCluster->getCalParams().getxPoszPos();
+    CAL_nsaturated = calCluster->getCalParams().getyPoszPos();
+    CAL_xdir2 = calCluster->getCalParams().getxDirxDir();
+    CAL_ydir2 = calCluster->getCalParams().getyDiryDir();
+    CAL_zdir2 = calCluster->getCalParams().getzDirzDir();
 
     // Get the lower and upper limits for the CAL in the installed towers
     double deltaX = 0.5*(m_xNum*m_towerPitch - m_calXWidth);
@@ -978,6 +1170,123 @@ StatusCode CalValsTool::calculate()
       CAL_nLayersRmsBack = s_badVal; 
     }
 
+    //
+    // Estimations of the transverse size (Philippe Bruel)
+    //
+    
+    //
+    // Perform the estimation with main axis = cal axis
+    //
+    TSaxisP = calCluster->getPosition();
+    Vector TSaxisVin = calCluster->getDirection();
+    TSaxisV = TSaxisVin.unit();
+    //
+    // Filling TSdist...
+    //
+    TSfillTSdist(pxtalrecs);
+
+    int i;
+
+    if(TSnlog>0)
+      {
+	//
+	// fill CAL_TS_CAL_T_
+	//
+	TSfillTS(0);
+	CAL_TS_CAL_T_68 = (float)TSgetinterpolationTS(0.68);
+	CAL_TS_CAL_T_90 = (float)TSgetinterpolationTS(0.90);
+	CAL_TS_CAL_T_95 = (float)TSgetinterpolationTS(0.95);
+	CAL_TS_CAL_T_99 = (float)TSgetinterpolationTS(0.99);
+	CAL_TS_CAL_T_100 = (float)TSTS[TSnlog-1];
+	//
+	// fill CAL_TS_CAL_TL_
+	//
+	TSfillTS(1);
+	CAL_TS_CAL_TL_68 = (float)TSgetinterpolationTS(0.68);
+	CAL_TS_CAL_TL_90 = (float)TSgetinterpolationTS(0.90);
+	CAL_TS_CAL_TL_95 = (float)TSgetinterpolationTS(0.95);
+	CAL_TS_CAL_TL_99 = (float)TSgetinterpolationTS(0.99);
+	CAL_TS_CAL_TL_100 = (float)TSTS[TSnlog-1];
+      }
+
+    //
+    // Perform the estimation with centroid and axis determined only with transverse information
+    //
+    if(CAL_posdir_nlayers>=4)
+      {
+	TSaxisP = Point(CAL_xEcntr2,CAL_yEcntr2,CAL_zEcntr2);
+	TSaxisVin = Vector(CAL_xdir2,CAL_ydir2,CAL_zdir2);
+	TSaxisV = TSaxisVin.unit();
+	//
+	// Filling TSdist...
+	//
+	TSfillTSdist(pxtalrecs);
+	
+	if(TSnlog>0)
+	  {
+	    //
+	    // fill CAL_TS_CAL2_T_
+	    //
+	    TSfillTS(0);
+	    CAL_TS_CAL2_T_68 = (float)TSgetinterpolationTS(0.68);
+	    CAL_TS_CAL2_T_90 = (float)TSgetinterpolationTS(0.90);
+	    CAL_TS_CAL2_T_95 = (float)TSgetinterpolationTS(0.95);
+	    CAL_TS_CAL2_T_99 = (float)TSgetinterpolationTS(0.99);
+	    CAL_TS_CAL2_T_100 = (float)TSTS[TSnlog-1];
+	    //
+	    // fill CAL_TS_CAL2_TL_
+	    //
+	    TSfillTS(1);
+	    CAL_TS_CAL2_TL_68 = (float)TSgetinterpolationTS(0.68);
+	    CAL_TS_CAL2_TL_90 = (float)TSgetinterpolationTS(0.90);
+	    CAL_TS_CAL2_TL_95 = (float)TSgetinterpolationTS(0.95);
+	    CAL_TS_CAL2_TL_99 = (float)TSgetinterpolationTS(0.99);
+	    CAL_TS_CAL2_TL_100 = (float)TSTS[TSnlog-1];
+	  }
+      }
+
+    //
+    // Perform the estimation with main axis = best track
+    //
+    int mynumtracks = 0;
+    if(pTracks) mynumtracks = pTracks->size();
+    if(mynumtracks>0)
+      { 
+        // Get the first track
+        pTrack1 = pTracks->begin();
+        track_1 = *pTrack1;
+        // Get the start and direction 
+        TSaxisP = track_1->getInitialPosition();
+        TSaxisVin = track_1->getInitialDirection();
+	TSaxisV = TSaxisVin.unit();
+	//
+	// Filling TSdist...
+	//
+	TSfillTSdist(pxtalrecs);
+
+	if(TSnlog>0)
+	  {
+	    //
+	    // fill CAL_TS_TKR_T_
+	    //
+	    TSfillTS(0);
+	    CAL_TS_TKR_T_68 = (float)TSgetinterpolationTS(0.68);
+	    CAL_TS_TKR_T_90 = (float)TSgetinterpolationTS(0.90);
+	    CAL_TS_TKR_T_95 = (float)TSgetinterpolationTS(0.95);
+	    CAL_TS_TKR_T_99 = (float)TSgetinterpolationTS(0.99);
+	    CAL_TS_TKR_T_100 = (float)TSTS[TSnlog-1];
+	    //
+	    // fill CAL_TS_TKR_TL_
+	    //
+	    TSfillTS(1);
+	    CAL_TS_TKR_TL_68 = (float)TSgetinterpolationTS(0.68);
+	    CAL_TS_TKR_TL_90 = (float)TSgetinterpolationTS(0.90);
+	    CAL_TS_TKR_TL_95 = (float)TSgetinterpolationTS(0.95);
+	    CAL_TS_TKR_TL_99 = (float)TSgetinterpolationTS(0.99);
+	    CAL_TS_TKR_TL_100 = (float)TSTS[TSnlog-1];
+	  }
+      }
+    
     return sc;
 }
 
@@ -1014,4 +1323,167 @@ double CalValsTool::activeDist(Point pos, int &view) const
         view = 1;
     }
     return edge;
+}
+
+int CalValsTool::TSfillTSdist(Event::CalXtalRecCol *pxtalrecs)
+{
+  int i;
+  TSnlog = 0;
+  for(i=0;i<1536;++i)
+    {
+      TSdistTL[i] = 0;
+      TSdistT[i] = 0;
+      TSenergy[i] = 0;
+    }
+
+  if(pxtalrecs==NULL) return 1;
+
+  int itow,ilay,icol,itowx,itowy;
+  double lambda;
+  Point TSxtalP;
+  Point TSxtalC;
+  Vector TSxtalV;
+  Vector TSTC;
+  double lambdamax = 326./2;
+ 
+  Event::CalXtalRecCol::const_iterator jlog;
+ 
+  for( jlog=pxtalrecs->begin(); jlog != pxtalrecs->end(); ++jlog)
+    {
+      const Event::CalXtalRecData& recLog = **jlog;    
+      TSxtalP = recLog.getPosition();
+      TSenergy[TSnlog] = recLog.getEnergy();
+      //
+      // computing TSdistTL : using both the transverse and longitudinal position measurements
+      //
+      TSTC = TSxtalP-TSaxisP;
+      TSdistTL[TSnlog] = TSTC*TSTC - (TSTC*TSaxisV)*(TSTC*TSaxisV);
+      if(TSdistTL[TSnlog]<0) TSdistTL[TSnlog] = 0;
+      TSdistTL[TSnlog] = sqrt(TSdistTL[TSnlog]);
+      //
+      // computing TSdistT : using only the transverse position measurement
+      //
+      idents::CalXtalId id = recLog.getPackedId();
+      itow = id.getTower();
+      ilay = id.getLayer();
+      icol = id.getColumn();
+      itowy = itow/4;
+      itowx = itow-4*itowy;
+      if(ilay%2==0)
+	{
+	  TSxtalV = Vector(1,0,0);
+	  TSxtalC = Point(-1.5*374.5+374.5*(double)itowx,TSxtalP.y(),TSxtalP.z());
+	}
+      else
+	{
+	  TSxtalV = Vector(0,1,0);
+	  if(m_xNum==4 && m_yNum==1) // beamtest configuration
+	    TSxtalC = Point(TSxtalP.x(),0,TSxtalP.z());
+	  else
+	    TSxtalC = Point(TSxtalP.x(),-1.5*374.5+374.5*(double)itowy,TSxtalP.z());
+	}
+      TSTC = TSxtalC-TSaxisP;
+      lambda = 1-(TSxtalV*TSaxisV)*(TSxtalV*TSaxisV);
+      if(lambda==0) // xtal axis and main axis are parallel
+	{
+	  TSdistT[TSnlog] = TSTC*TSTC - (TSTC*TSaxisV)*(TSTC*TSaxisV);
+	  if(TSdistT[TSnlog]<0) TSdistT[TSnlog] = 0;
+	  TSdistT[TSnlog] = sqrt(TSdistT[TSnlog]);
+	}
+      else
+	{
+	  lambda = (-(TSTC*TSxtalV)+(TSTC*TSaxisV)*(TSxtalV*TSaxisV))/lambda;
+	  if(lambda>lambdamax)
+	    lambda = lambdamax;
+	  if(lambda<-lambdamax)
+	    lambda = -lambdamax;
+	  TSxtalP = TSxtalC + lambda*TSxtalV;
+	  TSTC = TSxtalP-TSaxisP;
+	  TSdistT[TSnlog] = TSTC*TSTC - (TSTC*TSaxisV)*(TSTC*TSaxisV);
+	  if(TSdistT[TSnlog]<0) TSdistT[TSnlog] = 0;
+	  TSdistT[TSnlog] = sqrt(TSdistT[TSnlog]);
+	}
+      ++TSnlog;
+    }
+  
+  return 0;
+}
+
+int CalValsTool::TSfillTS(int optts)
+{
+  // optts = 0 : use only transverse position measurement
+  // optts = 1 : use both transverse and longitudinal position measurements
+
+  if(TSnlog<=0) return 1;
+  int i,j;
+  double TStotalenergy = 0;
+  for(i=0;i<TSnlog;++i)
+    {
+      TSTS[i] = 0;
+      TSiused[i] = 0;
+      TSiorder[i] = -1;
+      TStotalenergy += TSenergy[i];
+      if(optts==0)
+	TSdist[i] = TSdistT[i]; 
+      else
+	TSdist[i] = TSdistTL[i]; 
+    }
+  if(TStotalenergy<=0) return 1;
+  double mindist = 9999999;
+  int imin;
+  for(i=0;i<TSnlog;++i)
+    {
+      mindist = 9999999;
+      for(j=0;j<TSnlog;++j)
+	{
+	  if(TSiused[j]) continue;
+	  if(TSdist[j]<mindist)
+	    {
+	      mindist = TSdist[j];
+	      imin = j;
+	    }
+	}
+      TSiorder[i] = imin;
+      TSiused[imin] = 1;
+    }
+  double efrac = 0;
+  double weight = 0;
+  double transversesize = 0;
+  for(i=0;i<TSnlog;++i)
+    {
+      efrac += TSenergy[TSiorder[i]];
+      weight += TSenergy[TSiorder[i]];
+      transversesize += TSenergy[TSiorder[i]]*TSdist[TSiorder[i]]*TSdist[TSiorder[i]];
+      TSefrac[i] = efrac/TStotalenergy;
+      if(weight>0)
+	TSTS[i] = sqrt(transversesize/weight);
+    }
+
+  return 0;
+}
+
+double CalValsTool::TSgetinterpolationTS(double efrac)
+{
+  if(TSnlog<=0) return -999;
+  //
+  if(efrac<=TSefrac[0]) return TSTS[0];
+  if(efrac>=TSefrac[TSnlog-1]) return TSTS[TSnlog-1];
+  //
+  int i;
+  int j = -1;
+  for(i=0;i<TSnlog-1;++i)
+    {
+      if(TSefrac[i]<efrac && TSefrac[i+1]>=efrac)
+	{
+	  j = i;
+	  break;
+	}
+    }
+  if(j==-1) return TSTS[TSnlog-1];
+
+  i = j;
+  if(TSefrac[i+1]-TSefrac[i]>0)
+    return ((TSefrac[i+1]-efrac)*TSTS[i]+(efrac-TSefrac[i])*TSTS[i+1])/(TSefrac[i+1]-TSefrac[i]);
+
+  return (TSTS[i]+TSTS[i+1])/2;
 }
