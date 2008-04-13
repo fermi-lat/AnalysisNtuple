@@ -1,6 +1,10 @@
 /** @file release.notes
   @brief Package AnalysisNtule
   @verbatim
+ v2r37   13-Apr-08   LSR  (for Philippe B.)modifications : 
+                          estimations of shower transverse size 
+                            (using only the xtal transverse info), 
+                          added variables (transverse size, cal pos and dir, full fit profile)
  v2r36p3 10-Apr-08   LSR  Merge correction for Mc zenith coords
  v2r36p2 10-Apr-08   LSR  Oops, try again
  v2r36p1 01-Apr-08   LSR  Merge mods from BigRun branch
@@ -33,7 +37,8 @@
  v2r27   09-Sep-07   LSR  Incorporate newly calculated neutral vertex
  v2r26   05-Sep-07   LSR  Redefine Tkr1SSDVeto, and add diagnostics
  v2r25   28-Aug-07   HMK  Add GltGemEngine to GltValsTool
- v2r24p2 24-Aug-07   EAC  Temporarily disable HoleDoca calculation until holes are in right places and this has been checked.  
+ v2r24p2 24-Aug-07   EAC  Temporarily disable HoleDoca calculation until holes are 
+                            in right places and this has been checked.  
  v2r24p1 14-Aug-07   HMK  Patch for windows, use || rather than or
  v2r24   30-Jul-07   EAC  Re-organize AcdValsTool.  Added several ribbon related variables, 
                           removed unused arclength varialbes (better suited for svac ntuple)
@@ -71,7 +76,8 @@
                               (includes celestial coordinates for the best OBF track)
                           New Vtx variables related to the second vertex
                           Celestial coordinates for Mc particle
- v2r19p4 05-Mar-07   EAC  Added Doca to Acd tile screw holes, Error on track extrapolation at ACD, MC energy at ACD entry.
+ v2r19p4 05-Mar-07   EAC  Added Doca to Acd tile screw holes, Error on track extrapolation at ACD, 
+                            MC energy at ACD entry.
  v2r19p3 03-Jan-07   EAC  Added comments/doc associated with changes from v2r19p1 below
  v2r19p2 19-Dec-06   LSR  Remove the 2 GCR tools from the default list and update 
                             and from _load.cxx. Update documentation a bit.
@@ -83,7 +89,8 @@
  v2r18p1 02-Nov-06   LSR  Cleanup in CalValsTool--removed some hard-coded numbers
  v2r18   27-Oct-06   LSR  Added McSourceName to the ntuple
  v2r17p1 27-Oct-06   EAC  Protect from missing ActDist collections in AcdRecon
- v2r17   21-Oct-06   EAC  Added AcdAcdDist vars that 1) take direction into account, 2) use vertex info
+ v2r17   21-Oct-06   EAC  Added AcdAcdDist vars that 1) take direction into account, 
+                            2) use vertex info
  v2r16   15-Oct-06   LSR  Same as v2r15p9, but new release number
  v2r15p9 15-Oct-06   LSR  New CalValsTool vars: Cal[X/Y]PosRmsLL
                           Energy-weighted position rms in the last layer (layer 7)
