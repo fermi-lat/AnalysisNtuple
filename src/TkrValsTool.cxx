@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.82.32.1 2008/02/06 20:56:49 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.83 2008/02/07 17:20:04 heather Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -70,6 +70,7 @@ private:
 
     double towerEdge(Point pos) const;
     double containedFraction(Point pos, double gap, double r, double costh, double phi) const;
+	float SSDEvaluation(const Event::TkrTrack* track); 
 
     // some local constants
     double m_towerPitch;
@@ -78,6 +79,19 @@ private:
     double m_activeWidth;
     bool   m_useNew;
     bool   m_enableVetoDiagnostics;
+
+	// Local variables to transfer results of SSD calculation
+	 float m_VetoPlaneCrossed; 
+     float m_VetoTrials;
+     float m_SSDVeto;
+     float m_VetoUnknown;
+     float m_VetoDeadPlane;
+     float m_VetoTruncated; 
+     float m_VetoTower;   
+     float m_VetoGapCorner;
+     float m_VetoGapEdge;   
+     float m_VetoBadCluster;
+	 float m_VetoHitFound;
 
     // some pointers to services
 
@@ -92,7 +106,9 @@ private:
     /// 
     IPropagatorSvc* m_propSvc;
 
-    IPropagator*           m_G4PropTool; 
+    IPropagator* m_G4PropTool; 
+	/// AcdValsTool for Veto Track Number
+	IValsTool* m_pAcdTool;
 
     // properties
     double m_minVetoError;
@@ -163,7 +179,6 @@ private:
     float Tkr_1_ToTTrAve;
     float Tkr_1_ToTAsym;
     float Tkr_1_ChisqAsym;
-    float Tkr_1_SSDVetoOld; 
     float Tkr_1_SSDVeto; 
 
     // for SSDVeto Diagnostics
@@ -214,6 +229,15 @@ private:
     float Tkr_2TkrAngle;
     float Tkr_2TkrHDoca;
 
+	float Tkr_Veto_SSDVeto; 
+	float Tkr_Veto_Chisq;
+        
+    float Tkr_Veto_Hits;
+    float Tkr_Veto_FirstLayer;
+
+    float Tkr_Veto_KalEne; 
+    float Tkr_Veto_ConEne; 
+
     // here's some test stuff... if it works for a couple it will work for all
 
     /*
@@ -254,8 +278,10 @@ TkrValsTool::TkrValsTool(const std::string& type,
     // Declare additional interface
     declareInterface<IValsTool>(this);
 
-    declareProperty("useNew", m_useNew=true);
-    declareProperty("enableVetoDiagnostics", m_enableVetoDiagnostics=true);
+    //declareProperty("useNew", m_useNew=true);
+    // Old SSDVeto variable has been removed; always use "new" code
+    m_useNew = true;
+    declareProperty("enableVetoDiagnostics", m_enableVetoDiagnostics=false);
     declareProperty("minVetoError", m_minVetoError=1.0);
     declareProperty("maxVetoError", m_maxVetoError=100000.0);
     declareProperty("vetoNSigma", m_vetoNSigma=2.0);
@@ -269,7 +295,7 @@ Notes:
      those called Tkr2Xxx refer to the second track.
 - For variables listed as Tkr[1/2]Xxx there are two versions in the ntuple, 
      one for the best and one for the second track. 
-- The labels are not entierly consistent, but it's probably 
+- The labels are not entirely consistent, but it's probably 
      too disruptive to fix them at this point.
      For example: TkrRadLength, TkrTrackLength, TkrTwrEdge refer to track 1. 
      Also, Tkr2Angle and Tkr2HDoca are quantities that depend on both tracks.
@@ -278,7 +304,7 @@ Notes:
      Check TkrNumTracks before using these variables! 
      In fact check TkrNumTracks before using first-track variables, for the same reason.
 - A new section of (optional) ssd-veto diagnostic variables has been added. They are
-     included by default.
+     not written out by default.
 
 @subsection general General variables
      <table>
@@ -468,7 +494,7 @@ The definitions should be fairly stable.
 <td>F<td>   Asymmetry between last two and first two ToT's for the best track  
 <tr><td> Tkr1ChisqAsym  
 <td>F<td>   Asymmetry between last two and first two track-segment delta-chisquared's  
-<tr><td> Tkr1SSDVetoOld  
+<tr><td> Tkr1SSDVetoOld 
 <td>F<td>   Number of silicon planes between the top of the extrapolated track 
             and the first plane that has a hit near the track. Only planes that have
             wafers which intersect the extrapolated track are considered. No checks 
@@ -501,9 +527,9 @@ The definitions should be fairly stable.
 <td>F<td>   Minimum distance to any LAT edge of the head of the best track
 </table>
 
-@subsection ssdveto Diagnostic SSD Veto Variables (Optional, present by default) 
+@subsection ssdveto Diagnostic SSD Veto Variables (Optional, absent by default) 
 @verbatim
-(Turn off with jO parameter: ToolSvc.TkrValsTool.enableVetoDiagnostics = false;)
+(Turn on with jO parameter: ToolSvc.TkrValsTool.enableVetoDiagnostics = true;)
 @endverbatim
      <table>
 <tr><th> Variable <th> Type  <th> Description				                 
@@ -573,6 +599,12 @@ StatusCode TkrValsTool::initialize()
         if(!toolSvc->retrieveTool("G4PropagationTool", m_G4PropTool)) {
             log << MSG::ERROR << "Couldn't find the ToolSvc!" << endreq;
             return StatusCode::FAILURE;
+        }
+		m_pAcdTool = 0;
+        sc = toolSvc->retrieveTool("AcdValsTool", m_pAcdTool);
+        if( sc.isFailure() ) {
+            log << MSG::ERROR << "Unable to find tool: " "AcdValsTool" << endreq;
+            return sc;
         }
 
     } else {
@@ -657,7 +689,6 @@ StatusCode TkrValsTool::initialize()
     addItem("Tkr1ToTTrAve",   &Tkr_1_ToTTrAve);
     addItem("Tkr1ToTAsym",    &Tkr_1_ToTAsym);
     addItem("Tkr1ChisqAsym",  &Tkr_1_ChisqAsym);
-    addItem("Tkr1SSDVetoOld", &Tkr_1_SSDVetoOld);
     addItem("Tkr1SSDVeto",    &Tkr_1_SSDVeto);
     addItem("TkrPlaneCrossed",  &Tkr_1_VetoPlaneCrossed);
 
@@ -682,35 +713,43 @@ StatusCode TkrValsTool::initialize()
     addItem("Tkr2FirstChisq", &Tkr_2_FirstChisq);
 
     addItem("Tkr2Hits",       &Tkr_2_Hits);
-    addItem("Tkr2FirstHits",  &Tkr_2_FirstHits);
+//    addItem("Tkr2FirstHits",  &Tkr_2_FirstHits);
     addItem("Tkr2FirstLayer", &Tkr_2_FirstLayer);
     addItem("Tkr2LastLayer",  &Tkr_2_LastLayer);
-    addItem("Tkr2DifHits",    &Tkr_2_DifHits);
+ //   addItem("Tkr2DifHits",    &Tkr_2_DifHits);
 
-    addItem("Tkr2Gaps",       &Tkr_2_Gaps);
-    addItem("Tkr2FirstGaps",  &Tkr_2_FirstGaps);
+  //  addItem("Tkr2Gaps",       &Tkr_2_Gaps);
+  //  addItem("Tkr2FirstGaps",  &Tkr_2_FirstGaps);
 
     addItem("Tkr2Qual",       &Tkr_2_Qual);
     addItem("Tkr2Type",       &Tkr_2_Type);
     addItem("Tkr2TwrEdge",    &Tkr_2_TwrEdge);
     addItem("Tkr2PrjTwrEdge", &Tkr_2_PrjTwrEdge);
-    addItem("Tkr2DieEdge",    &Tkr_2_DieEdge);
+  //  addItem("Tkr2DieEdge",    &Tkr_2_DieEdge);
 
     addItem("Tkr2KalEne",     &Tkr_2_KalEne);
     addItem("Tkr2ConEne",     &Tkr_2_ConEne);
-    addItem("Tkr2KalThetaMS", &Tkr_2_KalThetaMS);
+  //  addItem("Tkr2KalThetaMS", &Tkr_2_KalThetaMS);
 
-    addItem("Tkr2XDir",       &Tkr_2_xdir);
-    addItem("Tkr2YDir",       &Tkr_2_ydir);
-    addItem("Tkr2ZDir",       &Tkr_2_zdir);
-    addItem("Tkr2Phi",        &Tkr_2_Phi);
-    addItem("Tkr2Theta",      &Tkr_2_Theta);
-    addItem("Tkr2X0",         &Tkr_2_x0);
-    addItem("Tkr2Y0",         &Tkr_2_y0);
-    addItem("Tkr2Z0",         &Tkr_2_z0);    
+  //  addItem("Tkr2XDir",       &Tkr_2_xdir);
+  //  addItem("Tkr2YDir",       &Tkr_2_ydir);
+  //  addItem("Tkr2ZDir",       &Tkr_2_zdir);
+  //  addItem("Tkr2Phi",        &Tkr_2_Phi);
+  //  addItem("Tkr2Theta",      &Tkr_2_Theta);
+  //  addItem("Tkr2X0",         &Tkr_2_x0);
+  //  addItem("Tkr2Y0",         &Tkr_2_y0);
+  //  addItem("Tkr2Z0",         &Tkr_2_z0);    
 
-    addItem("Tkr2TkrAngle",         &Tkr_2TkrAngle); 
-    addItem("Tkr2TkrHDoca",         &Tkr_2TkrHDoca); 
+    addItem("Tkr2TkrAngle",   &Tkr_2TkrAngle); 
+    addItem("Tkr2TkrHDoca",   &Tkr_2TkrHDoca); 
+
+	addItem("TkrVSSDVeto",    &Tkr_Veto_SSDVeto); 
+	addItem("TkrVChisq",      &Tkr_Veto_Chisq); 
+
+	addItem("TkrVHits",       &Tkr_Veto_Hits); 
+	addItem("TkrVFirstLayer", &Tkr_Veto_FirstLayer); 
+	addItem("TkrVKalEne",     &Tkr_Veto_KalEne); 
+	addItem("TkrVConEne",     &Tkr_Veto_ConEne); 
 
     // for test, uncomment these statements:
     /*
@@ -785,7 +824,7 @@ StatusCode TkrValsTool::calculate()
     //Recover EventHeader Pointer
     //SmartDataPtr<Event::EventHeader> pEvent(m_pEventSvc, EventModel::EventHeader);
 
-    // Recover Track associated info. 
+    // Recover Track associated info. NOTE: If no tracks are found ALL TKR variables are zero!  
     SmartDataPtr<Event::TkrTrackCol>   pTracks(m_pEventSvc,EventModel::TkrRecon::TkrTrackCol);
     if(!pTracks) return sc;
 
@@ -835,37 +874,6 @@ StatusCode TkrValsTool::calculate()
         Tkr_1_x0          = x1.x();
         Tkr_1_y0          = x1.y();
         Tkr_1_z0          = x1.z();
-
-        //test
-        /* 
-        float fVal;
-        getVal("Tkr1Pos[0]", fVal, -1);
-        std::cout << "Tkr1Pos[0] " << fVal << std::endl;
-        getVal("Tkr1Pos[1]", fVal, -1);
-        std::cout << "Tkr1Pos[1] " << fVal << std::endl;
-        getVal("Tkr1Pos[2]", fVal, -1);
-        std::cout << "Tkr1Pos[2] " << fVal << std::endl;
-        //getVal("Tkr1Pos[3]", fVal, -1);                   // illegal argument
-        //std::cout << "Tkr1Pos[3] " << fVal << std::endl; 
-        //getVal("Tkr1Pos[3", fVal, -1);                    // malformed (missing "]")
-
-        //getVal("TkrFoo", fVal, -1);                       // doesn't exist
-
-        int i;
-        for (i=0; i<5;++i) {Tkr_ints[i] = i;}
-        for (i=0; i<2;++i) {Tkr_doubles[i] = i+1;}
-        for (i=0; i<7;++i) {Tkr_uInts[i] = i+1;}
-        
-
-        //std::cout << "xdir = " << Tkr_1_xdir<< ", Before: " << Tkr_string << std::endl;
-        std::string tempStr;
-        tempStr = ((Tkr_1_xdir>0) ?
-            tempStr = "positive num, but way too long for the field" : "neg");
-            //Tkr_string[19] = 0;
-        strncpy(Tkr_string, tempStr.c_str(), 20);
-        Tkr_string[19] = 0;
-        //std::cout << "After: " << Tkr_string << std::endl;
-        */
 
         // theta and phi are of direction of source, hence the minus sign
         // this code replaces atan and acos used before
@@ -1083,191 +1091,54 @@ StatusCode TkrValsTool::calculate()
         // Chisq Asymmetry - Front vs Back ends of tracks
         if (chisq_last+chisq_first>0) Tkr_1_ChisqAsym = (chisq_last - chisq_first)/(chisq_last + chisq_first);
 
-        //m_G4PropTool->setStepStart(x1, -t1); //Note minus sign - swim backwards towards ACD
-  
-        bool upwards = true;
-        m_G4PropTool->setStepStart(params, x1.z(), upwards);
 
-        int topPlane = m_tkrGeom->numPlanes()-1; 
-        double topOfTkr = m_tkrGeom->getPlaneZ(topPlane) + 1.0;
-        double arc_min = fabs((topOfTkr-x1.z())/t1.z());
-        arc_min = std::min( arc_min, maxPath); 
-        m_G4PropTool->step(arc_min);  
-        int numSteps = m_G4PropTool->getNumberSteps();
+		int firstPlane = m_tkrGeom->getPlane(track_1->front()->getTkrId()); 
+         int firstLayer = m_tkrGeom->getLayer(firstPlane);
+         double zFirstLayer = m_tkrGeom->getLayerZ(firstLayer);
 
-        idents::VolumeIdentifier volId;
-        idents::VolumeIdentifier prefix = m_detSvc->getIDPrefix();
+		 double costh = fabs(t1.z());
+         double secth = 1./costh;
 
-        int firstPlane = m_tkrGeom->getPlane(track_1->front()->getTkrId()); 
-        int firstLayer = m_tkrGeom->getLayer(firstPlane);
-        double zFirstLayer = m_tkrGeom->getLayerZ(firstLayer);
+         // for the footprints
+         double secthX = 1./sqrt(1.0 - t1.x()*t1.x());
+         double secthY = 1./sqrt(1.0 - t1.y()*t1.y());
 
-        //int numLayersTrack = (int) (Tkr_1_FirstLayer - Tkr_1_LastLayer) + 1;
-
-        double costh = fabs(t1.z());
-        double secth = 1./costh;
-
-        // for the footprints
-        double secthX = 1./sqrt(1.0 - t1.x()*t1.x());
-        double secthY = 1./sqrt(1.0 - t1.y()*t1.y());
-
-        double xVetoRgn = _vetoRegion*secthX;
+         double xVetoRgn = _vetoRegion*secthX;
         double yVetoRgn = _vetoRegion*secthY;
 
-        // Note: skip the first vol - as this is the head SSD
+		 // SSD Veto stuff here:
+		// First Track stuff as before
+        Tkr_1_SSDVeto = SSDEvaluation(track_1); 
 
-        double arcLen = m_G4PropTool->getStepArcLen(0);
-        bool isFirstPlane = true;
+        Tkr_1_VetoPlaneCrossed = m_VetoPlaneCrossed; 
+        Tkr_1_VetoTrials = m_VetoTrials;
+        Tkr_1_VetoUnknown = m_VetoUnknown;
+        Tkr_1_VetoDeadPlane = m_VetoDeadPlane;
+        Tkr_1_VetoTruncated = m_VetoTruncated; 
+        Tkr_1_VetoTower = m_VetoTower;   
+        Tkr_1_VetoGapCorner = m_VetoGapCorner;
+        Tkr_1_VetoGapEdge = m_VetoGapEdge;   
+        Tkr_1_VetoBadCluster = m_VetoBadCluster;
 
-     try {
-        for(int istep = 1; istep < numSteps; ++istep) { 
-            volId = m_G4PropTool->getStepVolumeId(istep);
-            volId.prepend(prefix);
-            Point x_step       = m_G4PropTool->getStepPosition(istep);
-            arcLen += m_G4PropTool->getStepArcLen(istep);
+		// Most likely track from AcdValsTool
+		if(m_pAcdTool) {
+		  float veto_tkr_num = 0;
+		  int firstCheck = m_check; 
+		  if(m_pAcdTool->getVal("AcdActDistTkrNo", veto_tkr_num, firstCheck).isSuccess()) {
+			  if(veto_tkr_num >= 0 && veto_tkr_num < Tkr_No_Tracks) {
+				  int n = veto_tkr_num;
+                  const Event::TkrTrack* veto_track =  *(pTracks->begin()+n);
+                  Tkr_Veto_SSDVeto = SSDEvaluation(veto_track); 
+				  Tkr_Veto_Chisq        = track_1->getChiSquareSmooth();
+        
+                  Tkr_Veto_Hits         = track_1->getNumFitHits();
+                  Tkr_Veto_FirstLayer   = m_tkrGeom->getLayer(track_1->front()->getTkrId());
 
-            bool forward = false;
-            const Event::TkrTrackParams newParams = 
-                m_G4PropTool->getTrackParams(arcLen, Tkr_1_ConEne, forward);
- 
-            //std::cout << "pos " << x_step << ", step " << istep << ", arcLen " << arcLen << std::endl;
-            //std::cout << "err " << sqrt(newParams(xPosIdx,xPosIdx)) << " "
-            //        << sqrt(newParams(yPosIdx,yPosIdx)) << std::endl;
-            // we're outside the LAT
-            if(x_step.z() > topOfTkr || !m_tkrGeom->isInActiveLAT(x_step) ) break; 
-
-            // check that it's really a TKR hit (probably overkill)
-            if(volId.size() != 9) continue; 
-            if(!(volId[0]==0 && volId[3]==1)) continue; // !(LAT && TKR)
-            if(volId[6]> 1) continue;  //It's a converter or some other tray element!
-            Tkr_1_VetoPlaneCrossed++;
-
-            // now check if there's a hit near the extrapolated track!
-            // if there is, reset the veto counter... we want leading non-hits
-            //std::cout << "Tkr1SSDVeto volId " << volId.name() << std::endl;
-
-            int tower = idents::TowerId(volId[2], volId[1]).id();
-            int tray = volId[4];
-            int view = volId[5];
-            int face = volId[6];
-            int layer = m_tkrGeom->trayToBiLayer(tray, face);
-            int plane = m_tkrGeom->trayToPlane(tray, face);
-
-            int firstPlane;
-            if(isFirstPlane) {
-                isFirstPlane = false;
-                firstPlane = plane;
-            }
-
-            // I think we want to do this, most likely this is missed for
-            //   some good reason.
-            // on the other hand, it is a missed hit, so remove test for the new code
-            
-            
-            Tkr_1_VetoTrials = abs(plane-firstPlane) + 1;
-
-            //if(!m_useNew&&layer==firstLayer) continue;
-
-            double vetoRgn = (view==0 ? xVetoRgn : yVetoRgn);
-
-            int nVetoHits = pQueryClusters->numberOfHitsNear(view, layer, 
-                vetoRgn, x_step, t1);
-
-            if (nVetoHits>0) {
-                // found a hit, reset the SSDVeto
-                    Tkr_1_SSDVeto = 0.0;
-                    Tkr_1_SSDVetoOld = 0.0;
-                    if(m_enableVetoDiagnostics) { Tkr_1_VetoHitFound++; }
-
-            } else { 
-                // no hit
-                // plain old ssdveto
-                Tkr_1_SSDVetoOld += 1.0;
-
-                idents::TkrId tkrId(volId);
-                Event::TkrTrackParams outParams;
-
-                unsigned int status_bits = 0;
-                int stage = -1;
-                if(m_useNew||m_enableVetoDiagnostics) {
-                    stage = pFlagHits->flagHits(tkrId, newParams, x_step.z(),
-                        m_minVetoError, m_maxVetoError, m_vetoNSigma, 
-                        outParams, status_bits);
-                }
-                if(m_useNew && (stage==-1)) { 
-                    Tkr_1_SSDVeto += 1.0; 
-                }
-
-                if(m_enableVetoDiagnostics) {
-                    switch (stage) {
-                        case -1:
-                            Tkr_1_VetoUnknown++;
-                            break;
-                        case 1: 
-                            Tkr_1_VetoDeadPlane++;
-                            break;
-                        case 2:
-                            Tkr_1_VetoTruncated++;
-                            break;
-                        case 3:
-                            Tkr_1_VetoTower;
-                            break;
-                        case 4:
-                            Tkr_1_VetoGapCorner++;
-                            break;
-                        case 5:
-                            Tkr_1_VetoGapEdge++;
-                            break;
-                        case 6:
-                            Tkr_1_VetoBadCluster++;
-                            break;
-                        default:
-                            std::cout << "shouldn't get here, stage = " 
-                                << stage << std::endl;
-                    } // end switch
-                } // end diagnostics
-            } // end no hit 
-        } // end loop over steps
-
-    } catch( std::exception& e) {
-      SmartDataPtr<Event::EventHeader> header(m_pEventSvc, EventModel::EventHeader);
-      unsigned long evtId = (header) ? header->event() : 0;
-      long runId = (header) ? header->run() : -1;
-      log << MSG::WARNING << "Caught exception (run,event): ( "
-          << runId << ", " << evtId << " ) " << e.what()
-          << " Skipping the TKR calculations" << endreq;
-
-      Tkr_1_VetoPlaneCrossed = s_badVal; 
-      Tkr_1_VetoTrials = s_badVal;
-      Tkr_1_SSDVeto = s_badVal;
-      Tkr_1_SSDVetoOld = s_badVal;
-      Tkr_1_VetoUnknown = s_badVal;
-      Tkr_1_VetoDeadPlane = s_badVal;
-      Tkr_1_VetoTruncated = s_badVal; 
-      Tkr_1_VetoTower = s_badVal;   
-      Tkr_1_VetoGapCorner = s_badVal;
-      Tkr_1_VetoGapEdge = s_badVal;   
-      Tkr_1_VetoBadCluster = s_badVal;
-
-    } catch (...) {
-      SmartDataPtr<Event::EventHeader> header(m_pEventSvc, EventModel::EventHeader);
-      unsigned long evtId = (header) ? header->event() : 0;
-      long runId = (header) ? header->run() : -1;
-      log << MSG::WARNING << "Caught exception (run,event): ( "
-          << runId << ", " << evtId << " ) " 
-          << " Skipping the TKR calculations" << endreq;
-      Tkr_1_VetoPlaneCrossed = s_badVal; 
-      Tkr_1_VetoTrials = s_badVal;
-      Tkr_1_SSDVeto = s_badVal;
-      Tkr_1_SSDVetoOld = s_badVal;
-      Tkr_1_VetoUnknown = s_badVal;
-      Tkr_1_VetoDeadPlane = s_badVal;
-      Tkr_1_VetoTruncated = s_badVal; 
-      Tkr_1_VetoTower = s_badVal;   
-      Tkr_1_VetoGapCorner = s_badVal;
-      Tkr_1_VetoGapEdge = s_badVal;   
-      Tkr_1_VetoBadCluster = s_badVal;
-    }
+                  Tkr_Veto_KalEne       = track_1->getKalEnergy(); 
+                  Tkr_Veto_ConEne       = track_1->getInitialEnergy(); 
+			  }
+		  }
+		}
 
         // minimum distance from any edge, measured from the edge of the active area
         double deltaEdge = 0.5*(m_towerPitch - m_tkrGeom->trayWidth()) 
@@ -1379,7 +1250,7 @@ StatusCode TkrValsTool::calculate()
         double tkrTrackEnergy = tkrTrackEnergy1 + tkrTrackEnergy2;
 
         // Computation of the tracker contribution to the total energy 
-        arc_min = (x1.z() - m_tkrGeom->calZTop())*secth; 
+        double arc_min = (x1.z() - m_tkrGeom->calZTop())*secth; 
         m_G4PropTool->setStepStart(x1, t1);
         m_G4PropTool->step(arc_min);
         double z_present = x1.z();
@@ -1706,3 +1577,207 @@ double TkrValsTool::towerEdge(Point pos) const
     edge = 0.5*m_towerPitch - std::max(fabs(x_twr),fabs(y_twr));
     return edge;
 }
+
+float TkrValsTool::SSDEvaluation(const Event::TkrTrack* track) 
+{// Method to compute the number of SSD Vetoes for the given track
+
+	 MsgStream log(msgSvc(), name());
+
+	 m_VetoPlaneCrossed = 0.; 
+     m_VetoTrials = 0.;
+     m_SSDVeto = 0.;
+     m_VetoUnknown = 0.;
+     m_VetoDeadPlane = 0.;
+     m_VetoTruncated = 0.; 
+     m_VetoTower = -1.;   
+     m_VetoGapCorner = 0.;
+     m_VetoGapEdge = 0.;   
+     m_VetoBadCluster = 0.;
+	 m_VetoHitFound = 0.;
+	float s_badVal = -1.1; 
+	Point  x1 = track->getInitialPosition();
+	Vector t1 = track->getInitialDirection();
+
+	Event::TkrTrackHitVecConItr pHit = track->begin();
+    const Event::TkrTrackParams params((*pHit)->getTrackParams(Event::TkrTrackHit::SMOOTHED));
+
+
+    float Tkr_ConEne       = track->getInitialEnergy(); 
+
+     bool upwards = true;
+     m_G4PropTool->setStepStart(params, x1.z(), upwards);
+
+     int topPlane = m_tkrGeom->numPlanes()-1; 
+     double topOfTkr = m_tkrGeom->getPlaneZ(topPlane) + 1.0;
+     double arc_min = fabs((topOfTkr-x1.z())/t1.z());
+     arc_min = std::min( arc_min, maxPath); 
+     m_G4PropTool->step(arc_min);  
+     int numSteps = m_G4PropTool->getNumberSteps();
+
+     idents::VolumeIdentifier volId;
+     idents::VolumeIdentifier prefix = m_detSvc->getIDPrefix();
+
+     int firstPlane = m_tkrGeom->getPlane(track->front()->getTkrId()); 
+     int firstLayer = m_tkrGeom->getLayer(firstPlane);
+     double zFirstLayer = m_tkrGeom->getLayerZ(firstLayer);
+
+     double costh = fabs(t1.z());
+     double secth = 1./costh;
+
+     // for the footprints
+     double secthX = 1./sqrt(1.0 - t1.x()*t1.x());
+     double secthY = 1./sqrt(1.0 - t1.y()*t1.y());
+
+     double xVetoRgn = _vetoRegion*secthX;
+     double yVetoRgn = _vetoRegion*secthY;
+
+     // Note: skip the first vol - as this is the head SSD
+
+     double arcLen = m_G4PropTool->getStepArcLen(0);
+     bool isFirstPlane = true;
+
+     try {
+        for(int istep = 1; istep < numSteps; ++istep) { 
+            volId = m_G4PropTool->getStepVolumeId(istep);
+            volId.prepend(prefix);
+            Point x_step       = m_G4PropTool->getStepPosition(istep);
+            arcLen += m_G4PropTool->getStepArcLen(istep);
+
+            bool forward = false;
+            const Event::TkrTrackParams newParams = 
+                m_G4PropTool->getTrackParams(arcLen, Tkr_ConEne, forward);
+ 
+            //std::cout << "pos " << x_step << ", step " << istep << ", arcLen " << arcLen << std::endl;
+            //std::cout << "err " << sqrt(newParams(xPosIdx,xPosIdx)) << " "
+            //        << sqrt(newParams(yPosIdx,yPosIdx)) << std::endl;
+            // we're outside the LAT
+            if(x_step.z() > topOfTkr || !m_tkrGeom->isInActiveLAT(x_step) ) break; 
+
+            // check that it's really a TKR hit (probably overkill)
+            if(volId.size() != 9) continue; 
+            if(!(volId[0]==0 && volId[3]==1)) continue; // !(LAT && TKR)
+            if(volId[6]> 1) continue;  //It's a converter or some other tray element!
+            m_VetoPlaneCrossed++;
+
+            // now check if there's a hit near the extrapolated track!
+            // if there is, reset the veto counter... we want leading non-hits
+            //std::cout << "Tkr1SSDVeto volId " << volId.name() << std::endl;
+
+            int tower = idents::TowerId(volId[2], volId[1]).id();
+            int tray = volId[4];
+            int view = volId[5];
+            int face = volId[6];
+            int layer = m_tkrGeom->trayToBiLayer(tray, face);
+            int plane = m_tkrGeom->trayToPlane(tray, face);
+
+            int firstPlane;
+            if(isFirstPlane) {
+                isFirstPlane = false;
+                firstPlane = plane;
+            }
+
+            // I think we want to do this, most likely this is missed for
+            //   some good reason.
+            // on the other hand, it is a missed hit, so remove test for the new code
+            
+            
+            m_VetoTrials = abs(plane-firstPlane) + 1;
+
+            //if(!m_useNew&&layer==firstLayer) continue;
+
+            double vetoRgn = (view==0 ? xVetoRgn : yVetoRgn);
+
+            int nVetoHits = pQueryClusters->numberOfHitsNear(view, layer, 
+                vetoRgn, x_step, t1);
+
+            if (nVetoHits>0) {
+                // found a hit, reset the SSDVeto
+                    m_SSDVeto = 0.0;
+                    if(m_enableVetoDiagnostics) { m_VetoHitFound++; }
+
+            } else { 
+                // no hit
+                idents::TkrId tkrId(volId);
+                Event::TkrTrackParams outParams;
+
+                unsigned int status_bits = 0;
+                int stage = -1;
+                if(m_useNew||m_enableVetoDiagnostics) {
+                    stage = pFlagHits->flagHits(tkrId, newParams, x_step.z(),
+                        m_minVetoError, m_maxVetoError, m_vetoNSigma, 
+                        outParams, status_bits);
+                }
+                if(m_useNew && (stage==-1)) { 
+                    m_SSDVeto += 1.0; 
+                }
+
+                if(m_enableVetoDiagnostics) {
+                    switch (stage) {
+                        case -1:
+                            m_VetoUnknown++;
+                            break;
+                        case 1: 
+                            m_VetoDeadPlane++;
+                            break;
+                        case 2:
+                            m_VetoTruncated++;
+                            break;
+                        case 3:
+                            m_VetoTower;
+                            break;
+                        case 4:
+                            m_VetoGapCorner++;
+                            break;
+                        case 5:
+                            m_VetoGapEdge++;
+                            break;
+                        case 6:
+                            m_VetoBadCluster++;
+                            break;
+                        default:
+                            std::cout << "shouldn't get here, stage = " 
+                                << stage << std::endl;
+                    } // end switch
+                } // end diagnostics
+            } // end no hit 
+        } // end loop over steps
+
+    } catch( std::exception& e) {
+      SmartDataPtr<Event::EventHeader> header(m_pEventSvc, EventModel::EventHeader);
+      unsigned long evtId = (header) ? header->event() : 0;
+      long runId = (header) ? header->run() : -1;
+      log << MSG::WARNING << "Caught exception (run,event): ( "
+          << runId << ", " << evtId << " ) " << e.what()
+          << " Skipping the TKR calculations" << endreq;
+
+      m_VetoPlaneCrossed = s_badVal; 
+      m_VetoTrials = s_badVal;
+      m_SSDVeto = s_badVal;
+      m_VetoUnknown = s_badVal;
+      m_VetoDeadPlane = s_badVal;
+      m_VetoTruncated = s_badVal; 
+      m_VetoTower = s_badVal;   
+      m_VetoGapCorner = s_badVal;
+      m_VetoGapEdge = s_badVal;   
+      m_VetoBadCluster = s_badVal;
+
+    } catch (...) {
+      SmartDataPtr<Event::EventHeader> header(m_pEventSvc, EventModel::EventHeader);
+      unsigned long evtId = (header) ? header->event() : 0;
+      long runId = (header) ? header->run() : -1;
+      log << MSG::WARNING << "Caught exception (run,event): ( "
+          << runId << ", " << evtId << " ) " 
+          << " Skipping the TKR calculations" << endreq;
+      m_VetoPlaneCrossed = s_badVal; 
+      m_VetoTrials = s_badVal;
+      m_SSDVeto = s_badVal;
+      m_VetoUnknown = s_badVal;
+      m_VetoDeadPlane = s_badVal;
+      m_VetoTruncated = s_badVal; 
+      m_VetoTower = s_badVal;   
+      m_VetoGapCorner = s_badVal;
+      m_VetoGapEdge = s_badVal;   
+      m_VetoBadCluster = s_badVal;
+    }
+	return m_SSDVeto;
+	}

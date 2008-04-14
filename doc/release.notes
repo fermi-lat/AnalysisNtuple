@@ -1,6 +1,9 @@
 /** @file release.notes
   @brief Package AnalysisNtule
   @verbatim
+ v2r38   13-Apr-08   LSR  Major changes to Tkr, AcdValsTools from Bill.
+                            Get this in, and we'll deal with prettifying
+                            and updating the documentation later. 
  v2r37   13-Apr-08   LSR  (for Philippe B.)modifications : 
                           estimations of shower transverse size 
                             (using only the xtal transverse info), 

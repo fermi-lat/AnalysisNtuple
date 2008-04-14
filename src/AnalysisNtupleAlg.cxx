@@ -176,7 +176,7 @@ StatusCode AnalysisNtupleAlg::initialize(){
 
     //probably a better way to do this!
     // default set:
-    std::string toolnames [] = {"Mc", "Glt", "Tkr", "Vtx",  "Cal", "Acd", "Evt", "CalMip", "Obf", "McTkrHit", ""};
+    std::string toolnames [] = {"Mc", "Glt", "Acd", "TkrHit", "Tkr", "Vtx",  "Cal",  "Evt", "Obf", "McTkrHit", ""};
     int i;
     int namesSize = m_toolnames.size();
 
@@ -230,7 +230,6 @@ StatusCode AnalysisNtupleAlg::initialize(){
     for (i =0; i<namesSize; ++i){
         m_toolvec.push_back(0);
         sc = pToolSvc->retrieveTool(m_toolnames[i], m_toolvec.back());
-        m_toolvec.back()->setLoadFlag();
         if( sc.isFailure() ) {
             log << MSG::ERROR << "Unable to find tool: " << m_toolnames[i] << endreq;
             return sc;

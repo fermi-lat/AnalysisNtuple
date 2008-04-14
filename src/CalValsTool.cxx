@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.86 2008/02/07 17:20:03 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.87 2008/04/13 20:00:05 bruel Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -1185,7 +1185,7 @@ StatusCode CalValsTool::calculate()
     //
     TSfillTSdist(pxtalrecs);
 
-    int i;
+    //int i;
 
     if(TSnlog>0)
       {
