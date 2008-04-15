@@ -1,6 +1,8 @@
 /** @file release.notes
   @brief Package AnalysisNtule
   @verbatim
+ v2r37gr1 15-Apr-08  HMK  Prevent EventAuditor from forcing merit to store
+                     every event
  v2r37   13-Apr-08   LSR  (for Philippe B.)modifications : 
                           estimations of shower transverse size 
                             (using only the xtal transverse info), 

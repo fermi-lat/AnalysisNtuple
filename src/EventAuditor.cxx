@@ -15,7 +15,7 @@
 *
 * Experiment the monitoring of algorithms.
 *
-* $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EventAuditor.cxx,v 1.1 2008/01/15 19:17:11 lsrea Exp $
+* $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EventAuditor.cxx,v 1.2 2008/01/19 00:55:26 lsrea Exp $
 */
 
 class EventAuditor : virtual public Auditor
@@ -213,10 +213,13 @@ StatusCode EventAuditor::afterExecute( IAlgorithm * algo )
         }
     }
 
-    m_save_tuple = true;
-    if( m_rootTupleSvc!=0 && !m_root_tree.value().empty()){
-        m_rootTupleSvc->storeRowFlag(m_root_tree.value(), m_save_tuple);
-    }
+    // HMK Apr152008 Don't think we want an auditor to cause every
+    // event to be stored to the tuple.  This will circumvent the trigger
+    // or any other filtering
+    //m_save_tuple = true;
+    //if( m_rootTupleSvc!=0 && !m_root_tree.value().empty()){
+    //    m_rootTupleSvc->storeRowFlag(m_root_tree.value(), m_save_tuple);
+   // }
 
     return StatusCode::SUCCESS ;
 }
