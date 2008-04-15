@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.83 2008/02/07 17:20:04 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.84 2008/04/14 00:31:51 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -69,7 +69,8 @@ public:
 private:
 
     double towerEdge(Point pos) const;
-    double containedFraction(Point pos, double gap, double r, double costh, double phi) const;
+    double containedFraction(Point pos, double gap, double r, 
+        double costh, double phi) const;
 	float SSDEvaluation(const Event::TkrTrack* track); 
 
     // some local constants
@@ -253,7 +254,8 @@ private:
 
 namespace 
 {
-    double interpolate ( double xi, double xmin, double xmax, double ymin, double ymax) 
+    double interpolate ( double xi, double xmin, double xmax, 
+        double ymin, double ymax) 
     {
         double step = (xi-xmin)/(xmax-xmin);
         return ymin + (ymax-ymin)*step;
@@ -302,9 +304,10 @@ Notes:
 - The variables associated with the second track are undefined 
      if there is only one track! 
      Check TkrNumTracks before using these variables! 
-     In fact check TkrNumTracks before using first-track variables, for the same reason.
-- A new section of (optional) ssd-veto diagnostic variables has been added. They are
-     not written out by default.
+     In fact check TkrNumTracks before using first-track variables, 
+     for the same reason.
+- A new section of (optional) ssd-veto diagnostic variables has been added. 
+     They are not written out by default.
 
 @subsection general General variables
      <table>
@@ -325,7 +328,8 @@ Notes:
 <tr><td> TkrEnergyCorr 
 <td>F<td>   TkrEnergy corrected by TkrEdgeCorr 
 <tr><td> TkrEdgeCorr 	
-<td>F<td>   Tracker edge correction. This may go away; it's an intermediate quantity 
+<td>F<td>   Tracker edge correction. This may go away; 
+            it's an intermediate quantity 
 <tr><td> TkrHDCount 
 <td>F<td>   Number of unused clusters in top x-y layer of the best track 
             within a radius of 30 mm, corrected for track angle
@@ -824,15 +828,20 @@ StatusCode TkrValsTool::calculate()
     //Recover EventHeader Pointer
     //SmartDataPtr<Event::EventHeader> pEvent(m_pEventSvc, EventModel::EventHeader);
 
-    // Recover Track associated info. NOTE: If no tracks are found ALL TKR variables are zero!  
-    SmartDataPtr<Event::TkrTrackCol>   pTracks(m_pEventSvc,EventModel::TkrRecon::TkrTrackCol);
+    // Recover Track associated info. 
+    // NOTE: If no tracks are found ALL TKR variables are zero!  
+    SmartDataPtr<Event::TkrTrackCol>   
+        pTracks(m_pEventSvc,EventModel::TkrRecon::TkrTrackCol);
     if(!pTracks) return sc;
 
-    SmartDataPtr<Event::TkrVertexCol>  pVerts(m_pEventSvc,EventModel::TkrRecon::TkrVertexCol);
-    SmartDataPtr<Event::TkrClusterCol> pClusters(m_pEventSvc,EventModel::TkrRecon::TkrClusterCol);
+    SmartDataPtr<Event::TkrVertexCol>  
+        pVerts(m_pEventSvc,EventModel::TkrRecon::TkrVertexCol);
+    SmartDataPtr<Event::TkrClusterCol> 
+        pClusters(m_pEventSvc,EventModel::TkrRecon::TkrClusterCol);
 
 
-    // all variable values are preset to zero. Be sure to re-initialize the ones you care about  
+    // all variable values are preset to zero. 
+    // Be sure to re-initialize the ones you care about  
 
     double die_width = m_tkrGeom->ladderPitch();
     int nDies = m_tkrGeom->nWaferAcross();
@@ -881,18 +890,21 @@ StatusCode TkrValsTool::calculate()
         if (Tkr_1_Phi<0.0f) Tkr_1_Phi += static_cast<float>(2*M_PI);
         Tkr_1_Theta       = (-t1).theta();
 
-        const Event::TkrTrackParams& Tkr_1_Cov = track_1->front()->getTrackParams(Event::TkrTrackHit::SMOOTHED);
+        const Event::TkrTrackParams& Tkr_1_Cov 
+            = track_1->front()->getTrackParams(Event::TkrTrackHit::SMOOTHED);
         Tkr_1_Sxx         = Tkr_1_Cov.getxSlpxSlp();
         Tkr_1_Sxy         = Tkr_1_Cov.getxSlpySlp();
         Tkr_1_Syy         = Tkr_1_Cov.getySlpySlp();
         double sinPhi     = sin(Tkr_1_Phi);
         double cosPhi     = cos(Tkr_1_Phi);
-        Tkr_1_ThetaErr      = t1.z()*t1.z()*sqrt(std::max(0.0, cosPhi*cosPhi*Tkr_1_Sxx + 
+        Tkr_1_ThetaErr    = t1.z()*t1.z()*sqrt(std::max(0.0, cosPhi*cosPhi*Tkr_1_Sxx + 
             2.*sinPhi*cosPhi*Tkr_1_Sxy + sinPhi*sinPhi*Tkr_1_Syy)); 
         Tkr_1_PhiErr        = (-t1.z())*sqrt(std::max(0.0, sinPhi*sinPhi*Tkr_1_Sxx - 
             2.*sinPhi*cosPhi*Tkr_1_Sxy + cosPhi*cosPhi*Tkr_1_Syy));
         Tkr_1_ErrAsym     = fabs(Tkr_1_Sxy/(Tkr_1_Sxx + Tkr_1_Syy));
-        Tkr_1_CovDet      = sqrt(std::max(0.0f,Tkr_1_Sxx*Tkr_1_Syy-Tkr_1_Sxy*Tkr_1_Sxy))*Tkr_1_zdir*Tkr_1_zdir;
+        Tkr_1_CovDet = 
+            sqrt(std::max(0.0f,Tkr_1_Sxx*Tkr_1_Syy-Tkr_1_Sxy*Tkr_1_Sxy))*
+            Tkr_1_zdir*Tkr_1_zdir;
 
         Tkr_TrackLength = -(Tkr_1_z0-z0)/Tkr_1_zdir;
 
@@ -1089,7 +1101,8 @@ StatusCode TkrValsTool::calculate()
         Tkr_1_FirstGapPlane = gapId; 
 
         // Chisq Asymmetry - Front vs Back ends of tracks
-        if (chisq_last+chisq_first>0) Tkr_1_ChisqAsym = (chisq_last - chisq_first)/(chisq_last + chisq_first);
+        if (chisq_last+chisq_first>0) Tkr_1_ChisqAsym = 
+            (chisq_last - chisq_first)/(chisq_last + chisq_first);
 
 
 		int firstPlane = m_tkrGeom->getPlane(track_1->front()->getTkrId()); 
@@ -1128,14 +1141,14 @@ StatusCode TkrValsTool::calculate()
 			  if(veto_tkr_num >= 0 && veto_tkr_num < Tkr_No_Tracks) {
 				  int n = veto_tkr_num;
                   const Event::TkrTrack* veto_track =  *(pTracks->begin()+n);
-                  Tkr_Veto_SSDVeto = SSDEvaluation(veto_track); 
-				  Tkr_Veto_Chisq        = track_1->getChiSquareSmooth();
+                  Tkr_Veto_SSDVeto    = SSDEvaluation(veto_track); 
+				  Tkr_Veto_Chisq      = veto_track->getChiSquareSmooth();
         
-                  Tkr_Veto_Hits         = track_1->getNumFitHits();
-                  Tkr_Veto_FirstLayer   = m_tkrGeom->getLayer(track_1->front()->getTkrId());
+                  Tkr_Veto_Hits       = veto_track->getNumFitHits();
+                  Tkr_Veto_FirstLayer = m_tkrGeom->getLayer(veto_track->front()->getTkrId());
 
-                  Tkr_Veto_KalEne       = track_1->getKalEnergy(); 
-                  Tkr_Veto_ConEne       = track_1->getInitialEnergy(); 
+                  Tkr_Veto_KalEne     = veto_track->getKalEnergy(); 
+                  Tkr_Veto_ConEne     = veto_track->getInitialEnergy(); 
 			  }
 		  }
 		}
@@ -1176,8 +1189,8 @@ StatusCode TkrValsTool::calculate()
 
             const Event::TkrTrack* track_2 = *pTrack;
             Tkr_2_Chisq        = track_2->getChiSquareSmooth();
-            Tkr_2_FirstChisq     = track_2->chiSquareSegment();
-            Tkr_2_FirstGaps      = track_2->getNumXFirstGaps() + track_2->getNumYFirstGaps();
+            Tkr_2_FirstChisq   = track_2->chiSquareSegment();
+            Tkr_2_FirstGaps    = track_2->getNumXFirstGaps() + track_2->getNumYFirstGaps();
             Tkr_2_Qual         = track_2->getQuality();
             Tkr_2_Type         = track_2->getStatusBits();
             Tkr_2_Hits         = track_2->getNumFitHits();

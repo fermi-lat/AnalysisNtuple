@@ -1,6 +1,8 @@
 /** @file release.notes
   @brief Package AnalysisNtule
   @verbatim
+
+ v2r38p1 14-Apr-08   LSR  Fix typos in TkrValsTool
  v2r38   13-Apr-08   LSR  Activate TkrHitsValsTool by default
                           Major changes to Tkr, AcdValsTools from Bill.
                             Get this in, and we'll deal with prettifying
