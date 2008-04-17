@@ -15,7 +15,7 @@
 *
 * Experiment the monitoring of algorithms.
 *
-* $Header: /nfs/slac/g/glast/ground/cvs/TkrRecon/src/Utilities/EventAuditor.cxx,v 1.1 2006/11/27 18:40:53 chamont Exp $
+* $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EventAuditor.cxx,v 1.1 2008/01/15 19:17:11 lsrea Exp $
 */
 
 class EventAuditor : virtual public Auditor
@@ -203,10 +203,13 @@ StatusCode EventAuditor::afterExecute( IAlgorithm * algo )
         }
     }
 
+    /* HMK do not want to force writing of the merit ntuple row - this
+       could override our trigger settings.
     m_save_tuple = true;
     if( m_rootTupleSvc!=0 && !m_root_tree.value().empty()){
         m_rootTupleSvc->storeRowFlag(m_root_tree.value(), m_save_tuple);
     }
+    */
 
     return StatusCode::SUCCESS ;
 }

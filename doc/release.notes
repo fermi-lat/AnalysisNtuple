@@ -1,6 +1,7 @@
 /** @file release.notes
   @brief Package AnalysisNtule
   @verbatim
+ v2r32gr2 16-Apr-08  HMK  Include patch to EventAuditor on this branch
  v2r32gr1 06-Feb-08  HMK  Exception handling for CalValsTool and TkrValsTool
                      for the getStepVolId call
  v2r32   18-Jan-08   MLK  Added trigger prescales to GltValsTool
