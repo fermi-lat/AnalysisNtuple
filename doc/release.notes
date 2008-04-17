@@ -2,6 +2,9 @@
   @brief Package AnalysisNtule
   @verbatim
 
+ v2r38p2 17-Apr-08   HMK  Prevent EventAuditor from calling RootTupleSvc's
+                     storeRowFlag.  This auditor should not determine what
+                     events get written out.
  v2r38p1 14-Apr-08   LSR  Fix typos in TkrValsTool
  v2r38   13-Apr-08   LSR  Activate TkrHitsValsTool by default
                           Major changes to Tkr, AcdValsTools from Bill.
