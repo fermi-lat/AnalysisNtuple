@@ -2,7 +2,7 @@
 @brief header file for ValBase.cxx
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.h,v 1.34 2008/02/07 17:20:04 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.h,v 1.35 2008/02/28 21:42:51 lsrea Exp $
 */
 
 #ifndef ValBase_h
@@ -110,8 +110,9 @@ public:
     virtual StatusCode initialize();
 
     /// AnaTup loaded this object
-    virtual void setLoadFlag() { m_isLoaded = true; }
-    virtual bool isLoaded()    {return m_isLoaded; }
+    virtual void setLoadOrder(int index) { m_loadOrder = index; }
+    virtual bool isLoaded()              { return m_loadOrder>-1; }
+    virtual int  getLoadOrder()          { return m_loadOrder; }
     
 protected:
     StatusCode getTypedPointer(std::string varName, TypedPointer*& ptr, int check);
@@ -157,7 +158,7 @@ protected:
     int m_calcCount;
 
     /// tells if this routine has been "loaded" by AnalysisNtupleAlg
-    bool m_isLoaded;
+    int m_loadOrder;
 
     /// Obvious "bad" value if an exception occurs whild computing output
     /// variables

@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.84 2008/04/14 00:31:51 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.85 2008/04/15 01:33:29 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -80,6 +80,7 @@ private:
     double m_activeWidth;
     bool   m_useNew;
     bool   m_enableVetoDiagnostics;
+    int    m_messageCount;
 
 	// Local variables to transfer results of SSD calculation
 	 float m_VetoPlaneCrossed; 
@@ -230,7 +231,8 @@ private:
     float Tkr_2TkrAngle;
     float Tkr_2TkrHDoca;
 
-	float Tkr_Veto_SSDVeto; 
+	float Tkr_Veto_TrkNum;
+    float Tkr_Veto_SSDVeto; 
 	float Tkr_Veto_Chisq;
         
     float Tkr_Veto_Hits;
@@ -574,6 +576,8 @@ StatusCode TkrValsTool::initialize()
 
     if((ValBase::initialize()).isFailure()) return StatusCode::FAILURE;
 
+    m_messageCount = 0;
+
     // get the services
 
     if( serviceLocator()) {
@@ -747,6 +751,7 @@ StatusCode TkrValsTool::initialize()
     addItem("Tkr2TkrAngle",   &Tkr_2TkrAngle); 
     addItem("Tkr2TkrHDoca",   &Tkr_2TkrHDoca); 
 
+	addItem("TkrVTrkNum",    &Tkr_Veto_TrkNum); 
 	addItem("TkrVSSDVeto",    &Tkr_Veto_SSDVeto); 
 	addItem("TkrVChisq",      &Tkr_Veto_Chisq); 
 
@@ -1133,25 +1138,44 @@ StatusCode TkrValsTool::calculate()
         Tkr_1_VetoGapEdge = m_VetoGapEdge;   
         Tkr_1_VetoBadCluster = m_VetoBadCluster;
 
+        float veto_trk_num = -1;
 		// Most likely track from AcdValsTool
-		if(m_pAcdTool) {
-		  float veto_tkr_num = 0;
-		  int firstCheck = m_check; 
-		  if(m_pAcdTool->getVal("AcdActDistTkrNo", veto_tkr_num, firstCheck).isSuccess()) {
-			  if(veto_tkr_num >= 0 && veto_tkr_num < Tkr_No_Tracks) {
-				  int n = veto_tkr_num;
-                  const Event::TkrTrack* veto_track =  *(pTracks->begin()+n);
-                  Tkr_Veto_SSDVeto    = SSDEvaluation(veto_track); 
-				  Tkr_Veto_Chisq      = veto_track->getChiSquareSmooth();
-        
-                  Tkr_Veto_Hits       = veto_track->getNumFitHits();
-                  Tkr_Veto_FirstLayer = m_tkrGeom->getLayer(veto_track->front()->getTkrId());
+        if(m_pAcdTool) {
+            // check that Acd executes before Tkr
+            if(m_loadOrder<m_pAcdTool->getLoadOrder()) {
+                if(m_messageCount<10) {
+                    //std::cout << "TkrValsTool   WARNING "
+                    log << MSG::WARNING
+                        << "AcdValsTool needs to be loaded before TkrValsTool"
+                        << endreq << " to calculate Veto Track quantities" 
+                        << endreq;
+                    m_messageCount++;
+                    if(m_messageCount>=10) {
+                        log << MSG::WARNING
+                            << "Message suppressed after 10 warnings" << endreq;
+                    }
+                }
+            } else {
+                int firstCheck = m_check; 
+                if(m_pAcdTool->getVal("AcdActDistTkrNo", veto_trk_num, 
+                    firstCheck).isSuccess()) {
+                    if(veto_trk_num >= 0 && veto_trk_num < Tkr_No_Tracks) {
+                        int n = veto_trk_num;
+                        const Event::TkrTrack* veto_track =  *(pTracks->begin()+n);
+                        Tkr_Veto_SSDVeto    = SSDEvaluation(veto_track); 
+                        Tkr_Veto_Chisq      = veto_track->getChiSquareSmooth();
 
-                  Tkr_Veto_KalEne     = veto_track->getKalEnergy(); 
-                  Tkr_Veto_ConEne     = veto_track->getInitialEnergy(); 
-			  }
-		  }
-		}
+                        Tkr_Veto_Hits       = veto_track->getNumFitHits();
+                        Tkr_Veto_FirstLayer = 
+                            m_tkrGeom->getLayer(veto_track->front()->getTkrId());
+
+                        Tkr_Veto_KalEne     = veto_track->getKalEnergy(); 
+                        Tkr_Veto_ConEne     = veto_track->getInitialEnergy(); 
+                    }
+                }
+            }
+        }
+        Tkr_Veto_TrkNum = veto_trk_num;
 
         // minimum distance from any edge, measured from the edge of the active area
         double deltaEdge = 0.5*(m_towerPitch - m_tkrGeom->trayWidth()) 

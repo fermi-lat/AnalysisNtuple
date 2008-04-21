@@ -2,6 +2,7 @@
   @brief Package AnalysisNtule
   @verbatim
 
+ v2r38p3 21-Apr-08   LSR  Add logic to test for load order of ValsTools
  v2r38p2 17-Apr-08   HMK  Prevent EventAuditor from calling RootTupleSvc's
                      storeRowFlag.  This auditor should not determine what
                      events get written out.
