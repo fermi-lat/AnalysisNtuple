@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.87 2008/04/13 20:00:05 bruel Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.88 2008/04/14 00:31:51 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -279,10 +279,10 @@ CalValsTool::CalValsTool(const std::string& type,
 <tr><td> CalEnergyRaw 
 <td>F<td>   Sum of the raw energies in all the crystals.  
 Includes estimate of missed energy due to zero-supression.  
-This replaces the variable CalEnergySum.  NEW! 
+This replaces the variable CalEnergySum.
 <tr><td> CalEnergyCorr 
 <td>F<td>   Cal Energy corrected layer-by-layer for edges and leakage.  
-This replaces the variable CalEneSumCorr. NEW! 
+This replaces the variable CalEneSumCorr.
 <tr><td> CalLeakCorr 
 <td>F<td>   Leakage correction: this is the contained fraction of the total energy 
 after edge corrections.  

@@ -2,7 +2,7 @@
 @brief Calculates the Tkr hit analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrHitValsTool.cxx,v 1.12 2005/12/13 19:00:37 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrHitValsTool.cxx,v 1.13 2007/06/07 17:00:13 lsrea Exp $
 */
 
 // Include files
@@ -73,7 +73,7 @@ TkrHitValsTool::TkrHitValsTool(const std::string& type,
     declareInterface<IValsTool>(this); 
 }
 
-/** @page anatup_vars_optional 
+/** @page anatup_vars 
     @section tkrhitvalstool TkrHitValsTool Variables
 
 <table>

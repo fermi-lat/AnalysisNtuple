@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.85 2008/04/15 01:33:29 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.86 2008/04/21 19:31:24 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -310,6 +310,13 @@ Notes:
      for the same reason.
 - A new section of (optional) ssd-veto diagnostic variables has been added. 
      They are not written out by default.
+- Several new variables starting with "TkrV" have been added. These refer to 
+     quantities associated with the track likely to have cause the Acd veto.
+     The first of these, TkrVTrkNum, gives the sequence number of the veto
+     track in the track list. "0" is the best track, "1" is next-best. 
+     (Default for TkrVTrkNum is -1;
+- Some deleted variables, all Tkr2: FirstHits, DifHits, Gaps, FirstGaps,
+     DieEdge, KalThetaMs, [X/Y/Z]Dir, Phi, Theta, [X/Y/Z]0.
 
 @subsection general General variables
      <table>
@@ -371,21 +378,13 @@ Notes:
 <td>F<td>   Track chisquared for first Tkr[1/2]FirstHits layers  
 <tr><td> Tkr[1/2]Hits  
 <td>F<td>   Number of clusters in track  
-<tr><td> Tkr[1/2]FirstHits  
-<td>F<td>   Number of initial track hits used to determine the starting direction  
 <tr><td> Tkr[1/2][First/Last]Layer  
 <td>F<td>   [First/Last] layer in track  (layer 0 is the bottom of the tracker)
-<tr><td> Tkr[1/2]DifHits  
-<td>F<td>   Difference between the number of x and y clusters associated with track  
-<tr><td> Tkr[1/2]Gaps  
-<td>F<td>   Total number of gaps in track  
 <tr><td> Tkr1FirstGapPlane  
 <td>F<td>   plane number of first gap on track 1  
              (This and the following X,Y pair can be used to find dead strips)
 <tr><td> Tkr1[X/Y]Gap  
 <td>F<td>   [x/y] location of first gap on track 1  
-<tr><td> Tkr[1/2]FirstGaps  
-<td>F<td>   Number of gaps in first Tkr1FirstHits layers on track  
 <tr><td> Tkr[1/2]Qual  
 <td>F<td>   Track "quality": depends on the number of clusters and chisquared of the track. 
              Maximum is currently 64, can be negative if chisqared gets large. 
@@ -427,9 +426,6 @@ The definitions should be fairly stable.
 <tr><td> Tkr[1/2]PrjTwrEdge  
 <td>F<td>   Distance from tower edge of track extrapolated to the layer upstream 
              of the first layer (See Tkr1TwrEdge.) 
-<tr><td> Tkr[1/2]DieEdge  
-<td>F<td>   Distance from die (wafer) edge of initial point 
-             (0 is halfway between the dies, increases toward center of die)  
 <tr><td> Tkr[1/2]KalEne  
 <td>F<td>   Kalman energy of track 1; this is the energy determined from the multiple scattering 
             along the track (goes like 1/E). Since it is possible to measure a 
@@ -440,22 +436,6 @@ The definitions should be fairly stable.
              The tool computes the total event energy and then partitions it 
              between the first 2 tracks according to their Kalman energies 
              and energy errors  
-<tr><td> Tkr[1/2]KalThetaMS  
-<td>F<td>   Multiple scattering angle (radians) referenced to first layer. 
-             The contributions from all the layers in the track are adjusted 
-             for the predicted energy in each layer, and weighted accordingly. 
-             So the result is sensitive to the particle type and 
-             the chosen energy-loss mechanism. 		
-<tr><td> Tkr[1/2][X/Y/Z]Dir  
-<td>F<td>   Track [x/y/z] direction cosine  
-<tr><td> Tkr[1/2]Phi  
-<td>F<td>   Track phi, radians 
-            (direction from which particle comes, not particle direction!) 
-            range: (0, 2pi)  
-<tr><td> Tkr[1/2]Theta  
-<td>F<td>   Track theta, radians (direction ditto)  
-<tr><td> Tkr[1/2][X/Y/Z]0  
-<td>F<td>   Track [x/y/z] position at first hit  
 </table>
 @subsection best_only Variables that exist only for best track
 
@@ -531,6 +511,33 @@ The definitions should be fairly stable.
 <td>F<td>   the ratio of Tkr1CoreHC and Tkr1Hits
 <tr><td> Tkr1LATEdge
 <td>F<td>   Minimum distance to any LAT edge of the head of the best track
+<tr><td> Tkr1FirstHits  
+<td>F<td>   Number of initial track hits used to determine the starting direction  
+<tr><td> Tkr1DifHits  
+<td>F<td>   Difference between the number of x and y clusters associated with track  
+<tr><td> Tkr1Gaps  
+<td>F<td>   Total number of gaps in track  
+<tr><td> Tkr1FirstGaps  
+<td>F<td>   Number of gaps in first Tkr1FirstHits layers on track  
+<tr><td> Tkr1DieEdge  
+<td>F<td>   Distance from die (wafer) edge of initial point 
+             (0 is halfway between the dies, increases toward center of die)  
+<tr><td> Tkr1KalThetaMS  
+<td>F<td>   Multiple scattering angle (radians) referenced to first layer. 
+             The contributions from all the layers in the track are adjusted 
+             for the predicted energy in each layer, and weighted accordingly. 
+             So the result is sensitive to the particle type and 
+             the chosen energy-loss mechanism. 		
+<tr><td> Tkr1[X/Y/Z]Dir  
+<td>F<td>   Track [x/y/z] direction cosine  
+<tr><td> Tkr1Phi  
+<td>F<td>   Track phi, radians 
+            (direction from which particle comes, not particle direction!) 
+            range: (0, 2pi)  
+<tr><td> Tkr1Theta  
+<td>F<td>   Track theta, radians (direction ditto)  
+<tr><td> Tkr1[X/Y/Z]0  
+<td>F<td>   Track [x/y/z] position at first hit  
 </table>
 
 @subsection ssdveto Diagnostic SSD Veto Variables (Optional, absent by default) 
@@ -558,6 +565,22 @@ The definitions should be fairly stable.
 <td>I<td>   Number of missing hits close to a dead plane
 <tr><td> TkrVetoTruncated
 <td>I<td>   Number of missing hits close to a truncated region
+<tr><td> TkrVTkrNum
+<td>F<td>   Track number in the track list of the "veto track", 
+            that is the track that
+            is likely to have triggered the Acd veto
+<tr><td> TkrVSSDVeto
+<td>F<td>   Same as Tkr1SSDVeto, but for the veto track 
+<tr><td> TkrVChisq
+<td>F<td>   Same as Tkr1Chisq, but for the veto track
+<tr><td> TkrVHits
+<td>F<td>   Same as Tkr1Hits, but for the veto track
+<tr><td> TkrVFirstLayer
+<td>F<td>   Same as Tkr1FirstLayer, but for the veto track
+<tr><td> TkrVKalEne
+<td>F<td>   Same as Tkr1KalEne, but for the veto track
+<tr><td> TkrVConEne
+<td>F<td>   Same as Tkr1ConEne, but for the veto track
 </table>
 
 */
