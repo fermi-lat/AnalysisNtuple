@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.45 2008/04/14 00:31:50 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.46 2008/04/22 22:48:12 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -79,7 +79,7 @@ private:
     float ACD_Total_Ribbon_Energy;
     unsigned int ACD_TileIdRecon;
     unsigned int ACD_RibbonIdRecon;
-    unsigned int ACD_ActiveDist_TrackNum;
+    int          ACD_ActiveDist_TrackNum;
 
     // Variables computed by looping over all tracks w.r.t. hit tiles
     float ACD_ActiveDist3D;

@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.87 2008/04/21 21:05:35 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.88 2008/04/22 22:48:12 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -1152,7 +1152,7 @@ StatusCode TkrValsTool::calculate()
         Tkr_1_VetoGapEdge = m_VetoGapEdge;   
         Tkr_1_VetoBadCluster = m_VetoBadCluster;
 
-        unsigned int veto_track_num = -1;
+        int veto_track_num = -1;
 		// Most likely track from AcdValsTool
         if(m_pAcdTool) {
             // check that Acd executes before Tkr
