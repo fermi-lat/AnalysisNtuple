@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.44 2007/08/24 22:20:50 echarles Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.45 2008/04/14 00:31:50 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -79,7 +79,7 @@ private:
     float ACD_Total_Ribbon_Energy;
     unsigned int ACD_TileIdRecon;
     unsigned int ACD_RibbonIdRecon;
-    unsigned int ACD_ActiveDist_TkrNo;
+    unsigned int ACD_ActiveDist_TrackNum;
 
     // Variables computed by looping over all tracks w.r.t. hit tiles
     float ACD_ActiveDist3D;
@@ -175,9 +175,9 @@ an energy dep. min. distance and has the largest pulse height
 to the edge of any tile 
 <tr><td> AcdActDistTileEnergy 
 <td>F<td>   The deposited energy in the corresponding hit tile 
-<tr><td> AcdActDistTkrNo 
+<tr><td> AcdActDistTrackNum
 <td>F<td>   Track number of track which was used for AcdActiveDist3D. 
-First Track = 0
+Track numbering starts at zero; best track number is zero; -1 means no track
 
 <tr><td> AcdRibbonActDist   (fixme)
 <td>F<td>   Largest active distance to any ribbon 
@@ -322,7 +322,7 @@ StatusCode AcdValsTool::initialize()
     addItem("AcdActiveDist3D",   &ACD_ActiveDist3D);
     addItem("AcdActiveDist3DErr",   &ACD_ActiveDist3D_Err);
     addItem("AcdActDistTileEnergy",   &ACD_ActiveDist_Energy);
-    addItem("AcdActDistTkrNo", &ACD_ActiveDist_TkrNo);
+    addItem("AcdActDistTrackNum", &ACD_ActiveDist_TrackNum);
 
     addItem("AcdRibbonActDist", &ACD_ribbon_ActiveDist);
     addItem("AcdRibbonActDistErr", &ACD_ribbon_ActiveDist_Err);
@@ -362,6 +362,7 @@ StatusCode AcdValsTool::initialize()
     addItem("AcdNoSideRow3",   &ACD_tileCount3);   
 
     zeroVals();
+    ACD_ActiveDist_TrackNum = -1;
 
     return sc;
 }
@@ -597,7 +598,7 @@ StatusCode AcdValsTool::calculate()
             ACD_ActiveDist3D_Err = planeError;
             idents::AcdId theId = tile_vetoPoca->getId();
             ACD_ActiveDist_Energy = tileEnergyIdMap[theId];
-            ACD_ActiveDist_TkrNo = tile_vetoPoca->trackIndex(); // Index starts from 0
+            ACD_ActiveDist_TrackNum = tile_vetoPoca->trackIndex(); // Index starts from 0
             double holeDoca(0.), holeDocaError(0.); 
             int iHole = -1;
             //AcdTileUtil::tileScrewHoleDoca(aPoca->getId(),aPoca->getActiveX(),aPoca->getActiveY(),

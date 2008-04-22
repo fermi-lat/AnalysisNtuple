@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.86 2008/04/21 19:31:24 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.87 2008/04/21 21:05:35 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -119,7 +119,7 @@ private:
 
 
     //Global Track Tuple Items
-    float Tkr_No_Tracks;
+    float Tkr_Num_Tracks;
     float Tkr_Sum_KalEne; 
     float Tkr_Sum_ConEne;
     float Tkr_Energy;
@@ -231,7 +231,6 @@ private:
     float Tkr_2TkrAngle;
     float Tkr_2TkrHDoca;
 
-	float Tkr_Veto_TrkNum;
     float Tkr_Veto_SSDVeto; 
 	float Tkr_Veto_Chisq;
         
@@ -312,9 +311,6 @@ Notes:
      They are not written out by default.
 - Several new variables starting with "TkrV" have been added. These refer to 
      quantities associated with the track likely to have cause the Acd veto.
-     The first of these, TkrVTrkNum, gives the sequence number of the veto
-     track in the track list. "0" is the best track, "1" is next-best. 
-     (Default for TkrVTrkNum is -1;
 - Some deleted variables, all Tkr2: FirstHits, DifHits, Gaps, FirstGaps,
      DieEdge, KalThetaMs, [X/Y/Z]Dir, Phi, Theta, [X/Y/Z]0.
 
@@ -565,10 +561,6 @@ The definitions should be fairly stable.
 <td>I<td>   Number of missing hits close to a dead plane
 <tr><td> TkrVetoTruncated
 <td>I<td>   Number of missing hits close to a truncated region
-<tr><td> TkrVTkrNum
-<td>F<td>   Track number in the track list of the "veto track", 
-            that is the track that
-            is likely to have triggered the Acd veto
 <tr><td> TkrVSSDVeto
 <td>F<td>   Same as Tkr1SSDVeto, but for the veto track 
 <tr><td> TkrVChisq
@@ -654,7 +646,7 @@ StatusCode TkrValsTool::initialize()
 
     // load up the map
 
-    addItem("TkrNumTracks",   &Tkr_No_Tracks);
+    addItem("TkrNumTracks",   &Tkr_Num_Tracks);
     addItem("TkrSumKalEne",   &Tkr_Sum_KalEne);
     addItem("TkrSumConEne",   &Tkr_Sum_ConEne);
     addItem("TkrEnergy",      &Tkr_Energy);
@@ -774,7 +766,6 @@ StatusCode TkrValsTool::initialize()
     addItem("Tkr2TkrAngle",   &Tkr_2TkrAngle); 
     addItem("Tkr2TkrHDoca",   &Tkr_2TkrHDoca); 
 
-	addItem("TkrVTrkNum",    &Tkr_Veto_TrkNum); 
 	addItem("TkrVSSDVeto",    &Tkr_Veto_SSDVeto); 
 	addItem("TkrVChisq",      &Tkr_Veto_Chisq); 
 
@@ -877,7 +868,7 @@ StatusCode TkrValsTool::calculate()
     if (pTracks){   
         // Count number of tracks
         int nTracks = pTracks->size();
-        Tkr_No_Tracks   = nTracks;
+        Tkr_Num_Tracks   = nTracks;
 
         if(nTracks < 1) return sc;
 
@@ -1161,7 +1152,7 @@ StatusCode TkrValsTool::calculate()
         Tkr_1_VetoGapEdge = m_VetoGapEdge;   
         Tkr_1_VetoBadCluster = m_VetoBadCluster;
 
-        float veto_trk_num = -1;
+        unsigned int veto_track_num = -1;
 		// Most likely track from AcdValsTool
         if(m_pAcdTool) {
             // check that Acd executes before Tkr
@@ -1180,10 +1171,10 @@ StatusCode TkrValsTool::calculate()
                 }
             } else {
                 int firstCheck = m_check; 
-                if(m_pAcdTool->getVal("AcdActDistTkrNo", veto_trk_num, 
+                if(m_pAcdTool->getVal("AcdActDistTrackNum", veto_track_num, 
                     firstCheck).isSuccess()) {
-                    if(veto_trk_num >= 0 && veto_trk_num < Tkr_No_Tracks) {
-                        int n = veto_trk_num;
+                    if(veto_track_num >= 0 && veto_track_num < Tkr_Num_Tracks) {
+                        int n = veto_track_num;
                         const Event::TkrTrack* veto_track =  *(pTracks->begin()+n);
                         Tkr_Veto_SSDVeto    = SSDEvaluation(veto_track); 
                         Tkr_Veto_Chisq      = veto_track->getChiSquareSmooth();
@@ -1198,7 +1189,6 @@ StatusCode TkrValsTool::calculate()
                 }
             }
         }
-        Tkr_Veto_TrkNum = veto_trk_num;
 
         // minimum distance from any edge, measured from the edge of the active area
         double deltaEdge = 0.5*(m_towerPitch - m_tkrGeom->trayWidth()) 
