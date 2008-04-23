@@ -2,7 +2,7 @@
 @brief Calculates the Tkr hit analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrHitValsTool.cxx,v 1.13 2007/06/07 17:00:13 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrHitValsTool.cxx,v 1.14 2008/04/21 21:05:35 lsrea Exp $
 */
 
 // Include files
@@ -49,12 +49,12 @@ public:
 private:
     
     //TkrClusters Tuple Items
-    float Tkr_Cnv_Lyr_Hits;
-    float Tkr_Max_controller_hits;
-    float Tkr_Fst_Cnv_Lyr;
-    float Tkr_NCnv_Lyrs_Hit;
+    int Tkr_Cnv_Lyr_Hits;
+    int Tkr_Max_controller_hits;
+    int Tkr_Fst_Cnv_Lyr;
+    int Tkr_NCnv_Lyrs_Hit;
     
-    float Tkr_HitsPerLyr[_nLayers];
+    int Tkr_HitsPerLyr[_nLayers];
 
     ITkrQueryClustersTool* m_clusTool;
 };
@@ -79,13 +79,13 @@ TkrHitValsTool::TkrHitValsTool(const std::string& type,
 <table>
 <tr><th> Variable <th> Type  <th> Description					
 <tr><td> TkrNumHits 	
-<td>F<td>   Total number of TKR clusters 
+<td>I<td>   Total number of TKR clusters 
 <tr><td> TkrFirstLayer
-<td>F<td>   First layer containing a cluster 
+<td>I<td>   First layer containing a cluster 
 <tr><td> TkrNumLayersHit
-<td>F<td>   Total number of hit layers 
+<td>I<td>   Total number of hit layers 
 <tr><td> TkrHitsInLyrNN, NN=(00,17)   
-<td>F<td>   Number of clusters in (bi)layer NN 
+<td>I<td>   Number of clusters in (bi)layer NN 
            (numbered from the bottom of the tracker) 
 </table>
 */
@@ -115,27 +115,16 @@ StatusCode TkrHitValsTool::initialize()
 
     addItem("TkrNumHits",            &Tkr_Cnv_Lyr_Hits);       
     addItem("TkrFirstLayer",         &Tkr_Fst_Cnv_Lyr);        
-    addItem("TkrNumLayersHit",       &Tkr_NCnv_Lyrs_Hit);      
-    
-    addItem("TkrHitsInLyr00",      &Tkr_HitsPerLyr[0]);      
-    addItem("TkrHitsInLyr01",      &Tkr_HitsPerLyr[1]);      
-    addItem("TkrHitsInLyr02",      &Tkr_HitsPerLyr[2]);    
-    addItem("TkrHitsInLyr03",      &Tkr_HitsPerLyr[3]);      
-    addItem("TkrHitsInLyr04",      &Tkr_HitsPerLyr[4]);      
-    addItem("TkrHitsInLyr05",      &Tkr_HitsPerLyr[5]);      
-    addItem("TkrHitsInLyr06",      &Tkr_HitsPerLyr[6]);      
-    addItem("TkrHitsInLyr07",      &Tkr_HitsPerLyr[7]);      
-    addItem("TkrHitsInLyr08",      &Tkr_HitsPerLyr[8]);      
-    addItem("TkrHitsInLyr09",      &Tkr_HitsPerLyr[9]);      
-    addItem("TkrHitsInLyr10",     &Tkr_HitsPerLyr[10]);     
-    addItem("TkrHitsInLyr11",     &Tkr_HitsPerLyr[11]);     
-    addItem("TkrHitsInLyr12",     &Tkr_HitsPerLyr[12]);     
-    addItem("TkrHitsInLyr13",     &Tkr_HitsPerLyr[13]);     
-    addItem("TkrHitsInLyr14",     &Tkr_HitsPerLyr[14]);     
-    addItem("TkrHitsInLyr15",     &Tkr_HitsPerLyr[15]);     
-    addItem("TkrHitsInLyr16",     &Tkr_HitsPerLyr[16]);     
-    addItem("TkrHitsInLyr17",     &Tkr_HitsPerLyr[17]); 
-    
+    addItem("TkrNumLayersHit",       &Tkr_NCnv_Lyrs_Hit);
+
+    int i;
+    char buffer[20];
+    for(i=0;i<_nLayers;++i) {
+        // vars of form TkrHitsInLyrNN, NN = (00,17), for _nLayers==18
+        sprintf(buffer, "TkrHitsInLyr%02i",i);
+        addItem(buffer, &Tkr_HitsPerLyr[i]);
+    }
+            
     zeroVals();
     
     return sc;
