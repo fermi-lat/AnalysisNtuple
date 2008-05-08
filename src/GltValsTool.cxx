@@ -2,7 +2,7 @@
 @brief Calculates the Trigger analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.37 2008/01/18 22:39:41 kocian Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.38 2008/01/19 00:55:26 lsrea Exp $
 */
 
 // Include files
@@ -24,6 +24,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.37 
 #include "Event/TopLevel/EventModel.h"
 #include "Event/TopLevel/Event.h"
 #include "LdfEvent/EventSummaryData.h"
+#include "LdfEvent/LsfMetaEvent.h"
 #include "CLHEP/Matrix/Matrix.h"
 #include "CLHEP/Matrix/SymMatrix.h"
 
@@ -76,6 +77,7 @@ private:
     int   Trig_gltprescale;
     int   Trig_gemprescale;
     int   Trig_prescaleexpired;
+    int   Trig_sourcegps;
 
     ITkrQueryClustersTool* m_clusTool;
 };
@@ -141,6 +143,8 @@ i.e. 0 = central tower, 1 = side tower, 2 = edge edge tower,
 <td>I<td>   The GEM prescale factor for the event
 <tr><td> GltPrescaleExpired
 <td>I<td>   true if the prescale counter expired for this event
+<tr<td>  GltSourceGps
+<td>I<td>   true if timing comes from the GPS
 </table>
 */
 
@@ -202,6 +206,7 @@ StatusCode GltValsTool::initialize()
     addItem("GltEnginePrescale",  &Trig_gltprescale);
     addItem("GltGemEnginePrescale",  &Trig_gemprescale);
     addItem("GltPrescaleExpired",  &Trig_prescaleexpired);
+    addItem("GltSourceGps",  &Trig_sourcegps);
 
     zeroVals();
 
@@ -262,6 +267,10 @@ StatusCode GltValsTool::calculate()
     SmartDataPtr<LdfEvent::EventSummaryData> 
         eventSummary(m_pEventSvc, "/Event/EventSummary"); 
     Trig_evtFlags = ( eventSummary==0 ? 0 : eventSummary->eventFlags());
+    SmartDataPtr<LsfEvent::MetaEvent> 
+        metaTds(m_pEventSvc, "/Event/MetaEvent");
+    Trig_sourcegps = 
+        ( metaTds==0 ? 0 : metaTds->time().current().sourceGps()); 
 
     SmartDataPtr<Event::TkrClusterCol>   
         pClusters(m_pEventSvc,EventModel::TkrRecon::TkrClusterCol);

@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.88 2008/04/22 22:48:12 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.89 2008/04/22 22:54:47 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -296,6 +296,9 @@ TkrValsTool::TkrValsTool(const std::string& type,
 Notes: 
 - Variables called Tkr1Xxx refer to the "best" track; 
      those called Tkr2Xxx refer to the second track.
+- A number of variables have the word "Hits" in their name. This <em>usually</em>
+     refers to clusters! In some cases it refers to TkrTrackHits. 
+     The description should make it clear which meaning is intended.
 - For variables listed as Tkr[1/2]Xxx there are two versions in the ntuple, 
      one for the best and one for the second track. 
 - The labels are not entirely consistent, but it's probably 
@@ -344,10 +347,10 @@ Notes:
 <tr><td> TkrSurplusHitsInside 
 <td>F<td>   Number of clusters inside an energy- and angle-dependent cone 
             centered on the reconstructed axis of the best track and
-            starting at the head of track 1. Only hits in layers with at
+            starting at the head of track 1. Only clusters in layers with at
             least one x and one y cluster in the tower are counted.
 <tr><td> TkrSurplusHitRatio
-<td>F<td>   Ratio of the number of hits outside the cone to the number
+<td>F<td>   Ratio of the number of clusters outside the cone to the number
             inside. See TkrSurplusHitsInside
 <tr><td> TkrThinHits
 <td>F<td>   Number of clusters in the above cone in the thin-converter layers 
@@ -465,27 +468,31 @@ The definitions should be fairly stable.
 <tr><td> Tkr1SXY  
 <td>F<td>   x-y element of the covariance matrix; covariance  
 <tr><td> Tkr1ToTFirst  
-<td>F<td>   ToT of first hit on best track 
+<td>F<td>   ToT associated with the first hit on best track 
             (All ToT's are adjusted for pathlength in the measuring and non-measuring 
-            directions in the strip, and for the strip width.)  
+            directions in the strip, and for the strip width.) <em>Note: there is only 
+            one ToT per half-plane. If there is more than one hit strip, the highest
+            ToT is stored.</em>
 <tr><td> Tkr1ToTAve  
-<td>F<td>   Average ToT for the hits on the best track  
+<td>F<td>   Average ToT for the hits on the best track (See note above.) 
 <tr><td> Tkr1ToTTrAve  
-<td>F<td>   Average ToT for the hits on the best track, excluding the largest and smallest  
+<td>F<td>   Average ToT for the hits on the best track, 
+            excluding the largest and smallest (See note above.)
 <tr><td> Tkr1ToTAsym  
-<td>F<td>   Asymmetry between last two and first two ToT's for the best track  
+<td>F<td>   Asymmetry between last two and first two ToT's for the best track
+            (See note above.)
 <tr><td> Tkr1ChisqAsym  
 <td>F<td>   Asymmetry between last two and first two track-segment delta-chisquared's  
 <tr><td> Tkr1SSDVetoOld 
 <td>F<td>   Number of silicon planes between the top of the extrapolated track 
-            and the first plane that has a hit near the track. Only planes that have
+            and the first plane that has a cluster near the track. Only planes that have
             wafers which intersect the extrapolated track are considered. No checks 
             for dead strips, etc. are made (yet!).
             Can be used as a back-up for the ACD. 
 <tr><td> Tkr1SSDVeto  
 <td>F<td>   New version of the SSD Veto. For this variable, tracks which pass close
             to a dead plane, buffer-saturated region, inter-wafer gap, gap between towers,
-            or dead strips, do not cause the veto count to be incremented if no hit is found.
+            or dead strips, do not cause the veto count to be incremented if no cluster is found.
             This almost certainly overdoes it: a more correct calculation would include
             the probability for the track to cross the inactive region. (Coming soon!)
 <tr><td> TkrVetoPlaneCrossed
@@ -493,7 +500,7 @@ The definitions should be fairly stable.
             where a track crosses in a gap.
 <tr><td> Tkr1CoreHC
 <td>F<td>   Number of clusters within a roughly cylindrical region )(default radius 10 mm) 
-            around the hits in each plane between the first and last on the best
+            around the TrackHits in each plane between the first and last on the best
             track, excluding the clusters that belong to the track itself
 <tr><td> TkrDispersion
 <td>F<td>   the RMS of the distances between the 1st track and all others in the event.
@@ -501,14 +508,14 @@ The definitions should be fairly stable.
             For the rest, distance is the doca of the head of the track to the axis of
             the first track.
 <tr><td> TkrUpstreamHC
-<td>F<td>   The number of hits in a cylinder (default radius 150 mm) up to 4 layers thick
+<td>F<td>   The number of clusters in a cylinder (default radius 150 mm) up to 4 layers thick
             above the head of the first track.
 <tr><td> Tkr1CORERatio
 <td>F<td>   the ratio of Tkr1CoreHC and Tkr1Hits
 <tr><td> Tkr1LATEdge
 <td>F<td>   Minimum distance to any LAT edge of the head of the best track
 <tr><td> Tkr1FirstHits  
-<td>F<td>   Number of initial track hits used to determine the starting direction  
+<td>F<td>   Number of initial TrackHits used to determine the starting direction  
 <tr><td> Tkr1DifHits  
 <td>F<td>   Difference between the number of x and y clusters associated with track  
 <tr><td> Tkr1Gaps  
@@ -546,21 +553,21 @@ The definitions should be fairly stable.
 <td>I<td>   Difference between the plane number of the last plane crossed and the first, plus one
             Any gaps above the last plane are not counted. (This may change soon.)
 <tr><td> TkrVetoHitFound
-<td>I<td>   Number of hits found
+<td>I<td>   Number of clusters found
 <tr><td> TkrVetoUnknown
-<td>I<td>   Missing hits not ascribable to any inactive area
+<td>I<td>   Missing clusters not ascribable to any inactive area
 <tr><td> TkrVetoTower
 <td>I<td>   Number of tower crossings (zero for now, because the propagator doesn't report them)
 <tr><td> TkrVetoGapCorner
-<td>I<td>   Number of missing hits close to a wafer corner
+<td>I<td>   Number of missing clusters close to a wafer corner
 <tr><td> TkrVetoGapEdge
-<td>I<td>   Number of missing hits close to a wafer edge
+<td>I<td>   Number of missing clusters close to a wafer edge
 <tr><td> TkrVetoBadCluster
-<td>I<td>   Number of missing hits close to a dead strip
+<td>I<td>   Number of missing clusters close to a dead strip
 <tr><td> TkrVetoDeadPlane
-<td>I<td>   Number of missing hits close to a dead plane
+<td>I<td>   Number of missing clusters close to a dead plane
 <tr><td> TkrVetoTruncated
-<td>I<td>   Number of missing hits close to a truncated region
+<td>I<td>   Number of missing clusters close to a truncated region
 <tr><td> TkrVSSDVeto
 <td>F<td>   Same as Tkr1SSDVeto, but for the veto track 
 <tr><td> TkrVChisq

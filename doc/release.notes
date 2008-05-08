@@ -2,6 +2,8 @@
   @brief Package AnalysisNtule
   @verbatim
 
+ v2r38p8 05-May-08   LSR  Add GltSourceGps to GltValsTools
+                          Clarify documentation of TkrValsTools wrt hits and clusters
  v2r38p7 23-Apr-08   LSR  Change TkrHitValsTool vars to ints
  v2r38p6 22-Apr-08   LSR  Make AcdActDistTrackNum int; set default to -1
  v2r38p5 22-Apr-08   LSR  Rename ACD var to AcdActDistTrackNum
