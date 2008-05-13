@@ -2,6 +2,8 @@
   @brief Package AnalysisNtule
   @verbatim
 
+ v2r39   13-May-08   LSR  HMK Installing Leon's addition of MC_XYZDir to
+                     McKludgeValsTool
  v2r38p8 05-May-08   LSR  Add GltSourceGps to GltValsTools
                           Clarify documentation of TkrValsTools wrt hits and clusters
  v2r38p7 23-Apr-08   LSR  Change TkrHitValsTool vars to ints
