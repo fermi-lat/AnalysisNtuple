@@ -2,7 +2,7 @@
 @brief Inserts sentinel values for several variables needed by ClassifyAlg
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McKludgeValsTool.cxx,v 1.1.54.1 2008/02/18 22:35:05 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McKludgeValsTool.cxx,v 1.3 2008/05/13 16:40:01 heather Exp $
 */
 // Include files
 
@@ -51,6 +51,10 @@ private:
     float MC_DirErr;
     float MC_DirErrN;
     float MC_DirErrN1;
+    float MC_XDir;
+    float MC_YDir;
+    float MC_ZDir;
+
 
     // to decode the particle charge
     //IParticlePropertySvc* m_ppsvc;    
@@ -90,6 +94,8 @@ ClassifyAlg doesn't crash when it finds them missing
 <td>F<td>   set to -1 
 <tr><td> McDirErrN1 
 <td>F<td>   set to -1 
+<tr><td> Mc[X/Y/Z]Dir 
+<td>F<td>   set to -2 
 </table>
 */
 
@@ -120,6 +126,9 @@ StatusCode McKludgeValsTool::initialize()
     addItem("McTkr1DirErr",   &MC_Tkr1DirErr); 
     addItem("McDirErrN",      &MC_DirErrN);      
     addItem("McDirErrN1",     &MC_DirErrN1);      
+    addItem("McXDir",         &MC_XDir);
+    addItem("McYDir",         &MC_YDir);
+    addItem("McZDir",         &MC_ZDir);
     
     zeroVals();
     
@@ -137,6 +146,10 @@ StatusCode McKludgeValsTool::calculate()
     MC_Tkr1DirErr = -1.0f;
     MC_DirErrN    = -1.0f;
     MC_DirErrN1   = -1.0f;
+    MC_XDir       = -2.0f;
+    MC_YDir       = -2.0f;
+    MC_ZDir       = -2.0f;
+
    
     return sc;
 }
