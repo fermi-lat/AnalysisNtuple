@@ -2,6 +2,7 @@
   @brief Package AnalysisNtule
   @verbatim
 
+ v2r30p3gr9 16-May-08  HMK Patch my attempt to merge changes from HEAD
  v2r30p3gr8 15-May-08  TU Change PtValsAlg to use FluxSvc's FluxPointingInfoTool
  v2r30p3gr7 10-Apr-08  LSR Fix up calculation of Mc zenith coordinates
  v2r30p3gr6 01-Apr-08  LSR Optional suppress ntuple filling for PtValsAlg

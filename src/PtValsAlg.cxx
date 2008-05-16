@@ -1,7 +1,7 @@
 /** @file PtValsAlg.cxx
 @brief declaration and definition of the class PtValsAlg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/PtValsAlg.cxx,v 1.2.54.2 2008/04/01 22:53:03 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/PtValsAlg.cxx,v 1.2.54.3 2008/05/16 02:28:58 heather Exp $
 
 */
 
@@ -63,7 +63,7 @@ public:
 
 
 private: 
-    IPointingInfo m_pointingInfo;
+    IPointingInfo* m_pointingInfo;
 
     StringProperty m_root_tree;
     StringArrayProperty m_pointingHistory;///< history file name and launch date
