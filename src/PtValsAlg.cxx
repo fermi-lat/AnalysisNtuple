@@ -1,7 +1,7 @@
 /** @file PtValsAlg.cxx
 @brief declaration and definition of the class PtValsAlg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/PtValsAlg.cxx,v 1.2.54.1 2008/02/28 23:29:15 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/PtValsAlg.cxx,v 1.2.54.2 2008/04/01 22:53:03 lsrea Exp $
 
 */
 
@@ -35,13 +35,14 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/PtValsAlg.cxx,v 1.2.54.
 #include "astro/GPS.h"
 
 //
-#include "AnalysisNtuple/PointingInfo.h"
+//#include "AnalysisNtuple/PointingInfo.h"
+#include "FluxSvc/IPointingInfo.h"
 
 namespace { // anonymous namespace for file-global
     astro::GPS* gps(0);  // pointer to relevant GPS entry
 }
 
-using namespace AnalysisNtuple;
+//using namespace AnalysisNtuple;
 
 /** 
 * \class PtValsAlg
@@ -62,7 +63,7 @@ public:
 
 
 private: 
-    PointingInfo m_pointing_info;
+    IPointingInfo m_pointingInfo;
 
     StringProperty m_root_tree;
     StringArrayProperty m_pointingHistory;///< history file name and launch date
@@ -101,16 +102,22 @@ StatusCode PtValsAlg::initialize(){
     // Use the Job options service to set the Algorithm's parameters
     setProperties();
 
+    // Recover the all important Pointing Info tool
+    if ((sc=toolSvc()->retrieveTool("FluxPointingInfoTool",m_pointingInfo)).isFailure()) {
+        log << MSG::ERROR << "could not retrieve the FluxPointingInfoTool" << endreq;
+    }
+
 
     // get a pointer to RootTupleSvc
     if( (service("RootTupleSvc", m_rootTupleSvc, true) ). isFailure() ) {
         log << MSG::ERROR << " RootTupleSvc is not available" << endreq;
         m_rootTupleSvc=0;
         sc = StatusCode::FAILURE;
-    }else if( !m_root_tree.value().empty() ) {
-        
-        if(m_fillNtuple) m_pointing_info.setPtTuple(m_rootTupleSvc, m_root_tree.value());
     }
+//    else if( !m_root_tree.value().empty() ) {
+        
+//        if(m_fillNtuple) m_pointing_info.setPtTuple(m_rootTupleSvc, m_root_tree.value());
+//    }
     // get the GPS instance: either from FluxSvc or local, non-MC mode
     // leave off "true"
     IFluxSvc* fluxSvc(0);
@@ -193,7 +200,8 @@ StatusCode PtValsAlg::execute()
     gps->time(etime);
 
     // and create the tuple
-    if (m_fillNtuple) m_pointing_info.execute( *gps );
+ //   if (m_fillNtuple) m_pointing_info.execute( *gps );
+    if (m_fillNtuple) m_pointingInfo->set();
 
     return StatusCode::SUCCESS;
 }
