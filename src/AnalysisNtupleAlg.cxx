@@ -2,7 +2,7 @@
 @brief Uses the XxxValsTools to produce a comprehensive ntuple
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.37 2008/04/14 00:31:50 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.38 2008/04/21 19:31:24 lsrea Exp $
 */
 
 // Gaudi system includes
@@ -21,6 +21,8 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v
 
 // for access to geometry perhaps
 #include "GlastSvc/GlastDetSvc/IGlastDetSvc.h"
+
+#include <algorithm>
 
 
 /** @class NtupleVisitor
@@ -121,7 +123,11 @@ public:
     /// clean up
     StatusCode finalize();
     
-private: 
+private:
+    /// local utility methods
+    void fixLoadOrder();
+    void removeMc();
+
     /// number of times called
     double m_count; 
     
@@ -138,6 +144,7 @@ private:
     bool m_doNtuple;
     bool m_doDebug;
     bool m_countCalcs;
+    bool m_realData;
     
     IValsTool::Visitor* m_visitor; 
 };
@@ -158,6 +165,7 @@ AnalysisNtupleAlg::AnalysisNtupleAlg(const std::string& name, ISvcLocator* pSvcL
     declareProperty("doNtuple", m_doNtuple=true);
     declareProperty("enableDebugCalc", m_doDebug=false);
     declareProperty("countCalcs", m_countCalcs=false);  
+    declareProperty("realData", m_realData=false);  
 }
 
 StatusCode AnalysisNtupleAlg::initialize(){
@@ -177,19 +185,19 @@ StatusCode AnalysisNtupleAlg::initialize(){
     //probably a better way to do this!
     // default set:
     std::string toolnames [] = {"Mc", "Glt", "Acd", "TkrHit", "Tkr", "Vtx",  "Cal",  "Evt", "Obf", "McTkrHit", ""};
-    int i;
-    int namesSize = m_toolnames.size();
+    unsigned int i;
+    unsigned int namesSize = m_toolnames.size();
 
     // use the default
     if(m_toolnames.empty()) {
         for (i=0; ; ++i) {
             if (toolnames[i]=="") break;
-            m_toolnames.push_back(toolnames[i]+"ValsTool");
+            m_toolnames.push_back(toolnames[i]);
         }
     // fresh list, use it
     } else if (m_toolnames.size()>0&&m_toolnames[0]!="+") {
         for (i=0; i<namesSize; ++i) {
-            m_toolnames[i] = m_toolnames[i]+"ValsTool";
+            m_toolnames[i] = m_toolnames[i];
         }
     // add the input to the regular list
     } else if (namesSize>1&&m_toolnames[0]=="+") {
@@ -197,20 +205,20 @@ StatusCode AnalysisNtupleAlg::initialize(){
         // first the input
         namesSize = m_toolnames.size();
         for (i=0; i<namesSize; ++i) {
-            m_toolnames[i] = m_toolnames[i]+"ValsTool";
+            m_toolnames[i] = m_toolnames[i];
         }
         // then the regulars
         for (i=0; ; ++i) {
             if (toolnames[i]=="") break;
-            m_toolnames.push_back(toolnames[i]+"ValsTool");
+            m_toolnames.push_back(toolnames[i]);
         }
     }
 
-
+    log << MSG::INFO << endreq;
     namesSize = m_toolnames.size();
     log << MSG::INFO << namesSize << " Tools requested: ";
     for (i=0; i<namesSize; ++i) {
-        log << m_toolnames[i] << " " ;
+        log << m_toolnames[i]+"ValsTool" << " " ;
     }
     log << endreq;
     
@@ -225,14 +233,25 @@ StatusCode AnalysisNtupleAlg::initialize(){
         log << MSG::ERROR << "Can't find ToolSvc, will quit now" << endreq;
         return StatusCode::FAILURE;
     }
-        
+
+    // take care of the Acd/Tkr load order: Acd comes first!
+    // I wish we didn't have this restriction!
+    fixLoadOrder();
+
+    // now, fix up Mc stuff for real data
+    // the plan is to substitute McKludgeValsTool for McValsTool
+    // and remove any other tool with "Mc" in the name.
+    removeMc();
+
     namesSize = m_toolnames.size();
-    for (i =0; i<namesSize; ++i){
-        m_toolvec.push_back(0);
+    for (i =0; i!=namesSize; ++i){
+         m_toolvec.push_back(0);
+         m_toolnames[i]+="ValsTool";
         sc = pToolSvc->retrieveTool(m_toolnames[i], m_toolvec.back());
         m_toolvec.back()->setLoadOrder(i);
         if( sc.isFailure() ) {
-            log << MSG::ERROR << "Unable to find tool: " << m_toolnames[i] << endreq;
+            log << MSG::ERROR << "Unable to find tool: " 
+                << m_toolnames[i] << endreq;
             return sc;
         }
     }
@@ -281,11 +300,6 @@ StatusCode AnalysisNtupleAlg::execute()
     for( std::vector<IValsTool*>::iterator i =m_toolvec.begin(); i != m_toolvec.end(); ++i){
         (*i)->doCalcIfNotDone();
     }
-
-    // why twice???
-    //for( std::vector<IValsTool*>::iterator i =m_toolvec.begin(); i != m_toolvec.end(); ++i){
-    //    (*i)->doCalcIfNotDone();
-    //}
 
     // all the tools have been called at this point, so from now on,
     ///  we can call them with the no-calculate flag
@@ -368,4 +382,60 @@ StatusCode AnalysisNtupleAlg::finalize(){
     log << MSG::INFO << "finalize after " << m_count << " calls." << endreq;
     
     return sc;
+}
+
+void AnalysisNtupleAlg::fixLoadOrder()
+{
+    MsgStream log(msgSvc(), name());
+    std::vector<std::string>::iterator tkrIter, acdIter, endIter;
+
+    tkrIter = find(m_toolnames.begin(), m_toolnames.end(), "Tkr");
+    acdIter = find(m_toolnames.begin(), m_toolnames.end(), "Acd");
+    endIter = m_toolnames.end();
+
+    if(acdIter!=endIter&&tkrIter!=endIter&&acdIter-tkrIter>0) {
+        m_toolnames.erase(acdIter);
+        m_toolnames.insert(tkrIter, "Acd");
+        log << MSG::WARNING << endreq << 
+            "Load order of ValsTools changed" << endreq
+            << "AcdValsTool inserted beforeTkrValsTool" << endreq;
+        unsigned int i;
+        unsigned int namesSize = m_toolnames.size();
+        log << MSG::WARNING << "New order: " << endreq;
+        for (i=0; i<namesSize; ++i) {
+            log << m_toolnames[i]+"ValsTool" << " " ;
+        }
+        log << endreq;
+    }
+}
+
+void AnalysisNtupleAlg::removeMc() 
+{
+    MsgStream log(msgSvc(), name());
+    std::vector<std::string>::iterator  endIter, lastIter, listIter, thisIter, mckIter;
+    mckIter = find(m_toolnames.begin(), m_toolnames.end(), "McKludge");
+    endIter = m_toolnames.end();
+    lastIter = endIter;
+    --lastIter;
+    if(m_realData) {
+        for(listIter=lastIter; listIter!=--m_toolnames.begin(); --listIter) {
+            if(*listIter=="Mc") {
+                thisIter = m_toolnames.erase(listIter);
+                if(mckIter==endIter)  { m_toolnames.insert(thisIter, "McKludge");}
+            } else if (listIter->find("Mc")!=std::string::npos) {
+                m_toolnames.erase(listIter);
+            }
+        }
+        unsigned int namesSize = m_toolnames.size();
+        unsigned int i;
+        log << MSG::WARNING << endreq <<
+            "Real Data Run: Mc tools removed or modified" << endreq
+            << "Final Order: " << endreq;
+        for (i=0; i<namesSize; ++i) {
+            log << m_toolnames[i]+"ValsTool" << " " ;
+        }
+        log << endreq;
+    } 
+    log << endreq;
+    return;
 }
