@@ -2,7 +2,10 @@
   @brief Package AnalysisNtule
   @verbatim
 
- v2r39p3 26-May=08   LSR  Add fixLoadOrder() to make sure AcdValsTool is loaded
+ v2r39p3gr1 11-Jun-08 HMK Remove Tracy's updates to PtValsAlg until 
+                          PointingInfo classes are sorted out - so we can 
+                          build a GR with the new OBF updates
+ v2r39p3 26-May-08   LSR  Add fixLoadOrder() to make sure AcdValsTool is loaded
                             before TkrValsTool
                           Add removeMc() to adjust tool list for real data, on
                             boolean jO paramater realData (false by default) 
