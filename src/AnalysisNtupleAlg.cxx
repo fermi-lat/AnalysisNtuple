@@ -2,7 +2,7 @@
 @brief Uses the XxxValsTools to produce a comprehensive ntuple
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.38 2008/04/21 19:31:24 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.39 2008/05/26 19:31:15 lsrea Exp $
 */
 
 // Gaudi system includes
@@ -241,7 +241,7 @@ StatusCode AnalysisNtupleAlg::initialize(){
     // now, fix up Mc stuff for real data
     // the plan is to substitute McKludgeValsTool for McValsTool
     // and remove any other tool with "Mc" in the name.
-    removeMc();
+    if(m_realData) removeMc();
 
     namesSize = m_toolnames.size();
     for (i =0; i!=namesSize; ++i){
@@ -417,25 +417,25 @@ void AnalysisNtupleAlg::removeMc()
     endIter = m_toolnames.end();
     lastIter = endIter;
     --lastIter;
-    if(m_realData) {
-        for(listIter=lastIter; listIter!=--m_toolnames.begin(); --listIter) {
-            if(*listIter=="Mc") {
-                thisIter = m_toolnames.erase(listIter);
-                if(mckIter==endIter)  { m_toolnames.insert(thisIter, "McKludge");}
-            } else if (listIter->find("Mc")!=std::string::npos) {
-                m_toolnames.erase(listIter);
-            }
+
+    for(listIter=lastIter; listIter!=--m_toolnames.begin(); --listIter) {
+        if(*listIter=="Mc") {
+            thisIter = m_toolnames.erase(listIter);
+            if(mckIter==endIter)  { m_toolnames.insert(thisIter, "McKludge");}
+        } else if (listIter->find("Mc")!=std::string::npos) {
+            m_toolnames.erase(listIter);
         }
-        unsigned int namesSize = m_toolnames.size();
-        unsigned int i;
-        log << MSG::WARNING << endreq <<
-            "Real Data Run: Mc tools removed or modified" << endreq
-            << "Final Order: " << endreq;
-        for (i=0; i<namesSize; ++i) {
-            log << m_toolnames[i]+"ValsTool" << " " ;
-        }
-        log << endreq;
-    } 
+    }
+    unsigned int namesSize = m_toolnames.size();
+    unsigned int i;
+    log << MSG::WARNING << endreq <<
+        "Real Data Run: Mc tools removed or modified" << endreq
+        << "Final Order: " << endreq;
+    for (i=0; i<namesSize; ++i) {
+        log << m_toolnames[i]+"ValsTool" << " " ;
+    }
+    log << endreq;
+
     log << endreq;
     return;
 }
