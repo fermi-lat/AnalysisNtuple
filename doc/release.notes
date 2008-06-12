@@ -2,6 +2,8 @@
   @brief Package AnalysisNtule
   @verbatim
 
+ v2r40gr1 11-Jun-08  HMK  Back off PtValsAlg update while waiting for Toby's
+                          mods to remove FluxSvc dependency.
  v2r40   11-Jun-08   LSR  Tag Tracy's ObfValsTool
                           Rearrange logic for removeMc() in AnalysisNtupleAlg
  v2r39p3 26-May=08   LSR  Add fixLoadOrder() to make sure AcdValsTool is loaded
