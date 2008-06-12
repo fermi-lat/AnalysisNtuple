@@ -2,6 +2,7 @@
   @brief Package AnalysisNtule
   @verbatim
 
+ v2r41   12-Jun-08   THB  Remove dependence on FluxSvc
  v2r40   11-Jun-08   LSR  Tag Tracy's ObfValsTool
                           Rearrange logic for removeMc() in AnalysisNtupleAlg
  v2r39p3 26-May=08   LSR  Add fixLoadOrder() to make sure AcdValsTool is loaded
