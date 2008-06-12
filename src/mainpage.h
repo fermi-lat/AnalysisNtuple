@@ -119,6 +119,7 @@
  @param AnalysisNtupleAlg.enableDebugCalc
   Does some tests on the ntuple vars for every event... doesn't seem to be working too well at
   the moment!
+
  
  @param AnalysisNtupleAlg.countCalcs
   Counts the number of times that a given Tool is called for each event
@@ -128,6 +129,9 @@
   name of a FT2 FITS file, or a pointing history ascii file. If not set, and FluxSvc
   is not used, the default orbit will be used to define the pointing
 
+  @param FT1Alg.EnableAberrationCorrection [false]
+  if set true, the flag in GPS will be set to apply the orbital aberration correction when converting from 
+  instrument to celestical coordinates.
   <hr>
  @section vars Description of the variables
  Here are the <A HREF="./anatup_vars.html"> standard</A> variables, and here are the 
