@@ -1,7 +1,8 @@
 /** @file release.notes
-  @brief Package AnalysisNtule
+  @brief Package AnalysisNtuple
   @verbatim
 
+ v2r41p3 13-Jun-08   LSR  Remove last dependence on FluxSvc
  v2r41p1 13-Jun-08   LSR  Fix up McCoordsAlg
  v2r41   12-Jun-08   THB  Remove dependence on FluxSvc
  v2r40   11-Jun-08   LSR  Tag Tracy's ObfValsTool
