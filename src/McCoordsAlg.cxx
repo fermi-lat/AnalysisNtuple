@@ -1,7 +1,7 @@
 /** @file McCoordsAlg.cxx
 @brief Declaration and implementation of Gaudi algorithm McCoordsAlg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McCoordsAlg.cxx,v 1.6 2008/02/27 21:21:15 burnett Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McCoordsAlg.cxx,v 1.7 2008/04/11 04:36:59 lsrea Exp $
 */
 // Include files
 
@@ -12,10 +12,6 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McCoordsAlg.cxx,v 1.6 2
 
 #include "astro/GPS.h"
 #include "geometry/Vector.h"
-#include "FluxSvc/IFluxSvc.h"
-
-//#include "ntupleWriterSvc/INTupleWriterSvc.h"
-
 
 #include <cassert>
 #include <map>
@@ -24,7 +20,6 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McCoordsAlg.cxx,v 1.6 2
 class McCworker;
 
 namespace { // anonymous namespace for file-global
-    IFluxSvc* fluxSvc;
     std::string treename("MeritTuple");
     astro::GPS* gps;
 #include "Item.h"
@@ -99,13 +94,8 @@ StatusCode McCoordsAlg::initialize()
     }
     m_worker = new McCworker();
 
-    // get the GPS instance: either from FluxSvc or local, non-MC mode
-    IFluxSvc* fluxSvc(0);
-    if( service("FluxSvc", fluxSvc).isFailure() ){
-        gps = astro::GPS::instance();
-    }else{
-        gps = fluxSvc->GPSinstance();
-    }
+    // get the GPS instance
+    gps = astro::GPS::instance();
 
     m_count = 0;
 

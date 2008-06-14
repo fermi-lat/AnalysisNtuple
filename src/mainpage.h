@@ -126,8 +126,7 @@
   
  @param PtValsAlg.pointing_info_tree_name ["MeritTuple"] Sets the name of the tuple to write Pt info to
  @param PtValsAlg.PointingHistory [""]
-  name of a FT2 FITS file, or a pointing history ascii file. If not set, and FluxSvc
-  is not used, the default orbit will be used to define the pointing
+  name of a FT2 FITS file, or a pointing history ascii file. If not set, the default orbit will be used to define the pointing
 
   @param FT1Alg.EnableAberrationCorrection [false]
   if set true, the flag in GPS will be set to apply the orbital aberration correction when converting from 

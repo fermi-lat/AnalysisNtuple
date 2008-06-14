@@ -1,7 +1,7 @@
 /** @file PtValsAlg.cxx
 @brief declaration and definition of the class PtValsAlg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/PtValsAlg.cxx,v 1.6 2008/05/15 20:26:21 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/PtValsAlg.cxx,v 1.7 2008/06/12 18:46:20 burnett Exp $
 
 */
 
@@ -86,7 +86,8 @@ PtValsAlg::PtValsAlg(const std::string& name, ISvcLocator* pSvcLocator)
     // declare properties with setProperties calls
 
     declareProperty("pointing_info_tree_name",  m_root_tree="MeritTuple");
-    declareProperty("PointingHistory",   m_pointingHistory); // doublet, filename and launch date
+    // doublet, filename and launch date
+    declareProperty("PointingHistory",   m_pointingHistory); 
     declareProperty("FillNtuple",        m_fillNtuple=true);
 
 }
@@ -121,7 +122,9 @@ StatusCode PtValsAlg::initialize(){
             std::string field(m_pointingHistory.value()[1]);
             if(! field.empty() ) { // allow null string
                 facilities::Timestamp jt(m_pointingHistory.value()[1]);
-                offset = (astro::JulianDate(jt.getJulian())-astro::JulianDate::missionStart())*astro::JulianDate::secondsPerDay;
+                offset = (astro::JulianDate(jt.getJulian())
+                    - astro::JulianDate::missionStart())
+                    *astro::JulianDate::secondsPerDay;
                 astro::JulianDate jDate(astro::JulianDate(jt.getJulian()));
                 jStr = jDate.getGregorianDate();
             }
@@ -140,7 +143,8 @@ StatusCode PtValsAlg::initialize(){
             log << jStr << endreq;
         }
         if( m_horizontal){
-            log << MSG::INFO << "   Will override x-direction to be horizontal"<<endreq;
+            log << MSG::INFO 
+                << "   Will override x-direction to be horizontal"<<endreq;
         }
         gps->setPointingHistoryFile(filename, offset, m_horizontal);
     }
