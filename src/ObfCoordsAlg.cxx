@@ -1,7 +1,7 @@
 /** @file ObfCoordsAlg.cxx
 @brief Declaration and implementation of Gaudi algorithm ObfCoordsAlg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfCoordsAlg.cxx,v 1.12 2008/05/21 16:58:52 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfCoordsAlg.cxx,v 1.11 2008/04/11 04:36:59 lsrea Exp $
 */
 // Include files
 
@@ -12,6 +12,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfCoordsAlg.cxx,v 1.12
 
 #include "astro/GPS.h"
 #include "geometry/Vector.h"
+#include "FluxSvc/IFluxSvc.h"
 
 #include "ntupleWriterSvc/INTupleWriterSvc.h"
 
@@ -69,7 +70,6 @@ private:
     Item GrbZDir;
 
     //ObfCoords entries to create
-    float m_obfRa,m_obfDec,m_obfL,m_obfB;
     float m_grbRa,m_grbDec,m_grbL,m_grbB;
     //float m_obfZen,m_obfAzim;
 };
@@ -98,8 +98,14 @@ StatusCode ObfCoordsAlg::initialize()
     }
     m_worker = new ObfCworker();
 
-    // get the GPS instance: 
-    gps = astro::GPS::instance();
+    // get the GPS instance: either from FluxSvc or local, non-MC mode
+    IFluxSvc* fluxSvc(0);
+    if( service("FluxSvc", fluxSvc).isFailure() ){
+        //log << MSG::INFO << "Will use the GPS singleton to get coordinates" << endreq;
+        gps = astro::GPS::instance();
+    }else{
+        gps = fluxSvc->GPSinstance();
+    }
     return sc;
 }
 
@@ -146,30 +152,17 @@ ObfCworker::ObfCworker()
 , GrbZDir("GrbZDir")
 {
     //now create new items 
-
-    addItem( "FilterRa",  m_obfRa);
-    addItem( "FilterDec", m_obfDec);
-    addItem( "FilterL",   m_obfL);
-    addItem( "FilterB",   m_obfB);
-
     addItem( "GrbRa",     m_grbRa);
     addItem( "GrbDec",    m_grbDec);
     addItem( "GrbL",      m_grbL);
     addItem( "GrbB",      m_grbB);
-
-    //addItem( "ObfcZenithTheta",   m_obfZen);
-    //addItem( "ObfcEarthAzimuth",  m_obfAzim);
 }
 
 
 void ObfCworker::evaluate()
 {
-
-    m_obfRa = m_obfDec = m_obfL = m_obfB = 0;
     m_grbRa = m_grbDec = m_grbL = m_grbB = 0;
-    // convert to (ra, dec)
 
-    // "Best" GRB track in the Grb tuple variables
     Vector grbDir(GrbXDir, GrbYDir, GrbZDir);
     if (grbDir.mag()==0) return;
     astro::SkyDir skyGrbdir( gps->toSky(-grbDir) );
@@ -177,18 +170,6 @@ void ObfCworker::evaluate()
     m_grbDec = skyGrbdir.dec();
     m_grbL   = skyGrbdir.l();
     m_grbB   = skyGrbdir.b();
-
-    // Old school stuff first
-    Vector filterDir(GrbXDir, GrbYDir, GrbZDir);
-    if (filterDir.mag()==0) return;
-    // Filter direction points up... 
-    // toSky converts a *particle* direction
-    // into a direction on the sky, so the minus-sign is needed below (twice)!
-    astro::SkyDir skydir( gps->toSky(-filterDir) );
-    m_obfRa  = skydir.ra();
-    m_obfDec = skydir.dec();
-    m_obfL   = skydir.l();
-    m_obfB   = skydir.b();
 
     return;
 }

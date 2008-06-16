@@ -49,17 +49,6 @@ public:
 
 private:
 
-    // "Old" FilterStatus related variables
-    double m_statusHi;
-    double m_statusLo;
-    double m_separation;
-    double m_filtxdir,m_filtydir ,m_filtzdir;
-    float  m_energy;
-    double m_slopeYZ;
-    double m_slopeXZ;
-    int    m_xHits;
-    int    m_yHits;
-
     // "Best" track variables
     int    m_nGrbHitsX;
     int    m_nGrbHitsY;
@@ -75,13 +64,16 @@ private:
 
     // Filter status information
     int    m_gamStatus;
+    int    m_gamState;
     int    m_hfcStatus;
+    int    m_hfcState;
     int    m_mipStatus;
+    int    m_mipState;
     int    m_dfcStatus;
+    int    m_dfcState;
 
-    int    m_gamEnergy;
-
-    int    m_statusBytes;
+    int    m_gamStage;
+    float  m_gamEnergy;
 
     int    m_warnNoFilterStatus;
 };
@@ -103,62 +95,34 @@ ObfValsTool::ObfValsTool(const std::string& type,
 /** @page anatup_vars 
 @section obfvalstool ObfValsTool Variables
 
-Here is a list of the bits in the Gamma Filter word, as of March 2007:
-
-@verbatim
-    Name                          Bit  Explanation
-
-    DFC_V_STATUS_ACD                   0  ACD was analyzed                
-    DFC_V_STATUS_DIR                   1     DIR was decoded                 
-    DFC_V_STATUS_ATF                   2     ACD/TKR veto was analyzed       
-    DFC_V_STATUS_CAL1                  3  CAL was analyzed, phase 1       
-    DFC_V_STATUS_TKR                   4  TKR finding was done            
-    DFC_V_STATUS_ACD_TOP               5  ACD top  tile struck            
-    DFC_V_STATUS_ACD_SIDE              6  ACD side tile struck            
-    DFC_V_STATUS_ACD_SIDE_FILTER       7     ACD      filter tile struck     
-    DFC_V_STATUS_TKR_POSSIBLE          8     Possible track                  
-    DFC_V_STATUS_TKR_TRIGGER           9     Have a 3-in-a-row trigger       
-    DFC_V_STATUS_CAL_LO               10  Cal Lo Trigger                  
-    DFC_V_STATUS_CAL_HI               11  Cal Hi Trigger                  
-    DFC_V_STATUS_TKR_EQ_1             12  Exactly 1 track                 
-    DFC_V_STATUS_TKR_GE_2             13     Greater or equal 2 tracks       
-    DFC_V_STATUS_TKR_THROTTLE         14     Throttle bit set                
-
-    DFC_V_STATUS_TKR_LT_2_ELO         15  Low energy, no 2 track evidence   
-    DFC_V_STATUS_TKR_SKIRT            16  Event into the skirt region     
-    DFC_V_STATUS_TKR_EQ_0             17  No tracks                       
-    DFC_V_STATUS_TKR_ROW2             18  Track Row 2 match               
-    DFC_V_STATUS_TKR_ROW01            19  Track Row 0 or 1 match          
-    DFC_V_STATUS_TKR_TOP              20  Track Top match                 
-    DFC_V_STATUS_ZBOTTOM              21  No tracks into CAL with energy  
-    DFC_V_STATUS_EL0_ETOT_90          22  E layer 0/ETOT > .90            
-    DFC_V_STATUS_EL0_ETOT_01          23  E layer 0/ETOT < .01            
-    DFC_V_STATUS_SIDE                 24     Event has a side face veto      
-    DFC_V_STATUS_TOP                  25     Event has a top  face veto      
-    DFC_V_STATUS_SPLASH_1             26  Event has a splash veto         
-    DFC_V_STATUS_E350_FILTER_TILE     27  Event <350Mev  + filter tiles   
-    DFC_V_STATUS_E0_TILE              28  Event 0 energy + tile hit       
-    DFC_V_STATUS_SPLASH_0             29  Event has a splash veto         
-    DFC_V_STATUS_NOCALLO_FILTER_TILE  30  No CAL LO trigger + filter tile 
-    DFC_V_STATUS_VETOED               31  Any veto                        
-@endverbatim
+The bit definitions for the output status words are contained in the following files 
+located in the Glast obf external package (starting at obf/B1-0-8/PHY):
+1) Gamma Filter - EFC/GFC_status.h
+2) HIP Filter - XFC/HFC_status.h
+3) MIP Filter - XFC/MFC_status.h
+4) DGN Filter - XFC/DFC_status.h
 
 <table>
 <tr><th> Variable <th> Type <th> Description
 <tr><td>  ObfGamStatus
 <td>D<td>    The 32 bit status word output from the Gamma Filter 
+<tr><td>  ObfGamState
+<td>D<td>    The 4 bit state word summarizes veto and prescaler states 
 <tr><td>  ObfHfcStatus
 <td>D<td>    The 32 bit status word output from the Heavy Ion Filter 
+<tr><td>  ObfHfcState
+<td>D<td>    The 4 bit state word summarizes veto and prescaler states 
 <tr><td>  ObfMipStatus
 <td>D<td>    The 32 bit status word output from the Minimum Ionizing Filter 
+<tr><td>  ObfMipState
+<td>D<td>    The 4 bit state word summarizes veto and prescaler states 
 <tr><td>  ObfDfcStatus
 <td>D<td>    The 32 bit status word output from the Diagnostic Filter 
-<tr><td>  ObfStatusBytes
-<td>D<td>    A 32 bit word which packs in the "status byte" output from each filter
-<td>D<td>    Each filter contributes a 4 bit status word which describes "why" a given
-<td>D<td>    filter sent an event into the data stream. Each 4 bit field is shifted into
-<td>D<td>    a location by a factor given in the TDS Status class for that filter (see
-<td>D<td>    the code below). 
+<tr><td>  ObfDfcState
+<td>D<td>    The 4 bit state word summarizes veto and prescaler states 
+<tr><td>  ObfGamStage
+<tr>D<td>    The "stage" reached by the gamma filter (see the GFC_STAGE definition
+             in EFC/GFC_status.h)
 <tr><td>  ObfGamEnergy
 <td>D<td>    The energy in the calorimeter seen by the Gamma Filter
 <tr><td>  GrbXHits,GrbYHits
@@ -173,24 +137,6 @@ Here is a list of the bits in the Gamma Filter word, as of March 2007:
 <td>D<td>    Direction cosines of "best" track
 <tr><td>  GrbMcAngSep
 <td>D<td>    If MC run, angle to "true" incident particle of "best" track
-<tr><td>  FilterStatus_HI
-<td>D<td>    (deprecated) bits 15-31 of the filter status word (17 bits) 
-<tr><td>  FilterStatus_LO
-<td>D<td>    (deprecated) bits  0-14 of the filter status word (15 bits)
-<tr><td>  FilterAngSep   
-<td>D<td>    (deprecated) Filter status separation
-<tr><td>  FilterEnergy
-<td>F<td>    (deprecated) Energy as determined by onboard alg
-<tr><td>  Filter
-<td>I<td>    (deprecated) number of hits on best track XZ slope
-<tr><td>  FilterYhits
-<td>I<td>    (deprecated) number of hits on best track YZ slope
-<tr><td>  FilterXZslope
-<td>D<td>    (deprecated) XZ slope of the track
-<tr><td>  FilterYZslope
-<td>D<td>    (deprecated) YZ slope of the best track
-<tr><td>  Filter[X/Y/Z]Dir
-<td>D<td>    (deprecated) Direction cosines of the best track
 </table> 
 
 */    
@@ -204,25 +150,17 @@ StatusCode ObfValsTool::initialize()
 
     if( ValBase::initialize().isFailure()) return StatusCode::FAILURE;
 
-    // Deprecated "old" FilterStatus variables
-    addItem("FilterStatus_HI", &m_statusHi);
-    addItem("FilterStatus_LO", &m_statusLo );
-    addItem("FilterAngSep",    &m_separation );
-    addItem("FilterEnergy",    &m_energy );
-    addItem("FilterXhits",     &m_xHits );
-    addItem("FilterYhits",     &m_yHits );
-    addItem("FilterSlopeYZ",   &m_slopeYZ );
-    addItem("FilterSlopeXZ",   &m_slopeXZ );
-    addItem("FilterXDir",      &m_filtxdir );
-    addItem("FilterYDir",      &m_filtydir );
-    addItem("FilterZDir",      &m_filtzdir );
-
     // Status information from filters
     addItem("ObfGamStatus",    &m_gamStatus);
+    addItem("ObfGamState",     &m_gamState);
     addItem("ObfHipStatus",    &m_hfcStatus);
+    addItem("ObfHipState",     &m_hfcState);
     addItem("ObfMipStatus",    &m_mipStatus);
+    addItem("ObfMipState",     &m_mipState);
     addItem("ObfDgnStatus",    &m_dfcStatus);
-    addItem("ObfStatusBytes",  &m_statusBytes);
+    addItem("ObfDgnState",     &m_dfcState);
+
+    addItem("ObfGamStage",     &m_gamStage);
     addItem("ObfGamEnergy",    &m_gamEnergy);
 
     // "Best" track information
@@ -270,11 +208,9 @@ StatusCode ObfValsTool::calculate()
                 obfStatus->getFilterStatus(OnboardFilterTds::ObfFilterStatus::GammaFilter))
         {
             m_gamStatus    = obfResult->getStatusWord();
-            m_gamEnergy    = dynamic_cast<const OnboardFilterTds::ObfGammaStatus*>(obfResult)->getEnergy();
-            m_statusBytes |= (obfResult->getFiltersb() >> 4) << (4 * OnboardFilterTds::ObfFilterStatus::GammaFilter);
-
-            filterStatusHi = m_gamStatus >> GFC_STATUS_V_TKR_LT_2_ELO;
-            filterStatusLo = m_gamStatus && 0x7FFF;
+            m_gamState     = obfResult->getFiltersb() >> 4;
+            m_gamStage     = dynamic_cast<const OnboardFilterTds::ObfGammaStatus*>(obfResult)->getStage();
+            m_gamEnergy    = dynamic_cast<const OnboardFilterTds::ObfGammaStatus*>(obfResult)->getEnergy() / 4.;
         }
         else m_gamStatus = -1;
 
@@ -283,7 +219,7 @@ StatusCode ObfValsTool::calculate()
                 obfStatus->getFilterStatus(OnboardFilterTds::ObfFilterStatus::HIPFilter))
         {
             m_hfcStatus    = obfResult->getStatusWord();
-            m_statusBytes |= (obfResult->getFiltersb() >> 4) << (4 * OnboardFilterTds::ObfFilterStatus::HIPFilter);
+            m_hfcState     = obfResult->getFiltersb() >> 4;
         }
         else m_hfcStatus = -1;
 
@@ -292,7 +228,7 @@ StatusCode ObfValsTool::calculate()
                 obfStatus->getFilterStatus(OnboardFilterTds::ObfFilterStatus::MIPFilter))
         {
             m_mipStatus    = obfResult->getStatusWord();
-            m_statusBytes |= (obfResult->getFiltersb() >> 4) << (4 * OnboardFilterTds::ObfFilterStatus::MIPFilter);
+            m_mipState     = obfResult->getFiltersb() >> 4;
         }
         else m_mipStatus = -1;
 
@@ -301,7 +237,7 @@ StatusCode ObfValsTool::calculate()
                 obfStatus->getFilterStatus(OnboardFilterTds::ObfFilterStatus::DGNFilter))
         {
             m_dfcStatus    = obfResult ? obfResult->getStatusWord() : -1;
-            m_statusBytes |= (obfResult->getFiltersb() >> 4) << (4 * OnboardFilterTds::ObfFilterStatus::DGNFilter);
+            m_dfcState     = obfResult->getFiltersb() >> 4;
         }
         else m_dfcStatus = -1;
     }
@@ -365,19 +301,6 @@ StatusCode ObfValsTool::calculate()
             }
         }
     }
-
-    // Copy deprecated variables from new stuff
-    m_statusHi   = filterStatusHi;
-    m_statusLo   = filterStatusLo;
-    m_energy     = m_gamEnergy;
-    m_xHits      = m_nGrbHitsX;
-    m_yHits      = m_nGrbHitsY;
-    m_filtxdir   = m_grbXdir;
-    m_filtydir   = m_grbYdir;
-    m_filtzdir   = m_grbZdir;
-    m_slopeYZ    = m_grbSlpX;
-    m_slopeXZ    = m_grbSlpY;
-    m_separation = m_grbAngSep;
 
     return sc;
 }
