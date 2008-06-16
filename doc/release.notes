@@ -2,6 +2,7 @@
   @brief Package AnalysisNtuple
   @verbatim
 
+ v2r42p0 16-Jun-08   TU   Remove "FilterStatus" variables, updates for new ObfFilterStatus format
  v2r41p3 13-Jun-08   LSR  Remove last dependence on FluxSvc
  v2r41p1 13-Jun-08   LSR  Fix up McCoordsAlg
  v2r41   12-Jun-08   THB  Remove dependence on FluxSvc
