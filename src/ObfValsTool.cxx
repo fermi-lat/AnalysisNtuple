@@ -2,7 +2,7 @@
 @brief Calculates the Onboard Filter variables
 @authors
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfValsTool.cxx,v 1.13 2008/05/21 16:58:52 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfValsTool.cxx,v 1.15 2008/06/16 22:23:23 usher Exp $
 */
 
 // Include files
@@ -24,6 +24,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfValsTool.cxx,v 1.13 
 
 #include "OnboardFilterTds/ObfFilterStatus.h"
 #include "OnboardFilterTds/ObfFilterTrack.h"
+#include "LdfEvent/LsfMetaEvent.h"
 
 /*! @class ObfValsTool
 @brief calculates Obf values
@@ -65,17 +66,34 @@ private:
     // Filter status information
     int    m_gamStatus;
     int    m_gamState;
-    int    m_hfcStatus;
-    int    m_hfcState;
+    int    m_hipStatus;
+    int    m_hipState;
     int    m_mipStatus;
     int    m_mipState;
-    int    m_dfcStatus;
-    int    m_dfcState;
+    int    m_dgnStatus;
+    int    m_dgnState;
 
     int    m_gamStage;
     float  m_gamEnergy;
 
     int    m_warnNoFilterStatus;
+
+// Fsw filter info
+    int       m_fswGamStatus;
+    int       m_fswGamState;
+    int       m_fswGamPrescaleIndex;
+    int       m_fswGamPrescaleFactor;
+
+    int       m_fswHipStatus;
+    int       m_fswHipState;
+    int       m_fswMipStatus;
+    int       m_fswMipState;
+
+    int       m_fswDgnStatus;
+    int       m_fswDgnState;
+    int       m_fswDgnPrescaleIndex;
+    int       m_fswDgnPrescaleFactor;
+
 };
 
 // Static factory for instantiation of algtool objects
@@ -97,50 +115,66 @@ ObfValsTool::ObfValsTool(const std::string& type,
 
 The bit definitions for the output status words are contained in the following files 
 located in the Glast obf external package (starting at obf/B1-0-8/PHY):
-1) Gamma Filter - EFC/GFC_status.h
-2) HIP Filter - XFC/HFC_status.h
-3) MIP Filter - XFC/MFC_status.h
-4) DGN Filter - XFC/DFC_status.h
+-# Gamma Filter - EFC/GFC_status.h
+-# HIP Filter - XFC/HFC_status.h
+-# MIP Filter - XFC/MFC_status.h
+-# DGN Filter - XFC/DFC_status.h
+
+The ObfXXX and GrbXXX variables are calculated in the ground-software
+simulation of the onboard flight software.
 
 <table>
 <tr><th> Variable <th> Type <th> Description
-<tr><td>  ObfGamStatus
-<td>D<td>    The 32 bit status word output from the Gamma Filter 
-<tr><td>  ObfGamState
-<td>D<td>    The 4 bit state word summarizes veto and prescaler states 
-<tr><td>  ObfHfcStatus
-<td>D<td>    The 32 bit status word output from the Heavy Ion Filter 
-<tr><td>  ObfHfcState
-<td>D<td>    The 4 bit state word summarizes veto and prescaler states 
-<tr><td>  ObfMipStatus
-<td>D<td>    The 32 bit status word output from the Minimum Ionizing Filter 
-<tr><td>  ObfMipState
-<td>D<td>    The 4 bit state word summarizes veto and prescaler states 
-<tr><td>  ObfDfcStatus
-<td>D<td>    The 32 bit status word output from the Diagnostic Filter 
-<tr><td>  ObfDfcState
-<td>D<td>    The 4 bit state word summarizes veto and prescaler states 
+<tr><td>  ObfGamStatus, same for Hip, Mip, Dgn</td>
+<td>I<td>    The 32-bit status word output from the Gamma, Heavy-Ion, 
+             Minimum-Ionizing and Diagnostic Filters, resp, as calculated
+             by the OnboardFilter simulator. </td>
+<tr><td>  ObfGamState, same for Hip, Mip, Dgn</td>
+<td>I<td>    The 4-bit state word summarizes veto and prescaler states, as
+             calculated by the OnboardFilter simulator.
 <tr><td>  ObfGamStage
-<tr>D<td>    The "stage" reached by the gamma filter (see the GFC_STAGE definition
+<td>I<td>    The "stage" reached by the gamma filter (see the GFC_STAGE definition
              in EFC/GFC_status.h)
 <tr><td>  ObfGamEnergy
-<td>D<td>    The energy in the calorimeter seen by the Gamma Filter
-<tr><td>  GrbXHits,GrbYHits
-<td>D<td>    Number of hits in X (or Y) projection of "best" track
-<tr><td>  GrbSlpX,GrbSlpY
-<td>D<td>    Slope of "best" track in X or Y projection
-<tr><td>  GrbIntX,GrbIntY
-<td>D<td>    Intercept in X-Z or Y-Z projection of "best" track
+<td>F<td>    The energy in the calorimeter seen by the Gamma Filter
+<tr><td>  Grb[X/Y]Hits
+<td>I<td>    Number of hits in X (or Y) projection of "best" track
+<tr><td>  GrbSlp[X/Y]
+<td>F<td>    Slope of "best" track in X or Y projection
+<tr><td>  GrbInt[X/Y]
+<td>F<td>    Intercept in X-Z or Y-Z projection of "best" track
 <tr><td>  GrbZ
-<td>D<td>    Z coordinate of "best" track
-<tr><td>  GrbXDir,GrbYDir,GrbZDir
-<td>D<td>    Direction cosines of "best" track
+<td>F<td>    Z coordinate of "best" track
+<tr><td>  Grb[X/Y/Z]Dir
+<td>F<td>    Direction cosines of "best" track
 <tr><td>  GrbMcAngSep
-<td>D<td>    If MC run, angle to "true" incident particle of "best" track
+<td>F<td>    If MC run, angle to "true" incident particle of "best" track
+</table>
+
+The FswXXX variables are calculated onboard in flight software. For simulated data,
+they will be copies of the corresponding ObfXXX variables.
+
+<table>
+<tr><th> Variable <th> Type <th> Description
+<tr><td>  FswGamStatus, same for Hip, Mip, Dgn
+<td>I<td>    The 32-bit status word output from the Gamma, Heavy-Ion, 
+             Minimum-Ionizing and Diagnostic Filters, resp.
+<tr><td>  FswGamState, same for Hip, Mip, Dgn</td>
+<td>I<td>    The 4-bit state word summarizes veto and prescaler states
+<tr><td>  FswGamPrescaleIndex, same for Dgn</td>
+<td>I<td>    The prescaler which expired for this event.   
+             Remapped to the order they are applied, counting down from 33.<br>
+                33 -> input prescaler.  Event is ignored by this filter.<br>
+                32 -> output prescaler. Event is passed by this filter.<br>
+                31-0 -> "line" prescalers.  Only checked when each bit is set.<br>
+                -1 -> no prescaler expired.
+<tr><td>  FswGamPrescaleFactor, same for Dgn </td>
+<td>I<td>    The value to which the relevent prescaler counted 
+             before it expired.  ie.  the number of similar events 
+             that were tossed for each one that was kept, the "weight"
 </table> 
 
 */    
-
 
 StatusCode ObfValsTool::initialize()
 {
@@ -153,12 +187,12 @@ StatusCode ObfValsTool::initialize()
     // Status information from filters
     addItem("ObfGamStatus",    &m_gamStatus);
     addItem("ObfGamState",     &m_gamState);
-    addItem("ObfHipStatus",    &m_hfcStatus);
-    addItem("ObfHipState",     &m_hfcState);
+    addItem("ObfHipStatus",    &m_hipStatus);
+    addItem("ObfHipState",     &m_hipState);
     addItem("ObfMipStatus",    &m_mipStatus);
     addItem("ObfMipState",     &m_mipState);
-    addItem("ObfDgnStatus",    &m_dfcStatus);
-    addItem("ObfDgnState",     &m_dfcState);
+    addItem("ObfDgnStatus",    &m_dgnStatus);
+    addItem("ObfDgnState",     &m_dgnState);
 
     addItem("ObfGamStage",     &m_gamStage);
     addItem("ObfGamEnergy",    &m_gamEnergy);
@@ -175,6 +209,23 @@ StatusCode ObfValsTool::initialize()
     addItem("GrbYDir",         &m_grbYdir);
     addItem("GrbZDir",         &m_grbZdir);
     addItem("GrbMcAngSep",     &m_grbAngSep);
+
+    addItem("FswGamStatus",         &m_fswGamStatus);
+    addItem("FswGamState",          &m_fswGamState);
+    addItem("FswGamPrescaleIndex",  &m_fswGamPrescaleIndex);
+    addItem("FswGamPrescaleFactor", &m_fswGamPrescaleFactor);
+
+    addItem("FswHipStatus",    &m_fswHipStatus);
+    addItem("FswHipState",     &m_fswHipState);
+    addItem("FswMipStatus",    &m_fswMipStatus);
+    addItem("FswMipState",     &m_fswMipState);
+
+
+    addItem("FswDgnStatus",         &m_fswDgnStatus);
+    addItem("FswDgnState",          &m_fswDgnState);
+    addItem("FswDgnPrescaleIndex",  &m_fswDgnPrescaleIndex);
+    addItem("FswDgnPrescaleFactor", &m_fswDgnPrescaleFactor);
+
 
     zeroVals();
 
@@ -218,10 +269,10 @@ StatusCode ObfValsTool::calculate()
         if (obfResult   = 
                 obfStatus->getFilterStatus(OnboardFilterTds::ObfFilterStatus::HIPFilter))
         {
-            m_hfcStatus    = obfResult->getStatusWord();
-            m_hfcState     = obfResult->getFiltersb() >> 4;
+            m_hipStatus    = obfResult->getStatusWord();
+            m_hipState     = obfResult->getFiltersb() >> 4;
         }
-        else m_hfcStatus = -1;
+        else m_hipStatus = -1;
 
         // MIP Filter results
         if (obfResult   = 
@@ -236,10 +287,10 @@ StatusCode ObfValsTool::calculate()
         if (obfResult   = 
                 obfStatus->getFilterStatus(OnboardFilterTds::ObfFilterStatus::DGNFilter))
         {
-            m_dfcStatus    = obfResult ? obfResult->getStatusWord() : -1;
-            m_dfcState     = obfResult->getFiltersb() >> 4;
+            m_dgnStatus    = obfResult ? obfResult->getStatusWord() : -1;
+            m_dgnState     = obfResult->getFiltersb() >> 4;
         }
-        else m_dfcStatus = -1;
+        else m_dgnStatus = -1;
     }
     else 
     {
@@ -251,6 +302,60 @@ StatusCode ObfValsTool::calculate()
                 log << " -- Further WARNINGs on missing FilterStatus are suppressed"; }
             log  << endreq;
         }
+    }
+    // Next, try to find the Fsw versions of the above
+
+    m_fswGamState = enums::Lsf::INVALID;
+    m_fswGamPrescaleIndex = LSF_INVALID_UINT;
+    m_fswGamPrescaleFactor = LSF_INVALID_UINT;
+
+    m_fswDgnState = enums::Lsf::INVALID;
+    m_fswDgnPrescaleIndex = LSF_INVALID_UINT;
+    m_fswDgnPrescaleFactor = LSF_INVALID_UINT;
+
+    m_fswHipState = enums::Lsf::INVALID;
+
+    m_fswMipState = enums::Lsf::INVALID;
+
+    SmartDataPtr<LsfEvent::MetaEvent>  metaEventTds(m_pEventSvc, "/Event/MetaEvent");
+    if (metaEventTds) {
+        const lsfData::GammaHandler* gamma = metaEventTds->gammaFilter();
+        if (gamma) {
+            // rsd is Result Summary Data 
+            m_fswGamStatus = gamma->rsd()->status();  
+            m_fswGamState = gamma->state();  
+            m_fswGamPrescaleFactor = gamma->prescaleFactor();    
+            m_fswGamPrescaleIndex  = gamma->lpaHandler().prescaleIndex(); 
+        }
+        const lsfData::DgnHandler* dgn = metaEventTds->dgnFilter();
+        if (dgn) {
+            // rsd is Result Summary Data 
+            m_fswDgnStatus = dgn->rsd()->status();  
+            m_fswDgnState = dgn->state();  
+            m_fswDgnPrescaleFactor = dgn->prescaleFactor();  
+            m_fswDgnPrescaleIndex  = dgn->lpaHandler().prescaleIndex(); 
+        }
+
+        const lsfData::HipHandler* hip = metaEventTds->hipFilter();       if (hip) {
+            // rsd is Result Summary Data 
+            m_fswHipStatus = hip->rsd()->status();  
+            m_fswHipState = hip->state();  
+            //m_fswHipPrescaleFactor = hip->prescaleFactor();  
+            //m_fswHipPrescaleIndex  = hip->lpaHandler().prescaleIndex(); 
+        }
+
+        const lsfData::MipHandler* mip = metaEventTds->mipFilter();
+        if (mip) {
+            // rsd is Result Summary Data 
+            m_fswMipStatus = mip->rsd()->status();  
+            m_fswMipState = mip->state();  
+            //m_fswMipPrescaleFactor = mip->prescaleFactor();  
+            //m_fswMipPrescaleIndex  = mip->lpaHandler().prescaleIndex(); 
+        }
+
+
+    } else {
+        log << MSG::DEBUG << "No MetaEvent" << endreq;
     }
 
     // Get the summary tracking information on the "best" track

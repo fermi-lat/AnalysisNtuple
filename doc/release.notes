@@ -1,6 +1,8 @@
 /** @file release.notes
   @brief Package AnalysisNtuple
   @verbatim
+
+ v2r43   18-Jun-08   LSR  new Fsw variables
  v2r42p2 17-Jun-08   MLK  Changed type for EvtLiveTime from float to double
  v2r42p1 16-Jun-08   TU   oops, reintroduced FluxSvc connection... fixing
  v2r42p0 16-Jun-08   TU   Remove "FilterStatus" variables, updates for new ObfFilterStatus format
