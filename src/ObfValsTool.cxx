@@ -2,7 +2,7 @@
 @brief Calculates the Onboard Filter variables
 @authors
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfValsTool.cxx,v 1.15 2008/06/16 22:23:23 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfValsTool.cxx,v 1.16 2008/06/18 22:05:10 lsrea Exp $
 */
 
 // Include files
@@ -261,7 +261,7 @@ StatusCode ObfValsTool::calculate()
             m_gamStatus    = obfResult->getStatusWord();
             m_gamState     = obfResult->getFiltersb() >> 4;
             m_gamStage     = dynamic_cast<const OnboardFilterTds::ObfGammaStatus*>(obfResult)->getStage();
-            m_gamEnergy    = dynamic_cast<const OnboardFilterTds::ObfGammaStatus*>(obfResult)->getEnergy() / 4.;
+            m_gamEnergy    = dynamic_cast<const OnboardFilterTds::ObfGammaStatus*>(obfResult)->getEnergy();
         }
         else m_gamStatus = -1;
 
