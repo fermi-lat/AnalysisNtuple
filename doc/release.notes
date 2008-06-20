@@ -2,6 +2,8 @@
   @brief Package AnalysisNtule
   @verbatim
 
+ v2r30p3gr10 19-Jun-08 HMK Grab Martin's update for EvtLiveTime and Toby's
+                       fix to pointingInfo
  v2r30p3gr9 16-May-08  HMK Patch my attempt to merge changes from HEAD
  v2r30p3gr8 15-May-08  TU Change PtValsAlg to use FluxSvc's FluxPointingInfoTool
  v2r30p3gr7 10-Apr-08  LSR Fix up calculation of Mc zenith coordinates
