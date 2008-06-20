@@ -2,7 +2,7 @@
 @brief Calculates the Onboard Filter variables
 @authors
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfValsTool.cxx,v 1.16 2008/06/18 22:05:10 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfValsTool.cxx,v 1.17 2008/06/19 18:38:30 usher Exp $
 */
 
 // Include files
@@ -322,7 +322,7 @@ StatusCode ObfValsTool::calculate()
         const lsfData::GammaHandler* gamma = metaEventTds->gammaFilter();
         if (gamma) {
             // rsd is Result Summary Data 
-            m_fswGamStatus = gamma->rsd()->status();  
+            if(gamma->rsd()) m_fswGamStatus = gamma->rsd()->status();  
             m_fswGamState = gamma->state();  
             m_fswGamPrescaleFactor = gamma->prescaleFactor();    
             m_fswGamPrescaleIndex  = gamma->lpaHandler().prescaleIndex(); 
@@ -330,7 +330,7 @@ StatusCode ObfValsTool::calculate()
         const lsfData::DgnHandler* dgn = metaEventTds->dgnFilter();
         if (dgn) {
             // rsd is Result Summary Data 
-            m_fswDgnStatus = dgn->rsd()->status();  
+            if(dgn->rsd()) m_fswDgnStatus = dgn->rsd()->status();  
             m_fswDgnState = dgn->state();  
             m_fswDgnPrescaleFactor = dgn->prescaleFactor();  
             m_fswDgnPrescaleIndex  = dgn->lpaHandler().prescaleIndex(); 
@@ -338,7 +338,7 @@ StatusCode ObfValsTool::calculate()
 
         const lsfData::HipHandler* hip = metaEventTds->hipFilter();       if (hip) {
             // rsd is Result Summary Data 
-            m_fswHipStatus = hip->rsd()->status();  
+            if(hip->rsd()) m_fswHipStatus = hip->rsd()->status();  
             m_fswHipState = hip->state();  
             //m_fswHipPrescaleFactor = hip->prescaleFactor();  
             //m_fswHipPrescaleIndex  = hip->lpaHandler().prescaleIndex(); 
@@ -347,7 +347,7 @@ StatusCode ObfValsTool::calculate()
         const lsfData::MipHandler* mip = metaEventTds->mipFilter();
         if (mip) {
             // rsd is Result Summary Data 
-            m_fswMipStatus = mip->rsd()->status();  
+            if(mip->rsd()) m_fswMipStatus = mip->rsd()->status();  
             m_fswMipState = mip->state();  
             //m_fswMipPrescaleFactor = mip->prescaleFactor();  
             //m_fswMipPrescaleIndex  = mip->lpaHandler().prescaleIndex(); 
