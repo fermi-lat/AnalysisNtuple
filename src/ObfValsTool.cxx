@@ -2,7 +2,7 @@
 @brief Calculates the Onboard Filter variables
 @authors
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfValsTool.cxx,v 1.17 2008/06/19 18:38:30 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfValsTool.cxx,v 1.18 2008/06/20 22:05:28 lsrea Exp $
 */
 
 // Include files
@@ -248,6 +248,11 @@ StatusCode ObfValsTool::calculate()
     SmartDataPtr<OnboardFilterTds::ObfFilterStatus> 
         obfStatus(m_pEventSvc, "/Event/Filter/ObfFilterStatus");
 
+    m_gamState = enums::Lsf::INVALID;
+    m_dgnState = enums::Lsf::INVALID;
+    m_hipState = enums::Lsf::INVALID;
+    m_mipState = enums::Lsf::INVALID;
+
     // If it exists then fill filter status info
     if (obfStatus)
     {
@@ -305,16 +310,15 @@ StatusCode ObfValsTool::calculate()
     }
     // Next, try to find the Fsw versions of the above
 
-    m_fswGamState = enums::Lsf::INVALID;
     m_fswGamPrescaleIndex = LSF_INVALID_UINT;
     m_fswGamPrescaleFactor = LSF_INVALID_UINT;
 
-    m_fswDgnState = enums::Lsf::INVALID;
     m_fswDgnPrescaleIndex = LSF_INVALID_UINT;
     m_fswDgnPrescaleFactor = LSF_INVALID_UINT;
 
+    m_fswGamState = enums::Lsf::INVALID;
+    m_fswDgnState = enums::Lsf::INVALID;
     m_fswHipState = enums::Lsf::INVALID;
-
     m_fswMipState = enums::Lsf::INVALID;
 
     SmartDataPtr<LsfEvent::MetaEvent>  metaEventTds(m_pEventSvc, "/Event/MetaEvent");

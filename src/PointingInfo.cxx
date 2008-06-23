@@ -2,7 +2,7 @@
 @brief declaration and definition of the class PointingInfo
 
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/PointingInfo.cxx,v 1.2 2008/02/27 20:11:50 burnett Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/PointingInfo.cxx,v 1.3 2008/03/08 18:23:44 lsrea Exp $
 
 */
 class MsgStream;
@@ -60,7 +60,7 @@ void PointingInfo::execute( const astro::GPS& gps)
 
 <table>
 <tr><th> Variable <th>Type<th> Description
-<tr><td> PtTime       <td>F<td> (s) Current time, same as the elapsed time
+<tr><td> PtTime       <td>D<td> (s) Current time, same as the elapsed time
 <tr><td> PtLat,PtLon  <td>F<td> (deg) lattitude and longitude
 <tr><td> PtAlt        <td>F<td> (km) altitude
 <tr><td> PtMagLat     <td>F<td> magnetic latitude

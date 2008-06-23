@@ -3,7 +3,7 @@
 @brief Calculates the "Event" analysis variables from the other ntuple variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.34 2008/02/28 21:42:51 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.35 2008/06/17 22:11:05 kocian Exp $
 */
 
 #include "ValBase.h"
@@ -137,7 +137,10 @@ NOTE
 <td>UI<td>   Sequence number of event in the run (as generated) NEW: replaces Event_ID in the merit ntuple 
 <tr><td> EvtElapsedTime 
 <td>D<td>   Elapsed time in seconds since t0 (for DC1: 18-July-2005, 
-            for the future: mission start 1-Jan-2001) 
+            for the future: mission start 1-Jan-2001)
+<tr><td> FT1Livetime 
+<td>D<td>  (s) Cumulative live time, from start of run, or mission
+
 <tr><td> EvtEnergyCorr 
 <td>F<td>   Event energy formed by adding the corrected tracker energy 
             (TkrEnergyCorr) to the layer-by-layer corrected cal. energy CalEnergyCorr. 
