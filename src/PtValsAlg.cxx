@@ -1,7 +1,7 @@
 /** @file PtValsAlg.cxx
 @brief declaration and definition of the class PtValsAlg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/PtValsAlg.cxx,v 1.8 2008/06/14 04:11:05 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/PtValsAlg.cxx,v 1.9 2008/06/23 04:44:42 lsrea Exp $
 
 */
 
@@ -104,7 +104,11 @@ StatusCode PtValsAlg::initialize(){
         log << MSG::ERROR << " RootTupleSvc is not available" << endreq;
         m_rootTupleSvc=0;
         sc = StatusCode::FAILURE;
+    } else if( !m_root_tree.value().empty() ) {   
+     
+          if(m_fillNtuple) m_pointingInfo.setPtTuple(m_rootTupleSvc, m_root_tree.value()); 
     }
+
 
     // get the GPS instance: 
 
