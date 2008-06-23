@@ -2,6 +2,7 @@
   @brief Package AnalysisNtuple
   @verbatim
 
+ v2r43p3 20-Jun-08   LSR  Make FT1Livetime double, like EvtLivetime
  v2r43p2 20-Jun-08   LSR  Protect against null pointers
  v2r43p1 19-Jun-08   TU   Small patch to energy returned from ObfGamStatus
  v2r43   18-Jun-08   LSR  new Fsw variables
