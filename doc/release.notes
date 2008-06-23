@@ -2,6 +2,8 @@
   @brief Package AnalysisNtule
   @verbatim
 
+ v2r30p3gr11 22-Jun-08 HMK Pick up patches from main trunk for setting Ft2
+             livetime to double, and PtValsAlg's m_pointingInfo initialized
  v2r30p3gr10 19-Jun-08 HMK Grab Martin's update for EvtLiveTime and Toby's
                        fix to pointingInfo
  v2r30p3gr9 16-May-08  HMK Patch my attempt to merge changes from HEAD

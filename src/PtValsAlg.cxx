@@ -1,7 +1,7 @@
 /** @file PtValsAlg.cxx
 @brief declaration and definition of the class PtValsAlg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/PtValsAlg.cxx,v 1.8 2008/06/14 04:11:05 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/PtValsAlg.cxx,v 1.2.54.5 2008/06/20 04:20:08 heather Exp $
 
 */
 
@@ -59,7 +59,7 @@ public:
 
 
 private: 
-    PointingInfo* m_pointingInfo;
+    PointingInfo m_pointingInfo;
 
     StringProperty m_root_tree;
     StringArrayProperty m_pointingHistory;///< history file name and launch date
@@ -181,7 +181,7 @@ StatusCode PtValsAlg::execute()
     gps->time(etime);
 
     // and create the tuple
-    if (m_fillNtuple) m_pointingInfo->execute( *gps );
+    if (m_fillNtuple) m_pointingInfo.execute( *gps );
     
     return StatusCode::SUCCESS;
 }

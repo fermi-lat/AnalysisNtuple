@@ -1,7 +1,7 @@
 /** @file FT1Alg.cxx
 @brief Declaration and implementation of Gaudi algorithm FT1Alg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.6.54.2 2008/04/01 22:53:03 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.6.54.3 2008/04/11 04:12:25 lsrea Exp $
 */
 // Include files
 
@@ -90,7 +90,8 @@ public:
     unsigned int m_ft1eventid;
     float m_ft1energy;
     float m_ft1theta,m_ft1phi,m_ft1ra,m_ft1dec,m_ft1l,m_ft1b;
-    float m_ft1zen,m_ft1azim,m_ft1livetime;
+    float m_ft1zen,m_ft1azim;
+    double m_ft1livetime;
     float m_ft1convpointx,m_ft1convpointy,m_ft1convpointz,m_ft1convlayer;
 };
 
