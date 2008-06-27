@@ -2,7 +2,7 @@
 @brief Calculates the Onboard Filter variables
 @authors
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfValsTool.cxx,v 1.18 2008/06/20 22:05:28 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfValsTool.cxx,v 1.19 2008/06/23 19:58:27 lsrea Exp $
 */
 
 // Include files
@@ -79,20 +79,22 @@ private:
     int    m_warnNoFilterStatus;
 
 // Fsw filter info
-    int       m_fswGamStatus;
-    int       m_fswGamState;
-    int       m_fswGamPrescaleIndex;
-    int       m_fswGamPrescaleFactor;
+    int    m_fswGamStatus;
+    int    m_fswGamState;
+    int    m_fswGamPrescaleIndex;
+    int    m_fswGamPrescaleFactor;
+    float  m_fswGamEnergy;
+    int    m_fswGamStage;
 
-    int       m_fswHipStatus;
-    int       m_fswHipState;
-    int       m_fswMipStatus;
-    int       m_fswMipState;
+    int    m_fswHipStatus;
+    int    m_fswHipState;
+    int    m_fswMipStatus;
+    int    m_fswMipState;
 
-    int       m_fswDgnStatus;
-    int       m_fswDgnState;
-    int       m_fswDgnPrescaleIndex;
-    int       m_fswDgnPrescaleFactor;
+    int    m_fswDgnStatus;
+    int    m_fswDgnState;
+    int    m_fswDgnPrescaleIndex;
+    int    m_fswDgnPrescaleFactor;
 
 };
 
@@ -172,6 +174,10 @@ they will be copies of the corresponding ObfXXX variables.
 <td>I<td>    The value to which the relevent prescaler counted 
              before it expired.  ie.  the number of similar events 
              that were tossed for each one that was kept, the "weight"
+<tr><td>  FswGamEnergy</td>
+<td>F<td>    See ObfGamEnergy
+<tr><td>  FswGamStage</td>
+<td>I<td>    See ObfGamStage
 </table> 
 
 */    
@@ -187,15 +193,18 @@ StatusCode ObfValsTool::initialize()
     // Status information from filters
     addItem("ObfGamStatus",    &m_gamStatus);
     addItem("ObfGamState",     &m_gamState);
+    addItem("ObfGamEnergy",    &m_gamEnergy);
+    addItem("ObfGamStage",     &m_gamStage);
+
     addItem("ObfHipStatus",    &m_hipStatus);
     addItem("ObfHipState",     &m_hipState);
+
     addItem("ObfMipStatus",    &m_mipStatus);
     addItem("ObfMipState",     &m_mipState);
+
     addItem("ObfDgnStatus",    &m_dgnStatus);
     addItem("ObfDgnState",     &m_dgnState);
 
-    addItem("ObfGamStage",     &m_gamStage);
-    addItem("ObfGamEnergy",    &m_gamEnergy);
 
     // "Best" track information
     addItem("GrbXHits",        &m_nGrbHitsX);
@@ -212,6 +221,8 @@ StatusCode ObfValsTool::initialize()
 
     addItem("FswGamStatus",         &m_fswGamStatus);
     addItem("FswGamState",          &m_fswGamState);
+    addItem("FswGamEnergy",         &m_fswGamEnergy);
+    addItem("FswGamStage",          &m_fswGamStage);
     addItem("FswGamPrescaleIndex",  &m_fswGamPrescaleIndex);
     addItem("FswGamPrescaleFactor", &m_fswGamPrescaleFactor);
 
@@ -219,7 +230,6 @@ StatusCode ObfValsTool::initialize()
     addItem("FswHipState",     &m_fswHipState);
     addItem("FswMipStatus",    &m_fswMipStatus);
     addItem("FswMipState",     &m_fswMipState);
-
 
     addItem("FswDgnStatus",         &m_fswDgnStatus);
     addItem("FswDgnState",          &m_fswDgnState);
@@ -329,7 +339,9 @@ StatusCode ObfValsTool::calculate()
             if(gamma->rsd()) m_fswGamStatus = gamma->rsd()->status();  
             m_fswGamState = gamma->state();  
             m_fswGamPrescaleFactor = gamma->prescaleFactor();    
-            m_fswGamPrescaleIndex  = gamma->lpaHandler().prescaleIndex(); 
+            m_fswGamPrescaleIndex  = gamma->lpaHandler().prescaleIndex();
+            m_fswGamEnergy         = static_cast<float>(gamma->rsd()->energyInLeus())/4.0;
+            m_fswGamStage          = gamma->rsd()->stage();
         }
         const lsfData::DgnHandler* dgn = metaEventTds->dgnFilter();
         if (dgn) {
