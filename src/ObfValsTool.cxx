@@ -2,7 +2,7 @@
 @brief Calculates the Onboard Filter variables
 @authors
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfValsTool.cxx,v 1.19 2008/06/23 19:58:27 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfValsTool.cxx,v 1.20 2008/06/27 22:25:31 lsrea Exp $
 */
 
 // Include files
@@ -191,33 +191,32 @@ StatusCode ObfValsTool::initialize()
     if( ValBase::initialize().isFailure()) return StatusCode::FAILURE;
 
     // Status information from filters
-    addItem("ObfGamStatus",    &m_gamStatus);
-    addItem("ObfGamState",     &m_gamState);
-    addItem("ObfGamEnergy",    &m_gamEnergy);
-    addItem("ObfGamStage",     &m_gamStage);
+    addItem("ObfGamStatus",         &m_gamStatus);
+    addItem("ObfGamState",          &m_gamState);
+    addItem("ObfGamStage",          &m_gamStage);
+    addItem("ObfGamEnergy",         &m_gamEnergy);
 
-    addItem("ObfHipStatus",    &m_hipStatus);
-    addItem("ObfHipState",     &m_hipState);
+    addItem("ObfHipStatus",         &m_hipStatus);
+    addItem("ObfHipState",          &m_hipState);
 
-    addItem("ObfMipStatus",    &m_mipStatus);
-    addItem("ObfMipState",     &m_mipState);
+    addItem("ObfMipStatus",         &m_mipStatus);
+    addItem("ObfMipState",          &m_mipState);
 
-    addItem("ObfDgnStatus",    &m_dgnStatus);
-    addItem("ObfDgnState",     &m_dgnState);
-
+    addItem("ObfDgnStatus",         &m_dgnStatus);
+    addItem("ObfDgnState",          &m_dgnState);
 
     // "Best" track information
-    addItem("GrbXHits",        &m_nGrbHitsX);
-    addItem("GrbYHits",        &m_nGrbHitsY);
-    addItem("GrbSlpX",         &m_grbSlpX);
-    addItem("GrbSlpY",         &m_grbSlpY);
-    addItem("GrbIntX",         &m_grbIntX);
-    addItem("GrbIntY",         &m_grbIntY);
-    addItem("GrbZ",            &m_grbZ);
-    addItem("GrbXDir",         &m_grbXdir);
-    addItem("GrbYDir",         &m_grbYdir);
-    addItem("GrbZDir",         &m_grbZdir);
-    addItem("GrbMcAngSep",     &m_grbAngSep);
+    addItem("GrbXHits",             &m_nGrbHitsX);
+    addItem("GrbYHits",             &m_nGrbHitsY);
+    addItem("GrbSlpX",              &m_grbSlpX);
+    addItem("GrbSlpY",              &m_grbSlpY);
+    addItem("GrbIntX",              &m_grbIntX);
+    addItem("GrbIntY",              &m_grbIntY);
+    addItem("GrbZ",                 &m_grbZ);
+    addItem("GrbXDir",              &m_grbXdir);
+    addItem("GrbYDir",              &m_grbYdir);
+    addItem("GrbZDir",              &m_grbZdir);
+    addItem("GrbMcAngSep",          &m_grbAngSep);
 
     addItem("FswGamStatus",         &m_fswGamStatus);
     addItem("FswGamState",          &m_fswGamState);
@@ -226,10 +225,10 @@ StatusCode ObfValsTool::initialize()
     addItem("FswGamPrescaleIndex",  &m_fswGamPrescaleIndex);
     addItem("FswGamPrescaleFactor", &m_fswGamPrescaleFactor);
 
-    addItem("FswHipStatus",    &m_fswHipStatus);
-    addItem("FswHipState",     &m_fswHipState);
-    addItem("FswMipStatus",    &m_fswMipStatus);
-    addItem("FswMipState",     &m_fswMipState);
+    addItem("FswHipStatus",         &m_fswHipStatus);
+    addItem("FswHipState",          &m_fswHipState);
+    addItem("FswMipStatus",         &m_fswMipStatus);
+    addItem("FswMipState",          &m_fswMipState);
 
     addItem("FswDgnStatus",         &m_fswDgnStatus);
     addItem("FswDgnState",          &m_fswDgnState);
@@ -274,9 +273,9 @@ StatusCode ObfValsTool::calculate()
                 obfStatus->getFilterStatus(OnboardFilterTds::ObfFilterStatus::GammaFilter))
         {
             m_gamStatus    = obfResult->getStatusWord();
-            m_gamState     = obfResult->getFiltersb() >> 4;
+            m_gamState     = obfResult->getState();
             m_gamStage     = dynamic_cast<const OnboardFilterTds::ObfGammaStatus*>(obfResult)->getStage();
-            m_gamEnergy    = dynamic_cast<const OnboardFilterTds::ObfGammaStatus*>(obfResult)->getEnergy();
+            m_gamEnergy    = dynamic_cast<const OnboardFilterTds::ObfGammaStatus*>(obfResult)->getEnergyInLeus();
         }
         else m_gamStatus = -1;
 
@@ -285,7 +284,7 @@ StatusCode ObfValsTool::calculate()
                 obfStatus->getFilterStatus(OnboardFilterTds::ObfFilterStatus::HIPFilter))
         {
             m_hipStatus    = obfResult->getStatusWord();
-            m_hipState     = obfResult->getFiltersb() >> 4;
+            m_hipState     = obfResult->getState();
         }
         else m_hipStatus = -1;
 
@@ -294,7 +293,7 @@ StatusCode ObfValsTool::calculate()
                 obfStatus->getFilterStatus(OnboardFilterTds::ObfFilterStatus::MIPFilter))
         {
             m_mipStatus    = obfResult->getStatusWord();
-            m_mipState     = obfResult->getFiltersb() >> 4;
+            m_mipState     = obfResult->getState();
         }
         else m_mipStatus = -1;
 
@@ -303,7 +302,7 @@ StatusCode ObfValsTool::calculate()
                 obfStatus->getFilterStatus(OnboardFilterTds::ObfFilterStatus::DGNFilter))
         {
             m_dgnStatus    = obfResult ? obfResult->getStatusWord() : -1;
-            m_dgnState     = obfResult->getFiltersb() >> 4;
+            m_dgnState     = obfResult->getState();
         }
         else m_dgnStatus = -1;
     }
