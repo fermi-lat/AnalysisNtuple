@@ -2,6 +2,8 @@
   @brief Package AnalysisNtuple
   @verbatim
 
+ v2r45   14-Jul-08   LSR  New def for ObfGamState bits
+                          EvtEventId now unsigned long long
  v2r44   27-Jun-08   LSR  New vars FswGamEnergy and FswGamStage
  v2r43p6 23-Jun-08   LSR  Preset the ObfXXXState variables to -1
  v2r43p5 23-Jun-08   HMK  Patch writing Pt vars to ntuple

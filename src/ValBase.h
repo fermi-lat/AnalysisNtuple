@@ -2,7 +2,7 @@
 @brief header file for ValBase.cxx
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.h,v 1.35 2008/02/28 21:42:51 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.h,v 1.36 2008/04/21 19:31:24 lsrea Exp $
 */
 
 #ifndef ValBase_h
@@ -27,7 +27,10 @@ class IDataProviderSvc;
 
 */
 namespace {
-    enum valType {DOUBLE, FLOAT, INT, UINT, STRING};
+
+// LSR 14-Jul-08 code for ntuple types
+
+    enum valType {DOUBLE, FLOAT, INT, UINT, ULONG64, STRING};
     class TypedPointer 
     {
     public:  
@@ -39,8 +42,14 @@ namespace {
         valType getType()       { return    m_type; }
         void* getPointer()      { return    m_pointer; }
         int getDim()            { return    m_dim; }
+
+// LSR 14-Jul-08 code for ntuple types
+
         void setVal(unsigned int val)   { 
             *(reinterpret_cast<unsigned int*>(getPointer())) = val; 
+        }
+        void setVal(unsigned long long val)   { 
+            *(reinterpret_cast<unsigned long long*>(getPointer())) = val; 
         }
         void setVal(int val)    { *(reinterpret_cast<int*>(getPointer())) = val; }
         void setVal(float val)  { *(reinterpret_cast<float*>(getPointer())) = val; }
@@ -68,24 +77,33 @@ public:
     ~ValBase(); 
     /// clear map values
     virtual void zeroVals();
+
+// LSR 14-Jul-08 code for ntuple types
     /// add an item to the map
     virtual void addItem(std::string varName, double* pValue);
     virtual void addItem(std::string varName, float* pValue);
     virtual void addItem(std::string varName, int* pValue);
     virtual void addItem(std::string varName, unsigned int* pValue);
+    virtual void addItem(std::string varName, unsigned long long* pValue);
     virtual void addItem(std::string varName, char* pValue);
     virtual StatusCode doCalcIfNotDone();
-    /// get a particular value, using ntuple name default forces calculation
+ 
+// LSR 14-Jul-08 code for ntuple types
+   /// get a particular value, using ntuple name default forces calculation
     virtual StatusCode getVal(std::string varName, double& value, int check = CALC);
     virtual StatusCode getVal(std::string varName, float& value, int check = CALC);
     virtual StatusCode getVal(std::string varName, int& value, int check = CALC);
     virtual StatusCode getVal(std::string varName, unsigned int& value, int check = CALC);
+    virtual StatusCode getVal(std::string varName, unsigned long long& value, int check = CALC);
     virtual StatusCode getVal(std::string varName, std::string& value, int check = CALC);
     /// get a particular value, using ntuple name, with calc checking (called by AnaTup)
+ 
+// LSR 14-Jul-08 code for ntuple types
     virtual StatusCode getValCheck(std::string varName, double& value);
     virtual StatusCode getValCheck(std::string varName, float& value);
     virtual StatusCode getValCheck(std::string varName, int& value);
     virtual StatusCode getValCheck(std::string varName, unsigned int& value);
+    virtual StatusCode getValCheck(std::string varName, unsigned long long& value);
     virtual StatusCode getValCheck(std::string varName, std::string& value);
 
     virtual bool getArrayArg(std::string varName, std::string& baseName,

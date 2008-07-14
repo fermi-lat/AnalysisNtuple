@@ -23,8 +23,11 @@ INTupleWriterSvc* rootTupleSvc;
             return m_isFloat? *(float*)m_pvalue : *(double*)m_pvalue;
         }
 
+// LSR 14-Jul-08 code for ntuple types
+
         static std::string rootType(char code){
             if( code=='i') return "UInt_t";
+            if( code=='l') return "ULong64_t";
             if( code=='I') return "Int_t";
             if( code=='F') return "Float_t";
             if( code=='D') return "Double_t";

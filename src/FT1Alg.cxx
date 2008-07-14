@@ -1,7 +1,7 @@
 /** @file FT1Alg.cxx
 @brief Declaration and implementation of Gaudi algorithm FT1Alg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.11 2008/06/23 04:02:56 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.12 2008/06/23 19:58:27 lsrea Exp $
 */
 // Include files
 
@@ -68,7 +68,9 @@ public:
 
     void evaluate();
     // tuple items expect to find
-    TypedItem<unsigned int, 'i'> EvtRun, EvtEventId;
+// LSR 14-Jul-08 code for ntuple types; potential changes here!
+    TypedItem<unsigned int, 'i'> EvtRun; 
+    TypedItem<unsigned long long , 'l'> EvtEventId;
 
     // these all float or double
     Item EvtLiveTime;

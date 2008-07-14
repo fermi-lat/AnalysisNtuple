@@ -2,7 +2,7 @@
 @brief implements all the methods of the XxxValsTools
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.cxx,v 1.34 2008/02/28 21:42:51 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.cxx,v 1.35 2008/04/21 19:31:24 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -82,6 +82,8 @@ void ValBase::zeroVals()
         void* vPtr = ptr->getPointer();
         valType type = ptr->getType();
         int dim = ptr->getDim();
+ 
+// LSR 14-Jul-08 code for ntuple types
 
         int i;
         for (i=0; i<dim; ++i) {
@@ -98,6 +100,10 @@ void ValBase::zeroVals()
                 break;
             case UINT:
                 *(reinterpret_cast<unsigned int*>(vPtr)+i) = 0;
+                //std::cout << "After zero (I): " << *(reinterpret_cast<int*>(vPtr)) << std::endl;
+                break;
+            case ULONG64:
+                *(reinterpret_cast<unsigned long long*>(vPtr)+i) = 0;
                 //std::cout << "After zero (I): " << *(reinterpret_cast<int*>(vPtr)) << std::endl;
                 break;
             case STRING:
@@ -154,6 +160,9 @@ bool ValBase::getArrayArg(std::string varName, std::string& baseName, int& arg)
     }
 }
 
+
+// LSR 14-Jul-08 code for ntuple types
+
 void ValBase::addItem(std::string varName, double* pValue)
 {
     std::string baseName;
@@ -192,6 +201,17 @@ void ValBase::addItem(std::string varName, unsigned int* pValue)
     int dim;
     /*bool hasArg =*/ getArrayArg(varName, baseName, dim);
     TypedPointer* ptr = new TypedPointer(UINT, (void*) pValue, dim);
+    valPair* pair = new valPair(baseName, ptr);
+
+    m_ntupleMap.push_back(pair);
+}
+
+void ValBase::addItem(std::string varName, unsigned long long* pValue)
+{
+    std::string baseName;
+    int dim;
+    /*bool hasArg =*/ getArrayArg(varName, baseName, dim);
+    TypedPointer* ptr = new TypedPointer(ULONG64, (void*) pValue, dim);
     valPair* pair = new valPair(baseName, ptr);
 
     m_ntupleMap.push_back(pair);
@@ -274,7 +294,9 @@ StatusCode ValBase::browse(MsgStream log, std::string varName0)
 
         int i;
         if (doAll && dim>1) log << "(";
-        
+
+// LSR 14-Jul-08 code for ntuple types  
+      
         for (i=start; i<=end; ++i) {
 
             switch (type) {
@@ -289,6 +311,9 @@ StatusCode ValBase::browse(MsgStream log, std::string varName0)
                 break;
             case UINT: 
                 log << *(reinterpret_cast<unsigned int*>(vPtr)+i);
+                break;
+            case ULONG64: 
+                log << *(reinterpret_cast<unsigned long long*>(vPtr)+i);
                 break;
             default:
                 break;
@@ -329,6 +354,8 @@ StatusCode ValBase::doCalcIfNotDone()
     return sc;
 }       
 
+// LSR 14-Jul-08 code for ntuple types
+
 StatusCode ValBase::getValCheck(std::string varName, double& value)
 {
     // a simple way to force the check
@@ -351,6 +378,11 @@ StatusCode ValBase::getValCheck(std::string varName, unsigned int& value)
     return getVal(varName, value, CHECK);
 }
 
+StatusCode ValBase::getValCheck(std::string varName, unsigned long long& value)
+{
+    // a simple way to force the check
+    return getVal(varName, value, CHECK);
+}
 StatusCode ValBase::getValCheck(std::string varName, std::string& value)
 {
     // a simple way to force the check
@@ -410,6 +442,8 @@ StatusCode ValBase::getVal(std::string varName, std::string& value, int check)
     }
 
     valType type = ptr->getType();
+ 
+// LSR 14-Jul-08 code for ntuple types
     
     if(sc.isSuccess()) {
         if (type==FLOAT) { sprintf(buffer, "%g", 
@@ -420,10 +454,14 @@ StatusCode ValBase::getVal(std::string varName, std::string& value, int check)
             *(reinterpret_cast<int*>(vPtr)+element));}
         else if (type==UINT)    { sprintf(buffer, "%u", 
             *(reinterpret_cast<unsigned int*>(vPtr)+element));}
+        else if (type==ULONG64)    { sprintf(buffer, "%u", 
+            *(reinterpret_cast<unsigned long long*>(vPtr)+element));}
     }
     value = std::string(buffer);
     return sc;
 }
+ 
+// LSR 14-Jul-08 code for ntuple types
 
 StatusCode ValBase::getVal(std::string varName, int& value, int check)
 {
@@ -476,6 +514,34 @@ StatusCode ValBase::getVal(std::string varName, unsigned int& value, int check)
    
     return sc;
 }
+
+StatusCode ValBase::getVal(std::string varName, unsigned long long& value, int check)
+{
+    MsgStream log(msgSvc(), name());
+    TypedPointer* ptr = 0;
+    value = 0;
+
+    std::string baseName;
+    int element;
+    bool hasArg = getArrayArg(varName, baseName, element);
+
+    StatusCode sc = getTypedPointer(baseName, ptr, check);
+    if(sc.isFailure()) return sc;
+
+    if(!hasArg) element = 0;
+    int dim = ptr->getDim();
+    if (element>=dim || element<0) 
+    {
+        log << MSG::ERROR << "GetVal: element " << varName << " out of range" << endreq;
+            assert(element<dim && element>-1);
+    }
+
+    value = *(reinterpret_cast<unsigned long long*>(ptr->getPointer())+element);
+   
+    return sc;
+}
+
+
 StatusCode ValBase::getVal(std::string varName, double& value, int check)
 {
     MsgStream log(msgSvc(), name());
@@ -604,6 +670,9 @@ IValsTool::Visitor::eVisitorRet ValBase::traverse(IValsTool::Visitor* v,
             fullName = getFullName(varName, dim);
         }
 
+ 
+// LSR 14-Jul-08 code for ntuple types
+
         switch (type) {
             case FLOAT:
                 ret = v->analysisValue(fullName, *(reinterpret_cast<float*>(vPtr)));
@@ -614,6 +683,9 @@ IValsTool::Visitor::eVisitorRet ValBase::traverse(IValsTool::Visitor* v,
                 break;
             case UINT:
                 ret = v->analysisValue(fullName, *(reinterpret_cast<unsigned int*>(vPtr)));
+                break;
+            case ULONG64:
+                ret = v->analysisValue(fullName, *(reinterpret_cast<unsigned long long*>(vPtr)));
                 break;
             case INT:
                 ret = v->analysisValue(fullName, *(reinterpret_cast<int*>(vPtr)));

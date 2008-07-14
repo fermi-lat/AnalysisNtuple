@@ -2,7 +2,7 @@
 @brief Uses the XxxValsTools to produce a comprehensive ntuple
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.39 2008/05/26 19:31:15 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.40 2008/06/11 20:47:38 lsrea Exp $
 */
 
 // Gaudi system includes
@@ -35,6 +35,9 @@ public:
     /// constructor can set ntuple service and ntupleName
     NtupleVisitor(INTupleWriterSvc* ntupleSvc=0, std::string ntupleName="") 
         : m_ntupleSvc(ntupleSvc), m_ntupleName(ntupleName) {}
+
+// LSR 14-Jul-08 code for ntuple types
+
     virtual IValsTool::Visitor::eVisitorRet 
         analysisValue(std::string varName, const double& value) const;
     virtual IValsTool::Visitor::eVisitorRet 
@@ -43,6 +46,8 @@ public:
         analysisValue(std::string varName, const int& value) const;
     virtual IValsTool::Visitor::eVisitorRet 
         analysisValue(std::string varName, const unsigned int& value) const;
+    virtual IValsTool::Visitor::eVisitorRet 
+        analysisValue(std::string varName, const unsigned long long& value) const;
     virtual IValsTool::Visitor::eVisitorRet 
         analysisValue(std::string varName, const char* value) const;
     virtual ~NtupleVisitor() {}
@@ -53,6 +58,8 @@ private:
     /// name of the ntuple; should be the same as is set in NtupleWriterSvc
     std::string m_ntupleName;
 };
+
+// LSR 14-Jul-08 code for ntuple types
 
 IValsTool::Visitor::eVisitorRet NtupleVisitor::analysisValue(std::string varName,
                                                              const double& value) const
@@ -97,6 +104,19 @@ IValsTool::Visitor::eVisitorRet NtupleVisitor::analysisValue(std::string varName
     }    
     return IValsTool::Visitor::CONT;
 }
+
+
+IValsTool::Visitor::eVisitorRet NtupleVisitor::analysisValue(std::string varName,
+                                                             const unsigned long long& value) const
+{ 
+    StatusCode sc;
+    if (m_ntupleSvc) {
+        sc = m_ntupleSvc->addItem(m_ntupleName,  varName, &value );
+        if (sc.isFailure()) return IValsTool::Visitor::ERROR;
+    }    
+    return IValsTool::Visitor::CONT;
+}
+
 IValsTool::Visitor::eVisitorRet NtupleVisitor::analysisValue(std::string varName,
                                                              const char* value) const
 { 
