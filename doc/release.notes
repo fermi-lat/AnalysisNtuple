@@ -2,6 +2,7 @@
   @brief Package AnalysisNtuple
   @verbatim
 
+ v2r46   14-Jul-08   LSR  Add FT1EventClass
  v2r45   14-Jul-08   LSR  New def for ObfGamState bits
                           EvtEventId now unsigned long long
  v2r44   27-Jun-08   LSR  New vars FswGamEnergy and FswGamStage

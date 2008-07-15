@@ -1,7 +1,7 @@
 /** @file FT1Alg.cxx
 @brief Declaration and implementation of Gaudi algorithm FT1Alg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.12 2008/06/23 19:58:27 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.13 2008/07/14 23:43:59 lsrea Exp $
 */
 // Include files
 
@@ -86,6 +86,11 @@ public:
     Item CTBBestXDir;
     Item CTBBestYDir;
     Item CTBBestZDir;
+    Item CTBBestEnergyProb;
+    Item CTBBestEnergyRatio;
+    Item CTBCORE;
+    Item CTBClassLevel;
+    
 
     //FT1 entries to create
     unsigned int m_ft1eventid;
@@ -94,6 +99,7 @@ public:
     float m_ft1zen,m_ft1azim;
     double m_ft1livetime;
     float m_ft1convpointx,m_ft1convpointy,m_ft1convpointz,m_ft1convlayer;
+    float m_ft1eventclass;
 };
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -192,6 +198,11 @@ FT1worker::FT1worker()
 , CTBBestXDir("CTBBestXDir")  
 , CTBBestYDir("CTBBestYDir")  
 , CTBBestZDir("CTBBestZDir")
+, CTBBestEnergyProb("CTBBestEnergyProb")
+, CTBBestEnergyRatio("CTBBestEnergyRatio")
+, CTBCORE("CTBCORE")
+, CTBClassLevel("CTBClassLevel")
+
 {
     //now create new items 
 
@@ -210,6 +221,7 @@ FT1worker::FT1worker()
     addItem( "FT1ConvPointZ",    m_ft1convpointz);
     addItem( "FT1ConvLayer",     m_ft1convlayer);
     addItem( "FT1Livetime",      m_ft1livetime);
+    addItem( "FT1EventClass",    m_ft1eventclass);
 }
 
 /** @page anatup_vars 
@@ -221,7 +233,7 @@ see <a href="http://glast.gsfc.nasa.gov/ssc/dev/fits_def/definitionFT1.html">FT1
 <table>
 <tr><th> Variable <th> Type <th> Description
 <tr><td> FT1EventId  
-<td>UI<td>  RunNumber*100000 + EventNumber  
+<td>U<td>  RunNumber*100000 + EventNumber (overflows for real data!)
 <tr><td> FT1Energy   
 <td>F<td>  (MeV) estimate for energy  
 <tr><td> FT1Theta, FT1Phi 
@@ -239,6 +251,13 @@ see <a href="http://glast.gsfc.nasa.gov/ssc/dev/fits_def/definitionFT1.html">FT1
 (Layer 0 is the one closest to the calorimeter.)
 <tr><td> FT1ConvPoint[X/Y/Z] 
 <td>F<td>  <b>Do not use; no longer filled!</b>
+<tr><td> FT1EventClass
+<td>F<td> 
+   CTBBestEnergy<=10 || CTBBestEnergyRatio>=5 -> 0 <br>
+   else CTBClassLevel>2 && CTBCORE>0. && CTBBestEnergyProb>0.1 -> 3<br>
+   else CTBClassLevel>1 && CTBCORE>0.1 && CTBBestEnergyProb>0.1 -> 2<br>
+   else CTBClassLevel>0 && CTBCORE>0. && CTBBestEnergyProb>0. -> 1<br>
+   else 0
 </table> 
 */
 #if 0
@@ -312,5 +331,18 @@ void FT1worker::evaluate()
     m_ft1zen  = zenith_theta*180/M_PI;;
     m_ft1azim = earth_azimuth*180/M_PI;
 
-}
+    // more useful class level
 
+    m_ft1eventclass = 0;
+
+    if ( (CTBBestEnergy<=10) || (CTBBestEnergyRatio>=5) ) { // Apply minimal cut first.
+        m_ft1eventclass = 0;
+    } else if ( (CTBClassLevel>2) && (CTBCORE>0.1) && (CTBBestEnergyProb>0.1) ) {
+        m_ft1eventclass = 3;
+    } else if ( (CTBClassLevel>1) && (CTBCORE>0.1) && (CTBBestEnergyProb>0.1) ) {
+        m_ft1eventclass = 2;
+    } else if ( (CTBClassLevel>0) && (CTBCORE>0.) && (CTBBestEnergyProb>0.) ) {
+        m_ft1eventclass = 1;
+    }
+
+}
