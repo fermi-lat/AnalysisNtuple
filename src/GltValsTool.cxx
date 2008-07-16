@@ -2,7 +2,7 @@
 @brief Calculates the Trigger analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.38 2008/01/19 00:55:26 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.39 2008/05/08 23:37:48 lsrea Exp $
 */
 
 // Include files
@@ -25,6 +25,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.38 
 #include "Event/TopLevel/Event.h"
 #include "LdfEvent/EventSummaryData.h"
 #include "LdfEvent/LsfMetaEvent.h"
+#include "LdfEvent/Gem.h"
 #include "CLHEP/Matrix/Matrix.h"
 #include "CLHEP/Matrix/SymMatrix.h"
 
@@ -78,6 +79,8 @@ private:
     int   Trig_gemprescale;
     int   Trig_prescaleexpired;
     int   Trig_sourcegps;
+    int   Trig_gemDeltaEventTime;
+    int   Trig_gemDeltaWindowOpenTime;
 
     ITkrQueryClustersTool* m_clusTool;
 };
@@ -126,9 +129,9 @@ produces 13 potential triggers
 <tr><td> GltNumTowers 
 <td>F<td>   Number of towers which trigger (crossing track) 
 <tr><td> GltType 
-<td>F<td>   Number of exposed sides for the triggered tower, 
-i.e. 0 = central tower, 1 = side tower, 2 = edge edge tower, 
-4 = any single-tower setup 	
+<td>F<td>   Number of exposed sides for the triggered tower: <br>
+            0 = central tower, 1 = side tower, <br> 
+            2 = edge edge tower, 4 = any single-tower setup 	
 <tr><td> GltMoment 
 <td>F<td>   Do not use 
 <tr><td> GltZDir 
@@ -143,8 +146,16 @@ i.e. 0 = central tower, 1 = side tower, 2 = edge edge tower,
 <td>I<td>   The GEM prescale factor for the event
 <tr><td> GltPrescaleExpired
 <td>I<td>   true if the prescale counter expired for this event
-<tr<td>  GltSourceGps
+<tr><td> GltSourceGps
 <td>I<td>   true if timing comes from the GPS
+<tr><td> GltGemDeltaEventTime
+<td>I<td>   GEM Delta event time counter in ticks of 50 ns. 
+            Saturates at 3.3 ms
+<tr><td> GltGemDeltaWindowOpenTime
+<td>I<td>   GEM Delta window open time counter: Number of
+            of 50 ns ticks between the opening of the trigger window 
+            of the previous event and of this event. 
+            Wraps around at ~3.3 msec
 </table>
 */
 
@@ -203,6 +214,8 @@ StatusCode GltValsTool::initialize()
     addItem("GltZDir",       &Trig_zDir);  
     addItem("GltEngine",     &Trig_engine);  
     addItem("GltGemEngine",  &Trig_gemengine);
+    addItem("GltGemDeltaEventTime",      &Trig_gemDeltaEventTime);
+    addItem("GltGemDeltaWindowOpenTime", &Trig_gemDeltaWindowOpenTime);
     addItem("GltEnginePrescale",  &Trig_gltprescale);
     addItem("GltGemEnginePrescale",  &Trig_gemprescale);
     addItem("GltPrescaleExpired",  &Trig_prescaleexpired);
@@ -213,13 +226,11 @@ StatusCode GltValsTool::initialize()
     return sc;
 }
 
-
 StatusCode GltValsTool::calculate()
 {
     StatusCode sc = StatusCode::SUCCESS;
 
-    // m_pEventSvc alreay checked by doCalcIfNotDone, no need to repeat
-
+    // m_pEventSvc already checked by doCalcIfNotDone, no need to repeat
 
     int nLayers  = m_tkrGeom->numLayers();
     int nXTowers = m_tkrGeom->numXTowers();
@@ -270,10 +281,20 @@ StatusCode GltValsTool::calculate()
     SmartDataPtr<LsfEvent::MetaEvent> 
         metaTds(m_pEventSvc, "/Event/MetaEvent");
     Trig_sourcegps = 
-        ( metaTds==0 ? 0 : metaTds->time().current().sourceGps()); 
+        ( metaTds==0 ? 0 : metaTds->time().current().sourceGps());
+
+    // GemDeltaTimes
+    Trig_gemDeltaEventTime = -1;
+    Trig_gemDeltaWindowOpenTime = -1;
+    SmartDataPtr<LdfEvent::Gem> gemTds(m_pEventSvc, "/Event/Gem");
+    if(gemTds) {
+        Trig_gemDeltaEventTime      = gemTds->deltaEventTime();
+        Trig_gemDeltaWindowOpenTime = gemTds->deltaWindowOpenTime();
+    }
 
     SmartDataPtr<Event::TkrClusterCol>   
         pClusters(m_pEventSvc,EventModel::TkrRecon::TkrClusterCol);
+
     // everything from here on out uses Clusters
     if(!pClusters) return sc;
 
