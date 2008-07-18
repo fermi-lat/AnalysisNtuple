@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.46 2008/04/22 22:48:12 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.47 2008/04/22 22:54:47 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -131,6 +131,14 @@ private:
     unsigned int ACD_tileCount2;
     unsigned int ACD_tileCount3;
 
+    unsigned int   ACD_countRow3Readout;
+
+    float ACD_energyTop;
+    float ACD_energyRow0;
+    float ACD_energyRow1;
+    float ACD_energyRow2;
+    float ACD_energyRow3;
+
     // Services
     IGlastDetSvc *m_detSvc;
 
@@ -140,7 +148,7 @@ private:
 
 
 /** @page anatup_vars
-@section adcvalstool AdCValsTool Variables
+@section acdvalstool AcdValsTool Variables
 Notes
 - Default Doca/ActiveDistance is -2000.
 - Active distance is negative if a track is outside a tile, 
@@ -150,22 +158,21 @@ positive if inside.
 <tr><th> Variable <th> Type <th> Description					
 
 <tr><td> AcdTileCount 
-<td>I<td>   Number of tiles fired
+<td>U<td>   Number of tiles fired
 <tr><td> AcdRibbonCount 
-<td>I<td>   Number of ribbons fired
+<td>U<td>   Number of ribbons fired
 <tr><td> AcdTotalEnergy 	
 <td>F<td>   Total energy deposited in ACD Tiles
 <tr><td> AcdRibbonEnergy 	
 <td>F<td>   Total energy deposited in ACD Ribbons
 <tr><td> AcdTileIdRecon
-<td>I<td> Tile identifier that was pierced by the reconstructed track.  
+<td>U<td> Tile identifier that was pierced by the reconstructed track.  
 A value of 899 (N/A) is the default and denotes that no ACD tile was 
 intersected by a reconstructed track.
 <tr><td> AcdRibbonIdRecon (fixme)
-<td>I<td> Ribbon identifier that was pierced by the reconstructed track.  
+<td>U<td> Ribbon identifier that was pierced by the reconstructed track.  
 A value of 899 (N/A) is the default and denotes that no ACD ribbon was 
 intersected by a reconstructed track.
-
 <tr><td> AcdActiveDist3D  	
 <td>F<td>   Active Distance most likely to give a veto.  
 Corresponds to Act. Dist. that is greater than a set 
@@ -178,7 +185,6 @@ to the edge of any tile
 <tr><td> AcdActDistTrackNum
 <td>F<td>   Track number of track which was used for AcdActiveDist3D. 
 Track numbering starts at zero; best track number is zero; -1 means no track
-
 <tr><td> AcdRibbonActDist   (fixme)
 <td>F<td>   Largest active distance to any ribbon 
 (considered as a straight line of no thickness) 
@@ -192,7 +198,6 @@ Track numbering starts at zero; best track number is zero; -1 means no track
 <td>F<td>   The deposited energy in the A PMT of the corresponding hit ribbon
 <tr><td> AcdRibbonActEnergyPmtB   (fixme)
 <td>F<td>   The deposited energy in the B PMT of the corresponding hit ribbon
-
 <tr><td> AcdCornerDoca 
 <td>F<td>   Minimum Distance of Closest Approach of best track to the corner side gaps 
 <tr><td> AcdTkrHoleDist (fixme)
@@ -202,14 +207,12 @@ Track numbering starts at zero; best track number is zero; -1 means no track
 <tr><td> AcdTkrRibbonLength (fixme)
 <td>F<td>   Length along ribbon where point of closest approach occured.
 0 is center of ribbon + going towards +x or +y side of ACD.
-
 <tr><td>AcdTkr1ActiveDist 
 <td>F<td>   Largest active distance from  track 1 to the edge of any tile
 <tr><td>AcdTkr1ActiveDistErr
 <td>F<td>   Error on largest active distance from track 1 to the edge of any tile
 <tr><td>AcdTkr1ActDistTileEnergy
 <td>F<td>   The deposited energy in the corresponding hit tile
-
 <tr><td> AcdTkr1RibbonActDist   
 <td>F<td>   Largest active distance to any ribbon 
 (considered as a straight line of no thickness) 
@@ -223,7 +226,6 @@ Track numbering starts at zero; best track number is zero; -1 means no track
 <td>F<td>   The deposited energy in the A PMT of the corresponding hit ribbon
 <tr><td> AcdTkr1RibbonActEnergyPmtB   
 <td>F<td>   The deposited energy in the A PMT of the corresponding hit ribbon
-
 <tr><td> AcdTkr1CornerDoca 
 <td>F<td>   Minimum Distance of Closest Approach of best track to the corner side gaps 
 <tr><td> AcdTkr1HoleDist
@@ -232,7 +234,6 @@ Track numbering starts at zero; best track number is zero; -1 means no track
 <td>F<td>   Minimum Distance of Closest Approach to best track to any ribbons that cover gaps 
 <tr><td> AcdTkr1RibbonLength (fixme)
 <td>F<td>   Minimum Distance of Closest Approach to best track to any ribbons that cover gaps 
-
 <tr><td>AcdVtxActiveDist
 <td>F<td>   Largest active distance from vertex extrapolation to the edge of any tile
 <tr><td>AcdVtxActiveDist_Down
@@ -242,10 +243,14 @@ down-going side of tracks
 <td>F<td>   The deposited energy in the corresponding hit tile
 <tr><td>AcdVtxActDistTileEnergy_Down
 <td>F<td>   The deposited energy in the corresponding hit tile, down-going side of tracks
-
 <tr><td> AcdNoSideRow[0...3] 
-<td>F<td>   Hit Tile counts for side row [0...3] that have energy > TileCountThreshold (= .8)
-
+<td>U<td>   Hit Tile counts for side row [0...3] that have energy > TileCountThreshold (= .8)
+<tr><td> AcdNoRow3Readout
+<td>U<td>   Hit Tile counds for side row 3, no threshold cut
+<tr><td> AcdEnergyTop
+<td>F<td>   Total energy deposited in top tiles
+<tr><td> AcdEnergyRow[0...3]
+<td>F<td>   Total energy deposited in the tiles in side row 0 to 3
 </table>
 */
 
@@ -359,7 +364,14 @@ StatusCode AcdValsTool::initialize()
     addItem("AcdNoSideRow0",   &ACD_tileCount0);
     addItem("AcdNoSideRow1",   &ACD_tileCount1);
     addItem("AcdNoSideRow2",   &ACD_tileCount2);   
-    addItem("AcdNoSideRow3",   &ACD_tileCount3);   
+    addItem("AcdNoSideRow3",   &ACD_tileCount3);
+
+    addItem("AcdNoRow3Readout", &ACD_countRow3Readout);
+    addItem("AcdEnergyTop",  & ACD_energyTop);
+    addItem("AcdEnergyRow0", & ACD_energyRow0);
+    addItem("AcdEnergyRow1", & ACD_energyRow1);
+    addItem("AcdEnergyRow2", & ACD_energyRow2);
+    addItem("AcdEnergyRow3", & ACD_energyRow3);
 
     zeroVals();
     ACD_ActiveDist_TrackNum = -1;
@@ -426,12 +438,25 @@ StatusCode AcdValsTool::calculate()
 
                 // WBA: Insert the Tile_counts_by region here with energy threshold
                 if(MeV > TileCountThreshold) {
-                    if(id.top()) {ACD_tileTopCount = ACD_tileTopCount + 1.;}
+                    if(id.top()) {ACD_tileTopCount += 1.0;}
                     else {
-                        if(id.row()==0) ACD_tileCount0 = ACD_tileCount0 + 1.;
-                        if(id.row()==1) ACD_tileCount1 = ACD_tileCount1 + 1.;
-                        if(id.row()==2) ACD_tileCount2 = ACD_tileCount2 + 1.;
-                        if(id.row()==3) ACD_tileCount3 = ACD_tileCount3 + 1.;
+                        if(id.row()==0) ACD_tileCount0 += 1.0;
+                        if(id.row()==1) ACD_tileCount1 += 1.0;
+                        if(id.row()==2) ACD_tileCount2 += 1.0;
+                        if(id.row()==3) ACD_tileCount3 += 1.0;
+                    }
+                } 
+
+
+                // Bill's new variables 17-Jul-2008
+                if(id.top()) {ACD_energyTop  += MeV;}
+                else {
+                    if(id.row()==0) ACD_energyRow0 += MeV;
+                    if(id.row()==1) ACD_energyRow1 += MeV;
+                    if(id.row()==2) ACD_energyRow2 += MeV;
+                    if(id.row()==3) {
+                        ACD_energyRow3 += MeV;
+                        ACD_countRow3Readout += 1.0;
                     }
                 }
             }	  

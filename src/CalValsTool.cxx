@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.88 2008/04/14 00:31:51 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.89 2008/04/21 21:05:35 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -146,7 +146,9 @@ private:
     float CAL_Xtal_Ratio;
     float CAL_Xtal_maxEne; 
     float CAL_eLayer[8];
-    float CAL_No_Xtals_Trunc;
+    float CAL_Num_Xtals;
+    float CAL_Num_Xtals_Trunc;
+    float CAL_Max_Num_Xtals_In_Layer;
     float CAL_Long_Rms;
     float CAL_Trans_Rms;
     float CAL_LRms_Asym;
@@ -344,11 +346,18 @@ and the energy centroid, evaluated at the z of the centroid.
 <tr><td> CalBkHalfRatio 
 <td>F<td>   Ratio of total energy in back half of CAL (layers 4-7) to 
 CalEnergyRaw 
+<tr><td> CalNumXtals 
+<td>F<td>   Number of CAL Xtals above threshold
+<tr><td> CalMaxNumXtalsInLayer
+<td>F<td>   Number of xtals with energy above 5 MeV in the layer
+            with the highest number of xtals above 5 MeV. The cut
+            is chosen to match the one used in GCRSelect
 <tr><td> CalXtalsTrunc 
-<td>F<td>   Number of CAL Xtals with > %1 of CalEnergyRaw (see CalXtalRatio) 
+<td>F<td>   Number of CAL Xtals with > %1 of CalEnergyRaw 
+            in first Cluster (so far, there's only one!) 
 <tr><td> CalXtalRatio 
 <td>F<td>   Ratio of number of Xtals with energy > 1% of CalEnergyRaw to 
-total number of struck Xtals in the event. 
+total number of struck Xtals in the first Cluster  
 <tr><td> CalXtalMaxEne 
 <td>F<td>   Maximum energy found in a single Xtal
 <tr><td> CalLongRms 
@@ -548,9 +557,12 @@ StatusCode CalValsTool::initialize()
     addItem("CalLyr7Ratio",  &CAL_Lyr7_Ratio);
     addItem("CalBkHalfRatio",&CAL_BkHalf_Ratio);
 
-    addItem("CalXtalsTrunc", &CAL_No_Xtals_Trunc);
+    addItem("CalXtalsTrunc", &CAL_Num_Xtals_Trunc);
+    addItem("calNumXtals",   &CAL_Num_Xtals);
     addItem("CalXtalRatio",  &CAL_Xtal_Ratio);
     addItem("CalXtalMaxEne", &CAL_Xtal_maxEne);
+    addItem("CalMaxNumXtalsInLayer", 
+                             &CAL_Max_Num_Xtals_In_Layer);
 
     addItem("CalTransRms",   &CAL_Trans_Rms);
     addItem("CalLongRms",    &CAL_Long_Rms);
@@ -777,22 +789,34 @@ StatusCode CalValsTool::calculate()
     }
 
     int no_xtals=0;
-    CAL_Xtal_maxEne = 0.; 
+    CAL_Xtal_maxEne = 0.;
+
+    // Local array for #xtals in layer with the most xtals (cut on e>=5MeV);
+    std::vector<int> xtalCount(m_nLayers,0);
+
     Event::CalXtalRecCol::const_iterator jlog;
     if (pxtalrecs) {
         // Find Xtal with max. energy
+        CAL_Num_Xtals = (float)pxtalrecs->size();
         for( jlog=pxtalrecs->begin(); jlog != pxtalrecs->end(); ++jlog) {
             const Event::CalXtalRecData& recLog = **jlog;    
             double eneLog = recLog.getEnergy();
             if(eneLog > CAL_Xtal_maxEne) CAL_Xtal_maxEne = eneLog;
+            idents::CalXtalId xtalId = recLog.getPackedId();
+            int layer = xtalId.getLayer();
+            if(eneLog>5.0) xtalCount[layer]++;
         }
+
+        std::vector<int>::const_iterator itC = 
+            std::max_element(xtalCount.begin(),xtalCount.end());
+        CAL_Max_Num_Xtals_In_Layer = *itC;
 
         // Number of Xtals
         no_xtals=pxtalrecs->size();
     }
     int no_xtals_trunc=calCluster->getNumTruncXtals();
     CAL_Xtal_Ratio= (no_xtals>0) ? float(no_xtals_trunc)/no_xtals : 0;
-    CAL_No_Xtals_Trunc = float(no_xtals_trunc); 
+    CAL_Num_Xtals_Trunc = float(no_xtals_trunc); 
 
     // No use in continuing if too little energy in CAL
     if(CAL_EnergyRaw < 5.) return sc;  
