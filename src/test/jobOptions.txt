@@ -42,11 +42,11 @@ ApplicationMgr.TopAlg = {
 // turn on ntupleWriterSvc for this test
 AnalysisNtupleAlg.doNtuple = true;
 
-mcRootReaderAlg.mcRootFile="$(ROOTTESTDATAROOT)/data/default/mc.root";
+mcRootReaderAlg.mcRootFile="$(ROOTTESTDATADATAPATH)/default/mc.root";
 
-digiRootReaderAlg.digiRootFile="$(ROOTTESTDATAROOT)/data/default/digi.root";
+digiRootReaderAlg.digiRootFile="$(ROOTTESTDATADATAPATH)/default/digi.root";
 
-reconRootReaderAlg.ReconRootFile="$(ROOTTESTDATAROOT)/data/default/recon.root";
+reconRootReaderAlg.ReconRootFile="$(ROOTTESTDATADATAPATH)/default/recon.root";
 
 ApplicationMgr.DLLs   += { "ntupleWriterSvc"};
 ApplicationMgr.HistogramPersistency = "ROOT";
