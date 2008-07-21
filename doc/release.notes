@@ -2,6 +2,7 @@
   @brief Package AnalysisNtuple
   @verbatim
 
+ v2r48p1 21-Jul-08   LSR  Revert EvtEventId and add EvtEventId64
  v2r48   17-Jul-08   LSR  2 new Cal and 6 new Acd variables
  v2r47   16-Jul-08   LSR  Add GltGemDeltaEventTime, GltGemDeltaWindowOpenTime
  v2r46   14-Jul-08   LSR  Add FT1EventClass

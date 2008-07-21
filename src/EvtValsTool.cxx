@@ -3,7 +3,7 @@
 @brief Calculates the "Event" analysis variables from the other ntuple variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.37 2008/07/14 23:43:59 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.38 2008/07/15 04:44:14 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -43,7 +43,8 @@ private:
 
     //Global Items
     unsigned int EvtRun;
-    unsigned long long EvtEventId;
+    unsigned int EvtEventId;
+    unsigned long long EvtEventId64;
     double EvtElapsedTime;
     double EvtLiveTime;
 
@@ -134,7 +135,9 @@ NOTE
 <tr><td> EvtRun 
 <td>U<td>   Run number, copied from the event header NEW: replaces Run in the merit ntuple  
 <tr><td> EvtEventId 
-<td>UL<td>   Sequence number of event in the run (as generated) NEW: replaces Event_ID in the merit ntuple 
+<td>U<td>   Sequence number of event in the run
+<tr><td> EvtEventId64
+<td>UL<td>   Sequence number of event in the run, 64-bit unsigned version
 <tr><td> EvtElapsedTime 
 <td>D<td>   Elapsed time in seconds since t0 (for DC1: 18-July-2005, 
             for the future: mission start 1-Jan-2001)
@@ -277,6 +280,7 @@ StatusCode EvtValsTool::initialize()
 
     addItem("EvtRun",           &EvtRun);
     addItem("EvtEventId",       &EvtEventId);
+    addItem("EvtEventId64",     &EvtEventId64);
     addItem("EvtElapsedTime",   &EvtElapsedTime);
     addItem("EvtLiveTime",      &EvtLiveTime);
 
@@ -344,6 +348,7 @@ StatusCode EvtValsTool::calculate()
     if(header) {
         EvtRun         = header->run();
         EvtEventId     = header->event();
+        EvtEventId64   = header->event();
         //test
         /*
         if (EvtEventId%2==0) sprintf(EvtEvtNum, "%i" , EvtEventId);
