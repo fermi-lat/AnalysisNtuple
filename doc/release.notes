@@ -2,6 +2,8 @@
   @brief Package AnalysisNtuple
   @verbatim
 
+ v2r48gr0 21-Jul-08  HMK  Capture Leon's updates for EvtEventId64 on branch
+                     before updates to remove CMT env variables
  v2r48   17-Jul-08   LSR  2 new Cal and 6 new Acd variables
  v2r47   16-Jul-08   LSR  Add GltGemDeltaEventTime, GltGemDeltaWindowOpenTime
  v2r46   14-Jul-08   LSR  Add FT1EventClass
