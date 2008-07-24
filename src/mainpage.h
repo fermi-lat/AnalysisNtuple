@@ -131,6 +131,8 @@
   @param FT1Alg.EnableAberrationCorrection [false]
   if set true, the flag in GPS will be set to apply the orbital aberration correction when converting from 
   instrument to celestical coordinates.
+  @param FT1Alg.AlignmentFlavor [""]
+   Set to a flavor to enable the alignment correction from LAT to S/C coordinates.
   <hr>
  @section vars Description of the variables
  Here are the <A HREF="./anatup_vars.html"> standard</A> variables, and here are the 

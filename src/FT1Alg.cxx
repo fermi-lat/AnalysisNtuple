@@ -1,7 +1,7 @@
 /** @file FT1Alg.cxx
 @brief Declaration and implementation of Gaudi algorithm FT1Alg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.14 2008/07/15 04:44:14 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.15 2008/07/21 21:30:04 lsrea Exp $
 */
 // Include files
 
@@ -9,7 +9,9 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.14 2008/
 #include "GaudiKernel/MsgStream.h"
 #include "GaudiKernel/AlgFactory.h"
 #include "GaudiKernel/SmartDataPtr.h"
+#include "GaudiKernel/IDataProviderSvc.h"
 
+#include "CalibData/Nas/CalibLATAlignment.h"
 
 // Event for access to time
 #include "Event/TopLevel/EventModel.h"
@@ -17,6 +19,11 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.14 2008/
 
 #include "astro/GPS.h"
 #include "ntupleWriterSvc/INTupleWriterSvc.h"
+
+#include "CalibData/Nas/CalibLATAlignment.h" // defines interface for calibration object 
+#include "CalibSvc/ICalibPathSvc.h" // helpful service for forming calib TDS paths
+
+//#include "CalibSvc/ICalibDataSvc.h"
 
 #include <cassert>
 #include <map>
@@ -50,8 +57,15 @@ private:
     //counter
     int m_count;
     IDataProviderSvc* m_pEventSvc;
-    BooleanProperty m_aberrate;  ///< set true to enable aberration correction
 
+    IDataProviderSvc* m_pCalibDataSvc;
+    ICalibPathSvc*    m_pCalibPathSvc;
+
+    BooleanProperty m_aberrate;  ///< set true to enable aberration correction
+    StringProperty m_flavor;     ///< set to a flavor to enable the corrrection
+
+    std::string m_path;    ///< calibration service
+    
 
 };
 
@@ -110,6 +124,7 @@ FT1Alg::FT1Alg(const std::string& name, ISvcLocator* pSvcLocator)
     declareProperty("TreeName",  treename="MeritTuple");
     declareProperty("NbOfEvtsInFile", nbOfEvtsInFile=100000);
     declareProperty("CorrectForAberration", m_aberrate=false);
+    declareProperty("AlignmentFlavor"     , m_flavor="");
 }
 
 StatusCode FT1Alg::initialize()
@@ -146,8 +161,17 @@ StatusCode FT1Alg::initialize()
         gps->enableAberration(true);
         log << MSG::INFO << "Correction for aberration is enabled" << endreq;
     }
+    // stuff for getting the calibration -- this code grateful curtesy of J. Bogart!
+    if( !m_flavor.value().empty() ) {
+        service("CalibDataSvc", m_pCalibDataSvc, true); // needed for any access to calib. tds
+        service("CalibDataSvc", m_pCalibPathSvc, true); // preferred way to form paths into calib tds
+        m_path = m_pCalibPathSvc->getCalibPath(ICalibPathSvc::Calib_NAS_LATAlignment, m_flavor); // form path
+        log << MSG::INFO << "Using alignment flavor "<< m_flavor.value() << endreq;
+
+    }
     return sc;
 }
+
 
 StatusCode FT1Alg::execute()
 {
@@ -155,7 +179,38 @@ StatusCode FT1Alg::execute()
 
     MsgStream log(msgSvc(), name());
     m_count++;
-   SmartDataPtr<Event::EventHeader> header(m_pEventSvc, EventModel::EventHeader);
+
+    if(! m_flavor.value().empty() ){
+        // update alignment if necessary -- this code grateful curtesy of J. Bogart!
+
+
+        static unsigned serial = 0; // serial number of last calibration used
+
+        SmartDataPtr<CalibData::CalibLATAlignment> alignCalib(m_pCalibDataSvc, m_path);
+        if (!alignCalib) {
+            log << MSG::ERROR << "Failed access to CalibLATAlignment via smart ptr" << endreq;
+            return StatusCode::FAILURE;
+        }
+        unsigned newSerial = alignCalib->getSerNo();
+
+        if( serial != newSerial) {
+            serial = newSerial;
+
+            static double arcsec2deg(M_PI/648000);
+            const CalibData::ALIGN_ROT* r = alignCalib->getR();
+            double x(*r[0]), y(*r[1]), z(*r[2]);
+            gps->setAlignmentRotation( 
+                CLHEP::HepRotationX(x * arcsec2deg)
+                *CLHEP::HepRotationY(y* arcsec2deg)
+                *CLHEP::HepRotationZ(z* arcsec2deg)
+                );
+            log << MSG::INFO << "setting alignment parameters: ("
+                << x<<", "<< y<< "," << z << ") arcsec" << endreq;
+        }
+    }
+
+    
+    SmartDataPtr<Event::EventHeader> header(m_pEventSvc, EventModel::EventHeader);
 
     // get event time from header, and make sure gps is in sync 
     double etime(header->time());
@@ -240,12 +295,14 @@ see <a href="http://glast.gsfc.nasa.gov/ssc/dev/fits_def/definitionFT1.html">FT1
 <td>F<td>  (deg) reconstructed direction with respect to instrument coordinate system      
 <tr><td> FT1Ra, FT1Dec 
 <td>F<td>  (deg) reconstructed direction in equatorial coordinates       
-<tr><td> FT1ZenithTheta, FT1EarthAzimuth 
-<td>F<td>  (deg) reconstucted direction with respect to local zenith system
+<tr><td> FT1ZenithTheta
+<td>F<td>  (deg) reconstucted angle with respect to local zenith
+<tr><td> FT1EarthAzimuth 
+<td>F<td>  (deg) reconstucted heading: 0 is North, 90 East, etc.
 <tr><td> FT1L, FT1B 
 <td>F<td>  (deg) galactic longitude and latitude of reconstructed direction
 <tr><td> FT1Livetime 
-<td>D<td>  (s) Cumulative live time, from start of run, or mission
+<td>D<td>  (s) Cumulative live time, from start of run, or mission <b>do not use<b>
 <tr><td> FT1ConvLayer 
 <td>F<td>  Starting layer of the best track found in the tracker 
 (Layer 0 is the one closest to the calorimeter.)
