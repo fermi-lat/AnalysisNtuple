@@ -1,7 +1,7 @@
 /** @file FT1Alg.cxx
 @brief Declaration and implementation of Gaudi algorithm FT1Alg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.15 2008/07/21 21:30:04 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.16 2008/07/24 03:52:54 burnett Exp $
 */
 // Include files
 
@@ -163,8 +163,15 @@ StatusCode FT1Alg::initialize()
     }
     // stuff for getting the calibration -- this code grateful curtesy of J. Bogart!
     if( !m_flavor.value().empty() ) {
-        service("CalibDataSvc", m_pCalibDataSvc, true); // needed for any access to calib. tds
-        service("CalibDataSvc", m_pCalibPathSvc, true); // preferred way to form paths into calib tds
+        if( (sc=service("CalibDataSvc", m_pCalibDataSvc, true)).isFailure()) { // needed for any access to calib. tds
+            log << MSG::ERROR << " failed to get the CalibDataSvc" << endreq;
+            return sc;
+        }
+        if( (sc=service("CalibDataSvc", m_pCalibPathSvc, true)).isFailure()){ // preferred way to form paths into calib tds
+            log << MSG::ERROR << " failed to get the CalibDataSvc (or maybe CalibPathSvc)" << endreq;
+            return sc;
+        }
+
         m_path = m_pCalibPathSvc->getCalibPath(ICalibPathSvc::Calib_NAS_LATAlignment, m_flavor); // form path
         log << MSG::INFO << "Using alignment flavor "<< m_flavor.value() << endreq;
 
@@ -187,8 +194,9 @@ StatusCode FT1Alg::execute()
         static unsigned serial = 0; // serial number of last calibration used
 
         SmartDataPtr<CalibData::CalibLATAlignment> alignCalib(m_pCalibDataSvc, m_path);
-        if (!alignCalib) {
-            log << MSG::ERROR << "Failed access to CalibLATAlignment via smart ptr" << endreq;
+        if ( !alignCalib ) {
+            log << MSG::ERROR << "Failed access to CalibLATAlignment via smart ptr with path"
+                << m_path << endreq;
             return StatusCode::FAILURE;
         }
         unsigned newSerial = alignCalib->getSerNo();

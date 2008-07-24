@@ -2,7 +2,7 @@
   @brief Package AnalysisNtuple
   @verbatim
 
- v2r49   23-Jul-08   THB  Add alignment capability to FT1Alg
+ v2r49p1 24-Jul-08   THB  Add alignment capability to FT1Alg
  v2r48p1 21-Jul-08   LSR  Revert EvtEventId and add EvtEventId64
  v2r48   17-Jul-08   LSR  2 new Cal and 6 new Acd variables
  v2r47   16-Jul-08   LSR  Add GltGemDeltaEventTime, GltGemDeltaWindowOpenTime
