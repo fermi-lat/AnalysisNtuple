@@ -15,7 +15,7 @@
 *
 * Experiment the monitoring of algorithms.
 *
-* $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EventAuditor.cxx,v 1.2 2008/01/19 00:55:26 lsrea Exp $
+* $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EventAuditor.cxx,v 1.3 2008/04/17 17:01:08 heather Exp $
 */
 
 class EventAuditor : virtual public Auditor
@@ -27,8 +27,8 @@ public:
     virtual StatusCode finalize() ;
     virtual ~EventAuditor() ;
 
-    virtual StatusCode beforeInitialize( IAlgorithm * ) ;
-    virtual StatusCode afterInitialize( IAlgorithm * ) ;
+    //virtual StatusCode beforeInitialize( IAlgorithm * ) ;
+    //virtual StatusCode afterInitialize( IAlgorithm * ) ;
     virtual StatusCode beforeExecute( IAlgorithm * ) ;
     virtual StatusCode afterExecute( IAlgorithm * ) ;
     //virtual StatusCode beforeFinalize( IAlgorithm * ) ;
@@ -102,7 +102,7 @@ StatusCode EventAuditor::initialize()
     std::vector< std::string >::const_iterator algoName ;
     algoName = std::find(algoNames.begin(), algoNames.end(), "Event");
     if(algoName==algoNames.end()) {
-        algoNames.insert(algoNames.begin(),1,"Event");
+        algoNames.insert(algoNames.begin(),"Event");
     }
 
     m_nAlgs = algoNames.size();
@@ -144,29 +144,30 @@ StatusCode EventAuditor::initialize()
 // events loop
 //==========================================================
 
-StatusCode EventAuditor::beforeInitialize( IAlgorithm * alg )
-{
-    (*m_log)<<MSG::DEBUG<<"beforeInitialize("<<alg->name()<<") "<<endreq ;
-    return StatusCode::SUCCESS ;
-}
-
-
-StatusCode EventAuditor::afterInitialize( IAlgorithm * algo )
-{
-    (*m_log)<<MSG::DEBUG<<"afterInitialize("<<algo->name()<<") "<<endreq ;
-    return StatusCode::SUCCESS ;
-}
+//StatusCode EventAuditor::beforeInitialize( IAlgorithm * alg )
+//{
+//    (*m_log)<<MSG::DEBUG<<"beforeInitialize("<<alg->name()<<") "<<endreq ;
+//    return StatusCode::SUCCESS ;
+//}
+//
+//
+//StatusCode EventAuditor::afterInitialize( IAlgorithm * algo )
+//{
+//    (*m_log)<<MSG::DEBUG<<"afterInitialize("<<algo->name()<<") "<<endreq ;
+//    return StatusCode::SUCCESS ;
+//}
 
 StatusCode EventAuditor::beforeExecute( IAlgorithm * algo )
 {
     // upgrade m_algoStatus
-    std::map< IAlgorithm *, bool >::iterator itr ;
-    itr = m_algoStatus.find(algo) ;
     std::string thisName = algo->name();
     if(thisName=="Event") {
         // initialize the timers
         m_timeVals.assign(m_nAlgs, -1.0);
-    }
+    } 
+
+    std::map< IAlgorithm *, bool >::iterator itr ;
+    itr = m_algoStatus.find(algo) ;
     if ( itr == m_algoStatus.end() )
     {
         const std::vector< std::string > & algoNames = m_algoNames ;
@@ -174,7 +175,6 @@ StatusCode EventAuditor::beforeExecute( IAlgorithm * algo )
 
         algoName = std::find(algoNames.begin(), algoNames.end(), thisName);
         if(algoName==algoNames.end()) {
-            // algo is under monitoring
             m_algoStatus[algo] = false ; 
             return StatusCode::SUCCESS ;
         } else {
@@ -182,8 +182,10 @@ StatusCode EventAuditor::beforeExecute( IAlgorithm * algo )
         }
     }
 
-    // real work
-    m_chronoSvc->chronoStart(thisName) ;
+    if(m_algoStatus[algo]) {
+        m_chronoSvc->chronoStart("EA_"+thisName) ;
+        (*m_log) << MSG::DEBUG << "start " << thisName << std::endl;
+    }
     return StatusCode::SUCCESS ;
 }
 
@@ -196,11 +198,13 @@ StatusCode EventAuditor::afterExecute( IAlgorithm * algo )
     std::string thisName = algo->name();
 
     // stop chrono
-    m_chronoSvc->chronoStop(thisName) ;
+    m_chronoSvc->chronoStop("EA_"+thisName) ;
 
-    // display the last time interval
+    // retrieve and log the last time interval
+    
     IChronoStatSvc::ChronoTime delta
-        = m_chronoSvc->chronoDelta(thisName,IChronoStatSvc::USER) ;
+        = m_chronoSvc->chronoDelta("EA_"+thisName,IChronoStatSvc::USER) ;
+
     float fDelta = static_cast<float>(delta)*0.000001;
     (*m_log) << MSG::DEBUG << thisName <<" user time: " << fDelta << " sec" << endreq ;
 
@@ -229,14 +233,14 @@ StatusCode EventAuditor::afterExecute( IAlgorithm * algo )
 
 //StatusCode EventAuditor::beforeFinalize( IAlgorithm * alg )
 // {
-//  (*m_log)<<MSG::DEBUG<<"beforeFinalize("<<alg->name()<<") "<<endreq ;
+//     (*m_log) << MSG::DEBUG << "beforeFinalize("<<alg->name()<<") "<< endreq ;
 //  return StatusCode::SUCCESS ;
 // }
 //
 //
 //StatusCode EventAuditor::afterFinalize( IAlgorithm * alg )
 // {
-//  (*m_log)<<MSG::DEBUG<<"afterFinalize("<<alg->name()<<") "<<endreq ;
+//     (*m_log) << MSG::DEBUG << "afterFinalize("<<alg->name()<<") "<< endreq ;
 //  return StatusCode::SUCCESS ;
 // }
 //
@@ -247,8 +251,10 @@ StatusCode EventAuditor::afterExecute( IAlgorithm * algo )
 
 StatusCode EventAuditor::finalize()
 {
-    (*m_log)<<MSG::DEBUG<<"finalize() "<<endreq ;
-    return Auditor::finalize() ;
+    (*m_log) << MSG::DEBUG <<"finalize() "<< endreq ;
+//    return Auditor::finalize() ;
+  return StatusCode::SUCCESS;
+
 }
 
 EventAuditor::~EventAuditor()
