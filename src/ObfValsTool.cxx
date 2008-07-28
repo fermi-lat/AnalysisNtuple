@@ -2,7 +2,7 @@
 @brief Calculates the Onboard Filter variables
 @authors
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfValsTool.cxx,v 1.21 2008/07/13 17:19:09 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfValsTool.cxx,v 1.22 2008/07/14 16:15:40 usher Exp $
 */
 
 // Include files
@@ -85,6 +85,7 @@ private:
     int    m_fswGamPrescaleFactor;
     float  m_fswGamEnergy;
     int    m_fswGamStage;
+    int    m_fswGamVersion;
 
     int    m_fswHipStatus;
     int    m_fswHipState;
@@ -95,7 +96,7 @@ private:
     int    m_fswDgnState;
     int    m_fswDgnPrescaleIndex;
     int    m_fswDgnPrescaleFactor;
-
+  
 };
 
 // Static factory for instantiation of algtool objects
@@ -178,6 +179,8 @@ they will be copies of the corresponding ObfXXX variables.
 <td>F<td>    See ObfGamEnergy
 <tr><td>  FswGamStage</td>
 <td>I<td>    See ObfGamStage
+<tr><td>  FswGamVersion</td>
+<td>I<td>   Version of the Gamma Filter 
 </table> 
 
 */    
@@ -224,6 +227,7 @@ StatusCode ObfValsTool::initialize()
     addItem("FswGamStage",          &m_fswGamStage);
     addItem("FswGamPrescaleIndex",  &m_fswGamPrescaleIndex);
     addItem("FswGamPrescaleFactor", &m_fswGamPrescaleFactor);
+    addItem("FswGamVersion",        &m_fswGamVersion);
 
     addItem("FswHipStatus",         &m_fswHipStatus);
     addItem("FswHipState",          &m_fswHipState);
@@ -329,13 +333,18 @@ StatusCode ObfValsTool::calculate()
     m_fswDgnState = enums::Lsf::INVALID;
     m_fswHipState = enums::Lsf::INVALID;
     m_fswMipState = enums::Lsf::INVALID;
+    
+    m_fswGamVersion = enums::Lsf::INVALID;
 
     SmartDataPtr<LsfEvent::MetaEvent>  metaEventTds(m_pEventSvc, "/Event/MetaEvent");
     if (metaEventTds) {
         const lsfData::GammaHandler* gamma = metaEventTds->gammaFilter();
         if (gamma) {
             // rsd is Result Summary Data 
-            if(gamma->rsd()) m_fswGamStatus = gamma->rsd()->status();  
+            if(gamma->rsd()) {
+                m_fswGamStatus = gamma->rsd()->status();  
+                m_fswGamVersion = gamma->version();
+            }
             m_fswGamState = gamma->state();  
             m_fswGamPrescaleFactor = gamma->prescaleFactor();    
             m_fswGamPrescaleIndex  = gamma->lpaHandler().prescaleIndex();
