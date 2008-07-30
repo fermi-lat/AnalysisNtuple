@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.89 2008/04/21 21:05:35 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.90 2008/07/18 06:27:56 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -558,7 +558,7 @@ StatusCode CalValsTool::initialize()
     addItem("CalBkHalfRatio",&CAL_BkHalf_Ratio);
 
     addItem("CalXtalsTrunc", &CAL_Num_Xtals_Trunc);
-    addItem("calNumXtals",   &CAL_Num_Xtals);
+    addItem("CalNumXtals",   &CAL_Num_Xtals);
     addItem("CalXtalRatio",  &CAL_Xtal_Ratio);
     addItem("CalXtalMaxEne", &CAL_Xtal_maxEne);
     addItem("CalMaxNumXtalsInLayer", 
