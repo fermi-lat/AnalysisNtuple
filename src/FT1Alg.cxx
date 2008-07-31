@@ -1,7 +1,7 @@
 /** @file FT1Alg.cxx
 @brief Declaration and implementation of Gaudi algorithm FT1Alg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.16 2008/07/24 03:52:54 burnett Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.17 2008/07/24 19:48:32 burnett Exp $
 */
 // Include files
 
@@ -206,7 +206,10 @@ StatusCode FT1Alg::execute()
 
             static double arcsec2deg(M_PI/648000);
             const CalibData::ALIGN_ROT* r = alignCalib->getR();
-            double x(*r[0]), y(*r[1]), z(*r[2]);
+            // explanation from Joanne for the following: 
+            //"The type of (*r)  is a  3-element array of double, so applying a subscript
+            // should give you one of the doubles in that array. r itself is a pointer to something 3 doubles long "
+            double x((*r)[0]), y((*r)[1]), z((*r)[2]);
             gps->setAlignmentRotation( 
                 CLHEP::HepRotationX(x * arcsec2deg)
                 *CLHEP::HepRotationY(y* arcsec2deg)
