@@ -2,6 +2,7 @@
   @brief Package AnalysisNtuple
   @verbatim
 
+ v2r50   31-Jul-08   HMK  Merge in addition of FswGamVersion to ntuple
  v2r49p2 31-Jul-08   THB  Fix alignment code
  v2r49p1 24-Jul-08   THB  Add alignment capability to FT1Alg
  v2r48p1 21-Jul-08   LSR  Revert EvtEventId and add EvtEventId64
