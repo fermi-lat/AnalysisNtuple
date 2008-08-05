@@ -3,7 +3,7 @@
 @brief Calculates the "Event" analysis variables from the other ntuple variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.38 2008/07/15 04:44:14 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.39 2008/07/21 21:30:04 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -76,6 +76,7 @@ private:
 	float EvtECalTrackAngle;
     float EvtEVtxAngle;
     float EvtEVtxDoca;
+    unsigned int EvtEventFlags;
     //test
     //char  EvtEvtNum[20];
 
@@ -196,6 +197,9 @@ NOTE
 <td>F<td>   EvtVtxEAngle, compensated for energy and angle 
 <tr><td> EvtEVtxDoca 
 <td>F<td>   VtxDOCA, compensated for energy and angle 
+<tr><td> EvtEventFlags
+<td>U<td> Gleam Event Flags, zero denotes no error bits.  see enums/EventFlags.h
+          for a definition of the error bits
 </table>
 */
 
@@ -313,6 +317,7 @@ StatusCode EvtValsTool::initialize()
 
     addItem("EvtEVtxAngle",     &EvtEVtxAngle);
     addItem("EvtEVtxDoca",      &EvtEVtxDoca);
+    addItem("EvtEventFlags",      &EvtEventFlags);
  
     //test
     //addItem("EvtEvtNum",        EvtEvtNum);
@@ -537,6 +542,8 @@ StatusCode EvtValsTool::calculate()
         EvtEVtxDoca = vtxDoca/(1.55 - .685*logE+ .0851*logE2) 
                                 / (2.21 + 3.01*tkr1ZDir + 1.59*tkr1ZDir2);
     }
+
+    EvtEventFlags = header->gleamEventFlags();
 
     return sc;
 }

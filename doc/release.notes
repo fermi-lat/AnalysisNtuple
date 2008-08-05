@@ -2,6 +2,8 @@
   @brief Package AnalysisNtuple
   @verbatim
 
+ v2r48p1gr3 05-Aug-08 HMK Add new EvtEventFlags to ntuple to capture
+            potential error flags
  v2r48p1gr2 29-Jul-08 LSR capitalize "calNumXtals"
  v2r48p1gr1 28-Jul-08 HMK Add FswGamVersion to merit
  v2r48p1 21-Jul-08   LSR  Revert EvtEventId and add EvtEventId64
