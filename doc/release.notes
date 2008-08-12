@@ -2,6 +2,7 @@
   @brief Package AnalysisNtuple
   @verbatim
 
+ v2r48p1gr4 12-Aug-08 LSR more protection against propagator exceptions
  v2r48p1gr3 05-Aug-08 HMK Add new EvtEventFlags to ntuple to capture
             potential error flags
  v2r48p1gr2 29-Jul-08 LSR capitalize "calNumXtals"

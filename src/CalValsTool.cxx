@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.90 2008/07/18 06:27:56 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.90.10.1 2008/07/30 04:01:53 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -54,6 +54,8 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.90 
 
 namespace {
     double truncFraction = 0.9;
+    const int _badInt = -1;
+    const float _badFloat = -2.0;
 }
 
 class CalValsTool :   public ValBase
@@ -1081,24 +1083,28 @@ StatusCode CalValsTool::calculate()
 
     // Here we do the CAL_RmsE calculation
 
+    Point xEnd;
+    Vector tEnd;
+    double arclen;
+
     try {
     // get the last point on the best track
     if(num_tracks>0) {
         Event::TkrTrackHitVecConItr hitIter = (*track_1).end();
         hitIter--;
         const Event::TkrTrackHit* hit = *hitIter;
-        Point xEnd = hit->getPoint(Event::TkrTrackHit::SMOOTHED);
-        Vector tEnd = hit->getDirection(Event::TkrTrackHit::SMOOTHED);
+        xEnd = hit->getPoint(Event::TkrTrackHit::SMOOTHED);
+        tEnd = hit->getDirection(Event::TkrTrackHit::SMOOTHED);
         double eCosTheta = fabs(tEnd.z());
 
         // find the parameters to start the swim
         double deltaZ = xEnd.z() - m_calZBot;
-        double arclen   = fabs(deltaZ/eCosTheta);
+        arclen   = fabs(deltaZ/eCosTheta);
 
         // do the swim
         m_G4PropTool->setStepStart(xEnd, tEnd);
-        m_G4PropTool->step(arclen);  
-
+        m_G4PropTool->step(arclen);
+    
         // collect the radlens by layer
         int numSteps = m_G4PropTool->getNumberSteps();
         std::vector<double> rlCsI(m_nLayers, 0.0);
@@ -1170,28 +1176,30 @@ StatusCode CalValsTool::calculate()
     }
     } catch( std::exception& e ) {
       MsgStream log(msgSvc(), name());
-      SmartDataPtr<Event::EventHeader> header(m_pEventSvc, EventModel::EventHeader);
-      unsigned long evtId = (header) ? header->event() : 0;
-      long runId = (header) ? header->run() : -1;
-      log << MSG::WARNING << "Caught exception (run,event): ( " 
-          << runId << ", " << evtId << " ) " << e.what() 
+      printHeader(log);
+      log << e.what() 
           << " Skipping the Cal_rmsE calculation and resetting" << endreq;
+      log << "pos: " << xEnd << endreq 
+          << "dir: " << tEnd << endreq 
+          << "arclen: " << arclen << endreq;
 
-      CAL_layer0Ratio = s_badVal;
-      CAL_eAveBack = s_badVal;
-      CAL_nLayersRmsBack = s_badVal;
+      CAL_layer0Ratio = _badFloat;
+      CAL_eAveBack    = _badFloat;
+      CAL_nLayersRmsBack = _badInt;
+      CAL_rmsLayerEBack = _badFloat;
     
     } catch(...) {
       MsgStream log(msgSvc(), name());
-      SmartDataPtr<Event::EventHeader> header(m_pEventSvc, EventModel::EventHeader);
-      unsigned long evtId = (header) ? header->event() : 0;
-      long runId = (header) ? header->run() : -1;
-      log << MSG::WARNING << "Caught unknown exception (run,event): ( " 
-          << runId << ", " << evtId << " ) "
-          << " Skipping the Cal_rmsE calculation" << endreq;
-      CAL_layer0Ratio = s_badVal;
-      CAL_eAveBack = s_badVal;
-      CAL_nLayersRmsBack = s_badVal; 
+      printHeader(log);
+      log << " Skipping the Cal_rmsE calculation" << endreq;
+      log << "pos: " << xEnd << endreq 
+          << "dir: " << tEnd << endreq 
+          << "arclen: " << arclen << endreq;
+
+      CAL_layer0Ratio = _badFloat;
+      CAL_eAveBack    = _badFloat;
+      CAL_nLayersRmsBack = _badInt;
+      CAL_rmsLayerEBack = _badFloat;
     }
 
     //

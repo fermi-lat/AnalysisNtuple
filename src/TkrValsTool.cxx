@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.89 2008/04/22 22:54:47 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.90 2008/05/08 23:37:48 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -71,7 +71,7 @@ private:
     double towerEdge(Point pos) const;
     double containedFraction(Point pos, double gap, double r, 
         double costh, double phi) const;
-	float SSDEvaluation(const Event::TkrTrack* track); 
+    float SSDEvaluation(const Event::TkrTrack* track); 
 
     // some local constants
     double m_towerPitch;
@@ -82,18 +82,18 @@ private:
     bool   m_enableVetoDiagnostics;
     int    m_messageCount;
 
-	// Local variables to transfer results of SSD calculation
-	 float m_VetoPlaneCrossed; 
-     float m_VetoTrials;
-     float m_SSDVeto;
-     float m_VetoUnknown;
-     float m_VetoDeadPlane;
-     float m_VetoTruncated; 
-     float m_VetoTower;   
-     float m_VetoGapCorner;
-     float m_VetoGapEdge;   
-     float m_VetoBadCluster;
-	 float m_VetoHitFound;
+    // Local variables to transfer results of SSD calculation
+    float m_VetoPlaneCrossed; 
+    float m_VetoTrials;
+    float m_SSDVeto;
+    float m_VetoUnknown;
+    float m_VetoDeadPlane;
+    float m_VetoTruncated; 
+    float m_VetoTower;   
+    float m_VetoGapCorner;
+    float m_VetoGapEdge;   
+    float m_VetoBadCluster;
+    float m_VetoHitFound;
 
     // some pointers to services
 
@@ -109,8 +109,8 @@ private:
     IPropagatorSvc* m_propSvc;
 
     IPropagator* m_G4PropTool; 
-	/// AcdValsTool for Veto Track Number
-	IValsTool* m_pAcdTool;
+    /// AcdValsTool for Veto Track Number
+    IValsTool* m_pAcdTool;
 
     // properties
     double m_minVetoError;
@@ -232,8 +232,8 @@ private:
     float Tkr_2TkrHDoca;
 
     float Tkr_Veto_SSDVeto; 
-	float Tkr_Veto_Chisq;
-        
+    float Tkr_Veto_Chisq;
+
     float Tkr_Veto_Hits;
     float Tkr_Veto_FirstLayer;
 
@@ -266,6 +266,9 @@ namespace
     int yPosIdx = Event::TkrTrackParams::yPosIdx;
     int xSlpIdx = Event::TkrTrackParams::xSlpIdx;
     int ySlpIdx = Event::TkrTrackParams::ySlpIdx;
+
+    const int    _badInt  =   -1;
+    const float _badFloat = -2.0; 
 }
 
 // Static factory for instantiation of algtool objects
@@ -291,67 +294,67 @@ TkrValsTool::TkrValsTool(const std::string& type,
 }
 
 /** @page anatup_vars 
-    @section tkrvalstool TkrValsTool Variables
+@section tkrvalstool TkrValsTool Variables
 
 Notes: 
 - Variables called Tkr1Xxx refer to the "best" track; 
-     those called Tkr2Xxx refer to the second track.
+those called Tkr2Xxx refer to the second track.
 - A number of variables have the word "Hits" in their name. This <em>usually</em>
-     refers to clusters! In some cases it refers to TkrTrackHits. 
-     The description should make it clear which meaning is intended.
+refers to clusters! In some cases it refers to TkrTrackHits. 
+The description should make it clear which meaning is intended.
 - For variables listed as Tkr[1/2]Xxx there are two versions in the ntuple, 
-     one for the best and one for the second track. 
+one for the best and one for the second track. 
 - The labels are not entirely consistent, but it's probably 
-     too disruptive to fix them at this point.
-     For example: TkrRadLength, TkrTrackLength, TkrTwrEdge refer to track 1. 
-     Also, Tkr2Angle and Tkr2HDoca are quantities that depend on both tracks.
+too disruptive to fix them at this point.
+For example: TkrRadLength, TkrTrackLength, TkrTwrEdge refer to track 1. 
+Also, Tkr2Angle and Tkr2HDoca are quantities that depend on both tracks.
 - The variables associated with the second track are undefined 
-     if there is only one track! 
-     Check TkrNumTracks before using these variables! 
-     In fact check TkrNumTracks before using first-track variables, 
-     for the same reason.
+if there is only one track! 
+Check TkrNumTracks before using these variables! 
+In fact check TkrNumTracks before using first-track variables, 
+for the same reason.
 - A new section of (optional) ssd-veto diagnostic variables has been added. 
-     They are not written out by default.
+They are not written out by default.
 - Several new variables starting with "TkrV" have been added. These refer to 
-     quantities associated with the track likely to have cause the Acd veto.
+quantities associated with the track likely to have cause the Acd veto.
 - Some deleted variables, all Tkr2: FirstHits, DifHits, Gaps, FirstGaps,
-     DieEdge, KalThetaMs, [X/Y/Z]Dir, Phi, Theta, [X/Y/Z]0.
+DieEdge, KalThetaMs, [X/Y/Z]Dir, Phi, Theta, [X/Y/Z]0.
 
 @subsection general General variables
-     <table>
+<table>
 <tr><th> Variable <th> Type  <th> Description				                 
 <tr><td> TkrNumTracks 	
 <td>F<td>   Number of tracks found (Maximum is set by TkrRecon, currently 10) 
 <tr><td> TkrSumKalEne 
 <td>F<td>   Sum of Kalman energies (see TkrNKalEne, below) 
-            for the two best tracks 
+for the two best tracks 
 <tr><td> TkrSumConEne 	
 <td>F<td>   Sum of the energies for the two best tracks, 
-            as assigned by the patrec energy tool 
+as assigned by the patrec energy tool 
 <tr><td> TkrEnergy 
 <td>F<td>   Energy in tracker, as determined from linear regression analysis 
-            of number of clusters 
+of number of clusters 
 <tr><td> TkrEnergySum 	
 <td>F<td>   Deprecated 
 <tr><td> TkrEnergyCorr 
 <td>F<td>   TkrEnergy corrected by TkrEdgeCorr 
 <tr><td> TkrEdgeCorr 	
 <td>F<td>   Tracker edge correction. This may go away; 
-            it's an intermediate quantity 
+it's an intermediate quantity 
 <tr><td> TkrHDCount 
 <td>F<td>   Number of unused clusters in top x-y layer of the best track 
-            within a radius of 30 mm, corrected for track angle
-            (Used in PSF analysis and background rejection) 
+within a radius of 30 mm, corrected for track angle
+(Used in PSF analysis and background rejection) 
 <tr><td> TkrTotalHits 
 <td>F<td>   Deprecated. Use TkrSurplusHCInside instead
 <tr><td> TkrSurplusHitsInside 
 <td>F<td>   Number of clusters inside an energy- and angle-dependent cone 
-            centered on the reconstructed axis of the best track and
-            starting at the head of track 1. Only clusters in layers with at
-            least one x and one y cluster in the tower are counted.
+centered on the reconstructed axis of the best track and
+starting at the head of track 1. Only clusters in layers with at
+least one x and one y cluster in the tower are counted.
 <tr><td> TkrSurplusHitRatio
 <td>F<td>   Ratio of the number of clusters outside the cone to the number
-            inside. See TkrSurplusHitsInside
+inside. See TkrSurplusHitsInside
 <tr><td> TkrThinHits
 <td>F<td>   Number of clusters in the above cone in the thin-converter layers 
 <tr><td> TkrThickHits 
@@ -362,9 +365,9 @@ Notes:
 <td>F<td> Angle between first and second reconstructed tracks 
 <tr><td> Tkr2TkrHDoca  
 <td>F<td>   Distance between first and second track in the plane of the 
-            first hit on the first track. 
-            This is most useful if the two tracks are almost parallel, 
-            in which case the usual DOCA is poorly measured.  
+first hit on the first track. 
+This is most useful if the two tracks are almost parallel, 
+in which case the usual DOCA is poorly measured.  
 </table>
 
 @subsection both Variables that exist for both best and second tracks
@@ -381,60 +384,60 @@ Notes:
 <td>F<td>   [First/Last] layer in track  (layer 0 is the bottom of the tracker)
 <tr><td> Tkr1FirstGapPlane  
 <td>F<td>   plane number of first gap on track 1  
-             (This and the following X,Y pair can be used to find dead strips)
+(This and the following X,Y pair can be used to find dead strips)
 <tr><td> Tkr1[X/Y]Gap  
 <td>F<td>   [x/y] location of first gap on track 1  
 <tr><td> Tkr[1/2]Qual  
 <td>F<td>   Track "quality": depends on the number of clusters and chisquared of the track. 
-             Maximum is currently 64, can be negative if chisqared gets large. 
-             This is used primarily to order the tracks during patrec. 
-             <strong>It's not a good idea to cut on this variable!</strong>  
+Maximum is currently 64, can be negative if chisqared gets large. 
+This is used primarily to order the tracks during patrec. 
+<strong>It's not a good idea to cut on this variable!</strong>  
 <tr><td> Tkr[1/2]Type  
 <td>F<td>   These are the status bits from the trackign, containing information
-             about how the track was found and fitted.   
-             See TkrTrack.h in the Event package for the current description.     
-             As of GlastRelease v7r2, the status word bits organized as follows:
+about how the track was found and fitted.   
+See TkrTrack.h in the Event package for the current description.     
+As of GlastRelease v7r2, the status word bits organized as follows:
 
 @verbatim
 
-       |  0   0   0   0  |  0   0   0   0  |  0   0   0   0  |  0   0   0   0   |
-        [ Pat Rec Info  ]  [Pass ][ E-Loss] [ Track Energy ]  [Track Fit Status]
+|  0   0   0   0  |  0   0   0   0  |  0   0   0   0  |  0   0   0   0   |
+[ Pat Rec Info  ]  [Pass ][ E-Loss] [ Track Energy ]  [Track Fit Status]
 
-        FOUND    = 0x0001,  //Set if track has been "found" by pat rec
-        FILTERED = 0x0002,  //Set if track fit filter stage has been run
-        SMOOTHED = 0x0004,  //Set if track fit smoother has been run
-        REVFILTR = 0x0008,  //Set if track has been reverse-filtered
-        CALENERGY= 0x0010,  //Set if track energy from raw calorimeter info
-        LATENERGY= 0x0020,  //Set if track energy from TKR+CAL constrained
-        USERENERGY= 0x0040, //Set if track energy set by user
-        MCENERGY = 0x0080,  //Set if energy from users or from MC truth
-        RADELOSS = 0x0100,  //Set if radiative energy loss used (e+/e- fitting)
-        MIPELOSS = 0x0200,  //Set if Bethe-Block energy loss used (not e+/e-)
-        ONEPASS  = 0x0400,  //Set if the full first pass track fit finished
-        TWOPASS  = 0x0800,  //Set if an iteration of the first fit finished
-        PRCALSRCH= 0x1000,  //Set if Pat. Rec. used Cal Energy Centroid
-        PRBLNSRCH= 0x2000,  //Set if Pat. Rec. used only Track info.
-        TOP      = 0x4000,  //Set if track traj. intercepts top tracker plane
-        BOTTOM   = 0x8000   //Set if track traj. intercepts first Cal layer
+FOUND    = 0x0001,  //Set if track has been "found" by pat rec
+FILTERED = 0x0002,  //Set if track fit filter stage has been run
+SMOOTHED = 0x0004,  //Set if track fit smoother has been run
+REVFILTR = 0x0008,  //Set if track has been reverse-filtered
+CALENERGY= 0x0010,  //Set if track energy from raw calorimeter info
+LATENERGY= 0x0020,  //Set if track energy from TKR+CAL constrained
+USERENERGY= 0x0040, //Set if track energy set by user
+MCENERGY = 0x0080,  //Set if energy from users or from MC truth
+RADELOSS = 0x0100,  //Set if radiative energy loss used (e+/e- fitting)
+MIPELOSS = 0x0200,  //Set if Bethe-Block energy loss used (not e+/e-)
+ONEPASS  = 0x0400,  //Set if the full first pass track fit finished
+TWOPASS  = 0x0800,  //Set if an iteration of the first fit finished
+PRCALSRCH= 0x1000,  //Set if Pat. Rec. used Cal Energy Centroid
+PRBLNSRCH= 0x2000,  //Set if Pat. Rec. used only Track info.
+TOP      = 0x4000,  //Set if track traj. intercepts top tracker plane
+BOTTOM   = 0x8000   //Set if track traj. intercepts first Cal layer
 
 @endverbatim
 The definitions should be fairly stable.
 <tr><td> Tkr[1/2]TwrEdge  
 <td>F<td>   Distance from tower edge of initial point (0 is halfway between the towers, 
-             increases towards center of tower) 
+increases towards center of tower) 
 <tr><td> Tkr[1/2]PrjTwrEdge  
 <td>F<td>   Distance from tower edge of track extrapolated to the layer upstream 
-             of the first layer (See Tkr1TwrEdge.) 
+of the first layer (See Tkr1TwrEdge.) 
 <tr><td> Tkr[1/2]KalEne  
 <td>F<td>   Kalman energy of track 1; this is the energy determined from the multiple scattering 
-            along the track (goes like 1/E). Since it is possible to measure a 
-            zero scattering angle, which would lead to infinite energy, 
-            the minimum measureable angle, which limits the energy to reasonable values  
+along the track (goes like 1/E). Since it is possible to measure a 
+zero scattering angle, which would lead to infinite energy, 
+the minimum measureable angle, which limits the energy to reasonable values  
 <tr><td> Tkr[1/2]ConEne  
 <td>F<td>   Energy from PatRec energy tool for track 1. 
-             The tool computes the total event energy and then partitions it 
-             between the first 2 tracks according to their Kalman energies 
-             and energy errors  
+The tool computes the total event energy and then partitions it 
+between the first 2 tracks according to their Kalman energies 
+and energy errors  
 </table>
 @subsection best_only Variables that exist only for best track
 
@@ -442,18 +445,18 @@ The definitions should be fairly stable.
 <tr><th> Variable <th> Type  <th> Description				                 
 <tr><td> TkrRadLength 
 <td>F<td>   Radiation lengths traversed by the best track. 
-             This is from half-way thru the initial converter to the lowest bi-plane 
-             in the tracker, whether or not the track actually gets to the end. 
+This is from half-way thru the initial converter to the lowest bi-plane 
+in the tracker, whether or not the track actually gets to the end. 
 <tr><td> TkrTwrEdge 
 <td>F<td>   The average distance of the best track from the "edge" of each tray, 
-             weighted by radiation lengths traversed. 
-            (The edge is a plane halfway between the towers. 
+weighted by radiation lengths traversed. 
+(The edge is a plane halfway between the towers. 
 <tr><td> TkrTrackLength 
 <td>F<td>   Distance between the start of the best track and the grid, along the track axis. 	
 <tr><td> Tkr1TwrGap  
 <td>F<td>   Length of track in nominal intertower gap, currently set to 18 mm. 
-            Can be a small as zero if track exits through bottom of tracker, 
-            and as large as the intertower gap, if track crosses to adjacent tower.  
+Can be a small as zero if track exits through bottom of tracker, 
+and as large as the intertower gap, if track crosses to adjacent tower.  
 <tr><td> Tkr1ThetaErr  
 <td>F<td>   Error on the measurement of theta  
 <tr><td> Tkr1PhiErr  
@@ -462,54 +465,54 @@ The definitions should be fairly stable.
 <td>F<td>   Tkr1SXY/(Tkr1SXX + Tkr1SYY)  
 <tr><td> Tkr1CovDet  
 <td>F<td>   Determinant of the error matrix, 
-             but normalized to remove the dependence on cos(theta)          
+but normalized to remove the dependence on cos(theta)          
 <tr><td> Tkr1S[XX/YY]  
 <td>F<td>   [x-x/y-y] element of the covariance matrix; square of error on [x/y]  
 <tr><td> Tkr1SXY  
 <td>F<td>   x-y element of the covariance matrix; covariance  
 <tr><td> Tkr1ToTFirst  
 <td>F<td>   ToT associated with the first hit on best track 
-            (All ToT's are adjusted for pathlength in the measuring and non-measuring 
-            directions in the strip, and for the strip width.) <em>Note: there is only 
-            one ToT per half-plane. If there is more than one hit strip, the highest
-            ToT is stored.</em>
+(All ToT's are adjusted for pathlength in the measuring and non-measuring 
+directions in the strip, and for the strip width.) <em>Note: there is only 
+one ToT per half-plane. If there is more than one hit strip, the highest
+ToT is stored.</em>
 <tr><td> Tkr1ToTAve  
 <td>F<td>   Average ToT for the hits on the best track (See note above.) 
 <tr><td> Tkr1ToTTrAve  
 <td>F<td>   Average ToT for the hits on the best track, 
-            excluding the largest and smallest (See note above.)
+excluding the largest and smallest (See note above.)
 <tr><td> Tkr1ToTAsym  
 <td>F<td>   Asymmetry between last two and first two ToT's for the best track
-            (See note above.)
+(See note above.)
 <tr><td> Tkr1ChisqAsym  
 <td>F<td>   Asymmetry between last two and first two track-segment delta-chisquared's  
 <tr><td> Tkr1SSDVetoOld 
 <td>F<td>   Number of silicon planes between the top of the extrapolated track 
-            and the first plane that has a cluster near the track. Only planes that have
-            wafers which intersect the extrapolated track are considered. No checks 
-            for dead strips, etc. are made (yet!).
-            Can be used as a back-up for the ACD. 
+and the first plane that has a cluster near the track. Only planes that have
+wafers which intersect the extrapolated track are considered. No checks 
+for dead strips, etc. are made (yet!).
+Can be used as a back-up for the ACD. 
 <tr><td> Tkr1SSDVeto  
 <td>F<td>   New version of the SSD Veto. For this variable, tracks which pass close
-            to a dead plane, buffer-saturated region, inter-wafer gap, gap between towers,
-            or dead strips, do not cause the veto count to be incremented if no cluster is found.
-            This almost certainly overdoes it: a more correct calculation would include
-            the probability for the track to cross the inactive region. (Coming soon!)
+to a dead plane, buffer-saturated region, inter-wafer gap, gap between towers,
+or dead strips, do not cause the veto count to be incremented if no cluster is found.
+This almost certainly overdoes it: a more correct calculation would include
+the probability for the track to cross the inactive region. (Coming soon!)
 <tr><td> TkrVetoPlaneCrossed
 <td>I<td>   Number of planes contributiong to the SSD Veto. This doesn't count the points
-            where a track crosses in a gap.
+where a track crosses in a gap.
 <tr><td> Tkr1CoreHC
 <td>F<td>   Number of clusters within a roughly cylindrical region )(default radius 10 mm) 
-            around the TrackHits in each plane between the first and last on the best
-            track, excluding the clusters that belong to the track itself
+around the TrackHits in each plane between the first and last on the best
+track, excluding the clusters that belong to the track itself
 <tr><td> TkrDispersion
 <td>F<td>   the RMS of the distances between the 1st track and all others in the event.
-            For tracks which start "above" the first track distance is the 3-D distance
-            For the rest, distance is the doca of the head of the track to the axis of
-            the first track.
+For tracks which start "above" the first track distance is the 3-D distance
+For the rest, distance is the doca of the head of the track to the axis of
+the first track.
 <tr><td> TkrUpstreamHC
 <td>F<td>   The number of clusters in a cylinder (default radius 150 mm) up to 4 layers thick
-            above the head of the first track.
+above the head of the first track.
 <tr><td> Tkr1CORERatio
 <td>F<td>   the ratio of Tkr1CoreHC and Tkr1Hits
 <tr><td> Tkr1LATEdge
@@ -524,19 +527,19 @@ The definitions should be fairly stable.
 <td>F<td>   Number of gaps in first Tkr1FirstHits layers on track  
 <tr><td> Tkr1DieEdge  
 <td>F<td>   Distance from die (wafer) edge of initial point 
-             (0 is halfway between the dies, increases toward center of die)  
+(0 is halfway between the dies, increases toward center of die)  
 <tr><td> Tkr1KalThetaMS  
 <td>F<td>   Multiple scattering angle (radians) referenced to first layer. 
-             The contributions from all the layers in the track are adjusted 
-             for the predicted energy in each layer, and weighted accordingly. 
-             So the result is sensitive to the particle type and 
-             the chosen energy-loss mechanism. 		
+The contributions from all the layers in the track are adjusted 
+for the predicted energy in each layer, and weighted accordingly. 
+So the result is sensitive to the particle type and 
+the chosen energy-loss mechanism. 		
 <tr><td> Tkr1[X/Y/Z]Dir  
 <td>F<td>   Track [x/y/z] direction cosine  
 <tr><td> Tkr1Phi  
 <td>F<td>   Track phi, radians 
-            (direction from which particle comes, not particle direction!) 
-            range: (0, 2pi)  
+(direction from which particle comes, not particle direction!) 
+range: (0, 2pi)  
 <tr><td> Tkr1Theta  
 <td>F<td>   Track theta, radians (direction ditto)  
 <tr><td> Tkr1[X/Y/Z]0  
@@ -547,11 +550,11 @@ The definitions should be fairly stable.
 @verbatim
 (Turn on with jO parameter: ToolSvc.TkrValsTool.enableVetoDiagnostics = true;)
 @endverbatim
-     <table>
+<table>
 <tr><th> Variable <th> Type  <th> Description				                 
 <tr><td> TkrVetoTrials
 <td>I<td>   Difference between the plane number of the last plane crossed and the first, plus one
-            Any gaps above the last plane are not counted. (This may change soon.)
+Any gaps above the last plane are not counted. (This may change soon.)
 <tr><td> TkrVetoHitFound
 <td>I<td>   Number of clusters found
 <tr><td> TkrVetoUnknown
@@ -630,7 +633,7 @@ StatusCode TkrValsTool::initialize()
             log << MSG::ERROR << "Couldn't find the ToolSvc!" << endreq;
             return StatusCode::FAILURE;
         }
-		m_pAcdTool = 0;
+        m_pAcdTool = 0;
         sc = toolSvc->retrieveTool("AcdValsTool", m_pAcdTool);
         if( sc.isFailure() ) {
             log << MSG::ERROR << "Unable to find tool: " "AcdValsTool" << endreq;
@@ -743,43 +746,43 @@ StatusCode TkrValsTool::initialize()
     addItem("Tkr2FirstChisq", &Tkr_2_FirstChisq);
 
     addItem("Tkr2Hits",       &Tkr_2_Hits);
-//    addItem("Tkr2FirstHits",  &Tkr_2_FirstHits);
+    //    addItem("Tkr2FirstHits",  &Tkr_2_FirstHits);
     addItem("Tkr2FirstLayer", &Tkr_2_FirstLayer);
     addItem("Tkr2LastLayer",  &Tkr_2_LastLayer);
- //   addItem("Tkr2DifHits",    &Tkr_2_DifHits);
+    //   addItem("Tkr2DifHits",    &Tkr_2_DifHits);
 
-  //  addItem("Tkr2Gaps",       &Tkr_2_Gaps);
-  //  addItem("Tkr2FirstGaps",  &Tkr_2_FirstGaps);
+    //  addItem("Tkr2Gaps",       &Tkr_2_Gaps);
+    //  addItem("Tkr2FirstGaps",  &Tkr_2_FirstGaps);
 
     addItem("Tkr2Qual",       &Tkr_2_Qual);
     addItem("Tkr2Type",       &Tkr_2_Type);
     addItem("Tkr2TwrEdge",    &Tkr_2_TwrEdge);
     addItem("Tkr2PrjTwrEdge", &Tkr_2_PrjTwrEdge);
-  //  addItem("Tkr2DieEdge",    &Tkr_2_DieEdge);
+    //  addItem("Tkr2DieEdge",    &Tkr_2_DieEdge);
 
     addItem("Tkr2KalEne",     &Tkr_2_KalEne);
     addItem("Tkr2ConEne",     &Tkr_2_ConEne);
-  //  addItem("Tkr2KalThetaMS", &Tkr_2_KalThetaMS);
+    //  addItem("Tkr2KalThetaMS", &Tkr_2_KalThetaMS);
 
-  //  addItem("Tkr2XDir",       &Tkr_2_xdir);
-  //  addItem("Tkr2YDir",       &Tkr_2_ydir);
-  //  addItem("Tkr2ZDir",       &Tkr_2_zdir);
-  //  addItem("Tkr2Phi",        &Tkr_2_Phi);
-  //  addItem("Tkr2Theta",      &Tkr_2_Theta);
-  //  addItem("Tkr2X0",         &Tkr_2_x0);
-  //  addItem("Tkr2Y0",         &Tkr_2_y0);
-  //  addItem("Tkr2Z0",         &Tkr_2_z0);    
+    //  addItem("Tkr2XDir",       &Tkr_2_xdir);
+    //  addItem("Tkr2YDir",       &Tkr_2_ydir);
+    //  addItem("Tkr2ZDir",       &Tkr_2_zdir);
+    //  addItem("Tkr2Phi",        &Tkr_2_Phi);
+    //  addItem("Tkr2Theta",      &Tkr_2_Theta);
+    //  addItem("Tkr2X0",         &Tkr_2_x0);
+    //  addItem("Tkr2Y0",         &Tkr_2_y0);
+    //  addItem("Tkr2Z0",         &Tkr_2_z0);    
 
     addItem("Tkr2TkrAngle",   &Tkr_2TkrAngle); 
     addItem("Tkr2TkrHDoca",   &Tkr_2TkrHDoca); 
 
-	addItem("TkrVSSDVeto",    &Tkr_Veto_SSDVeto); 
-	addItem("TkrVChisq",      &Tkr_Veto_Chisq); 
+    addItem("TkrVSSDVeto",    &Tkr_Veto_SSDVeto); 
+    addItem("TkrVChisq",      &Tkr_Veto_Chisq); 
 
-	addItem("TkrVHits",       &Tkr_Veto_Hits); 
-	addItem("TkrVFirstLayer", &Tkr_Veto_FirstLayer); 
-	addItem("TkrVKalEne",     &Tkr_Veto_KalEne); 
-	addItem("TkrVConEne",     &Tkr_Veto_ConEne); 
+    addItem("TkrVHits",       &Tkr_Veto_Hits); 
+    addItem("TkrVFirstLayer", &Tkr_Veto_FirstLayer); 
+    addItem("TkrVKalEne",     &Tkr_Veto_KalEne); 
+    addItem("TkrVConEne",     &Tkr_Veto_ConEne); 
 
     // for test, uncomment these statements:
     /*
@@ -993,7 +996,7 @@ StatusCode TkrValsTool::calculate()
         int gapId = -1;
         bool gapFound = false;
 
-        
+
         // count the number of real hits... may not be necessary but I'm nervous!
         int clustersOnTrack = 0;
         while(pHit != track_1->end()) {
@@ -1131,22 +1134,22 @@ StatusCode TkrValsTool::calculate()
             (chisq_last - chisq_first)/(chisq_last + chisq_first);
 
 
-		int firstPlane = m_tkrGeom->getPlane(track_1->front()->getTkrId()); 
-         int firstLayer = m_tkrGeom->getLayer(firstPlane);
-         double zFirstLayer = m_tkrGeom->getLayerZ(firstLayer);
+        int firstPlane = m_tkrGeom->getPlane(track_1->front()->getTkrId()); 
+        int firstLayer = m_tkrGeom->getLayer(firstPlane);
+        double zFirstLayer = m_tkrGeom->getLayerZ(firstLayer);
 
-		 double costh = fabs(t1.z());
-         double secth = 1./costh;
+        double costh = fabs(t1.z());
+        double secth = 1./costh;
 
-         // for the footprints
-         double secthX = 1./sqrt(1.0 - t1.x()*t1.x());
-         double secthY = 1./sqrt(1.0 - t1.y()*t1.y());
+        // for the footprints
+        double secthX = 1./sqrt(1.0 - t1.x()*t1.x());
+        double secthY = 1./sqrt(1.0 - t1.y()*t1.y());
 
-         double xVetoRgn = _vetoRegion*secthX;
+        double xVetoRgn = _vetoRegion*secthX;
         double yVetoRgn = _vetoRegion*secthY;
 
-		 // SSD Veto stuff here:
-		// First Track stuff as before
+        // SSD Veto stuff here:
+        // First Track stuff as before
         Tkr_1_SSDVeto = SSDEvaluation(track_1); 
 
         Tkr_1_VetoPlaneCrossed = m_VetoPlaneCrossed; 
@@ -1160,7 +1163,7 @@ StatusCode TkrValsTool::calculate()
         Tkr_1_VetoBadCluster = m_VetoBadCluster;
 
         int veto_track_num = -1;
-		// Most likely track from AcdValsTool
+        // Most likely track from AcdValsTool
         if(m_pAcdTool) {
             // check that Acd executes before Tkr
             if(m_loadOrder<m_pAcdTool->getLoadOrder()) {
@@ -1180,20 +1183,20 @@ StatusCode TkrValsTool::calculate()
                 int firstCheck = m_check; 
                 if(m_pAcdTool->getVal("AcdActDistTrackNum", veto_track_num, 
                     firstCheck).isSuccess()) {
-                    if(veto_track_num >= 0 && veto_track_num < Tkr_Num_Tracks) {
-                        int n = veto_track_num;
-                        const Event::TkrTrack* veto_track =  *(pTracks->begin()+n);
-                        Tkr_Veto_SSDVeto    = SSDEvaluation(veto_track); 
-                        Tkr_Veto_Chisq      = veto_track->getChiSquareSmooth();
+                        if(veto_track_num >= 0 && veto_track_num < Tkr_Num_Tracks) {
+                            int n = veto_track_num;
+                            const Event::TkrTrack* veto_track =  *(pTracks->begin()+n);
+                            Tkr_Veto_SSDVeto    = SSDEvaluation(veto_track); 
+                            Tkr_Veto_Chisq      = veto_track->getChiSquareSmooth();
 
-                        Tkr_Veto_Hits       = veto_track->getNumFitHits();
-                        Tkr_Veto_FirstLayer = 
-                            m_tkrGeom->getLayer(veto_track->front()->getTkrId());
+                            Tkr_Veto_Hits       = veto_track->getNumFitHits();
+                            Tkr_Veto_FirstLayer = 
+                                m_tkrGeom->getLayer(veto_track->front()->getTkrId());
 
-                        Tkr_Veto_KalEne     = veto_track->getKalEnergy(); 
-                        Tkr_Veto_ConEne     = veto_track->getInitialEnergy(); 
+                            Tkr_Veto_KalEne     = veto_track->getKalEnergy(); 
+                            Tkr_Veto_ConEne     = veto_track->getInitialEnergy(); 
+                        }
                     }
-                }
             }
         }
 
@@ -1308,8 +1311,8 @@ StatusCode TkrValsTool::calculate()
 
         // Computation of the tracker contribution to the total energy 
         double arc_min = (x1.z() - m_tkrGeom->calZTop())*secth; 
-        m_G4PropTool->setStepStart(x1, t1);
-        m_G4PropTool->step(arc_min);
+
+
         double z_present = x1.z();
 
         // Compute the sum-of radiation_lengths x Hits in each layer
@@ -1338,7 +1341,7 @@ StatusCode TkrValsTool::calculate()
 
         Tkr_HDCount = pQueryClusters->numberOfUUHitsNear((int) Tkr_1_FirstLayer, 
             xNearRgn, yNearRgn, x1);
-        
+
         // Tkr1CoreHC:
 
         double xCoreRgn = _coreRegion*secthX;
@@ -1398,14 +1401,14 @@ StatusCode TkrValsTool::calculate()
         // Recover pointer to CalEventEnergy info 
         double CAL_EnergyCorr = 0.0;
 #ifdef PRE_CALMOD
-       Event::CalEventEnergy* calEventEnergy = 
+        Event::CalEventEnergy* calEventEnergy = 
             SmartDataPtr<Event::CalEventEnergy>(m_pEventSvc, EventModel::CalRecon::CalEventEnergy);
 #else
         Event::CalEventEnergyCol * calEventEnergyCol = 
-          SmartDataPtr<Event::CalEventEnergyCol>(m_pEventSvc, EventModel::CalRecon::CalEventEnergyCol);
+            SmartDataPtr<Event::CalEventEnergyCol>(m_pEventSvc, EventModel::CalRecon::CalEventEnergyCol);
         Event::CalEventEnergy * calEventEnergy = 0 ;
         if ((calEventEnergyCol!=0)&&(!calEventEnergyCol->empty()))
-          calEventEnergy = calEventEnergyCol->front() ;
+            calEventEnergy = calEventEnergyCol->front() ;
 #endif
         if (calEventEnergy != 0) {
             // Extraction of results from CalValCorrTool in CalRecon... 
@@ -1417,153 +1420,178 @@ StatusCode TkrValsTool::calculate()
                 }
             }
         }
-        
+
         double eRecon = CAL_EnergyCorr + tkrTrackEnergy;
         double eCone = std::min(_eConeMax, std::max(eRecon, _eConeMin));
         // Get the basic cone angle for this Energy
         double coneAngle;
         if (eCone<_eConeBreak) {
             coneAngle = interpolate(1.0/eCone, 1.0/_eConeMin, 1.0/_eConeBreak, 
-            _coneAngleEMin, _coneAngleEBreak);
+                _coneAngleEMin, _coneAngleEBreak);
         } else {
             coneAngle = interpolate(1./eCone, 1./_eConeBreak, 1.0/_eConeMax, 
-            _coneAngleEBreak, _coneAngleEMax);
+                _coneAngleEBreak, _coneAngleEMax);
         }
 
         double xSprd0 = coneAngle*secthX*cosFactor;
         double ySprd0 = coneAngle*secthY*cosFactor;
 
-        for(layer = firstLayer; layer>=0; --layer) {
-            
-            if(layer <firstLayer) {
-                radlen = m_G4PropTool->getRadLength(arc_len); 
-            }
+        bool goodProp = true;
 
-            // Assume location of shower center is given by 1st track
+        try {
+            m_G4PropTool->setStepStart(x1, t1);
+            m_G4PropTool->step(arc_min);
+        } catch( std::exception& e) {
+            printHeader(log);
+            log << e.what()
+                << " Skipping the TKR total-energy calculations" << endreq;
+            log << "pos: " << x1 << endreq 
+                << "dir: " << t1 << endreq 
+                << "arclen: " << arc_min << endreq;
+            goodProp = false;
+        } catch (...) {
+            printHeader(log);
+            log << "(Unknown) Skipping the TKR total-energy calculations" << endreq;
+            log << "pos: " << x1 << endreq 
+                << "dir: " << t1 << endreq 
+                << "arclen: " << arc_min << endreq;
+            goodProp = false;
+        }
 
-            // try to get actual x and y (accounting for the differences in z)
-            double zX = m_tkrGeom->getLayerZ(layer, 0);
-            double zY = m_tkrGeom->getLayerZ(layer, 1);
-            double zAve = 0.5*(zX + zY);
-            double arcLenX = (x1.z() - zX)*secth;
-            double arcLenY = (x1.z() - zY)*secth;
 
-            double x_hitX = x1.x() + arcLenX*t1.x();
-            double x_hitY = x1.y() + arcLenY*t1.y();
-            Point x_hit1(x_hitX, x_hitY, zAve);
-            // whew!!
+        if(goodProp) {
+            for(layer = firstLayer; layer>=0; --layer) {
 
-            int hitXTower, hitYTower;
-            m_tkrGeom->truncateCoord(x_hit1.x(), m_towerPitch, m_xNum, hitXTower);
-            m_tkrGeom->truncateCoord(x_hit1.y(), m_towerPitch, m_yNum, hitYTower);
-            int thisTower = idents::TowerId(hitXTower, hitYTower).id();
-                
-            Point x_hit = x1 + arc_len*t1;
-
-            // trial code for Surplus hits
-
-            layerInCount.assign(numTowers,0);
-            layerOutCount.assign(numTowers, 0);
-
-            Event::TkrClusterVec clusVec[2];
-            int tower;
-            std::vector<int> clusCount[2];
-            clusCount[0].assign(numTowers,0);
-            clusCount[1].assign(numTowers,0);
-            int view;
-            // fpr each layer, count the clusters in each tower, view
-            for (view=0; view<2; ++view) {
-                clusVec[view] = pQueryClusters->getClusters(view, layer);
-                //std::cout << clusVec[view].size() << std::endl;
-                Event::TkrClusterVecConItr iter = clusVec[view].begin();
-                for(;iter!=clusVec[view].end(); ++iter) {
-                    idents::TkrId id = (*iter)->getTkrId();
-                    tower = idents::TowerId(id.getTowerX(), id.getTowerY()).id();
-                    clusCount[view][tower]++;
-                    //std::cout << "count, " << tower << " " << view << ": " 
-                    //    << clusCount[view][tower] << std::endl;
+                if(layer <firstLayer) {
+                    radlen = m_G4PropTool->getRadLength(arc_len); 
                 }
-            }
 
-            // form the x-y coincidence
-            std::vector<bool> isXY(numTowers, false);
-            for (tower=0;tower<numTowers; ++ tower) {
-                isXY[tower] = (clusCount[0][tower]>0 && clusCount[1][tower]>0);
-                //std::cout << "tower " << tower << ", " << clusCount[0][tower] 
-                //    << " " << clusCount[1][tower] << ", " << isXY[tower] << std::endl;
-            }
-            // make sure *this* tower is included!
-            isXY[thisTower] = true;
+                // Assume location of shower center is given by 1st track
 
-            float factor;
+                // try to get actual x and y (accounting for the differences in z)
+                double zX = m_tkrGeom->getLayerZ(layer, 0);
+                double zY = m_tkrGeom->getLayerZ(layer, 1);
+                double zAve = 0.5*(zX + zY);
+                double arcLenX = (x1.z() - zX)*secth;
+                double arcLenY = (x1.z() - zY)*secth;
 
-            double xSprd = spread0 + xSprd0*(firstLayer-layer);
-            double ySprd = spread0 + ySprd0*(firstLayer-layer);
+                double x_hitX = x1.x() + arcLenX*t1.x();
+                double x_hitY = x1.y() + arcLenY*t1.y();
+                Point x_hit1(x_hitX, x_hitY, zAve);
+                // whew!!
 
-            // test each cluster in surviving towers
-            int mode = 0;
-            if (mode==0) {
-                factor = 1.0;
+                int hitXTower, hitYTower;
+                m_tkrGeom->truncateCoord(x_hit1.x(), m_towerPitch, m_xNum, hitXTower);
+                m_tkrGeom->truncateCoord(x_hit1.y(), m_towerPitch, m_yNum, hitYTower);
+                int thisTower = idents::TowerId(hitXTower, hitYTower).id();
+
+                Point x_hit = x1 + arc_len*t1;
+
+                // trial code for Surplus hits
+
+                layerInCount.assign(numTowers,0);
+                layerOutCount.assign(numTowers, 0);
+
+                Event::TkrClusterVec clusVec[2];
+                int tower;
+                std::vector<int> clusCount[2];
+                clusCount[0].assign(numTowers,0);
+                clusCount[1].assign(numTowers,0);
+                int view;
+                // fpr each layer, count the clusters in each tower, view
                 for (view=0; view<2; ++view) {
+                    clusVec[view] = pQueryClusters->getClusters(view, layer);
+                    //std::cout << clusVec[view].size() << std::endl;
                     Event::TkrClusterVecConItr iter = clusVec[view].begin();
                     for(;iter!=clusVec[view].end(); ++iter) {
                         idents::TkrId id = (*iter)->getTkrId();
                         tower = idents::TowerId(id.getTowerX(), id.getTowerY()).id();
-                        if(!isXY[tower]) continue;
-                        Vector diff = x_hit1 - (*iter)->position();
-                        bool in;
-                        // replace with current definition of "in"
-                        if(view==0) {
-                            in = (fabs(diff.x())<=xSprd && (fabs(diff.y())-ySprd<0.5*m_activeWidth));
-                        } else { 
-                            in = (fabs(diff.y())<=ySprd && (fabs(diff.x())-xSprd<0.5*m_activeWidth));
-                        }
-                        if (in) {layerInCount[tower]  += 1.0f;}
-                        else    {layerOutCount[tower] += 1.0f;}
+                        clusCount[view][tower]++;
+                        //std::cout << "count, " << tower << " " << view << ": " 
+                        //    << clusCount[view][tower] << std::endl;
                     }
                 }
-            } 
-            /*
-            // first attempt at code that uses TkrPoint-like objects... needs lots more work!!
-            else if (mode==1) {
+
+                // form the x-y coincidence
+                std::vector<bool> isXY(numTowers, false);
+                for (tower=0;tower<numTowers; ++ tower) {
+                    isXY[tower] = (clusCount[0][tower]>0 && clusCount[1][tower]>0);
+                    //std::cout << "tower " << tower << ", " << clusCount[0][tower] 
+                    //    << " " << clusCount[1][tower] << ", " << isXY[tower] << std::endl;
+                }
+                // make sure *this* tower is included!
+                isXY[thisTower] = true;
+
+                float factor;
+
+                double xSprd = spread0 + xSprd0*(firstLayer-layer);
+                double ySprd = spread0 + ySprd0*(firstLayer-layer);
+
+                // test each cluster in surviving towers
+                int mode = 0;
+                if (mode==0) {
+                    factor = 1.0;
+                    for (view=0; view<2; ++view) {
+                        Event::TkrClusterVecConItr iter = clusVec[view].begin();
+                        for(;iter!=clusVec[view].end(); ++iter) {
+                            idents::TkrId id = (*iter)->getTkrId();
+                            tower = idents::TowerId(id.getTowerX(), id.getTowerY()).id();
+                            if(!isXY[tower]) continue;
+                            Vector diff = x_hit1 - (*iter)->position();
+                            bool in;
+                            // replace with current definition of "in"
+                            if(view==0) {
+                                in = (fabs(diff.x())<=xSprd && (fabs(diff.y())-ySprd<0.5*m_activeWidth));
+                            } else { 
+                                in = (fabs(diff.y())<=ySprd && (fabs(diff.x())-xSprd<0.5*m_activeWidth));
+                            }
+                            if (in) {layerInCount[tower]  += 1.0f;}
+                            else    {layerOutCount[tower] += 1.0f;}
+                        }
+                    }
+                } 
+                /*
+                // first attempt at code that uses TkrPoint-like objects... needs lots more work!!
+                else if (mode==1) {
                 double xDenom = 1./xSprd/xSprd;
                 double yDenom = 1./ySprd/ySprd;
                 Event::TkrClusterVecConItr iterX = clusVec[0].begin();
                 for(;iterX!=clusVec[0].end(); ++iterX) {
-                    idents::TkrId idX = (*iterX)->getTkrId();
-                    int towerX = idents::TowerId(idX.getTowerX(), idX.getTowerY()).id();
-                    if(!isXY[tower]) continue;
-                    Event::TkrClusterVecConItr iterY = clusVec[1].begin();
-                    for(;iterY!=clusVec[1].end(); ++iterY) {
-                        idents::TkrId idY = (*iterY)->getTkrId();
-                        int towerY = idents::TowerId(idY.getTowerX(), idY.getTowerY()).id();
-                        if(towerX!=towerY) continue;
-                        layerOutCount[tower] += 1.0f;
-                        double dx = fabs(x_hit.x() - (*iterX)->position().x());
-                        double dy = fabs(x_hit.y() - (*iterY)->position().y());
-                        if (dx>xSprd || dy>ySprd) continue;
-                        // could be inside!
-                        if(dx*dx/xDenom + dy*dy/yDenom < 1.) layerInCount[tower] += 1.0f;
-                    }
+                idents::TkrId idX = (*iterX)->getTkrId();
+                int towerX = idents::TowerId(idX.getTowerX(), idX.getTowerY()).id();
+                if(!isXY[tower]) continue;
+                Event::TkrClusterVecConItr iterY = clusVec[1].begin();
+                for(;iterY!=clusVec[1].end(); ++iterY) {
+                idents::TkrId idY = (*iterY)->getTkrId();
+                int towerY = idents::TowerId(idY.getTowerX(), idY.getTowerY()).id();
+                if(towerX!=towerY) continue;
+                layerOutCount[tower] += 1.0f;
+                double dx = fabs(x_hit.x() - (*iterX)->position().x());
+                double dy = fabs(x_hit.y() - (*iterY)->position().y());
+                if (dx>xSprd || dy>ySprd) continue;
+                // could be inside!
+                if(dx*dx/xDenom + dy*dy/yDenom < 1.) layerInCount[tower] += 1.0f;
+                }
                 }
                 //    factor = ((float)clusCount[0][tower]+clusCount[1][tower])/
                 //    std::max(clusCount[0][tower]*clusCount[1][tower], 1);
-            } */        
+                } */        
 
-            int numHits = 0, numHitsOut = 0;
-            for(tower=0;tower<numTowers;++tower) {
-                numHitsOut += (int)layerOutCount[tower];
-                numHits    += (int)(layerInCount[tower]*factor);
-            }
-            Tkr_SurplusHCOutside += numHitsOut;
-            Tkr_SurplusHCInside  += numHits;
+                int numHits = 0, numHitsOut = 0;
+                for(tower=0;tower<numTowers;++tower) {
+                    numHitsOut += (int)layerOutCount[tower];
+                    numHits    += (int)(layerInCount[tower]*factor);
+                }
+                Tkr_SurplusHCOutside += numHitsOut;
+                Tkr_SurplusHCInside  += numHits;
 
-            double layer_edge = towerEdge(x_hit);
+                double layer_edge = towerEdge(x_hit);
 
-            double delta_rad= radlen-radlen_old;
-            double thisRad;
-            //A bit cleaner
-            switch (m_tkrGeom->getLayerType(layer)) {
+                double delta_rad= radlen-radlen_old;
+                double thisRad;
+                //A bit cleaner
+                switch (m_tkrGeom->getLayerType(layer)) 
+                {
                 case STANDARD:
                     thisRad = radThin;
                     thin_hits += numHits;
@@ -1578,46 +1606,60 @@ StatusCode TkrValsTool::calculate()
                     break;
                 default:
                     break;
-            }
-            if (layer==firstLayer) {
-                // on first layer, add in 1/2 if the 1st plane is the top of a layer
-                if(m_tkrGeom->isTopPlaneInLayer(firstPlane)) {delta_rad = 0.5*thisRad*secth;}
-            } else {
-                // on subseqent layers, make sure that there is a minimum radiator
-                if(delta_rad*costh < thisRad) {
-                    delta_rad = (radTray + thisRad)*secth;
                 }
+                if (layer==firstLayer) {
+                    // on first layer, add in 1/2 if the 1st plane is the top of a layer
+                    if(m_tkrGeom->isTopPlaneInLayer(firstPlane)) {delta_rad = 0.5*thisRad*secth;}
+                } else {
+                    // on subseqent layers, make sure that there is a minimum radiator
+                    if(delta_rad*costh < thisRad) {
+                        delta_rad = (radTray + thisRad)*secth;
+                    }
+                }
+
+                total_hits       += numHits; 
+                ave_edge         += layer_edge*delta_rad; 
+                rad_len_sum      += delta_rad;
+
+                // Increment arc-length
+                if(layer==0) break;
+
+                double z_next = m_tkrGeom->getLayerZ(layer-1);
+                double deltaZ = z_present - z_next;
+                z_present = z_next;
+
+                arc_len += fabs( deltaZ/t1.z()); 
+                radlen_old = radlen; 
             }
 
-            total_hits       += numHits; 
-            ave_edge         += layer_edge*delta_rad; 
-            rad_len_sum      += delta_rad;
+            Tkr_Energy     = (cfThin*thin_hits + cfThick*thick_hits)*std::min(secth, 5.0);
+            Tkr_SurplusHitRatio = Tkr_SurplusHCOutside/std::max(1.0f, Tkr_SurplusHCInside);        
 
-            // Increment arc-length
-            if(layer==0) break;
+            // The following flattens the cos(theta) dependence.  Anomolous leakage for widely spaced
+            // samples?  
+            Tkr_Energy_Corr= Tkr_Energy*(1.+ .0012*(Tkr_1_FirstLayer-1)*(Tkr_1_FirstLayer-1)) 
+                *(1 + .3*std::max((4-Tkr_1_FirstLayer),0.f));
+            Tkr_TwrEdge    = ave_edge/rad_len_sum; 
+            Tkr_RadLength  = rad_len_sum;
+        } else {
 
-            double z_next = m_tkrGeom->getLayerZ(layer-1);
-            double deltaZ = z_present - z_next;
-            z_present = z_next;
-
-            arc_len += fabs( deltaZ/t1.z()); 
-            radlen_old = radlen; 
+            Tkr_Energy      = _badFloat;
+            Tkr_SurplusHitRatio = _badFloat;        
+            Tkr_Energy_Corr = _badFloat; 
+            Tkr_TwrEdge     = _badFloat;
+            Tkr_RadLength   = _badFloat;
+            Tkr_Total_Hits  = _badFloat;
+            Tkr_Thin_Hits   = _badFloat;
+            Tkr_Thick_Hits  = _badFloat;
+            Tkr_Blank_Hits  = _badFloat;
+            Tkr_SurplusHCInside = _badFloat;
         }
-
-        Tkr_Energy     = (cfThin*thin_hits + cfThick*thick_hits)*std::min(secth, 5.0);
-        Tkr_SurplusHitRatio = Tkr_SurplusHCOutside/std::max(1.0f, Tkr_SurplusHCInside);        
-
-        // The following flattens the cos(theta) dependence.  Anomolous leakage for widely spaced
-        // samples?  
-        Tkr_Energy_Corr= Tkr_Energy*(1.+ .0012*(Tkr_1_FirstLayer-1)*(Tkr_1_FirstLayer-1)) 
-            *(1 + .3*std::max((4-Tkr_1_FirstLayer),0.f));
 
         Tkr_Total_Hits = total_hits;
         Tkr_Thin_Hits  = thin_hits;
         Tkr_Thick_Hits = thick_hits;
         Tkr_Blank_Hits = blank_hits; 
-        Tkr_TwrEdge    = ave_edge/rad_len_sum; 
-        Tkr_RadLength  = rad_len_sum;
+
     }
     return sc;
 }
@@ -1638,203 +1680,198 @@ double TkrValsTool::towerEdge(Point pos) const
 float TkrValsTool::SSDEvaluation(const Event::TkrTrack* track) 
 {// Method to compute the number of SSD Vetoes for the given track
 
-	 MsgStream log(msgSvc(), name());
+    MsgStream log(msgSvc(), name());
 
-	 m_VetoPlaneCrossed = 0.; 
-     m_VetoTrials = 0.;
-     m_SSDVeto = 0.;
-     m_VetoUnknown = 0.;
-     m_VetoDeadPlane = 0.;
-     m_VetoTruncated = 0.; 
-     m_VetoTower = -1.;   
-     m_VetoGapCorner = 0.;
-     m_VetoGapEdge = 0.;   
-     m_VetoBadCluster = 0.;
-	 m_VetoHitFound = 0.;
-	float s_badVal = -1.1; 
-	Point  x1 = track->getInitialPosition();
-	Vector t1 = track->getInitialDirection();
+    Point  x1 = track->getInitialPosition();
+    Vector t1 = track->getInitialDirection();
 
-	Event::TkrTrackHitVecConItr pHit = track->begin();
+    Event::TkrTrackHitVecConItr pHit = track->begin();
     const Event::TkrTrackParams params((*pHit)->getTrackParams(Event::TkrTrackHit::SMOOTHED));
 
 
     float Tkr_ConEne       = track->getInitialEnergy(); 
 
-     bool upwards = true;
-     m_G4PropTool->setStepStart(params, x1.z(), upwards);
+    int topPlane = m_tkrGeom->numPlanes()-1; 
+    double topOfTkr = m_tkrGeom->getPlaneZ(topPlane) + 1.0;
+    double arc_min = fabs((topOfTkr-x1.z())/t1.z());
+    arc_min = std::min( arc_min, maxPath);
 
-     int topPlane = m_tkrGeom->numPlanes()-1; 
-     double topOfTkr = m_tkrGeom->getPlaneZ(topPlane) + 1.0;
-     double arc_min = fabs((topOfTkr-x1.z())/t1.z());
-     arc_min = std::min( arc_min, maxPath); 
-     m_G4PropTool->step(arc_min);  
-     int numSteps = m_G4PropTool->getNumberSteps();
+    bool upwards = true;
 
-     idents::VolumeIdentifier volId;
-     idents::VolumeIdentifier prefix = m_detSvc->getIDPrefix();
+    m_VetoPlaneCrossed = _badFloat; 
+    m_VetoTrials = _badFloat;
+    m_SSDVeto = _badFloat;
+    m_VetoUnknown = _badFloat;
+    m_VetoDeadPlane = _badFloat;
+    m_VetoTruncated = _badFloat; 
+    m_VetoTower = -1.;   
+    m_VetoGapCorner = _badFloat;
+    m_VetoGapEdge = _badFloat;   
+    m_VetoBadCluster = _badFloat;
+    m_VetoHitFound = _badFloat;
 
-     int firstPlane = m_tkrGeom->getPlane(track->front()->getTkrId()); 
-     int firstLayer = m_tkrGeom->getLayer(firstPlane);
-     double zFirstLayer = m_tkrGeom->getLayerZ(firstLayer);
-
-     double costh = fabs(t1.z());
-     double secth = 1./costh;
-
-     // for the footprints
-     double secthX = 1./sqrt(1.0 - t1.x()*t1.x());
-     double secthY = 1./sqrt(1.0 - t1.y()*t1.y());
-
-     double xVetoRgn = _vetoRegion*secthX;
-     double yVetoRgn = _vetoRegion*secthY;
-
-     // Note: skip the first vol - as this is the head SSD
-
-     double arcLen = m_G4PropTool->getStepArcLen(0);
-     bool isFirstPlane = true;
-
-     try {
-        for(int istep = 1; istep < numSteps; ++istep) { 
-            volId = m_G4PropTool->getStepVolumeId(istep);
-            volId.prepend(prefix);
-            Point x_step       = m_G4PropTool->getStepPosition(istep);
-            arcLen += m_G4PropTool->getStepArcLen(istep);
-
-            bool forward = false;
-            const Event::TkrTrackParams newParams = 
-                m_G4PropTool->getTrackParams(arcLen, Tkr_ConEne, forward);
- 
-            //std::cout << "pos " << x_step << ", step " << istep << ", arcLen " << arcLen << std::endl;
-            //std::cout << "err " << sqrt(newParams(xPosIdx,xPosIdx)) << " "
-            //        << sqrt(newParams(yPosIdx,yPosIdx)) << std::endl;
-            // we're outside the LAT
-            if(x_step.z() > topOfTkr || !m_tkrGeom->isInActiveLAT(x_step) ) break; 
-
-            // check that it's really a TKR hit (probably overkill)
-            if(volId.size() != 9) continue; 
-            if(!(volId[0]==0 && volId[3]==1)) continue; // !(LAT && TKR)
-            if(volId[6]> 1) continue;  //It's a converter or some other tray element!
-            m_VetoPlaneCrossed++;
-
-            // now check if there's a hit near the extrapolated track!
-            // if there is, reset the veto counter... we want leading non-hits
-            //std::cout << "Tkr1SSDVeto volId " << volId.name() << std::endl;
-
-            int tower = idents::TowerId(volId[2], volId[1]).id();
-            int tray = volId[4];
-            int view = volId[5];
-            int face = volId[6];
-            int layer = m_tkrGeom->trayToBiLayer(tray, face);
-            int plane = m_tkrGeom->trayToPlane(tray, face);
-
-            int firstPlane;
-            if(isFirstPlane) {
-                isFirstPlane = false;
-                firstPlane = plane;
-            }
-
-            // I think we want to do this, most likely this is missed for
-            //   some good reason.
-            // on the other hand, it is a missed hit, so remove test for the new code
-            
-            
-            m_VetoTrials = abs(plane-firstPlane) + 1;
-
-            //if(!m_useNew&&layer==firstLayer) continue;
-
-            double vetoRgn = (view==0 ? xVetoRgn : yVetoRgn);
-
-            int nVetoHits = pQueryClusters->numberOfHitsNear(view, layer, 
-                vetoRgn, x_step, t1);
-
-            if (nVetoHits>0) {
-                // found a hit, reset the SSDVeto
-                    m_SSDVeto = 0.0;
-                    if(m_enableVetoDiagnostics) { m_VetoHitFound++; }
-
-            } else { 
-                // no hit
-                idents::TkrId tkrId(volId);
-                Event::TkrTrackParams outParams;
-
-                unsigned int status_bits = 0;
-                int stage = -1;
-                if(m_useNew||m_enableVetoDiagnostics) {
-                    stage = pFlagHits->flagHits(tkrId, newParams, x_step.z(),
-                        m_minVetoError, m_maxVetoError, m_vetoNSigma, 
-                        outParams, status_bits);
-                }
-                if(m_useNew && (stage==-1)) { 
-                    m_SSDVeto += 1.0; 
-                }
-
-                if(m_enableVetoDiagnostics) {
-                    switch (stage) {
-                        case -1:
-                            m_VetoUnknown++;
-                            break;
-                        case 1: 
-                            m_VetoDeadPlane++;
-                            break;
-                        case 2:
-                            m_VetoTruncated++;
-                            break;
-                        case 3:
-                            m_VetoTower;
-                            break;
-                        case 4:
-                            m_VetoGapCorner++;
-                            break;
-                        case 5:
-                            m_VetoGapEdge++;
-                            break;
-                        case 6:
-                            m_VetoBadCluster++;
-                            break;
-                        default:
-                            std::cout << "shouldn't get here, stage = " 
-                                << stage << std::endl;
-                    } // end switch
-                } // end diagnostics
-            } // end no hit 
-        } // end loop over steps
-
+    try {
+        m_G4PropTool->setStepStart(params, x1.z(), upwards);
+        m_G4PropTool->step(arc_min);
     } catch( std::exception& e) {
-      SmartDataPtr<Event::EventHeader> header(m_pEventSvc, EventModel::EventHeader);
-      unsigned long evtId = (header) ? header->event() : 0;
-      long runId = (header) ? header->run() : -1;
-      log << MSG::WARNING << "Caught exception (run,event): ( "
-          << runId << ", " << evtId << " ) " << e.what()
-          << " Skipping the TKR calculations" << endreq;
-
-      m_VetoPlaneCrossed = s_badVal; 
-      m_VetoTrials = s_badVal;
-      m_SSDVeto = s_badVal;
-      m_VetoUnknown = s_badVal;
-      m_VetoDeadPlane = s_badVal;
-      m_VetoTruncated = s_badVal; 
-      m_VetoTower = s_badVal;   
-      m_VetoGapCorner = s_badVal;
-      m_VetoGapEdge = s_badVal;   
-      m_VetoBadCluster = s_badVal;
+        printHeader(log);
+        log << e.what()
+            << " Skipping the TKR Veto calculations" << endreq;
+        log << "pos: " << x1 << endreq 
+            << "dir: " << t1 << endreq 
+            << "arclen: " << arc_min << endreq;
+        return m_SSDVeto;
 
     } catch (...) {
-      SmartDataPtr<Event::EventHeader> header(m_pEventSvc, EventModel::EventHeader);
-      unsigned long evtId = (header) ? header->event() : 0;
-      long runId = (header) ? header->run() : -1;
-      log << MSG::WARNING << "Caught exception (run,event): ( "
-          << runId << ", " << evtId << " ) " 
-          << " Skipping the TKR calculations" << endreq;
-      m_VetoPlaneCrossed = s_badVal; 
-      m_VetoTrials = s_badVal;
-      m_SSDVeto = s_badVal;
-      m_VetoUnknown = s_badVal;
-      m_VetoDeadPlane = s_badVal;
-      m_VetoTruncated = s_badVal; 
-      m_VetoTower = s_badVal;   
-      m_VetoGapCorner = s_badVal;
-      m_VetoGapEdge = s_badVal;   
-      m_VetoBadCluster = s_badVal;
+        printHeader(log);
+        log << "(Unknown) Skipping the TKR Veto calculations" << endreq;
+        log << "pos: " << x1 << endreq 
+            << "dir: " << t1 << endreq 
+            << "arclen: " << arc_min << endreq;
+        return m_SSDVeto;
     }
-	return m_SSDVeto;
-	}
+
+    m_VetoPlaneCrossed = 0.0; 
+    m_VetoTrials = 0.0;
+    m_SSDVeto = 0.0;
+    m_VetoUnknown = 0.0;
+    m_VetoDeadPlane = 0.0;
+    m_VetoTruncated = 0.0; 
+    m_VetoTower = -1.;   
+    m_VetoGapCorner = 0.0;
+    m_VetoGapEdge = 0.0;   
+    m_VetoBadCluster = 0.0;
+    m_VetoHitFound = 0.0;
+
+    int numSteps = m_G4PropTool->getNumberSteps();
+
+    idents::VolumeIdentifier volId;
+    idents::VolumeIdentifier prefix = m_detSvc->getIDPrefix();
+
+    int firstPlane = m_tkrGeom->getPlane(track->front()->getTkrId()); 
+    int firstLayer = m_tkrGeom->getLayer(firstPlane);
+    double zFirstLayer = m_tkrGeom->getLayerZ(firstLayer);
+
+    double costh = fabs(t1.z());
+    double secth = 1./costh;
+
+    // for the footprints
+    double secthX = 1./sqrt(1.0 - t1.x()*t1.x());
+    double secthY = 1./sqrt(1.0 - t1.y()*t1.y());
+
+    double xVetoRgn = _vetoRegion*secthX;
+    double yVetoRgn = _vetoRegion*secthY;
+
+    // Note: skip the first vol - as this is the head SSD
+
+    double arcLen = m_G4PropTool->getStepArcLen(0);
+    bool isFirstPlane = true;
+
+    for(int istep = 1; istep < numSteps; ++istep) { 
+        volId = m_G4PropTool->getStepVolumeId(istep);
+        volId.prepend(prefix);
+        Point x_step       = m_G4PropTool->getStepPosition(istep);
+        arcLen += m_G4PropTool->getStepArcLen(istep);
+
+        bool forward = false;
+        const Event::TkrTrackParams newParams = 
+            m_G4PropTool->getTrackParams(arcLen, Tkr_ConEne, forward);
+
+        //std::cout << "pos " << x_step << ", step " << istep << ", arcLen " << arcLen << std::endl;
+        //std::cout << "err " << sqrt(newParams(xPosIdx,xPosIdx)) << " "
+        //        << sqrt(newParams(yPosIdx,yPosIdx)) << std::endl;
+        // we're outside the LAT
+        if(x_step.z() > topOfTkr || !m_tkrGeom->isInActiveLAT(x_step) ) break; 
+
+        // check that it's really a TKR hit (probably overkill)
+        if(volId.size() != 9) continue; 
+        if(!(volId[0]==0 && volId[3]==1)) continue; // !(LAT && TKR)
+        if(volId[6]> 1) continue;  //It's a converter or some other tray element!
+        m_VetoPlaneCrossed++;
+
+        // now check if there's a hit near the extrapolated track!
+        // if there is, reset the veto counter... we want leading non-hits
+        //std::cout << "Tkr1SSDVeto volId " << volId.name() << std::endl;
+
+        int tower = idents::TowerId(volId[2], volId[1]).id();
+        int tray = volId[4];
+        int view = volId[5];
+        int face = volId[6];
+        int layer = m_tkrGeom->trayToBiLayer(tray, face);
+        int plane = m_tkrGeom->trayToPlane(tray, face);
+
+        int firstPlane;
+        if(isFirstPlane) {
+            isFirstPlane = false;
+            firstPlane = plane;
+        }
+
+        // I think we want to do this, most likely this is missed for
+        //   some good reason.
+        // on the other hand, it is a missed hit, so remove test for the new code
+
+
+        m_VetoTrials = abs(plane-firstPlane) + 1;
+
+        //if(!m_useNew&&layer==firstLayer) continue;
+
+        double vetoRgn = (view==0 ? xVetoRgn : yVetoRgn);
+
+        int nVetoHits = pQueryClusters->numberOfHitsNear(view, layer, 
+            vetoRgn, x_step, t1);
+
+        if (nVetoHits>0) {
+            // found a hit, reset the SSDVeto
+            m_SSDVeto = 0.0;
+            if(m_enableVetoDiagnostics) { m_VetoHitFound++; }
+
+        } else { 
+            // no hit
+            idents::TkrId tkrId(volId);
+            Event::TkrTrackParams outParams;
+
+            unsigned int status_bits = 0;
+            int stage = -1;
+            if(m_useNew||m_enableVetoDiagnostics) {
+                stage = pFlagHits->flagHits(tkrId, newParams, x_step.z(),
+                    m_minVetoError, m_maxVetoError, m_vetoNSigma, 
+                    outParams, status_bits);
+            }
+            if(m_useNew && (stage==-1)) { 
+                m_SSDVeto += 1.0; 
+            }
+
+            if(m_enableVetoDiagnostics) {
+                switch (stage) 
+                {
+                case -1:
+                    m_VetoUnknown++;
+                    break;
+                case 1: 
+                    m_VetoDeadPlane++;
+                    break;
+                case 2:
+                    m_VetoTruncated++;
+                    break;
+                case 3:
+                    m_VetoTower;
+                    break;
+                case 4:
+                    m_VetoGapCorner++;
+                    break;
+                case 5:
+                    m_VetoGapEdge++;
+                    break;
+                case 6:
+                    m_VetoBadCluster++;
+                    break;
+                default:
+                    std::cout << "shouldn't get here, stage = " 
+                        << stage << std::endl;
+                } // end switch
+            } // end diagnostics
+        } // end no hit 
+    } // end loop over steps
+
+    return m_SSDVeto;
+}
