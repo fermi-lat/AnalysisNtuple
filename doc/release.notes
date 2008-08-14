@@ -2,7 +2,7 @@
   @brief Package AnalysisNtuple
   @verbatim
 
- v2r48p1gr5 12-Aug-08 LSR Coordinate the exception printout with Tracy
+ v2r48p1gr5 13-Aug-08 LSR Coordinate the exception printout with Tracy
                           Add a try/catch block around each call to a ValsTool
                             and zero out (most of) the variables in case of
                             an exception.
