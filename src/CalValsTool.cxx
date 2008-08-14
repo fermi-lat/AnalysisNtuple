@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.90.10.1 2008/07/30 04:01:53 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.90.10.1.6.1 2008/08/12 20:30:06 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -254,8 +254,6 @@ private:
   double TSgetinterpolationTS(double efrac);
 
 };
-
-
 
 namespace {
     // this is the test distance for the CAL_EdgeEnergy variable
@@ -1174,32 +1172,28 @@ StatusCode CalValsTool::calculate()
             CAL_layer0Ratio = eNorm0/eAveBack;
         }
     }
-    } catch( std::exception& e ) {
-      MsgStream log(msgSvc(), name());
-      printHeader(log);
-      log << e.what() 
-          << " Skipping the Cal_rmsE calculation and resetting" << endreq;
-      log << "pos: " << xEnd << endreq 
-          << "dir: " << tEnd << endreq 
-          << "arclen: " << arclen << endreq;
+    } catch( std::exception& /*e*/ ) {
+        MsgStream log(msgSvc(), name());
+        printHeader(log);
+        log << "See previous exception message." << endreq;
+        log << " Skipping the Cal_rmsE calculation and resetting" << endreq;
 
-      CAL_layer0Ratio = _badFloat;
-      CAL_eAveBack    = _badFloat;
-      CAL_nLayersRmsBack = _badInt;
-      CAL_rmsLayerEBack = _badFloat;
-    
+        CAL_layer0Ratio = _badFloat;
+        CAL_eAveBack    = _badFloat;
+        CAL_nLayersRmsBack = _badInt;
+        CAL_rmsLayerEBack = _badFloat;
     } catch(...) {
-      MsgStream log(msgSvc(), name());
-      printHeader(log);
-      log << " Skipping the Cal_rmsE calculation" << endreq;
-      log << "pos: " << xEnd << endreq 
-          << "dir: " << tEnd << endreq 
-          << "arclen: " << arclen << endreq;
+        MsgStream log(msgSvc(), name());
+        printHeader(log);
+        log << "Unknown exception: see previous exception message, if any." << endreq;
+        log << " Skipping the Cal_rmsE calculation" << endreq;
+        log << "Initial track parameters: pos: " << xEnd << endreq 
+            << "dir: " << tEnd << " arclen: " << arclen << endreq;
 
-      CAL_layer0Ratio = _badFloat;
-      CAL_eAveBack    = _badFloat;
-      CAL_nLayersRmsBack = _badInt;
-      CAL_rmsLayerEBack = _badFloat;
+        CAL_layer0Ratio = _badFloat;
+        CAL_eAveBack    = _badFloat;
+        CAL_nLayersRmsBack = _badInt;
+        CAL_rmsLayerEBack = _badFloat;
     }
 
     //

@@ -3,7 +3,7 @@
 @brief Calculates the "Event" analysis variables from the other ntuple variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.39 2008/07/21 21:30:04 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.39.6.1 2008/08/05 05:11:03 heather Exp $
 */
 
 #include "ValBase.h"
@@ -38,6 +38,10 @@ public:
     StatusCode initialize();
 
     StatusCode calculate();
+
+    void zeroVals();
+
+    void fillHeaderInfo();
 
 private:
 
@@ -319,12 +323,16 @@ StatusCode EvtValsTool::initialize()
     addItem("EvtEVtxDoca",      &EvtEVtxDoca);
     addItem("EvtEventFlags",      &EvtEventFlags);
  
-    //test
-    //addItem("EvtEvtNum",        EvtEvtNum);
-
     zeroVals();
 
     return sc;
+}
+
+void EvtValsTool::zeroVals() 
+{
+    ValBase::zeroVals();
+    // restore some interesting event variables, no need to touch them again...
+    fillHeaderInfo();
 }
 
 StatusCode EvtValsTool::calculate()
@@ -347,21 +355,6 @@ StatusCode EvtValsTool::calculate()
     // So far, we're only using Tkr, Cal, Vtx and Mc quantities. 
     // The corresponding ValsTools have already been called, 
     // so we can use nextCheck throughout. 
-
-    SmartDataPtr<Event::EventHeader> header(m_pEventSvc, EventModel::EventHeader);
-
-    if(header) {
-        EvtRun         = header->run();
-        EvtEventId     = header->event();
-        EvtEventId64   = header->event();
-        //test
-        /*
-        if (EvtEventId%2==0) sprintf(EvtEvtNum, "%i" , EvtEventId);
-        //std::cout << "Event number: " << EvtEvtNum << std::endl;
-        */
-        EvtElapsedTime = header->time();
-        EvtLiveTime    = header->livetime();
-    }
 
     float eCalSum = -1.0, eTkr = -1.0;
     if(    m_pCalTool->getVal("CalEnergyRaw", eCalSum, nextCheck).isSuccess()
@@ -542,8 +535,20 @@ StatusCode EvtValsTool::calculate()
         EvtEVtxDoca = vtxDoca/(1.55 - .685*logE+ .0851*logE2) 
                                 / (2.21 + 3.01*tkr1ZDir + 1.59*tkr1ZDir2);
     }
-
-    EvtEventFlags = header->gleamEventFlags();
-
     return sc;
 }
+
+void EvtValsTool::fillHeaderInfo () 
+{
+   SmartDataPtr<Event::EventHeader> header(m_pEventSvc, EventModel::EventHeader);
+
+    if(header) {
+        EvtRun         = header->run();
+        EvtEventId     = header->event();
+        EvtEventId64   = header->event();
+        EvtElapsedTime = header->time();
+        EvtLiveTime    = header->livetime();
+        EvtEventFlags  = header->gleamEventFlags();
+    }
+}
+

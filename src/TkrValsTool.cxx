@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.90 2008/05/08 23:37:48 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.90.82.1 2008/08/12 20:30:06 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -116,6 +116,7 @@ private:
     double m_minVetoError;
     double m_maxVetoError;
     double m_vetoNSigma;
+    bool   m_testExceptions;
 
 
     //Global Track Tuple Items
@@ -291,6 +292,7 @@ TkrValsTool::TkrValsTool(const std::string& type,
     declareProperty("minVetoError", m_minVetoError=1.0);
     declareProperty("maxVetoError", m_maxVetoError=100000.0);
     declareProperty("vetoNSigma", m_vetoNSigma=2.0);
+    declareProperty("testExceptions", m_testExceptions=false);
 }
 
 /** @page anatup_vars 
@@ -1441,20 +1443,17 @@ StatusCode TkrValsTool::calculate()
         try {
             m_G4PropTool->setStepStart(x1, t1);
             m_G4PropTool->step(arc_min);
-        } catch( std::exception& e) {
+        } catch( std::exception& /*e*/) {
             printHeader(log);
-            log << e.what()
-                << " Skipping the TKR total-energy calculations" << endreq;
-            log << "pos: " << x1 << endreq 
-                << "dir: " << t1 << endreq 
-                << "arclen: " << arc_min << endreq;
+            log << "See previous exception message." << endreq;
+            log << " Skipping the TKR total-energy calculations" << endreq;
             goodProp = false;
         } catch (...) {
             printHeader(log);
-            log << "(Unknown) Skipping the TKR total-energy calculations" << endreq;
-            log << "pos: " << x1 << endreq 
-                << "dir: " << t1 << endreq 
-                << "arclen: " << arc_min << endreq;
+            log << "Unknown exception, see previous exception message, if any" << endreq;
+            log << "Skipping the TKR total-energy calculations" << endreq;
+            log << "Initial track parameters: pos: " << x1 << endreq 
+                << "dir: " << t1 << " arclen: " << arc_min << endreq;
             goodProp = false;
         }
 
@@ -1661,6 +1660,16 @@ StatusCode TkrValsTool::calculate()
         Tkr_Blank_Hits = blank_hits; 
 
     }
+
+    if(m_testExceptions) {
+
+        // throw the exception here! (or not!)
+        int i = 0;
+        int j = 1;
+        int k = j/i;
+        k++;
+    }
+
     return sc;
 }
 
@@ -1713,21 +1722,18 @@ float TkrValsTool::SSDEvaluation(const Event::TkrTrack* track)
     try {
         m_G4PropTool->setStepStart(params, x1.z(), upwards);
         m_G4PropTool->step(arc_min);
-    } catch( std::exception& e) {
+    } catch( std::exception& /*e*/) {
         printHeader(log);
-        log << e.what()
-            << " Skipping the TKR Veto calculations" << endreq;
-        log << "pos: " << x1 << endreq 
-            << "dir: " << t1 << endreq 
-            << "arclen: " << arc_min << endreq;
+        log << "See previous exception printout." << endreq;
+        log << " Skipping the TKR Veto calculations" << endreq;
         return m_SSDVeto;
 
     } catch (...) {
         printHeader(log);
-        log << "(Unknown) Skipping the TKR Veto calculations" << endreq;
-        log << "pos: " << x1 << endreq 
-            << "dir: " << t1 << endreq 
-            << "arclen: " << arc_min << endreq;
+        log << "Unknown exception, see previous exception message, if any" << endreq;
+        log << "Skipping the TKR Veto calculations" << endreq;
+        log << "Initial track parameters: pos: " << x1 << endreq 
+            << "dir: " << t1 << " arclen: " << arc_min << endreq;
         return m_SSDVeto;
     }
 

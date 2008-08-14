@@ -2,7 +2,7 @@
 @brief common abstract inteface for all the XxxValsTools
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/AnalysisNtuple/IValsTool.h,v 1.20 2008/04/21 19:31:23 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/AnalysisNtuple/IValsTool.h,v 1.21 2008/07/14 23:43:58 lsrea Exp $
 */
 
 #ifndef _H_IValsTool
@@ -53,6 +53,8 @@ public:
     virtual StatusCode browse(MsgStream log, const std::string varName = "") =0;
     /// let the user trigger her own calculation
     virtual StatusCode doCalcIfNotDone() = 0;
+    /// to allow calling from AnalysisNtupleAlg
+    virtual void zeroVals() = 0;
     /// number of times a tool did its calculation for this event
     virtual int getCalcCount() = 0;
     /// return a string containing the value, as above

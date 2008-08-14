@@ -2,6 +2,10 @@
   @brief Package AnalysisNtuple
   @verbatim
 
+ v2r48p1gr5 12-Aug-08 LSR Coordinate the exception printout with Tracy
+                          Add a try/catch block around each call to a ValsTool
+                            and zero out (most of) the variables in case of
+                            an exception.
  v2r48p1gr4 12-Aug-08 LSR more protection against propagator exceptions
  v2r48p1gr3 05-Aug-08 HMK Add new EvtEventFlags to ntuple to capture
             potential error flags
