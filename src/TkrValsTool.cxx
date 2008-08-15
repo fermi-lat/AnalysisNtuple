@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.90.82.1 2008/08/12 20:30:06 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.90.82.2 2008/08/14 00:15:24 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -1445,11 +1445,13 @@ StatusCode TkrValsTool::calculate()
             m_G4PropTool->step(arc_min);
         } catch( std::exception& /*e*/) {
             printHeader(log);
+            setAnaTupBit();
             log << "See previous exception message." << endreq;
             log << " Skipping the TKR total-energy calculations" << endreq;
             goodProp = false;
         } catch (...) {
             printHeader(log);
+            setAnaTupBit();
             log << "Unknown exception, see previous exception message, if any" << endreq;
             log << "Skipping the TKR total-energy calculations" << endreq;
             log << "Initial track parameters: pos: " << x1 << endreq 
@@ -1724,12 +1726,14 @@ float TkrValsTool::SSDEvaluation(const Event::TkrTrack* track)
         m_G4PropTool->step(arc_min);
     } catch( std::exception& /*e*/) {
         printHeader(log);
+        setAnaTupBit();
         log << "See previous exception printout." << endreq;
         log << " Skipping the TKR Veto calculations" << endreq;
         return m_SSDVeto;
 
     } catch (...) {
         printHeader(log);
+        setAnaTupBit();
         log << "Unknown exception, see previous exception message, if any" << endreq;
         log << "Skipping the TKR Veto calculations" << endreq;
         log << "Initial track parameters: pos: " << x1 << endreq 

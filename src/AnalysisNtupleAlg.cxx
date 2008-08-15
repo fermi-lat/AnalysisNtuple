@@ -2,7 +2,7 @@
 @brief Uses the XxxValsTools to produce a comprehensive ntuple
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.41 2008/07/14 23:43:59 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.41.18.1 2008/08/14 00:15:24 lsrea Exp $
 */
 
 // Gaudi system includes
@@ -348,6 +348,10 @@ StatusCode AnalysisNtupleAlg::execute()
         }
     }
     if(isException) {
+
+      SmartDataPtr<Event::EventHeader> header(m_pEventSvc, EventModel::EventHeader);
+      if (header) header->setAnalysisNtupleError();
+
         for(i=m_toolvec.begin() ; i != m_toolvec.end(); ++i){
             (*i)->zeroVals();
         }

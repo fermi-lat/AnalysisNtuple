@@ -2,7 +2,7 @@
 @brief header file for ValBase.cxx
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.h,v 1.37 2008/07/14 23:43:59 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.h,v 1.37.18.1 2008/08/12 20:30:06 lsrea Exp $
 */
 
 #ifndef ValBase_h
@@ -161,6 +161,7 @@ protected:
     }
 
     void printHeader(MsgStream& log);
+    void setAnaTupBit();
     
     /// map containing ntuple names, and pointers to the ntuple variables
     valMap m_ntupleMap;

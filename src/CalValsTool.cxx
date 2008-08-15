@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.90.10.1.6.1 2008/08/12 20:30:06 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.90.10.1.6.2 2008/08/14 00:15:24 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -71,6 +71,8 @@ public:
     StatusCode initialize();
 
     StatusCode calculate();
+
+    void zeroVals();
 
 private:
 
@@ -1175,6 +1177,7 @@ StatusCode CalValsTool::calculate()
     } catch( std::exception& /*e*/ ) {
         MsgStream log(msgSvc(), name());
         printHeader(log);
+        setAnaTupBit();
         log << "See previous exception message." << endreq;
         log << " Skipping the Cal_rmsE calculation and resetting" << endreq;
 
@@ -1185,6 +1188,7 @@ StatusCode CalValsTool::calculate()
     } catch(...) {
         MsgStream log(msgSvc(), name());
         printHeader(log);
+        setAnaTupBit();
         log << "Unknown exception: see previous exception message, if any." << endreq;
         log << " Skipping the Cal_rmsE calculation" << endreq;
         log << "Initial track parameters: pos: " << xEnd << endreq 
@@ -1312,6 +1316,12 @@ StatusCode CalValsTool::calculate()
 	    CAL_TS_TKR_TL_100 = (float)TSTS[TSnlog-1];
 	  }
       }
+
+      // throw an exception
+      //int ii = 1;
+      //int j = 0;
+      //int k = ii/j;
+      //k++;
     
     return sc;
 }
@@ -1512,4 +1522,18 @@ double CalValsTool::TSgetinterpolationTS(double efrac)
     return ((TSefrac[i+1]-efrac)*TSTS[i]+(efrac-TSefrac[i])*TSTS[i+1])/(TSefrac[i+1]-TSefrac[i]);
 
   return (TSTS[i]+TSTS[i+1])/2;
+}
+
+void CalValsTool::zeroVals()
+{
+    ValBase::zeroVals();
+
+    // This is so zeroing the Cal vals will keep CalEnergyRaw
+    SmartDataPtr<Event::CalClusterCol>     
+        pCals(m_pEventSvc,EventModel::CalRecon::CalClusterCol);
+    if(pCals) {
+        if (pCals->empty()) return;
+        Event::CalCluster* calCluster = pCals->front();
+        CAL_EnergyRaw  = calCluster->getCalParams().getEnergy();
+    }
 }

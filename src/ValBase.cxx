@@ -2,7 +2,7 @@
 @brief implements all the methods of the XxxValsTools
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.cxx,v 1.36 2008/07/14 23:43:59 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.cxx,v 1.36.18.1 2008/08/12 20:30:06 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -709,4 +709,10 @@ void ValBase::printHeader(MsgStream& log)
       long runId = (header) ? header->run() : -1;
       log << MSG::WARNING << "Caught exception (run,event): ( " 
           << runId << ", " << evtId << " ) " << endreq;
+}
+
+void ValBase::setAnaTupBit()
+{
+      SmartDataPtr<Event::EventHeader> header(m_pEventSvc, EventModel::EventHeader);
+      if(header) header->setAnalysisNtupleError();
 }

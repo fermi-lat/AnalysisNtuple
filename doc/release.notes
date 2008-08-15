@@ -2,6 +2,8 @@
   @brief Package AnalysisNtuple
   @verbatim
 
+ v2r48p1gr6 14-Aug-08 LSR Set bit in gleamEventFlags on exception from AnalysisNtuple
+                            Make sure some minimal info is retained in tuple
  v2r48p1gr5 13-Aug-08 LSR Coordinate the exception printout with Tracy
                           Add a try/catch block around each call to a ValsTool
                             and zero out (most of) the variables in case of
