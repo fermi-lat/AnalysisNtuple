@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.89 2008/04/21 21:05:35 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.90.10.1.6.3 2008/08/15 04:50:33 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -54,6 +54,8 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.89 
 
 namespace {
     double truncFraction = 0.9;
+    const int _badInt = -1;
+    const float _badFloat = -2.0;
 }
 
 class CalValsTool :   public ValBase
@@ -69,6 +71,8 @@ public:
     StatusCode initialize();
 
     StatusCode calculate();
+
+    void zeroVals();
 
 private:
 
@@ -252,8 +256,6 @@ private:
   double TSgetinterpolationTS(double efrac);
 
 };
-
-
 
 namespace {
     // this is the test distance for the CAL_EdgeEnergy variable
@@ -558,7 +560,7 @@ StatusCode CalValsTool::initialize()
     addItem("CalBkHalfRatio",&CAL_BkHalf_Ratio);
 
     addItem("CalXtalsTrunc", &CAL_Num_Xtals_Trunc);
-    addItem("calNumXtals",   &CAL_Num_Xtals);
+    addItem("CalNumXtals",   &CAL_Num_Xtals);
     addItem("CalXtalRatio",  &CAL_Xtal_Ratio);
     addItem("CalXtalMaxEne", &CAL_Xtal_maxEne);
     addItem("CalMaxNumXtalsInLayer", 
@@ -1081,24 +1083,28 @@ StatusCode CalValsTool::calculate()
 
     // Here we do the CAL_RmsE calculation
 
+    Point xEnd;
+    Vector tEnd;
+    double arclen;
+
     try {
     // get the last point on the best track
     if(num_tracks>0) {
         Event::TkrTrackHitVecConItr hitIter = (*track_1).end();
         hitIter--;
         const Event::TkrTrackHit* hit = *hitIter;
-        Point xEnd = hit->getPoint(Event::TkrTrackHit::SMOOTHED);
-        Vector tEnd = hit->getDirection(Event::TkrTrackHit::SMOOTHED);
+        xEnd = hit->getPoint(Event::TkrTrackHit::SMOOTHED);
+        tEnd = hit->getDirection(Event::TkrTrackHit::SMOOTHED);
         double eCosTheta = fabs(tEnd.z());
 
         // find the parameters to start the swim
         double deltaZ = xEnd.z() - m_calZBot;
-        double arclen   = fabs(deltaZ/eCosTheta);
+        arclen   = fabs(deltaZ/eCosTheta);
 
         // do the swim
         m_G4PropTool->setStepStart(xEnd, tEnd);
-        m_G4PropTool->step(arclen);  
-
+        m_G4PropTool->step(arclen);
+    
         // collect the radlens by layer
         int numSteps = m_G4PropTool->getNumberSteps();
         std::vector<double> rlCsI(m_nLayers, 0.0);
@@ -1168,30 +1174,30 @@ StatusCode CalValsTool::calculate()
             CAL_layer0Ratio = eNorm0/eAveBack;
         }
     }
-    } catch( std::exception& e ) {
-      MsgStream log(msgSvc(), name());
-      SmartDataPtr<Event::EventHeader> header(m_pEventSvc, EventModel::EventHeader);
-      unsigned long evtId = (header) ? header->event() : 0;
-      long runId = (header) ? header->run() : -1;
-      log << MSG::WARNING << "Caught exception (run,event): ( " 
-          << runId << ", " << evtId << " ) " << e.what() 
-          << " Skipping the Cal_rmsE calculation and resetting" << endreq;
+    } catch( std::exception& /*e*/ ) {
+        MsgStream log(msgSvc(), name());
+        printHeader(log);
+        setAnaTupBit();
+        log << "See previous exception message." << endreq;
+        log << " Skipping the Cal_rmsE calculation and resetting" << endreq;
 
-      CAL_layer0Ratio = s_badVal;
-      CAL_eAveBack = s_badVal;
-      CAL_nLayersRmsBack = s_badVal;
-    
+        CAL_layer0Ratio = _badFloat;
+        CAL_eAveBack    = _badFloat;
+        CAL_nLayersRmsBack = _badInt;
+        CAL_rmsLayerEBack = _badFloat;
     } catch(...) {
-      MsgStream log(msgSvc(), name());
-      SmartDataPtr<Event::EventHeader> header(m_pEventSvc, EventModel::EventHeader);
-      unsigned long evtId = (header) ? header->event() : 0;
-      long runId = (header) ? header->run() : -1;
-      log << MSG::WARNING << "Caught unknown exception (run,event): ( " 
-          << runId << ", " << evtId << " ) "
-          << " Skipping the Cal_rmsE calculation" << endreq;
-      CAL_layer0Ratio = s_badVal;
-      CAL_eAveBack = s_badVal;
-      CAL_nLayersRmsBack = s_badVal; 
+        MsgStream log(msgSvc(), name());
+        printHeader(log);
+        setAnaTupBit();
+        log << "Unknown exception: see previous exception message, if any." << endreq;
+        log << " Skipping the Cal_rmsE calculation" << endreq;
+        log << "Initial track parameters: pos: " << xEnd << endreq 
+            << "dir: " << tEnd << " arclen: " << arclen << endreq;
+
+        CAL_layer0Ratio = _badFloat;
+        CAL_eAveBack    = _badFloat;
+        CAL_nLayersRmsBack = _badInt;
+        CAL_rmsLayerEBack = _badFloat;
     }
 
     //
@@ -1310,6 +1316,12 @@ StatusCode CalValsTool::calculate()
 	    CAL_TS_TKR_TL_100 = (float)TSTS[TSnlog-1];
 	  }
       }
+
+      // throw an exception
+      //int ii = 1;
+      //int j = 0;
+      //int k = ii/j;
+      //k++;
     
     return sc;
 }
@@ -1510,4 +1522,18 @@ double CalValsTool::TSgetinterpolationTS(double efrac)
     return ((TSefrac[i+1]-efrac)*TSTS[i]+(efrac-TSefrac[i])*TSTS[i+1])/(TSefrac[i+1]-TSefrac[i]);
 
   return (TSTS[i]+TSTS[i+1])/2;
+}
+
+void CalValsTool::zeroVals()
+{
+    ValBase::zeroVals();
+
+    // This is so zeroing the Cal vals will keep CalEnergyRaw
+    SmartDataPtr<Event::CalClusterCol>     
+        pCals(m_pEventSvc,EventModel::CalRecon::CalClusterCol);
+    if(pCals) {
+        if (pCals->empty()) return;
+        Event::CalCluster* calCluster = pCals->front();
+        CAL_EnergyRaw  = calCluster->getCalParams().getEnergy();
+    }
 }

@@ -2,7 +2,7 @@
 @brief Uses the XxxValsTools to produce a comprehensive ntuple
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.40 2008/06/11 20:47:38 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.41.18.2 2008/08/15 04:50:33 lsrea Exp $
 */
 
 // Gaudi system includes
@@ -21,6 +21,9 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v
 
 // for access to geometry perhaps
 #include "GlastSvc/GlastDetSvc/IGlastDetSvc.h"
+
+#include "Event/TopLevel/EventModel.h"
+#include "Event/TopLevel/Event.h"
 
 #include <algorithm>
 
@@ -147,6 +150,7 @@ private:
     /// local utility methods
     void fixLoadOrder();
     void removeMc();
+    void printHeader(MsgStream& log);
 
     /// number of times called
     double m_count; 
@@ -165,6 +169,8 @@ private:
     bool m_doDebug;
     bool m_countCalcs;
     bool m_realData;
+
+    IDataProviderSvc* m_pEventSvc;
     
     IValsTool::Visitor* m_visitor; 
 };
@@ -298,6 +304,14 @@ StatusCode AnalysisNtupleAlg::initialize(){
                 return fail;
             }
         }
+        IDataProviderSvc* eventsvc = 0;
+          sc = serviceLocator()->service( "EventDataSvc", eventsvc, true );
+          if(sc.isFailure()){
+              log << MSG::ERROR << "Could not find EventDataSvc" << std::endl;
+              return sc;
+          }
+          m_pEventSvc = eventsvc;
+
     }
     
     return sc;
@@ -317,9 +331,33 @@ StatusCode AnalysisNtupleAlg::execute()
     m_ntupleSvc->storeRowFlag(m_tupleName, true);  // needed to save the event with RootTupleSvc
 
 
-    for( std::vector<IValsTool*>::iterator i =m_toolvec.begin(); i != m_toolvec.end(); ++i){
-        (*i)->doCalcIfNotDone();
+    int toolCounter = 0;
+    bool isException = false;
+    std::vector<IValsTool*>::iterator i = m_toolvec.begin();
+    for( ; i != m_toolvec.end(); ++i, ++toolCounter){
+        try {
+            (*i)->doCalcIfNotDone();
+        } catch( std::exception& e) {
+            printHeader(log);
+            log << "Non-propagator exception from " << m_toolnames[toolCounter]<< endreq; 
+            log << e.what() << endreq;
+        } catch (...) {
+            printHeader(log);
+            log << "Non-propagator exception from " << m_toolnames[toolCounter]<< endreq;
+            isException = true;
+        }
     }
+    if(isException) {
+
+      SmartDataPtr<Event::EventHeader> header(m_pEventSvc, EventModel::EventHeader);
+      if (header) header->setAnalysisNtupleError();
+
+        for(i=m_toolvec.begin() ; i != m_toolvec.end(); ++i){
+            (*i)->zeroVals();
+        }
+        return sc;
+    }
+
 
     // all the tools have been called at this point, so from now on,
     ///  we can call them with the no-calculate flag
@@ -458,4 +496,13 @@ void AnalysisNtupleAlg::removeMc()
 
     log << endreq;
     return;
+}
+
+void AnalysisNtupleAlg::printHeader(MsgStream& log)
+{
+      SmartDataPtr<Event::EventHeader> header(m_pEventSvc, EventModel::EventHeader);
+      unsigned long evtId = (header) ? header->event() : 0;
+      long runId = (header) ? header->run() : -1;
+      log << MSG::WARNING << "Caught exception (run,event): ( " 
+          << runId << ", " << evtId << " ) " << endreq;
 }

@@ -2,9 +2,24 @@
   @brief Package AnalysisNtuple
   @verbatim
 
+ v2r51   14-Aug-08   HMK  Merge in GlastReleasev15r36 branch
  v2r50   31-Jul-08   HMK  Merge in addition of FswGamVersion to ntuple
  v2r49p2 31-Jul-08   THB  Fix alignment code
  v2r49p1 24-Jul-08   THB  Add alignment capability to FT1Alg
+== End Branch GlastReleasev15r36 ==
+ v2r48p1gr6 14-Aug-08 LSR Set bit in gleamEventFlags on exception from 
+                     AnalysisNtuple Make sure some minimal info is retained in 
+                     tuple
+ v2r48p1gr5 13-Aug-08 LSR Coordinate the exception printout with Tracy
+                      Add a try/catch block around each call to a ValsTool
+                      and zero out (most of) the variables in case of
+                      an exception.
+ v2r48p1gr4 12-Aug-08 LSR more protection against propagator exceptions
+ v2r48p1gr3 05-Aug-08 HMK Add new EvtEventFlags to ntuple to capture
+                      potential error flags
+ v2r48p1gr2 29-Jul-08 LSR capitalize "calNumXtals"
+ v2r48p1gr1 28-Jul-08 HMK Add FswGamVersion to merit
+== Begin Branch GlastReleasev15r36 ==
  v2r48p1 21-Jul-08   LSR  Revert EvtEventId and add EvtEventId64
  v2r48   17-Jul-08   LSR  2 new Cal and 6 new Acd variables
  v2r47   16-Jul-08   LSR  Add GltGemDeltaEventTime, GltGemDeltaWindowOpenTime

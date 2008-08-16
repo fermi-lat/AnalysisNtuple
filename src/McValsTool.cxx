@@ -2,7 +2,7 @@
 @brief Calculates the Mc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.49 2008/02/27 21:58:14 burnett Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.50.126.1 2008/08/14 00:15:24 lsrea Exp $
 */
 // Include files
 
@@ -250,7 +250,6 @@ StatusCode McValsTool::initialize()
     
     return sc;
 }
-
 
 StatusCode McValsTool::calculate()
 {
