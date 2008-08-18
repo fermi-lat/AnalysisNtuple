@@ -1,5 +1,5 @@
 # -*-python-*-
-# $Header$
+# $Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/SConscript,v 1.1 2008/08/15 21:22:39 ecephas Exp $
 # Authors: Leon Rochester <lsrea@slac.stanford.edu>
 import platform
 
@@ -20,7 +20,7 @@ if baseEnv['PLATFORM'] != 'win32':
 	libEnv.Tool('addLibrary', library = ['dl'])
 	libEnv.Tool('addLibrary', library = ['pthread'])
 
-if baseEnv['PLATFORM'] == 'WIN32':
+if baseEnv['PLATFORM'] == 'win32':
 	progEnv.AppendUnique(CPPDEFINES = 'WIN32')
 
 
@@ -29,7 +29,7 @@ AnalysisNtuple = SharedLibrary('AnalysisNtuple', listFiles(['src/*.cxx','src/Dll
 
 
 progEnv.Tool('AnalysisNtupleLib')
-test_AnalysisNtuple = progEnv.GaudiProgram('test_AnalysisNtuple', ['src/test/AnalysisNtupleAlg.cxx'], test=1)
+test_AnalysisNtuple = progEnv.Program('test_AnalysisNtuple', ['src/test/AnalysisNtupleAlg.cxx'])
 
 progEnv.Tool('registerObjects', package = 'AnalysisNtuple', libraries = [AnalysisNtuple],
 	     testApps = [test_AnalysisNtuple], includes = listFiles(['AnalysisNtuple/*.h']))
