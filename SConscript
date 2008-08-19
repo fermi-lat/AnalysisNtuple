@@ -1,5 +1,5 @@
 # -*-python-*-
-# $Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/SConscript,v 1.1 2008/08/15 21:22:39 ecephas Exp $
+# $Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/SConscript,v 1.2 2008/08/18 17:18:54 ecephas Exp $
 # Authors: Leon Rochester <lsrea@slac.stanford.edu>
 import platform
 
@@ -25,7 +25,7 @@ if baseEnv['PLATFORM'] == 'win32':
 
 
 libEnv.Tool('AnalysisNtupleLib', depsOnly=1)
-AnalysisNtuple = SharedLibrary('AnalysisNtuple', listFiles(['src/*.cxx','src/Dll/*.cxx']))
+AnalysisNtuple = libEnv.SharedLibrary('AnalysisNtuple', listFiles(['src/*.cxx','src/Dll/*.cxx']))
 
 
 progEnv.Tool('AnalysisNtupleLib')
