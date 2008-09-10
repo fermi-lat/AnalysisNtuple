@@ -2,7 +2,7 @@
 @brief Calculates the Tkr hit analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrHitValsTool.cxx,v 1.15 2008/04/23 20:27:42 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrHitValsTool.cxx,v 1.16 2008/09/10 01:24:33 lsrea Exp $
 */
 
 // Include files
@@ -52,7 +52,9 @@ private:
     int Tkr_Cnv_Lyr_Hits;
     int Tkr_numHitsOnTracks;
     int Tkr_numGhosts;
+    int Tkr_numToT255s;
     int Tkr_numGhostsOnTracks;
+    int Tkr_numToT255sOnTracks;
     int Tkr_numFlaggedTrackHits;
     int Tkr_numWideClusters;
     int Tkr_Max_controller_hits;
@@ -88,9 +90,13 @@ TkrHitValsTool::TkrHitValsTool(const std::string& type,
 <tr><td> TkrNumHitsOnTracks 	
 <td>I<td>   Total number of TKR clusters on tracks
 <tr><td> TkrNumGhosts 	
-<td>I<td>   Total number of TKR ghost clusters, including ToT==255 
+<td>I<td>   Total number of TKR ghost clusters 
+<tr><td> TkrNumToT255s 	
+<td>I<td>   Total number of clusters with ToT==255 
 <tr><td> TkrNumGhostsOnTracks 	
-<td>I<td>   Total number of above clusters on tracks
+<td>I<td>   Total number of ghost clusters on tracks
+<tr><td> TkrNumToT255sOnTracks 	
+<td>I<td>   Total number of ToT==255 clusters on tracks
 <tr><td> TkrNumFlaggedTrackHits 	
 <td>I<td>   Total number of track hits flagged because
             the track had some 255 or ghost hits
@@ -134,7 +140,9 @@ StatusCode TkrHitValsTool::initialize()
     addItem("TkrFirstLayer",          &Tkr_Fst_Cnv_Lyr);        
     addItem("TkrNumLayersHit",        &Tkr_NCnv_Lyrs_Hit);
     addItem("TkrNumGhosts",           &Tkr_numGhosts);
+    addItem("TkrNumToT255s",          &Tkr_numToT255s);
     addItem("TkrNumGhostsOnTracks",   &Tkr_numGhostsOnTracks);
+    addItem("TkrNumToT255sOnTracks",  &Tkr_numToT255sOnTracks);
     addItem("TkrNumFlaggedTrackHits", &Tkr_numFlaggedTrackHits);
     addItem("TkrNumWideClusters",     &Tkr_numWideClusters);
 
@@ -177,22 +185,25 @@ StatusCode TkrHitValsTool::calculate()
             
             Tkr_HitsPerLyr[layerIdx] = hitCount;
         }
-        
+
         Tkr_Cnv_Lyr_Hits = pClusters->size();
-    Event::TkrClusterColConItr iter = pClusters->begin();
-    for(; iter!=pClusters->end();++iter) {
-        bool isGhost;
-        Event::TkrCluster* clust = *iter;
-        unsigned int mask = Event::TkrCluster::mask255&Event::TkrCluster::maskGHOST;
-        if(isGhost=clust->isSet(mask)) Tkr_numGhosts++;
-        bool onTrack = clust->hitFlagged();
-        if(onTrack) {
-            Tkr_numHitsOnTracks++;
-            if(isGhost) Tkr_numGhostsOnTracks++;
-            if(clust->isSet(Event::TkrCluster::maskSAMETRACK)) Tkr_numFlaggedTrackHits++;
-            if(clust->size()>4) Tkr_numWideClusters++;
-       }
-    }
+
+        Event::TkrClusterColConItr iter = pClusters->begin();
+        for(; iter!=pClusters->end();++iter) {
+            bool isGhost;
+            bool is255;
+            Event::TkrCluster* clust = *iter;
+            if(isGhost=clust->isSet(Event::TkrCluster::maskGHOST)) Tkr_numGhosts++;
+            if(is255=clust->isSet(Event::TkrCluster::mask255))  Tkr_numToT255s++;
+            bool onTrack = clust->hitFlagged();
+            if(onTrack) {
+                Tkr_numHitsOnTracks++;
+                if(isGhost) Tkr_numGhostsOnTracks++;
+                if(is255) Tkr_numToT255sOnTracks++;
+                if(clust->isSet(Event::TkrCluster::maskSAMETRACK)) Tkr_numFlaggedTrackHits++;
+                if(clust->size()>4) Tkr_numWideClusters++;
+            }
+        }
     
     return sc;
 }
