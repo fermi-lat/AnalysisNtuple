@@ -1,5 +1,5 @@
 # -*-python-*-
-# $Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/SConscript,v 1.2 2008/08/18 17:18:54 ecephas Exp $
+# $Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/SConscript,v 1.3 2008/08/19 14:08:07 ecephas Exp $
 # Authors: Leon Rochester <lsrea@slac.stanford.edu>
 import platform
 
@@ -9,26 +9,27 @@ Import('packages')
 progEnv = baseEnv.Clone()
 libEnv = baseEnv.Clone()
 
-progEnv.Replace(CPPDEFINES = ['GLEAM'])
-progEnv.AppendUnique(CPPDEFINES = ['__i386'])
-progEnv.AppendUnique(CPPDEFINES = 'EFC_FILTER')
+libEnv.Tool('AnalysisNtupleLib', depsOnly=1)
+libEnv.AppendUnique(CPPDEFINES = ['GLEAM'])
+libEnv.AppendUnique(CPPDEFINES = ['__i386'])
+libEnv.AppendUnique(CPPDEFINES = ['EFC_FILTER'])
 
-if baseEnv['PLATFORM'] != 'win32':
-	progEnv.AppendUnique(CPPDEFINES = 'MSG_ST')
-	progEnv.AppendUnique(CPPDEFINES = '__unix__')
-	progEnv.AppendUnique(CPPDEFINES = 'WUT_IMPLEMENTATION_PX')
-	libEnv.Tool('addLibrary', library = ['dl'])
-	libEnv.Tool('addLibrary', library = ['pthread'])
+if baseEnv['PLATFORM'] == 'Linux':
+	libEnv.AppendUnique(CPPDEFINES = ['MSG_ST'])
+	libEnv.AppendUnique(CPPDEFINES = ['__unix__'])
+	libEnv.AppendUnique(CPPDEFINES = ['WUT_IMPLEMENTATION_PX'])
 
 if baseEnv['PLATFORM'] == 'win32':
-	progEnv.AppendUnique(CPPDEFINES = 'WIN32')
+	libEnv.AppendUnique(CPPDEFINES = ['WIN32'])
 
-
-libEnv.Tool('AnalysisNtupleLib', depsOnly=1)
 AnalysisNtuple = libEnv.SharedLibrary('AnalysisNtuple', listFiles(['src/*.cxx','src/Dll/*.cxx']))
 
 
 progEnv.Tool('AnalysisNtupleLib')
+if baseEnv['PLATFORM'] == 'Linux':
+	progEnv.Tool('addLibrary', library = ['dl'])
+	progEnv.Tool('addLibrary', library = ['pthread'])
+
 test_AnalysisNtuple = progEnv.Program('test_AnalysisNtuple', ['src/test/AnalysisNtupleAlg.cxx'])
 
 progEnv.Tool('registerObjects', package = 'AnalysisNtuple', libraries = [AnalysisNtuple],
