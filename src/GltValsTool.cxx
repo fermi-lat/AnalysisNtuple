@@ -2,7 +2,7 @@
 @brief Calculates the Trigger analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.39 2008/05/08 23:37:48 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.40 2008/07/16 05:26:18 lsrea Exp $
 */
 
 // Include files
@@ -40,6 +40,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.39 
 namespace {
     const int _nTowers = 16; // maximum possible number of towers
     const int _nLayers = 18; // maximum possible number of layers
+    const unsigned int _unset   = (unsigned int) -1; // default for some of the variables
 }
 
 class GltValsTool : public ValBase
@@ -55,6 +56,8 @@ public:
     StatusCode initialize();
 
     StatusCode calculate();
+
+    void zeroVals();
 
 private:
     /// pointer to tracker geometry
@@ -81,6 +84,8 @@ private:
     int   Trig_sourcegps;
     int   Trig_gemDeltaEventTime;
     int   Trig_gemDeltaWindowOpenTime;
+    int   Trig_eventSize;
+    int   Trig_compressedEventSize;
 
     ITkrQueryClustersTool* m_clusTool;
 };
@@ -156,7 +161,11 @@ produces 13 potential triggers
             of 50 ns ticks between the opening of the trigger window 
             of the previous event and of this event. 
             Wraps around at ~3.3 msec
-</table>
+<tr><td> GltEventSize
+<td>I<td>   Uncompressed size of the event in bytes
+<tr><td> GltCompressedEventSize
+<td>I<td>   Compressed size of the event in bytes
+            </table>
 */
 
 
@@ -216,14 +225,28 @@ StatusCode GltValsTool::initialize()
     addItem("GltGemEngine",  &Trig_gemengine);
     addItem("GltGemDeltaEventTime",      &Trig_gemDeltaEventTime);
     addItem("GltGemDeltaWindowOpenTime", &Trig_gemDeltaWindowOpenTime);
-    addItem("GltEnginePrescale",  &Trig_gltprescale);
-    addItem("GltGemEnginePrescale",  &Trig_gemprescale);
-    addItem("GltPrescaleExpired",  &Trig_prescaleexpired);
-    addItem("GltSourceGps",  &Trig_sourcegps);
+    addItem("GltEnginePrescale",         &Trig_gltprescale);
+    addItem("GltGemEnginePrescale",      &Trig_gemprescale);
+    addItem("GltPrescaleExpired",        &Trig_prescaleexpired);
+    addItem("GltSourceGps",              &Trig_sourcegps);
+
+    addItem("GltEventSize",              &Trig_eventSize);
+    addItem("GltCompressedEventSize",    &Trig_compressedEventSize);
 
     zeroVals();
 
     return sc;
+}
+
+void GltValsTool::zeroVals()
+{
+    ValBase::zeroVals();
+
+    Trig_gemprescale     = _unset;
+    Trig_gltprescale     = _unset;
+    Trig_prescaleexpired = _unset;
+    Trig_gemDeltaEventTime      = -1;
+    Trig_gemDeltaWindowOpenTime = -1;
 }
 
 StatusCode GltValsTool::calculate()
@@ -253,10 +276,17 @@ StatusCode GltValsTool::calculate()
     // Recover EventHeader Pointer
     SmartDataPtr<Event::EventHeader> 
         pEvent(m_pEventSvc, EventModel::EventHeader);
-    unsigned int word = ( pEvent==0? 0 : pEvent->trigger());
-    /// if no header, set the word such that both engines are "unset"
-    unsigned int unset = ((unsigned int) -1);
-    unsigned int word2 = ( pEvent==0 ? unset : pEvent->triggerWordTwo());
+    unsigned int word  = 0;
+    unsigned int word2 = _unset;
+    
+    if(pEvent) {
+    word  = pEvent->trigger();
+    word2 = pEvent->triggerWordTwo();
+     // by default, engines are initialized to "_unset"; see zeroVals() above
+    Trig_gemprescale     = pEvent->gemPrescale();
+    Trig_gltprescale     = pEvent->gltPrescale();
+    Trig_prescaleexpired = pEvent->prescaleExpired();
+    }
 
     // This is the same as the old GltWord
     // actually only 6 bits, but no harm (I think!)  
@@ -271,21 +301,22 @@ StatusCode GltValsTool::calculate()
     // If the engine number is set, then we will store this one from the TrgConfigSvc in the tuple
     if (Trig_gltengine != enums::ENGINE_unset) Trig_engine = Trig_gltengine;
     Trig_gemengine = ((word2 >> enums::ENGINE_offset) & enums::ENGINE_mask); // GEM trigger engine number
-    Trig_gemprescale= pEvent==0 ? unset : pEvent->gemPrescale();
-    Trig_gltprescale= pEvent==0 ? unset : pEvent->gltPrescale();
-    Trig_prescaleexpired= pEvent==0 ? unset : pEvent->prescaleExpired();
+
+    SmartDataPtr<LsfEvent::MetaEvent> 
+        metaTds(m_pEventSvc, "/Event/MetaEvent");
+    if(metaTds) {
+        Trig_sourcegps =  metaTds->time().current().sourceGps();
+        Trig_compressedEventSize = metaTds->compressedSize();
+    }
 
     SmartDataPtr<LdfEvent::EventSummaryData> 
         eventSummary(m_pEventSvc, "/Event/EventSummary"); 
-    Trig_evtFlags = ( eventSummary==0 ? 0 : eventSummary->eventFlags());
-    SmartDataPtr<LsfEvent::MetaEvent> 
-        metaTds(m_pEventSvc, "/Event/MetaEvent");
-    Trig_sourcegps = 
-        ( metaTds==0 ? 0 : metaTds->time().current().sourceGps());
+    if(eventSummary) {
+        Trig_evtFlags =  eventSummary->eventFlags();
+        Trig_eventSize = eventSummary->eventSizeInBytes();
+    }
 
     // GemDeltaTimes
-    Trig_gemDeltaEventTime = -1;
-    Trig_gemDeltaWindowOpenTime = -1;
     SmartDataPtr<LdfEvent::Gem> gemTds(m_pEventSvc, "/Event/Gem");
     if(gemTds) {
         Trig_gemDeltaEventTime      = gemTds->deltaEventTime();
