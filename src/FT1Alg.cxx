@@ -1,7 +1,7 @@
 /** @file FT1Alg.cxx
 @brief Declaration and implementation of Gaudi algorithm FT1Alg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.17 2008/07/24 19:48:32 burnett Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.18 2008/07/31 12:11:52 burnett Exp $
 */
 // Include files
 
@@ -313,7 +313,7 @@ see <a href="http://glast.gsfc.nasa.gov/ssc/dev/fits_def/definitionFT1.html">FT1
 <tr><td> FT1L, FT1B 
 <td>F<td>  (deg) galactic longitude and latitude of reconstructed direction
 <tr><td> FT1Livetime 
-<td>D<td>  (s) Cumulative live time, from start of run, or mission <b>do not use<b>
+<td>D<td>  (s) Cumulative live time, from start of run, or mission <b>do not use</b>
 <tr><td> FT1ConvLayer 
 <td>F<td>  Starting layer of the best track found in the tracker 
 (Layer 0 is the one closest to the calorimeter.)
