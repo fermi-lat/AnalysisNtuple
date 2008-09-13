@@ -2,6 +2,7 @@
   @brief Package AnalysisNtuple
   @verbatim
 
+ v2r52   13-Sep-08   LSR  Ghosts and eventSize variables 
  v2r51   14-Aug-08   HMK  Merge in GlastReleasev15r36 branch
  v2r50   31-Jul-08   HMK  Merge in addition of FswGamVersion to ntuple
  v2r49p2 31-Jul-08   THB  Fix alignment code
