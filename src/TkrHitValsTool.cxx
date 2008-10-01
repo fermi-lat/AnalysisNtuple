@@ -2,7 +2,7 @@
 @brief Calculates the Tkr hit analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrHitValsTool.cxx,v 1.16 2008/09/10 01:24:33 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrHitValsTool.cxx,v 1.17 2008/09/10 21:32:42 lsrea Exp $
 */
 
 // Include files
@@ -35,19 +35,19 @@ namespace {
 class TkrHitValsTool : public ValBase
 {
 public:
-    
+
     TkrHitValsTool( const std::string& type, 
         const std::string& name, 
         const IInterface* parent);
-    
+
     virtual ~TkrHitValsTool() { }
-    
+
     StatusCode initialize();
-    
+
     StatusCode calculate();
-    
+
 private:
-    
+
     //TkrClusters Tuple Items
     int Tkr_Cnv_Lyr_Hits;
     int Tkr_numHitsOnTracks;
@@ -60,7 +60,7 @@ private:
     int Tkr_Max_controller_hits;
     int Tkr_Fst_Cnv_Lyr;
     int Tkr_NCnv_Lyrs_Hit;
-    
+
     int Tkr_HitsPerLyr[_nLayers];
 
     ITkrQueryClustersTool* m_clusTool;
@@ -81,7 +81,7 @@ TkrHitValsTool::TkrHitValsTool(const std::string& type,
 }
 
 /** @page anatup_vars 
-    @section tkrhitvalstool TkrHitValsTool Variables
+@section tkrhitvalstool TkrHitValsTool Variables
 
 <table>
 <tr><th> Variable <th> Type  <th> Description					
@@ -99,7 +99,7 @@ TkrHitValsTool::TkrHitValsTool(const std::string& type,
 <td>I<td>   Total number of ToT==255 clusters on tracks
 <tr><td> TkrNumFlaggedTrackHits 	
 <td>I<td>   Total number of track hits flagged because
-            the track had some 255 or ghost hits
+the track had some 255 or ghost hits
 <tr><td> TkrNumWideClusters	
 <td>I<td>   Number of clusters more than 4 strips wide
 <tr><td> TkrFirstLayer
@@ -108,22 +108,22 @@ TkrHitValsTool::TkrHitValsTool(const std::string& type,
 <td>I<td>   Total number of hit layers 
 <tr><td> TkrHitsInLyrNN, NN=(00,17)   
 <td>I<td>   Number of clusters in (bi)layer NN 
-           (numbered from the bottom of the tracker) 
+(numbered from the bottom of the tracker) 
 </table>
 */
 
 StatusCode TkrHitValsTool::initialize()
 {
     StatusCode sc = StatusCode::SUCCESS;
-    
+
     MsgStream log(msgSvc(), name());
 
     if( ValBase::initialize().isFailure()) return StatusCode::FAILURE;
 
     // get the services
-    
+
     if( serviceLocator() ) {
-        
+
     } else {
         return StatusCode::FAILURE;
     }
@@ -132,7 +132,7 @@ StatusCode TkrHitValsTool::initialize()
     {
         throw GaudiException("Service [TkrQueryClustersTool] not found", name(), sc);
     }
-    
+
     // load up the map
 
     addItem("TkrNumHits",             &Tkr_Cnv_Lyr_Hits);       
@@ -153,9 +153,9 @@ StatusCode TkrHitValsTool::initialize()
         sprintf(buffer, "TkrHitsInLyr%02i",i);
         addItem(buffer, &Tkr_HitsPerLyr[i]);
     }
-            
+
     zeroVals();
-    
+
     return sc;
 }
 
@@ -163,7 +163,7 @@ StatusCode TkrHitValsTool::initialize()
 StatusCode TkrHitValsTool::calculate()
 {
     StatusCode sc = StatusCode::SUCCESS;
-    
+
     // Recover Track associated info. 
     SmartDataPtr<Event::TkrClusterCol>   
         pClusters(m_pEventSvc,EventModel::TkrRecon::TkrClusterCol);
@@ -172,38 +172,39 @@ StatusCode TkrHitValsTool::calculate()
     if (!pClusters) return sc;
 
     int layerIdx;
-    for(layerIdx=0;layerIdx<_nLayers;++layerIdx)
+    for(layerIdx=0;layerIdx<_nLayers;++layerIdx) {
+        int hitCount = 
+            m_clusTool->getClusters(idents::TkrId::eMeasureX,layerIdx).size()
+            + m_clusTool->getClusters(idents::TkrId::eMeasureY,layerIdx).size();
+
+        if (hitCount > 0)
         {
-            int hitCount = m_clusTool->getClusters(idents::TkrId::eMeasureX,layerIdx).size()
-                         + m_clusTool->getClusters(idents::TkrId::eMeasureY,layerIdx).size();
-            
-            if (hitCount > 0)
-            {
-                Tkr_Fst_Cnv_Lyr    = layerIdx;
-                Tkr_NCnv_Lyrs_Hit += 1;
-            }
-            
-            Tkr_HitsPerLyr[layerIdx] = hitCount;
+            Tkr_Fst_Cnv_Lyr    = layerIdx;
+            Tkr_NCnv_Lyrs_Hit += 1;
         }
 
-        Tkr_Cnv_Lyr_Hits = pClusters->size();
+        Tkr_HitsPerLyr[layerIdx] = hitCount;
+    }
 
-        Event::TkrClusterColConItr iter = pClusters->begin();
-        for(; iter!=pClusters->end();++iter) {
-            bool isGhost;
-            bool is255;
-            Event::TkrCluster* clust = *iter;
-            if(isGhost=clust->isSet(Event::TkrCluster::maskGHOST)) Tkr_numGhosts++;
-            if(is255=clust->isSet(Event::TkrCluster::mask255))  Tkr_numToT255s++;
-            bool onTrack = clust->hitFlagged();
-            if(onTrack) {
-                Tkr_numHitsOnTracks++;
-                if(isGhost) Tkr_numGhostsOnTracks++;
-                if(is255) Tkr_numToT255sOnTracks++;
-                if(clust->isSet(Event::TkrCluster::maskSAMETRACK)) Tkr_numFlaggedTrackHits++;
-                if(clust->size()>4) Tkr_numWideClusters++;
+    Tkr_Cnv_Lyr_Hits = pClusters->size();
+
+    Event::TkrClusterColConItr iter = pClusters->begin();
+    for(; iter!=pClusters->end();++iter) {
+        bool isGhost;
+        bool is255;
+        Event::TkrCluster* clust = *iter;
+        if(isGhost=clust->isSet(Event::TkrCluster::maskGHOST)) Tkr_numGhosts++;
+        if(is255=clust->isSet(Event::TkrCluster::mask255))     Tkr_numToT255s++;
+        bool onTrack = clust->hitFlagged();
+        if(onTrack) {
+            Tkr_numHitsOnTracks++;
+            if(isGhost) Tkr_numGhostsOnTracks++;
+            if(is255) Tkr_numToT255sOnTracks++;
+            if(clust->isSet(Event::TkrCluster::maskSAMETRACK)) {
+                Tkr_numFlaggedTrackHits++;
             }
+            if(clust->size()>4) Tkr_numWideClusters++;
         }
-    
+    }
     return sc;
 }

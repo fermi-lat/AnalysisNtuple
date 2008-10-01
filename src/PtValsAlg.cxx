@@ -1,7 +1,7 @@
 /** @file PtValsAlg.cxx
 @brief declaration and definition of the class PtValsAlg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/PtValsAlg.cxx,v 1.9 2008/06/23 04:44:42 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/PtValsAlg.cxx,v 1.10 2008/06/23 18:10:58 heather Exp $
 
 */
 
@@ -177,11 +177,18 @@ StatusCode PtValsAlg::execute()
  
    SmartDataPtr<Event::EventHeader> header(m_pEventSvc, EventModel::EventHeader);
 
-   // get event time from header and look up position info from the history
-    double etime(header->time());
+   // get event time from header or merit 
+   // and look up position info from the history  
 
+   double etime;
 
-    // Tell the  GPS object about the current time.
+   if(header==0) {
+       void* ptr;
+       m_rootTupleSvc->getItem(m_root_tree,"PtTime",ptr);
+       etime = *reinterpret_cast<double*>(ptr);
+   } else {
+       etime = header->time();
+   }
     gps->time(etime);
 
     // and create the tuple
