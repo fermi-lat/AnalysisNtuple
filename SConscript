@@ -1,5 +1,5 @@
 # -*-python-*-
-# $Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/SConscript,v 1.3 2008/08/19 14:08:07 ecephas Exp $
+# $Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/SConscript,v 1.4 2008/09/10 17:41:31 ecephas Exp $
 # Authors: Leon Rochester <lsrea@slac.stanford.edu>
 import platform
 
@@ -14,7 +14,7 @@ libEnv.AppendUnique(CPPDEFINES = ['GLEAM'])
 libEnv.AppendUnique(CPPDEFINES = ['__i386'])
 libEnv.AppendUnique(CPPDEFINES = ['EFC_FILTER'])
 
-if baseEnv['PLATFORM'] == 'Linux':
+if baseEnv['PLATFORM'] != 'win32':
 	libEnv.AppendUnique(CPPDEFINES = ['MSG_ST'])
 	libEnv.AppendUnique(CPPDEFINES = ['__unix__'])
 	libEnv.AppendUnique(CPPDEFINES = ['WUT_IMPLEMENTATION_PX'])
@@ -26,11 +26,11 @@ AnalysisNtuple = libEnv.SharedLibrary('AnalysisNtuple', listFiles(['src/*.cxx','
 
 
 progEnv.Tool('AnalysisNtupleLib')
-if baseEnv['PLATFORM'] == 'Linux':
+if baseEnv['PLATFORM'] != 'win32':
 	progEnv.Tool('addLibrary', library = ['dl'])
 	progEnv.Tool('addLibrary', library = ['pthread'])
 
-test_AnalysisNtuple = progEnv.Program('test_AnalysisNtuple', ['src/test/AnalysisNtupleAlg.cxx'])
+test_AnalysisNtuple = progEnv.Program('test_AnalysisNtuple', ['src/AnalysisNtupleAlg.cxx'])
 
 progEnv.Tool('registerObjects', package = 'AnalysisNtuple', libraries = [AnalysisNtuple],
 	     testApps = [test_AnalysisNtuple], includes = listFiles(['AnalysisNtuple/*.h']))
