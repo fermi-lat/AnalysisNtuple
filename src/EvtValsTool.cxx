@@ -3,7 +3,7 @@
 @brief Calculates the "Event" analysis variables from the other ntuple variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.39.6.1.4.1 2008/08/14 00:15:24 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.40 2008/08/16 05:17:47 heather Exp $
 */
 
 #include "ValBase.h"
@@ -444,7 +444,7 @@ StatusCode EvtValsTool::calculate()
 	// Vtx kinematic variable:  angle * event energy / Track_1 energy fraction
     float vtxAngle;
     if (m_pVtxTool->getVal("VtxAngle", vtxAngle, nextCheck).isSuccess()) {
-        if (tkr1ConE>0.0) EvtVtxKin = vtxAngle*EvtEnergyCorr/EvtTkr1EFrac;
+        if (EvtTkr1EFrac>0.0) EvtVtxKin = vtxAngle*EvtEnergyCorr/EvtTkr1EFrac;
     }
 
 	// Vtx angle x event energy  ~ constant
