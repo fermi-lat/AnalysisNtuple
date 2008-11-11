@@ -1,5 +1,5 @@
 # -*-python-*-
-# $Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/SConscript,v 1.6 2008/11/04 19:50:53 ecephas Exp $
+# $Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/SConscript,v 1.7 2008/11/06 22:07:35 ecephas Exp $
 # Authors: Leon Rochester <lsrea@slac.stanford.edu>
 import platform
 
@@ -16,7 +16,6 @@ libEnv.AppendUnique(CPPDEFINES = ['__i386'])
 libEnv.AppendUnique(CPPDEFINES = ['EFC_FILTER'])
 libEnv.AppendUnique(CPPDEFINES= ['f2cFortran'])
 libEnv.AppendUnique(FORTRANFLAGS = ['-Wno-globals'])
-ctype_fix=tempEnv.Object(target = 'ctype_fix.o', source = ['src/flux_c_type_fix.cxx'])
 
 if baseEnv['PLATFORM'] != 'win32':
 	libEnv.AppendUnique(CPPDEFINES = ['MSG_ST'])
