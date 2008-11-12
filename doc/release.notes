@@ -2,6 +2,7 @@
   @brief Package AnalysisNtuple
   @verbatim
 
+ v2r52p4 11-Nov-08   HMK  Remove FluxSvc from test JO
  v2r52p3 05-Nov-08   LSR  Try to protect EvtVtxKin 
  v2r52p1 13-Sep-08   LSR  Ghosts and eventSize variables  
  v2r51   14-Aug-08   HMK  Merge in GlastReleasev15r36 branch
