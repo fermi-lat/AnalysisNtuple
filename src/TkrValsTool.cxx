@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.90.82.3 2008/08/15 04:50:33 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.91 2008/08/16 05:17:47 heather Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -1001,20 +1001,35 @@ StatusCode TkrValsTool::calculate()
 
         // count the number of real hits... may not be necessary but I'm nervous!
         int clustersOnTrack = 0;
+        //int trackSize = track_1->size();
+        bool isGhost = false;
         while(pHit != track_1->end()) {
             const Event::TkrTrackHit* hit = *pHit++;
             unsigned int bits = hit->getStatusBits();
             if((bits & Event::TkrTrackHit::HITISSSD)==0) continue;
             const Event::TkrCluster* cluster = hit->getClusterPtr();
             double mips = cluster->getMips();
-            if (mips<0.0 || mips>10.0) continue;
+            if (mips<-0.5) continue;
+            int rawToT = cluster->ToT();
+            if(rawToT==255) {
+                isGhost = true;
+                continue;
+            }
             clustersOnTrack++;
         }
+
+        // commented statements are part of the debug
+        //std::vector<float> mipsVec(trackSize, 0.0);
+        //std::vector<float> mipsBefore(trackSize, 0.0);
+        //int seq = -1;
+        //float maxMips = -1000;
 
         pHit = track_1->begin();
         const Event::TkrTrackParams params((*pHit)->getTrackParams(Event::TkrTrackHit::SMOOTHED));
         while(pHit != track_1->end()) {
+            
             const Event::TkrTrackHit* hit = *pHit++;
+            //seq++;
             unsigned int bits = hit->getStatusBits();
 
             int layer = m_tkrGeom->getLayer(hit->getTkrId());
@@ -1048,58 +1063,56 @@ StatusCode TkrValsTool::calculate()
             double theta1       = atan(slope1);
 
             double aspectRatio = 0.228/0.400;
-            double totMax      =  250.;   // counts
             double threshold   =  0.25;   // Mips
             double countThreshold = 15; // counts
             double normFactor  =  1./53.;
 
             double mips = cluster->getMips();
-            if(mips<0.0 || mips>10.0) continue;
+            //mipsBefore[seq] = mips;
+            if(mips<-0.5) continue;
+            //if(mips>maxMips) maxMips = mips;
 
-            double tot = cluster->ToT();
-            if(tot>=totMax) tot = totMax;
             double path1 = 1.0;
 
             // get the path length for the hit
-            // tries to get the average
+            // tries to get the average length
             // the calculation is part analytic, part approximation and part fudge.
             //   more work is definitely in order!
 
             // theta1 first
-            if (tot>=totMax) { tot = normFactor*(totMax+countThreshold); }
-            else {
-                double costh1 = cos(theta1);
-                if (size==1) {
-                    double sinth1 = sin(theta1);
-                    if (slope1< aspectRatio) {
-                        path1 = (1./costh1*(aspectRatio-slope1) + 
-                            (1/costh1 - 0.5*threshold)*(2*threshold*sinth1))
-                            /(aspectRatio - slope1 + 2*threshold*sinth1);
-                    } else if (slope1<aspectRatio/(1-2.*threshold*costh1)) {
-                        path1 = 1; //1/costh1 - threshold*costh1;
-                    } else { 
-                        path1 = 1;
-                    }
+            double costh1 = cos(theta1);
+            if (size==1) {
+                double sinth1 = sin(theta1);
+                if (slope1< aspectRatio) {
+                    path1 = (1./costh1*(aspectRatio-slope1) + 
+                        (1/costh1 - 0.5*threshold)*(2*threshold*sinth1))
+                        /(aspectRatio - slope1 + 2*threshold*sinth1);
+                } else if (slope1<aspectRatio/(1-2.*threshold*costh1)) {
+                    path1 = 1.0; //1/costh1 - threshold*costh1;
+                } else { 
+                    path1 = 1.0;
                 }
-                else if (size==2) {
-                    if (slope1<aspectRatio/(1.-threshold*costh1)) {
-                        path1 = 0.75/costh1 -0.5*threshold;
-                    } else if (slope1<2.*aspectRatio/(1.-2*threshold*costh1)) { 
-                        path1 = aspectRatio/sin(theta1);
-                    } else {
-                        path1 = 1.0;
-                    }
-                } else {
-                    if(slope1>aspectRatio/(1.- 2.*threshold*costh1)) {
-                        path1 = aspectRatio/sin(theta1);
-                    } else {
-                        path1 = 1.0;
-                    }
-                }
-                double factor = path1*costh1*slope;
-                double path2 = sqrt(path1*path1 + factor*factor);
-                mips /= path2;
             }
+            else if (size==2) {
+                if (slope1<aspectRatio/(1.-threshold*costh1)) {
+                    path1 = 0.75/costh1 -0.5*threshold;
+                } else if (slope1<2.*aspectRatio/(1.-2*threshold*costh1)) { 
+                    path1 = aspectRatio/sin(theta1);
+                } else {
+                    path1 = 1.0;
+                }
+            } else {
+                if(slope1>aspectRatio/(1.- 2.*threshold*costh1)) {
+                    path1 = aspectRatio/sin(theta1);
+                } else {
+                    path1 = 1.0;
+                }
+            }
+
+            double factor = path1*costh1*slope;
+            double path2 = sqrt(path1*path1 + factor*factor);
+            mips /= path2;
+            //mipsVec[seq] = mips;
 
             if(mips > max_ToT) max_ToT = mips; 
             if(mips < min_ToT) min_ToT = mips; 
@@ -1118,13 +1131,57 @@ StatusCode TkrValsTool::calculate()
             }
         }
 
-        if(clustersOnTrack>3) {
-            Tkr_1_ToTTrAve = (Tkr_1_ToTAve - max_ToT - min_ToT)/(clustersOnTrack-2.);
-            Tkr_1_ToTAve /= clustersOnTrack;
-            if(first_ToTs+last_ToTs>0) {
+        // need 4 clusters to calculate an asymmetry
+        if(clustersOnTrack>3&&first_ToTs+last_ToTs>0) {
                 Tkr_1_ToTAsym = (last_ToTs - first_ToTs)/(first_ToTs + last_ToTs);
+        }
+
+        Tkr_1_ToTAve /= std::max(1, clustersOnTrack);
+
+        // at least three tracks to do a real truncated mean, if not use normal mean
+        if (clustersOnTrack>2) {
+            Tkr_1_ToTTrAve = (Tkr_1_ToTAve*clustersOnTrack - max_ToT - min_ToT)/(clustersOnTrack-2.);
+        } else { 
+            Tkr_1_ToTTrAve = Tkr_1_ToTAve;
+        }
+
+        // save this for future debugging
+        /*       
+        if(maxMips>50) {
+            std::cout << "New Track Ave = " << Tkr_1_ToTAve << " TrAve= "
+                << Tkr_1_ToTTrAve << " Size/ClsOnTrk " << trackSize << " " 
+                <<clustersOnTrack << " maxMips " << maxMips << std::endl;
+            int ihit = -1;
+            int ihitgood = -1;
+            pHit = track_1->begin();
+            while(pHit != track_1->end()) {
+                ihit++;
+                bool skip = false;
+                const Event::TkrTrackHit* hit = *pHit++;
+                unsigned int bits = hit->getStatusBits();
+                if((bits & Event::TkrTrackHit::HITISSSD)==0) skip = true;
+                if(skip) continue;
+                const Event::TkrCluster* cluster = hit->getClusterPtr();
+                int tower = cluster->tower();
+                int layer = cluster->getLayer();
+                int plane = cluster->getPlane();
+                int strip0 = cluster->firstStrip();
+                int stripf = cluster->lastStrip();
+                double mips = cluster->getMips();
+                if(mips<-0.5) skip = true;
+     
+                mips = mipsVec[ihit];
+                float mipsBef = mipsBefore[ihit];
+                int tot = cluster->ToT();
+                std::string ast = (skip ? "*" : " ");
+                std::cout << "hit " << ihit << ast << "twr/lyr/plane/strip " << tower 
+                    << " " << layer << " " << plane << " " << strip0 << " " << stripf ;
+                std::cout << " tot/MipBefore/Mips " << tot << " " 
+                    << mipsBef << " " << mips  << std::endl;
+                std::cout << *cluster <<std::endl;
             }
         }
+        */
 
         tkrTrackEnergy1 /= fabs(Tkr_1_zdir);
 
