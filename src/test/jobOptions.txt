@@ -30,6 +30,10 @@ ApplicationMgr.DLLs   += { "CalibSvc" };
 DetectorPersistencySvc.CnvServices += {"CalibMySQLCnvSvc"};
 
 // ----------------------------
+// Point to the particle properties file
+ParticlePropertySvc.ParticlePropertiesFile = "../src/test/ParticleTable.txt";
+
+// ----------------------------
 //  topalg
 //
 ApplicationMgr.TopAlg = {
