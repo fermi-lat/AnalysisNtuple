@@ -2,6 +2,9 @@
   @brief Package AnalysisNtuple
   @verbatim
 
+ v2r52p7 20-Jan-09   LSR  New variables that count Ghost, ToT255, Saturated,
+                             Wide and Wider clusters; in Event, on Tracks (TkrHitValsTool),
+                             and associated with track1 and track 2 (TkrValsTool)
  v2r52p6 19-Dec-08    TU  Add ParticleTables.txt for test program to find when initializing
  v2r52p5 18-Dec-08   HMK  Fix Tkr1ToTXxx calculation in TkrValsTool
  v2r52p4 11-Nov-08   HMK  Remove FluxSvc from test JO

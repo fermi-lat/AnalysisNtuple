@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.91 2008/08/16 05:17:47 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.92 2008/12/19 06:17:24 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -117,6 +117,8 @@ private:
     double m_maxVetoError;
     double m_vetoNSigma;
     bool   m_testExceptions;
+    int    m_minWide;
+    int    m_minWider;
 
 
     //Global Track Tuple Items
@@ -150,6 +152,12 @@ private:
     float Tkr_1_FirstHits;
     float Tkr_1_FirstLayer; 
     float Tkr_1_LastLayer; 
+
+    float Tkr_1_GhostFrac;
+    float Tkr_1_SaturatedFrac;
+    float Tkr_1_ToT255Frac;
+    float Tkr_1_WideFrac;
+    float Tkr_1_WiderFrac;
 
     float Tkr_1_Qual;
     float Tkr_1_Type;
@@ -211,6 +219,12 @@ private:
     float Tkr_2_FirstHits;
     float Tkr_2_FirstLayer; 
     float Tkr_2_LastLayer; 
+
+    float Tkr_2_GhostFrac;
+    float Tkr_2_SaturatedFrac;
+    float Tkr_2_ToT255Frac;
+    float Tkr_2_WideFrac;
+    float Tkr_2_WiderFrac;
 
     float Tkr_2_Gaps;
     float Tkr_2_DifHits;
@@ -293,6 +307,9 @@ TkrValsTool::TkrValsTool(const std::string& type,
     declareProperty("maxVetoError", m_maxVetoError=100000.0);
     declareProperty("vetoNSigma", m_vetoNSigma=2.0);
     declareProperty("testExceptions", m_testExceptions=false);
+    declareProperty("minWide", m_minWide=5);
+    declareProperty("minWider", m_minWider=9);
+
 }
 
 /** @page anatup_vars 
@@ -382,6 +399,16 @@ in which case the usual DOCA is poorly measured.
 <td>F<td>   Track chisquared for first Tkr[1/2]FirstHits layers  
 <tr><td> Tkr[1/2]Hits  
 <td>F<td>   Number of clusters in track  
+<tr><td> Tkr[1/2]GhostFrac
+<td>F<td>   Fraction of good hits on track that are ghosts
+<tr><td> Tkr[1/2]ToT255Frac
+<td>F<td>   Fraction of good hits on track that have ToT==255
+<tr><td> Tkr[1/2]SaturatedFrac
+<td>F<td>   Fraction of good hits on track that are saturated
+<tr><td> Tkr[1/2]WideFrac
+<td>F<td>   Fraction of good hits on track whose with is >= m_minWide (default=5)
+<tr><td> Tkr[1/2]WiderFrac
+<td>F<td>   Fraction of good hits on track whose with is >= m_minWider (default=9)
 <tr><td> Tkr[1/2][First/Last]Layer  
 <td>F<td>   [First/Last] layer in track  (layer 0 is the bottom of the tracker)
 <tr><td> Tkr1FirstGapPlane  
@@ -523,6 +550,16 @@ above the head of the first track.
 <td>F<td>   Number of initial TrackHits used to determine the starting direction  
 <tr><td> Tkr1DifHits  
 <td>F<td>   Difference between the number of x and y clusters associated with track  
+<tr><td> Tkr1GhostFrac
+<td>F<td>   Fraction of good hits on track 1 that are ghosts
+<tr><td> Tkr1ToT255Frac
+<td>F<td>   Fraction of good hits on track 1 that have ToT==255
+<tr><td> Tkr1SaturatedFrac
+<td>F<td>   Fraction of good hits on track 1 that are saturated
+<tr><td> Tkr1WideFrac
+<td>F<td>   Fraction of good hits on track 1 whose with is >= m_minWide (default=5)
+<tr><td> Tkr1WiderFrac
+<td>F<td>   Fraction of good hits on track 1 whose with is >= m_minWider (default=9)
 <tr><td> Tkr1Gaps  
 <td>F<td>   Total number of gaps in track  
 <tr><td> Tkr1FirstGaps  
@@ -588,7 +625,6 @@ Any gaps above the last plane are not counted. (This may change soon.)
 </table>
 
 */
-
 
 StatusCode TkrValsTool::initialize()
 {
@@ -685,6 +721,12 @@ StatusCode TkrValsTool::initialize()
     addItem("Tkr1LastLayer",  &Tkr_1_LastLayer);
     addItem("Tkr1DifHits",    &Tkr_1_DifHits);
 
+    addItem("Tkr1GhostFrac",  &Tkr_1_GhostFrac);
+    addItem("Tkr1ToT255Frac", &Tkr_1_ToT255Frac);
+    addItem("Tkr1SaturatedFrac",  &Tkr_1_SaturatedFrac);
+    addItem("Tkr1WideFrac",   &Tkr_1_WideFrac);
+    addItem("Tkr1WiderFrac",  &Tkr_1_WiderFrac);
+
     addItem("Tkr1Gaps",       &Tkr_1_Gaps);
     addItem("Tkr1FirstGapPlane",&Tkr_1_FirstGapPlane);
     addItem("Tkr1XGap",       &Tkr_1_GapX);
@@ -755,6 +797,13 @@ StatusCode TkrValsTool::initialize()
 
     //  addItem("Tkr2Gaps",       &Tkr_2_Gaps);
     //  addItem("Tkr2FirstGaps",  &Tkr_2_FirstGaps);
+
+    addItem("Tkr2GhostFrac",  &Tkr_2_GhostFrac);
+    addItem("Tkr2ToT255Frac", &Tkr_2_ToT255Frac);
+    addItem("Tkr2SaturatedFrac",  &Tkr_2_SaturatedFrac);
+    addItem("Tkr2WideFrac",   &Tkr_2_WideFrac);
+    addItem("Tkr2WiderFrac",  &Tkr_2_WiderFrac);
+
 
     addItem("Tkr2Qual",       &Tkr_2_Qual);
     addItem("Tkr2Type",       &Tkr_2_Type);
@@ -998,11 +1047,16 @@ StatusCode TkrValsTool::calculate()
         int gapId = -1;
         bool gapFound = false;
 
-
+        // count up different types of hits for track 1 (same below for track 2)
         // count the number of real hits... may not be necessary but I'm nervous!
+        // skip bad hits (mips<-0.5)
         int clustersOnTrack = 0;
-        //int trackSize = track_1->size();
-        bool isGhost = false;
+        int ghostCount     = 0;
+        int toT255Count    = 0;
+        int saturatedCount = 0;
+        int wideCount      = 0;
+        int widerCount     = 0;
+
         while(pHit != track_1->end()) {
             const Event::TkrTrackHit* hit = *pHit++;
             unsigned int bits = hit->getStatusBits();
@@ -1011,11 +1065,21 @@ StatusCode TkrValsTool::calculate()
             double mips = cluster->getMips();
             if (mips<-0.5) continue;
             int rawToT = cluster->ToT();
-            if(rawToT==255) {
-                isGhost = true;
-                continue;
-            }
+            if(rawToT==250) { saturatedCount++;}
+            if(cluster->isSet(Event::TkrCluster::maskGHOST)) ghostCount++;
+            if(cluster->isSet(Event::TkrCluster::mask255))   toT255Count++;
+
+            int width = cluster->size();
+            if(width>=m_minWide) wideCount++;
+            if(width>=m_minWider) widerCount++;
             clustersOnTrack++;
+        }
+        if(clustersOnTrack>0) {
+            Tkr_1_GhostFrac     = ((float)ghostCount)/clustersOnTrack;
+            Tkr_1_ToT255Frac    = ((float)toT255Count)/clustersOnTrack;
+            Tkr_1_SaturatedFrac = ((float)saturatedCount)/clustersOnTrack;
+            Tkr_1_WideFrac      = ((float)wideCount)/clustersOnTrack;
+            Tkr_1_WiderFrac     = ((float)widerCount)/clustersOnTrack;
         }
 
         // commented statements are part of the debug
@@ -1361,6 +1425,44 @@ StatusCode TkrValsTool::calculate()
                 else if (type==SUPER) {tkrTrackEnergy2 += cfThick;}
             }
             tkrTrackEnergy2 /= fabs(Tkr_2_zdir);
+
+            // count up different types of hits for track 2
+            // count the number of real hits... may not be necessary but I'm nervous!
+            // skip bad hits (mips<-0.5)
+
+            int clustersOnTrack2 = 0;
+            ghostCount     = 0;
+            toT255Count    = 0;
+            saturatedCount = 0;
+            wideCount      = 0;
+            widerCount     = 0;
+
+            pHit = track_2->begin();
+            while(pHit != track_2->end()) {
+                const Event::TkrTrackHit* hit = *pHit++;
+                unsigned int bits = hit->getStatusBits();
+                if((bits & Event::TkrTrackHit::HITISSSD)==0) continue;
+                const Event::TkrCluster* cluster = hit->getClusterPtr();
+                double mips = cluster->getMips();
+                if (mips<-0.5) continue;
+                int rawToT = cluster->ToT();
+                if(rawToT==250) { saturatedCount++;}
+                if(cluster->isSet(Event::TkrCluster::maskGHOST)) ghostCount++;
+                if(cluster->isSet(Event::TkrCluster::mask255))   toT255Count++;
+
+                int width = cluster->size();
+                if(width>=m_minWide) wideCount++;
+                if(width>=m_minWider) widerCount++;
+                clustersOnTrack2++;
+            }
+
+            if(clustersOnTrack2>0) {
+                Tkr_2_GhostFrac     = ((float)ghostCount)/clustersOnTrack2;
+                Tkr_2_ToT255Frac    = ((float)toT255Count)/clustersOnTrack2;
+                Tkr_2_SaturatedFrac = ((float)saturatedCount)/clustersOnTrack2;
+                Tkr_2_WideFrac      = ((float)wideCount)/clustersOnTrack2;
+                Tkr_2_WiderFrac     = ((float)widerCount)/clustersOnTrack2;
+            }
         }
 
         Tkr_Sum_KalEne    = Tkr_1_KalEne+Tkr_2_KalEne; 
