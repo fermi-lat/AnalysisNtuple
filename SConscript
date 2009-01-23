@@ -1,7 +1,7 @@
 # -*-python-*-
-# $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/SConscript,v 1.11 2008/12/19 23:30:32 glastrm Exp $
+# $Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/SConscript,v 1.8 2008/11/11 17:05:43 ecephas Exp $
 # Authors: Leon Rochester <lsrea@slac.stanford.edu>
-# Version: AnalysisNtuple-02-52-07
+# Version: AnalysisNtuple-02-52-02
 
 import platform
 
@@ -38,6 +38,7 @@ test_AnalysisNtuple = progEnv.GaudiProgram('test_AnalysisNtuple', ['src/Analysis
 
 progEnv.Tool('registerObjects', package = 'AnalysisNtuple', libraries = [AnalysisNtuple],
 	     testApps = [test_AnalysisNtuple], includes = listFiles(['AnalysisNtuple/*.h']))
+
 
 
 
