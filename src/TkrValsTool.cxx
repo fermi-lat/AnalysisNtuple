@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.92 2008/12/19 06:17:24 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.93 2009/01/21 06:28:40 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -1049,7 +1049,6 @@ StatusCode TkrValsTool::calculate()
 
         // count up different types of hits for track 1 (same below for track 2)
         // count the number of real hits... may not be necessary but I'm nervous!
-        // skip bad hits (mips<-0.5)
         int clustersOnTrack = 0;
         int ghostCount     = 0;
         int toT255Count    = 0;
@@ -1062,12 +1061,15 @@ StatusCode TkrValsTool::calculate()
             unsigned int bits = hit->getStatusBits();
             if((bits & Event::TkrTrackHit::HITISSSD)==0) continue;
             const Event::TkrCluster* cluster = hit->getClusterPtr();
+            if(cluster->isSet(Event::TkrCluster::mask255))   toT255Count++;
             double mips = cluster->getMips();
-            if (mips<-0.5) continue;
+            // we want the 255s in the clustersOnTrack count
+            //   so comment the next statement
+            // There should be no totally bad clusters, they're killed in MakeClusters
+            //if (mips<-0.5) continue;
             int rawToT = cluster->ToT();
             if(rawToT==250) { saturatedCount++;}
             if(cluster->isSet(Event::TkrCluster::maskGHOST)) ghostCount++;
-            if(cluster->isSet(Event::TkrCluster::mask255))   toT255Count++;
 
             int width = cluster->size();
             if(width>=m_minWide) wideCount++;
@@ -1443,12 +1445,15 @@ StatusCode TkrValsTool::calculate()
                 unsigned int bits = hit->getStatusBits();
                 if((bits & Event::TkrTrackHit::HITISSSD)==0) continue;
                 const Event::TkrCluster* cluster = hit->getClusterPtr();
+                if(cluster->isSet(Event::TkrCluster::mask255))   toT255Count++;
                 double mips = cluster->getMips();
-                if (mips<-0.5) continue;
+                // we want the 255s in the clustersOnTrack count
+                //   so comment the next statement
+                // There should be no totally bad clusters; they're killed in MakeClusters
+                //if (mips<-0.5) continue;
                 int rawToT = cluster->ToT();
                 if(rawToT==250) { saturatedCount++;}
                 if(cluster->isSet(Event::TkrCluster::maskGHOST)) ghostCount++;
-                if(cluster->isSet(Event::TkrCluster::mask255))   toT255Count++;
 
                 int width = cluster->size();
                 if(width>=m_minWide) wideCount++;
