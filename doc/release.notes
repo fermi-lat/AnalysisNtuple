@@ -2,6 +2,8 @@
   @brief Package AnalysisNtuple
   @verbatim
 
+ v2r52p8 30-Jan-09   LSR  Fixed the Tkr[1/2]ToT255Frac (was always zero)
+                             and denominator of the other "fracs"
  v2r52p7 20-Jan-09   LSR  New variables that count Ghost, ToT255, Saturated,
                              Wide and Wider clusters; in the event, on tracks (TkrHitValsTool),
                              and associated with track1 and track 2 (TkrValsTool)
