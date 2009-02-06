@@ -2,7 +2,7 @@
 @brief declaration and definition of the class PointingInfo
 
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/PointingInfo.cxx,v 1.3 2008/03/08 18:23:44 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/PointingInfo.cxx,v 1.4 2008/06/23 19:58:27 lsrea Exp $
 
 */
 class MsgStream;
@@ -47,11 +47,25 @@ void PointingInfo::execute( const astro::GPS& gps)
     rad_geo = earth.altitude(); 
     L=earth.L();
     B=earth.B();
+
+    R=earth.R();
+
+    lambda=earth.lambda();
+    CLHEP::Hep3Vector bField = earth.magnetic_field();
+    bEast = bField.x();
+    bNorth = bField.y();
+    bUp    = bField.z();
+
+    const double radToDeg = 180./M_PI;
+
     lat_mag = earth.geolat();
     in_saa= earth.insideSAA()? 1:0;
-    zenith_scz = 180/M_PI* gps.zenithDir().difference(gps.zAxisDir());
+    zenith_scz = radToDeg* gps.zenithDir().difference(gps.zAxisDir());
+ 
+    // sign the rocking angle
+    double temp = radToDeg*pos_km[2]/pos_km.mag();
+    if(dec_scz < temp) zenith_scz *= -1.0;
 }
-
 
 /** @page anatup_vars 
     @section Pt  Pt Variables
@@ -63,11 +77,21 @@ void PointingInfo::execute( const astro::GPS& gps)
 <tr><td> PtTime       <td>D<td> (s) Current time, same as the elapsed time
 <tr><td> PtLat,PtLon  <td>F<td> (deg) lattitude and longitude
 <tr><td> PtAlt        <td>F<td> (km) altitude
-<tr><td> PtMagLat     <td>F<td> magnetic latitude
+<tr><td> PtMagLat     <td>F<td> magnetic latitude, signed; see PtLambda
 <tr><td> PtPos[3]     <td>F<td> (m) current orbit position
 <tr><td> PtRax,PtDecx <td>F<td> (deg) equatorial coordinates for orientation of S/C x-axis
 <tr><td> PtRaz,PtDecz <td>F<td> (deg) equatorial coordinates for orientation of S/C z-axis 
-<tr><td> PtSCzenith   <td>F<td> (deg) current angle between zenith and S/C z-axis
+<tr><td> PtSCzenith   <td>F<td> (deg) current angle between zenith and S/C z-axis 
+                                   Now signed... + means rocked north
+<tr><td> PtMcIlwainB  <td>F<td> McIlwain-L parameter
+<tr><td> PtMcIlwainL  <td>F<td> McIlwain-B parameter
+<tr><td> PtLambda     <td>F<td> Lambda parameter, signed according to whether PlLambda 
+                                increases (+) or decreases (-) with increasing PtLat
+                                Test is done for a one-degree increment of PtLat
+<tr><td> PtR          <td>F<td> distance to the dipole center, in Earth radii
+<tr><td> PtBEast      <td>F<td> East component of the magnetic field
+<tr><td> PtBNorth     <td>F<td> North component of the magnetic field
+<tr><td> PtBUp        <td>F<td> Upward component of the magnetic field
 </table>
 */
 
@@ -89,4 +113,9 @@ void PointingInfo::setPtTuple(INTupleWriterSvc* tuple, const std::string& tname)
     tuple->addItem(tname, "PtMcIlwainB", &B);
     tuple->addItem(tname, "PtMcIlwainL", &L);
 
+    tuple->addItem(tname, "PtLambda", &lambda);
+    tuple->addItem(tname, "PtR",      &R);
+    tuple->addItem(tname, "PtBEast",  &bEast);
+    tuple->addItem(tname, "PtBNorth", &bNorth);
+    tuple->addItem(tname, "PtBUp",    &bUp);
 }

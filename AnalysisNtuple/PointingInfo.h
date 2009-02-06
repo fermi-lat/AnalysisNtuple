@@ -1,5 +1,5 @@
 /** @file PointingInfo.h
-// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/AnalysisNtuple/PointingInfo.h,v 1.3 2008/02/28 00:24:31 burnett Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/AnalysisNtuple/PointingInfo.h,v 1.4 2008/02/28 21:42:51 lsrea Exp $
 */
 
 #ifndef PointingInfo_h
@@ -43,6 +43,12 @@ private:
     float L; ///< McIllwain L parameter
     float B; ///< magnetic field
     float zenith_scz; ///< space craft zenith angle
+
+    float lambda;
+    float R;
+    float bEast;
+    float bNorth;
+    float bUp;
 
 };
 
