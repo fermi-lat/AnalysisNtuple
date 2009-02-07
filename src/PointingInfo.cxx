@@ -2,7 +2,7 @@
 @brief declaration and definition of the class PointingInfo
 
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/PointingInfo.cxx,v 1.4 2008/06/23 19:58:27 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/PointingInfo.cxx,v 1.5 2009/02/06 20:57:10 lsrea Exp $
 
 */
 class MsgStream;
@@ -51,14 +51,16 @@ void PointingInfo::execute( const astro::GPS& gps)
     R=earth.R();
 
     lambda=earth.lambda();
+
     CLHEP::Hep3Vector bField = earth.magnetic_field();
-    bEast = bField.x();
+    bEast  = bField.x();
     bNorth = bField.y();
     bUp    = bField.z();
 
     const double radToDeg = 180./M_PI;
 
     lat_mag = earth.geolat();
+    lambda *= radToDeg; // convert to degrees
     in_saa= earth.insideSAA()? 1:0;
     zenith_scz = radToDeg* gps.zenithDir().difference(gps.zAxisDir());
  
@@ -77,7 +79,7 @@ void PointingInfo::execute( const astro::GPS& gps)
 <tr><td> PtTime       <td>D<td> (s) Current time, same as the elapsed time
 <tr><td> PtLat,PtLon  <td>F<td> (deg) lattitude and longitude
 <tr><td> PtAlt        <td>F<td> (km) altitude
-<tr><td> PtMagLat     <td>F<td> magnetic latitude, signed; see PtLambda
+<tr><td> PtMagLat     <td>F<td> (deg) magnetic latitude, signed; see PtLambda
 <tr><td> PtPos[3]     <td>F<td> (m) current orbit position
 <tr><td> PtRax,PtDecx <td>F<td> (deg) equatorial coordinates for orientation of S/C x-axis
 <tr><td> PtRaz,PtDecz <td>F<td> (deg) equatorial coordinates for orientation of S/C z-axis 
@@ -85,7 +87,7 @@ void PointingInfo::execute( const astro::GPS& gps)
                                    Now signed... + means rocked north
 <tr><td> PtMcIlwainB  <td>F<td> McIlwain-L parameter
 <tr><td> PtMcIlwainL  <td>F<td> McIlwain-B parameter
-<tr><td> PtLambda     <td>F<td> Lambda parameter, signed according to whether PlLambda 
+<tr><td> PtLambda     <td>F<td> (deg)Lambda parameter, signed according to whether PlLambda 
                                 increases (+) or decreases (-) with increasing PtLat
                                 Test is done for a one-degree increment of PtLat
 <tr><td> PtR          <td>F<td> distance to the dipole center, in Earth radii

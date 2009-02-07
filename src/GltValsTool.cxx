@@ -2,7 +2,7 @@
 @brief Calculates the Trigger analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.40 2008/07/16 05:26:18 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.41 2008/09/10 01:24:33 lsrea Exp $
 */
 
 // Include files
@@ -86,6 +86,8 @@ private:
     int   Trig_gemDeltaWindowOpenTime;
     int   Trig_eventSize;
     int   Trig_compressedEventSize;
+    unsigned long long Trig_elapsedTime;
+    unsigned long long Trig_liveTime;
 
     ITkrQueryClustersTool* m_clusTool;
 };
@@ -165,6 +167,11 @@ produces 13 potential triggers
 <td>I<td>   Uncompressed size of the event in bytes
 <tr><td> GltCompressedEventSize
 <td>I<td>   Compressed size of the event in bytes
+<tr><td> GltGemElapsedTime
+<td>UL<td>   Gem raw count scaler (64-bit, counts at 20 MHz).
+<tr><td> GltGemLiveTime
+<td>UL<td>   Gem livetime scaler (64-bit, counts at 20 MHz),
+             increments every 50-nsec tick when instrument is live
             </table>
 */
 
@@ -232,6 +239,9 @@ StatusCode GltValsTool::initialize()
 
     addItem("GltEventSize",              &Trig_eventSize);
     addItem("GltCompressedEventSize",    &Trig_compressedEventSize);
+
+    addItem("GltGemElapsedTime",         &Trig_elapsedTime);
+    addItem("GltGemLiveTime",            &Trig_liveTime);
 
     zeroVals();
 
@@ -307,6 +317,8 @@ StatusCode GltValsTool::calculate()
     if(metaTds) {
         Trig_sourcegps =  metaTds->time().current().sourceGps();
         Trig_compressedEventSize = metaTds->compressedSize();
+        Trig_elapsedTime = metaTds->scalers().elapsed();
+        Trig_liveTime    = metaTds->scalers().livetime();
     }
 
     SmartDataPtr<LdfEvent::EventSummaryData> 
