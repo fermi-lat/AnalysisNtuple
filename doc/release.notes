@@ -2,6 +2,8 @@
   @brief Package AnalysisNtuple
   @verbatim
 
+ v2r54   07-Feb-09   LSR  New vars: GltGem[Elapsed/Live]Time
+                              change PtLambda from rads to degrees 
  v2r53   06-Feb-09   LSR  Added vars PtLambda, PtR, and PtB(East,North,Up)
                           Signed the rocking angle PtSCzenith (north = +)
  v2r52p8 30-Jan-09   LSR  Fixed the Tkr[1/2]ToT255Frac (was always zero)
