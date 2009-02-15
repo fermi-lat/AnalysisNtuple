@@ -2,7 +2,7 @@
 @brief declaration and definition of the class PointingInfo
 
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/PointingInfo.cxx,v 1.5 2009/02/06 20:57:10 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/PointingInfo.cxx,v 1.6 2009/02/07 21:36:27 lsrea Exp $
 
 */
 class MsgStream;
@@ -18,6 +18,10 @@ class MsgStream;
 #include "ntupleWriterSvc/INTupleWriterSvc.h"
 
 using namespace AnalysisNtuple;
+
+namespace {
+    const double R2D = 180./M_PI;
+}
 
 void PointingInfo::execute( const astro::GPS& gps)
 {
@@ -57,16 +61,14 @@ void PointingInfo::execute( const astro::GPS& gps)
     bNorth = bField.y();
     bUp    = bField.z();
 
-    const double radToDeg = 180./M_PI;
-
     lat_mag = earth.geolat();
-    lambda *= radToDeg; // convert to degrees
     in_saa= earth.insideSAA()? 1:0;
-    zenith_scz = radToDeg* gps.zenithDir().difference(gps.zAxisDir());
+    zenith_scz = gps.zenithDir().difference(gps.zAxisDir());
  
     // sign the rocking angle
-    double temp = radToDeg*pos_km[2]/pos_km.mag();
+    double temp = pos_km[2]/pos_km.mag();
     if(dec_scz < temp) zenith_scz *= -1.0;
+    zenith_scz *= R2D; // and convert to degrees
 }
 
 /** @page anatup_vars 

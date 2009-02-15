@@ -1,7 +1,7 @@
 /** @file FT1Alg.cxx
 @brief Declaration and implementation of Gaudi algorithm FT1Alg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.18 2008/07/31 12:11:52 burnett Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.19 2008/09/13 18:22:07 lsrea Exp $
 */
 // Include files
 
@@ -34,6 +34,8 @@ class FT1worker;
 namespace { // anonymous namespace for file-global
     unsigned int nbOfEvtsInFile(100000);
     std::string treename("MeritTuple");
+
+    const double R2D = 180./M_PI;
 
     astro::GPS* gps(0);  // pointer to relevant GPS entry
 #include "Item.h"
@@ -364,10 +366,10 @@ void FT1worker::evaluate()
 
     // instrument coords
 
-    m_ft1theta = (-glastDir).theta()*180/M_PI;
+    m_ft1theta = (-glastDir).theta()*R2D;
     double phi_deg = (-glastDir).phi(); 
     if( phi_deg<0 ) phi_deg += 2*M_PI;
-    m_ft1phi =  phi_deg*180/M_PI;
+    m_ft1phi =  phi_deg*R2D;
 
     // celestial coordinates
 
@@ -396,8 +398,8 @@ void FT1worker::evaluate()
     if( earth_azimuth <0) earth_azimuth += 2*M_PI; // to 0-360 deg.
     if( fabs(earth_azimuth)<1e-8) earth_azimuth=0;
 
-    m_ft1zen  = zenith_theta*180/M_PI;;
-    m_ft1azim = earth_azimuth*180/M_PI;
+    m_ft1zen  = zenith_theta*R2D;;
+    m_ft1azim = earth_azimuth*R2D;
 
     // more useful class level
 
