@@ -2,6 +2,8 @@
   @brief Package AnalysisNtuple
   @verbatim
 
+ v2r54p1 14-Feb-09   LSR  Move lambda rad->deg to astro/EarthCoordinate
+                            introduce R2D = 180./M_PI
  v2r54   07-Feb-09   LSR  New vars: GltGem[Elapsed/Live]Time
                               change PtLambda from rads to degrees 
  v2r53   06-Feb-09   LSR  Added vars PtLambda, PtR, and PtB(East,North,Up)
