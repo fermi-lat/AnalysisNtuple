@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.90.10.1.6.3 2008/08/15 04:50:33 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.91 2008/08/16 05:17:47 heather Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -10,6 +10,8 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.90.
 
 
 #include "ValBase.h"
+
+#include "UBinterpolate.h"
 
 #include "GaudiKernel/MsgStream.h"
 #include "GaudiKernel/IDataProviderSvc.h"
@@ -83,6 +85,8 @@ private:
     ITkrGeometrySvc* m_tkrGeom;
 
     IPropagator*     m_G4PropTool;    
+
+    IValsTool*       m_pTkrTool;
 
     /// some Geometry
     double m_towerPitch;
@@ -164,6 +168,7 @@ private:
     // Full profile fit
     float CAL_cfp_energy;      // Energy from Full Profile tool
     float CAL_cfp_totChiSq;    // Total ChiSquare of fit divided by 11
+    float CAL_cfp_energyUB;    // Energy from Full Profile tool unbiased
     float CAL_cfp_calEffRLn;   // Effective radiation lengths in the Cal
     float CAL_cfp_tkrRLn;   // Effective radiation lengths in the tkr
     float CAL_cfp_alpha;       // fit parameter alpha
@@ -183,6 +188,7 @@ private:
     float CAL_tkl_energyErr;   // Chisquare from the tracker likelihood
     float CAL_LkHd_energy;     // Energy from the Likelihood tool
     float CAL_LkHd_energyErr;  // Chisquare from the likelihood
+    float CAL_LkHd_energyUB;   // Energy from the Likelihood tool unbiased
     float CAL_RmsE;            // Rms of layer energies, corrected for pathlength
     //    and dropping layers with low E, normalized
     //    to the energy in these layers.
@@ -255,6 +261,7 @@ private:
   int TSfillTS(int optts);
   double TSgetinterpolationTS(double efrac);
 
+    UBinterpolate* m_ubInterpolate;
 };
 
 namespace {
@@ -511,6 +518,20 @@ StatusCode CalValsTool::initialize()
         m_xNum = m_tkrGeom->numXTowers();
         m_yNum = m_tkrGeom->numYTowers();
 
+        IToolSvc* pToolSvc = 0; 
+        sc = service("ToolSvc", pToolSvc, true);
+        if ( !sc.isSuccess() ) {
+            log << MSG::ERROR << "Can't find ToolSvc, will quit now" << endreq;
+            return StatusCode::FAILURE;
+        }
+
+        m_pTkrTool = 0;
+        sc = pToolSvc->retrieveTool("TkrValsTool", m_pTkrTool);
+        if( sc.isFailure() ) {
+            log << MSG::ERROR << "Unable to find tool: " "TkrValsTool" << endreq;
+            return sc;
+        }
+
         if (getCalInfo().isFailure()) {
             log << MSG::ERROR << "Couldn't initialize the CAL constants" << endreq;
             return StatusCode::FAILURE;
@@ -600,6 +621,7 @@ StatusCode CalValsTool::initialize()
 
     addItem("CalCfpEnergy",  &CAL_cfp_energy);
     addItem("CalCfpChiSq",   &CAL_cfp_totChiSq);
+    addItem("CalCfpEnergyUB",&CAL_cfp_energyUB);
     addItem("CalCfpEffRLn",  &CAL_cfp_calEffRLn);
     addItem("CalCfpTkrRLn",  &CAL_cfp_tkrRLn);
     addItem("CalCfpAlpha",  &CAL_cfp_alpha);
@@ -617,6 +639,7 @@ StatusCode CalValsTool::initialize()
     addItem("CalTklEneErr",  &CAL_tkl_energyErr);
     addItem("CalLkHdEnergy", &CAL_LkHd_energy);
     addItem("CalLkHdEneErr", &CAL_LkHd_energyErr);
+    addItem("CalLkHdEnergyUB", &CAL_LkHd_energyUB);
 
     addItem("CalRmsLayerE",  &CAL_rmsLayerE);
     addItem("CalRmsLayerEBack",  &CAL_rmsLayerEBack);
@@ -660,6 +683,8 @@ StatusCode CalValsTool::initialize()
     addItem("CalTrSizeTkrTL100",&CAL_TS_TKR_TL_100);
 
     zeroVals();
+
+    m_ubInterpolate = new UBinterpolate("$(ANALYSISNTUPLEROOT)/calib/BiasMapCalCfpEnergy.txt");
 
     return sc;
 }
@@ -742,6 +767,20 @@ StatusCode CalValsTool::calculate()
                 CAL_cfp_calfit_alpha = corResult["calfit_alpha"];
                 CAL_cfp_calfit_tmax = corResult["calfit_tmax"];
                 CAL_cfp_calfit_fiterrflg = corResult["calfit_fitflag"];
+                if ( CAL_cfp_energy == 0 ) {
+                    CAL_cfp_energyUB = 0;
+                    //                    std::cout << "CalValsTool CAL_cfp_energy " << CAL_cfp_energy << ' ' << CAL_cfp_energyUB << std::endl;
+                }
+                else {
+                    float tkr1ZDir = -1;
+                    if ( m_pTkrTool->getVal("Tkr1ZDir", tkr1ZDir).isSuccess() ) {
+                        if ( tkr1ZDir == 0 )
+                            tkr1ZDir = -1;
+                    }
+                    const float bias = m_ubInterpolate->interpolate(log10(CAL_cfp_energy), tkr1ZDir);
+                    CAL_cfp_energyUB = bias == 0 ? -1 : CAL_cfp_energy / bias;
+                    //                    std::cout << "EvtValsTool CAL_cfp_energy " << CAL_cfp_energy << " ( " << log10(CAL_cfp_energy) << " ) " << CAL_cfp_energyUB << " ( " << log10(CAL_cfp_energyUB) << " ) " << tkr1ZDir << std::endl;
+                }
             }
             else if (corResult.getCorrectionName() == "CalLastLayerLikelihoodTool")
             {
@@ -757,6 +796,8 @@ StatusCode CalValsTool::calculate()
             {
                 CAL_LkHd_energy    = corResult.getParams().getEnergy();
                 CAL_LkHd_energyErr = corResult.getParams().getEnergyErr();
+                CAL_LkHd_energyUB = CAL_LkHd_energy / ( 1.003 - 0.005345 * log10(CAL_LkHd_energy) );
+                //                std::cout << "CalValsTool CAL_LkHd_energy " << CAL_LkHd_energy << ' ' << CAL_LkHd_energyUB << std::endl;
             }
         }
     }

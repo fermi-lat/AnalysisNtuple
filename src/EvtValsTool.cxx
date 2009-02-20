@@ -3,10 +3,12 @@
 @brief Calculates the "Event" analysis variables from the other ntuple variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.40 2008/08/16 05:17:47 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.41 2008/11/06 03:30:46 lsrea Exp $
 */
 
 #include "ValBase.h"
+
+#include "UBinterpolate.h"
 
 #include "GaudiKernel/MsgStream.h"
 #include "GaudiKernel/IDataProviderSvc.h"
@@ -53,6 +55,7 @@ private:
     double EvtLiveTime;
 
     float EvtEnergyCorr;
+    float EvtEnergyCorrUB;
     float EvtEnergyRaw;
     float EvtDeltaEoE;
     float EvtCalEdgeAngle;
@@ -110,6 +113,7 @@ private:
 
 // EvtVtxEAngle	continuous	VtxAngle*sqrt(EvtEnergySumOpt)/(4.24 -1.98*EvtLogEnergy + .269*EvtLogEnergy^2)/(1.95+2.36*Tkr1ZDir+1.3*Tkr1ZDir^2)
 
+    UBinterpolate* m_ubInterpolate;
 };
 
 
@@ -293,6 +297,7 @@ StatusCode EvtValsTool::initialize()
     addItem("EvtLiveTime",      &EvtLiveTime);
 
     addItem("EvtEnergyCorr",    &EvtEnergyCorr);
+    addItem("EvtEnergyCorrUB",  &EvtEnergyCorrUB);
     addItem("EvtEnergyRaw",     &EvtEnergyRaw);
     addItem("EvtDeltaEoE",      &EvtDeltaEoE);
     addItem("EvtCalEdgeAngle",  &EvtCalEdgeAngle);
@@ -324,6 +329,8 @@ StatusCode EvtValsTool::initialize()
     addItem("EvtEventFlags",      &EvtEventFlags);
  
     zeroVals();
+
+    m_ubInterpolate = new UBinterpolate("$(ANALYSISNTUPLEROOT)/calib/BiasMapEvtEnergyCorr.txt");
 
     return sc;
 }
@@ -403,6 +410,13 @@ StatusCode EvtValsTool::calculate()
             //	if(eCalEneLLCorr > 0) EvtEnergyCorr = eCalEneLLCorr; //This is wrong! LL has comp.for TkrEne!
             //	else { 
         EvtEnergyCorr = (eTkr + eCalSumCorr);
+        if ( EvtEnergyCorr == 0 )
+            EvtEnergyCorrUB = 0;
+        else {
+            const float bias = m_ubInterpolate->interpolate(log10(EvtEnergyCorr), tkr1ZDir);
+            EvtEnergyCorrUB = bias == 0 ? -1 : EvtEnergyCorr / bias;
+            //            std::cout << "EvtValsTool EvtEnergyCorr " << EvtEnergyCorr << " ( " << log10(EvtEnergyCorr) << " ) " << EvtEnergyCorrUB << " ( " << log10(EvtEnergyCorrUB) << " ) " << tkr1ZDir << std::endl;
+        }
             //	}
             //	}
     }
