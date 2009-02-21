@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.93 2009/01/21 06:28:40 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.94 2009/01/30 17:13:13 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -1055,6 +1055,7 @@ StatusCode TkrValsTool::calculate()
         int saturatedCount = 0;
         int wideCount      = 0;
         int widerCount     = 0;
+        int nToTs = 0; // count the good ToTs at the same time
 
         while(pHit != track_1->end()) {
             const Event::TkrTrackHit* hit = *pHit++;
@@ -1067,6 +1068,7 @@ StatusCode TkrValsTool::calculate()
             //   so comment the next statement
             // There should be no totally bad clusters, they're killed in MakeClusters
             //if (mips<-0.5) continue;
+            if(mips>-0.5) nToTs++;
             int rawToT = cluster->ToT();
             if(rawToT==250) { saturatedCount++;}
             if(cluster->isSet(Event::TkrCluster::maskGHOST)) ghostCount++;
@@ -1136,7 +1138,6 @@ StatusCode TkrValsTool::calculate()
             double mips = cluster->getMips();
             //mipsBefore[seq] = mips;
             if(mips<-0.5) continue;
-            //if(mips>maxMips) maxMips = mips;
 
             double path1 = 1.0;
 
@@ -1191,22 +1192,22 @@ StatusCode TkrValsTool::calculate()
                 chisq_first += hit->getChiSquareSmooth();
             }
             // last 2 valid clusters
-            if(hit_counter > clustersOnTrack-2){
+            if(hit_counter > nToTs-2){
                 last_ToTs += mips;
                 chisq_last += hit->getChiSquareSmooth();
             }
         }
 
         // need 4 clusters to calculate an asymmetry
-        if(clustersOnTrack>3&&first_ToTs+last_ToTs>0) {
+        if(nToTs>3&&first_ToTs+last_ToTs>0) {
                 Tkr_1_ToTAsym = (last_ToTs - first_ToTs)/(first_ToTs + last_ToTs);
         }
 
-        Tkr_1_ToTAve /= std::max(1, clustersOnTrack);
+        Tkr_1_ToTAve /= std::max(1, nToTs);
 
         // at least three tracks to do a real truncated mean, if not use normal mean
-        if (clustersOnTrack>2) {
-            Tkr_1_ToTTrAve = (Tkr_1_ToTAve*clustersOnTrack - max_ToT - min_ToT)/(clustersOnTrack-2.);
+        if (nToTs>2) {
+            Tkr_1_ToTTrAve = (Tkr_1_ToTAve*nToTs - max_ToT - min_ToT)/(nToTs-2.);
         } else { 
             Tkr_1_ToTTrAve = Tkr_1_ToTAve;
         }
@@ -1216,7 +1217,7 @@ StatusCode TkrValsTool::calculate()
         if(maxMips>50) {
             std::cout << "New Track Ave = " << Tkr_1_ToTAve << " TrAve= "
                 << Tkr_1_ToTTrAve << " Size/ClsOnTrk " << trackSize << " " 
-                <<clustersOnTrack << " maxMips " << maxMips << std::endl;
+                <<nToTs << " maxMips " << maxMips << std::endl;
             int ihit = -1;
             int ihitgood = -1;
             pHit = track_1->begin();
