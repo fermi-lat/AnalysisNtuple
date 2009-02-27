@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.47 2008/04/22 22:54:47 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.48 2008/07/18 06:27:56 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -438,12 +438,12 @@ StatusCode AcdValsTool::calculate()
 
                 // WBA: Insert the Tile_counts_by region here with energy threshold
                 if(MeV > TileCountThreshold) {
-                    if(id.top()) {ACD_tileTopCount += 1.0;}
+		    if(id.top()) {ACD_tileTopCount += 1;}
                     else {
-                        if(id.row()==0) ACD_tileCount0 += 1.0;
-                        if(id.row()==1) ACD_tileCount1 += 1.0;
-                        if(id.row()==2) ACD_tileCount2 += 1.0;
-                        if(id.row()==3) ACD_tileCount3 += 1.0;
+                        if(id.row()==0) ACD_tileCount0 += 1;
+                        if(id.row()==1) ACD_tileCount1 += 1;
+                        if(id.row()==2) ACD_tileCount2 += 1;
+                        if(id.row()==3) ACD_tileCount3 += 1;
                     }
                 } 
 
@@ -456,7 +456,7 @@ StatusCode AcdValsTool::calculate()
                     if(id.row()==2) ACD_energyRow2 += MeV;
                     if(id.row()==3) {
                         ACD_energyRow3 += MeV;
-                        ACD_countRow3Readout += 1.0;
+                        ACD_countRow3Readout += 1;
                     }
                 }
             }	  
