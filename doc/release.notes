@@ -2,6 +2,8 @@
   @brief Package AnalysisNtuple
   @verbatim
 
+ v2r54p3 17-Mar-09   LSR  AcdValsTool: condition energy and tile counts on "accept" bit
+                            so that plots look reasonable for PT events 
  v2r54p2 20-Feb-09   LSR  Fixed a bug in the ToT averaging logic
                           Caused the average to be lower for tracks
                             containing ToT255 clusters
