@@ -1,7 +1,7 @@
 /** @file McTkrHitValsTool.cxx
     @brief declartion, implementaion of the class UserAlg
 
-    $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McTkrHitValsTool.cxx,v 1.6 2007/04/06 15:19:55 usher Exp $
+    $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McTkrHitValsTool.cxx,v 1.7 2007/06/07 17:00:13 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -23,12 +23,15 @@
 #include "Event/MonteCarlo/McParticle.h"
 #include "Event/MonteCarlo/McTrajectory.h"
 #include "Event/MonteCarlo/McPositionHit.h"
+#include "Event/MonteCarlo/McIntegratingHit.h"
 #include "Event/MonteCarlo/McRelTableDefs.h"
 
 #include "Event/Digi/TkrDigi.h"
 
 // Volume identifier stuff
 #include "idents/VolumeIdentifier.h"
+#include "idents/AcdId.h"
+#include "idents/CalXtalId.h"
 
 #include <algorithm>
 #include <set>
@@ -55,23 +58,34 @@ public:
     
 private:
     // Internal functions
+    int  GetAcdHits(const Event::McParticle* paricle);
     int  GetTrackHits(const Event::McParticle* paricle);
+    int  GetCalHits(const Event::McParticle* paricle);
     void CntTotalHits(const Event::McParticle* primary);
     int  GetSharedHits(const Event::McParticle* daught1, const Event::McParticle* daught2);
     void CntMcPosHits(const Event::McParticle* primary);
 
     // Variables for primary track
     int          m_primType;          // Particle type of primary
-    int          m_primNumHits;       // Primary number of tracker hits 
-                                      // (will be zero for a gamma)
+    int          m_numDaughters;      // Number of daughters for the primary
+    int          m_primNumTkrHits;    // Primary number of tracker hits 
+    int          m_primNumAcdHits;    // Primary number of Acd hits 
+    int          m_primNumCalHits;    // Primary number of calorimeter hits 
+    int          m_primInteracted;    // Primary interacted in LAT
 
     // Variables for first daughter
     int          m_dght1Type;         // Particle type of "best" daughter of primary
-    int          m_dght1NumHits;      // "Best" daughter number of track hits
+    int          m_dght1NumTkrHits;   // "Best" daughter number of track hits
+    int          m_dght1NumAcdHits;   // "Best" daughter number of acd hits
+    int          m_dght1NumCalHits;   // "Best" daughter number of cal hits
+    char         m_dght1Process[80];  // Decay process for this daughter
 
     // Variables for second daughter
     int          m_dght2Type;         // Particle type of "next" daughter track
-    int          m_dght2NumHits;      // "Next" daughter number of track hits
+    int          m_dght2NumTkrHits;   // "Next" daughter number of track hits
+    int          m_dght2NumAcdHits;   // "Next" daughter number of acd hits
+    int          m_dght2NumCalHits;   // "Next" daughter number of cal hits
+    char         m_dght2Process[80];  // Decay process for this daughter
 
     // McPositionHit/particle counts
     int          m_posHitPrimary;     // Number of McPositionHits associated to primary
@@ -81,20 +95,26 @@ private:
     int          m_posHitOthers;      // Number of McPositionHits none of the above
 
     // Other variables
-    int          m_process;           // Decay process for primary (if one)
-    int          m_totalHits;         // Total number of non-noise hits in tracker
-    int          m_totalPrimHits;     // Number of hits due to primary and its descendants
+    int          m_totalTkrHits;      // Total number of non-noise hits in tracker
+    int          m_totalPrimTkrHits;  // Number of tracker hits due to primary and its descendants
+    int          m_totalPrimAcdHits;  // Number of acd hits due to primary and its descendants
+    int          m_totalPrimCalHits;  // Number of cal hits due to primary and its descendants
     int          m_totalPrimClusHits; // Number of clusters due to primary and its descendants
     int          m_dghtSharedHits;    // Number of clusters shared by the two daughters above
+    float        m_totEnergyDepCal;   // Total energy deposited in the calorimeter
+    float        m_totEnergyDepAcd;   // Total energy deposited in the ACD
 
     // to decode the particle charge
     IParticlePropertySvc*  m_ppsvc;
 
     // Relational tables to be set up each event...
-    Event::McPartToTrajectoryTab* m_partToTrajTab;
-    Event::McPointToPosHitTab*    m_pointToPosHitTab;
-    //Event::McPointToIntHitTab*    m_pointToIntHitTab;  // Future expansion
-    Event::ClusMcPosHitTab*       m_clusToPosHitTab;
+    Event::McPartToTrajectoryTab*      m_partToTrajTab;
+    Event::McPointToPosHitTab*         m_pointToPosHitTab;
+    Event::McPointToIntHitTab*         m_pointToIntHitTab;  
+    Event::ClusMcPosHitTab*            m_clusToPosHitTab;
+
+    std::map<idents::CalXtalId, float> m_xtalIdToEnergyMap;
+    std::map<idents::AcdId,     float> m_acdIdToEnergyMap;
 };
 
 // Static factory for instantiation of algtool objects
@@ -108,6 +128,7 @@ McTkrHitValsTool::McTkrHitValsTool(const std::string& type,
                                : ValBase( type, name, parent ),
                                  m_partToTrajTab(0),
                                  m_pointToPosHitTab(0),
+                                 m_pointToIntHitTab(0),
                                  m_clusToPosHitTab(0)
 {    
     // Declare additional interface
@@ -121,7 +142,9 @@ McTkrHitValsTool::McTkrHitValsTool(const std::string& type,
 <table>
 <tr><th> Variable <th> Type <th> Description
 <tr><td> McTHPrimType <td> I <td> Primary particle type (id)
-<tr><td> McTHPrimNumHits <td> I <td> Primary number of Tracker hits (making clusters) 
+<tr><td> McTHPrimNumTkrHits <td> I <td> Primary number of Tracker hits (making clusters) 
+<tr><td> McTHPrimNumAcdHits <td> I <td> Primary number of Acd hits (McPositionHits)
+<tr><td> McTHPrimNumCalHits <td> I <td> Primary number of Cal hits (McIntegratingHits)
 <tr><td> McTHDght1Type <td> I <td> Daughter 1 (most hits) particle type (id)
 <tr><td> McTHDght1NumHits <td> I <td> Daughter 1 number of Tracker hits
 <tr><td> McTHDght2Type <td> I <td> Daughter 2 (most hits) particle type (id)
@@ -154,22 +177,35 @@ StatusCode McTkrHitValsTool::initialize()
         return StatusCode::FAILURE;
     }
  
-	addItem("McTHPrimType",       &m_primType);
-    addItem("McTHProcess",        &m_process);
-	addItem("McTHPrimNumHits",    &m_primNumHits);
-	addItem("McTHDght1Type",      &m_dght1Type);
-	addItem("McTHDght1NumHits",   &m_dght1NumHits);
-	addItem("McTHDght2Type",      &m_dght2Type);
-	addItem("McTHDght2NumHits",   &m_dght2NumHits);
-    addItem("McTHPosHitPrimary",  &m_posHitPrimary);
-    addItem("McTHPosHitGamma",    &m_posHitGammas);
-    addItem("McTHPosHitElectron", &m_posHitElectrons);
-    addItem("McTHPosHitPositron", &m_posHitPositrons);
-    addItem("McTHPosHitOthers",   &m_posHitOthers);
-    addItem("McTHTotalHits",      &m_totalHits);
-    addItem("McTHTotPrmHits",     &m_totalPrimHits);
-    addItem("McTHTotPrmClusHits", &m_totalPrimClusHits);
-    addItem("McTHDghtSharedHits", &m_dghtSharedHits);
+	addItem("McTHPrimType",        &m_primType);
+	addItem("McTHNumDaughters",    &m_numDaughters);
+	addItem("McTHPrimNumHits",     &m_primNumTkrHits);
+	addItem("McTHPrimNumAcdHits",  &m_primNumAcdHits);
+	addItem("McTHPrimNumCalHits",  &m_primNumCalHits);
+    addItem("McTHPrimInteracted",  &m_primInteracted);
+	addItem("McTHDght1Type",       &m_dght1Type);
+	addItem("McTHDght1NumTkrHits", &m_dght1NumTkrHits);
+	addItem("McTHDght1NumAcdHits", &m_dght1NumAcdHits);
+	addItem("McTHDght1NumCalHits", &m_dght1NumCalHits);
+    addItem("McTHDght1Process",     m_dght1Process);
+	addItem("McTHDght2Type",       &m_dght2Type);
+	addItem("McTHDght2NumTkrHits", &m_dght2NumTkrHits);
+	addItem("McTHDght2NumAcdHits", &m_dght2NumAcdHits);
+	addItem("McTHDght2NumCalHits", &m_dght2NumCalHits);
+    addItem("McTHDght2Process",     m_dght2Process);
+    addItem("McTHPosHitPrimary",   &m_posHitPrimary);
+    addItem("McTHPosHitGamma",     &m_posHitGammas);
+    addItem("McTHPosHitElectron",  &m_posHitElectrons);
+    addItem("McTHPosHitPositron",  &m_posHitPositrons);
+    addItem("McTHPosHitOthers",    &m_posHitOthers);
+    addItem("McTHTotalTkrHits",    &m_totalTkrHits);
+    addItem("McTHTotPrmTkrHits",   &m_totalPrimTkrHits);
+    addItem("McTHTotPrmAcdHits",   &m_totalPrimAcdHits);
+    addItem("McTHTotPrmCalHits",   &m_totalPrimCalHits);
+    addItem("McTHTotPrmClusHits",  &m_totalPrimClusHits);
+    addItem("McTHDghtSharedHits",  &m_dghtSharedHits);
+    addItem("McTHTotEneDepCal",    &m_totEnergyDepCal);
+    addItem("McTHTotEneDepAcd",    &m_totEnergyDepAcd);
 
     zeroVals();
     
@@ -203,13 +239,17 @@ StatusCode McTkrHitValsTool::calculate()
     m_pointToPosHitTab = new Event::McPointToPosHitTab(mcPointToPosHitList);
 
     // Recover the McIntegratingHits to trajectory points relational tables
-    //SmartDataPtr<Event::McPointToIntHitTabList> 
-    //    mcPointToIntHitList(m_pEventSvc, "/Event/MC/McPointToIntHit");
-    //m_pointToIntHitTab = new Event::McPointToIntHitTab(mcPointToIntHitList);
+    SmartDataPtr<Event::McPointToIntHitTabList> 
+        mcPointToIntHitList(m_pEventSvc, "/Event/MC/McPointToIntHit");
+    m_pointToIntHitTab = new Event::McPointToIntHitTab(mcPointToIntHitList);
 
     // Retrieve the table giving us TkrDigi to McPositionHit relations
     SmartDataPtr<Event::ClusMcPosHitTabList> 
         clusMcPosHitList(m_pEventSvc, EventModel::Digi::TkrClusterHitTab);
+
+    // Clear energy deposited maps
+    m_xtalIdToEnergyMap.clear();
+    m_acdIdToEnergyMap.clear();
 
     // It can happen that there are no clusters...
     if (clusMcPosHitList != 0) m_clusToPosHitTab = new Event::ClusMcPosHitTab(clusMcPosHitList);
@@ -235,6 +275,9 @@ StatusCode McTkrHitValsTool::calculate()
     // Everything follows if we have found a primary
     if (primary)
     {
+        // Primary's number of daughters
+        m_numDaughters = primary->daughterList().size();
+
         // We now count the total number of hits in the Tracker and the number
         // due to the primary and its products
         CntTotalHits(primary);
@@ -242,31 +285,46 @@ StatusCode McTkrHitValsTool::calculate()
         // Count the number of McPositionHits due to primary, electrons and positrons
         CntMcPosHits(primary);
 
-        // Next up is to get the number of hits for each of McParticles in the list
-        // Set up the map to hold the results
-        std::map<const Event::McParticle*,int> mcPartHitMap;
-        mcPartHitMap.clear();
+        // Next up is to get the number of hits in the various detectors for each of McParticles in the list
+        // First set up maps to hold these hits for each detector element
+        // Start with Tracker
+        std::map<const Event::McParticle*,int> mcPartToTkrHitMap;
+        mcPartToTkrHitMap.clear();
+
+        // Then ACD 
+        std::map<const Event::McParticle*,int> mcPartToAcdHitMap;
+        mcPartToAcdHitMap.clear();
+
+        // Then the CAL
+        std::map<const Event::McParticle*,int> mcPartToCalHitMap;
+        mcPartToCalHitMap.clear();
 
         // Reset the McParticle iterator
         mcPartIter = particleCol->begin();
 
+        // Loop through the list of particles and build the variouls hit maps
         for(++mcPartIter; mcPartIter != particleCol->end(); mcPartIter++)
         {
             Event::McParticle* mcPart = *mcPartIter;
 
-            // Get the number of hits from this track 
+            // Get the number of TKR hits from this track 
             int numHits = GetTrackHits(mcPart);
+            mcPartToTkrHitMap[mcPart] = numHits;
 
-            mcPartHitMap[mcPart] = numHits;
+            // Get the number of ACD hits from this track 
+            int numAcdHits = GetAcdHits(mcPart);
+            mcPartToAcdHitMap[mcPart] = numAcdHits;
+
+            // Get the number of CAL hits from this track 
+            int numCalHits = GetCalHits(mcPart);
+            mcPartToCalHitMap[mcPart] = numCalHits;
         }
 
         // Recover the primary's particle identification and number of hits
-        m_primType    = primary->particleProperty();
-        m_primNumHits = mcPartHitMap[primary];
-
-        // Get some of the primary's characteristics
-//        ParticleProperty* ppty     = m_ppsvc->findByStdHepID(m_primType);
-//        std::string       partName = ppty->particle(); 
+        m_primType         = primary->particleProperty();
+        m_primNumTkrHits   = mcPartToTkrHitMap[primary];
+        m_primNumAcdHits   = mcPartToAcdHitMap[primary];
+        m_primNumCalHits   = mcPartToCalHitMap[primary];
 
         // We will need pointers to the "two" daughters to determine shared hits
         const Event::McParticle* daughter1 = 0;
@@ -280,40 +338,83 @@ StatusCode McTkrHitValsTool::calculate()
         {
             const Event::McParticle* daughter = *daughterIter;
 
-            int numHits = mcPartHitMap[daughter];
+            // Tracker hits first
+            int numHits = mcPartToTkrHitMap[daughter];
 
             // Check to see if this exceeds the current daughter1 count
-            if (numHits > m_dght1NumHits || m_dght1Type == 0)
+            if (numHits > m_dght1NumTkrHits || m_dght1Type == 0)
             {
                 // Check to see if we need to switch down to second daughter
-                if (m_dght1NumHits > m_dght2NumHits || m_dght2Type == 0)
+                if (m_dght1NumTkrHits > m_dght2NumTkrHits || m_dght2Type == 0)
                 {
-                    m_dght2NumHits = m_dght1NumHits;
-                    m_dght2Type    = m_dght2Type;
-                    daughter2      = daughter1;
+                    m_dght2NumTkrHits = m_dght1NumTkrHits;
+                    m_dght2Type       = m_dght2Type;
+                    daughter2         = daughter1;
                 }
 
-                m_dght1NumHits = numHits;
-                m_dght1Type    = daughter->particleProperty();
-                daughter1      = daughter;
+                m_dght1NumTkrHits = numHits;
+                m_dght1Type       = daughter->particleProperty();
+                daughter1         = daughter;
             }
             // Otherwise, check to see if this is the hit count for the next particle
-            else if (numHits > m_dght2NumHits || m_dght2Type == 0)
+            else if (numHits > m_dght2NumTkrHits || m_dght2Type == 0)
             {
-                m_dght2NumHits = numHits;
-                m_dght2Type    = daughter->particleProperty();
-                daughter2      = daughter;
+                m_dght2NumTkrHits = numHits;
+                m_dght2Type       = daughter->particleProperty();
+                daughter2         = daughter;
             }
         }
+
+        // ACD and CAL hits associate to daughter 1
+        m_dght1NumAcdHits = mcPartToAcdHitMap[daughter1];
+        m_dght1NumCalHits = mcPartToCalHitMap[daughter1];
+
+        // ACD and CAL hits associate to daughter 2
+        m_dght2NumAcdHits = mcPartToAcdHitMap[daughter2];
+        m_dght2NumCalHits = mcPartToCalHitMap[daughter2];
+
+        // Count the total ACD hits due to the simulation
+        m_totalPrimAcdHits = m_acdIdToEnergyMap.size();
+
+        // Total energy deposited in ACD
+        for(std::map<idents::AcdId, float>::iterator acdMapIter  = m_acdIdToEnergyMap.begin();
+                                                     acdMapIter != m_acdIdToEnergyMap.end();
+                                                     acdMapIter++)
+        {
+            m_totEnergyDepAcd += acdMapIter->second;
+        }
+
+        // Now count the total CAL hits due to the simulation
+        m_totalPrimCalHits = m_xtalIdToEnergyMap.size();
+
+        // Total energy deposited in CAL
+        for(std::map<idents::CalXtalId, float>::iterator calMapIter  = m_xtalIdToEnergyMap.begin();
+                                                         calMapIter != m_xtalIdToEnergyMap.end();
+                                                         calMapIter++)
+        {
+            m_totEnergyDepCal += calMapIter->second;
+        }
+
+        // Recover the decay process for this primary (which is conveniently located in its daughter)
+        std::string process1 = daughter1 ? daughter1->getProcess() : "";
+        strncpy(m_dght1Process, process1.c_str(),80);
+        if (m_dght1Process == "") memset(m_dght1Process, '_', 80);
+
+        std::string process2 = daughter2 ? daughter2->getProcess() : "";
+        strncpy(m_dght2Process, process2.c_str(),80);
+        if (m_dght2Process == "") memset(m_dght2Process, '_', 80);
 
         // Finally... get the number of hits these two daughters share
         m_dghtSharedHits = GetSharedHits(daughter1, daughter2);
     }
 
+    // Check to see that **something** happened
+    if (m_totalPrimTkrHits > 0 || m_totalPrimAcdHits > 0 || m_totalPrimCalHits > 0) m_primInteracted = 1;
+
     // Clean up after ourselves
     if (m_partToTrajTab)    {delete m_partToTrajTab;    m_partToTrajTab    = 0;}
     if (m_pointToPosHitTab) {delete m_pointToPosHitTab; m_pointToPosHitTab = 0;}
-    //if (m_pointToIntHitTab) {delete m_pointToIntHitTab; m_pointToIntHitTab = 0;}
+    if (m_pointToIntHitTab) {delete m_pointToIntHitTab; m_pointToIntHitTab = 0;}
     if (m_clusToPosHitTab)  {delete m_clusToPosHitTab;  m_clusToPosHitTab  = 0;}
     
     log << MSG::DEBUG << " returning. " << endreq;
@@ -324,8 +425,8 @@ StatusCode McTkrHitValsTool::calculate()
 
 void McTkrHitValsTool::CntTotalHits(const Event::McParticle* primary)
 {
-    m_totalHits     = 0;
-    m_totalPrimHits = 0;
+    m_totalTkrHits     = 0;
+    m_totalPrimTkrHits = 0;
 
     // If there is no cluster table then there are no hits (by definition)
     if (m_clusToPosHitTab)
@@ -351,7 +452,6 @@ void McTkrHitValsTool::CntTotalHits(const Event::McParticle* primary)
             Event::ClusMcPosHitVec clusHitVec = m_clusToPosHitTab->getRelBySecond(posHit);
 
             // Do we have anything? (note that this will eliminate McPositionHits from the ACD)
-           
             if (!clusHitVec.empty())
             {
                 // An McPositionHit belongs to one cluster (but a cluster can be made up of
@@ -377,13 +477,13 @@ void McTkrHitValsTool::CntTotalHits(const Event::McParticle* primary)
         for (std::map<int,std::set<Event::TkrCluster*> >::iterator idToHitIter = idToHitMap.begin(); 
              idToHitIter != idToHitMap.end(); idToHitIter++)
         {
-            m_totalHits += idToHitIter->second.size();
+            m_totalTkrHits += idToHitIter->second.size();
         }
 
         // Go through and count total number of hits from the primary and its descendants
         for (std::set<int>::iterator trkIdIter = primTrkIdSet.begin(); trkIdIter != primTrkIdSet.end(); trkIdIter++)
         {
-            m_totalPrimHits += idToHitMap[*trkIdIter].size();
+            m_totalPrimTkrHits += idToHitMap[*trkIdIter].size();
         }
 
         // And now the total number of clusters from the primary and its descendants
@@ -391,6 +491,71 @@ void McTkrHitValsTool::CntTotalHits(const Event::McParticle* primary)
     }
 
     return;
+}
+
+int McTkrHitValsTool::GetAcdHits(const Event::McParticle* particle)
+{
+    int nAcdHits = 0;
+
+    // If there is no point to position hit table then there are no hits
+    if (m_pointToPosHitTab)
+    {
+        // Look up trajectory for this particle
+        Event::McPartToTrajectoryVec trajVec = m_partToTrajTab->getRelByFirst(particle);
+        Event::McTrajectory* mcTraj          = (*(trajVec.begin()))->getSecond();
+
+        // Set up to loop through Trajectory points
+        std::vector<Event::McTrajectoryPoint*> points = mcTraj->getPoints();
+        std::vector<Event::McTrajectoryPoint*>::const_iterator pointIter;
+
+        // Keep track of number of McPositionHits in each ACD object
+        std::map<idents::AcdId, std::vector<const Event::McPositionHit*> > acdToHitMap;
+        acdToHitMap.clear();
+
+        // Loop through all the McTrajectoryPoints on this track
+        for(pointIter = points.begin(); pointIter != points.end(); pointIter++) 
+        {
+            // De-reference the McTrajectoryPoint pointer
+            Event::McTrajectoryPoint* mcPoint = *pointIter;
+
+            // Looking for ACD hits only
+            if (!mcPoint->getVolumeID().isAcd()) continue;
+
+            // Of course, that only gives us the general volume... must do rest inside a try-catch
+            try
+            {
+                idents::AcdId acdId(mcPoint->getVolumeID());
+
+                // Look for McTrajectoryPoint <--> McPositionHit
+                Event::McPointToPosHitVec posRelVec = m_pointToPosHitTab->getRelByFirst(mcPoint);
+
+                // Did this trajectory point leave a mark?
+                if (!posRelVec.empty())
+                {
+                    // Can only be one McPositionHit per McTrajectoryPoint... by definition
+                    Event::McPointToPosHitRel* hitRel = *(posRelVec.begin());
+
+                    Event::McPositionHit* mcPosHit = hitRel->getSecond();
+
+                    // Add to local id to posHit map for counting
+                    acdToHitMap[acdId].push_back(mcPosHit);
+
+                    // Update global id to energy map
+                    // For ACD, McPositionHits are unique for each McParticle so not double counting here
+                    m_acdIdToEnergyMap[acdId] += mcPosHit->depositedEnergy();
+                }
+            }
+            catch(...)
+            {
+                continue;
+            }
+        }
+
+        // ok, the size of trackClusters is, then, the number of hits this track left
+        nAcdHits = acdToHitMap.size();
+    }
+
+    return nAcdHits;
 }
 
 int McTkrHitValsTool::GetTrackHits(const Event::McParticle* particle)
@@ -418,6 +583,9 @@ int McTkrHitValsTool::GetTrackHits(const Event::McParticle* particle)
         {
             // De-reference the McTrajectoryPoint pointer
             Event::McTrajectoryPoint* mcPoint = *pointIter;
+
+            // Tracker only
+            if (!mcPoint->getVolumeID().isTkr()) continue;
 
             // Look for McTrajectoryPoint <--> McPositionHit
             Event::McPointToPosHitVec posRelVec = m_pointToPosHitTab->getRelByFirst(mcPoint);
@@ -451,6 +619,77 @@ int McTkrHitValsTool::GetTrackHits(const Event::McParticle* particle)
     }
 
     return nTrackHits;
+}
+
+int McTkrHitValsTool::GetCalHits(const Event::McParticle* particle)
+{
+    int nCalHits = 0;
+
+    // If there is no cluster table then there are no hits
+    if (m_pointToIntHitTab)
+    {
+        // Look up trajectory for this particle
+        Event::McPartToTrajectoryVec trajVec = m_partToTrajTab->getRelByFirst(particle);
+        Event::McTrajectory* mcTraj          = (*(trajVec.begin()))->getSecond();
+
+        // Set up to loop through Trajectory points
+        std::vector<Event::McTrajectoryPoint*> points = mcTraj->getPoints();
+        std::vector<Event::McTrajectoryPoint*>::const_iterator pointIter;
+
+        // Keep track of number of McIntegratingHits in each Xtal object
+        std::map<idents::CalXtalId, std::vector<const Event::McIntegratingHit*> > xtalToIntMap;
+        xtalToIntMap.clear();
+
+        // Loop through all the McTrajectoryPoints on this track
+        for(pointIter = points.begin(); pointIter != points.end(); pointIter++) 
+        {
+            // De-reference the McTrajectoryPoint pointer
+            Event::McTrajectoryPoint* mcPoint = *pointIter;
+
+            // Looking for Cal hits only
+            if (!mcPoint->getVolumeID().isCal()) continue;
+
+            // And, like with ACD, this only gets us close, rest in a try-catch block
+            try
+            {
+                idents::CalXtalId calXtalId(mcPoint->getVolumeID());
+
+                // Look for McTrajectoryPoint <--> McIntegratingHit
+                Event::McPointToIntHitVec intRelVec = m_pointToIntHitTab->getRelByFirst(mcPoint);
+
+                // Did this trajectory point leave a mark?
+                if (!intRelVec.empty())
+                {
+                    // Can only be one McIntegratingHit per McTrajectoryPoint... by definition
+                    Event::McPointToIntHitRel* hitRel = *(intRelVec.begin());
+
+                    Event::McIntegratingHit* mcIntHit = hitRel->getSecond();
+
+                    xtalToIntMap[calXtalId].push_back(mcIntHit);
+                }
+            }
+            catch(...)
+            {
+                continue;
+            }
+        }
+
+        // For Calorimeter, McIntegratingHits are unique to xtalIds, must loop here and update
+        for(std::map<idents::CalXtalId, std::vector<const Event::McIntegratingHit*> >::iterator mapIter  = xtalToIntMap.begin();
+                                                                                                mapIter != xtalToIntMap.end();
+                                                                                                mapIter++)
+        {
+            if (m_xtalIdToEnergyMap.find(mapIter->first) == m_xtalIdToEnergyMap.end())
+            {
+                m_xtalIdToEnergyMap[mapIter->first] = mapIter->second.front()->totalEnergy();
+            }
+        }
+
+        // Set number of hit crystals by simulated event
+        nCalHits = xtalToIntMap.size();
+    }
+
+    return nCalHits;
 }
 
 int McTkrHitValsTool::GetSharedHits(const Event::McParticle* daughter1, const Event::McParticle* daughter2)
@@ -571,7 +810,7 @@ void McTkrHitValsTool::CntMcPosHits(const Event::McParticle* primary)
             idents::VolumeIdentifier volId = posHit->volumeID();
 
             // Do not count ACD hits
-            if (volId[0] != 0) continue;
+            if (!volId.isTkr()) continue;
 
             // Get parent information
             const Event::McParticle* particle = posHit->mcParticle();
