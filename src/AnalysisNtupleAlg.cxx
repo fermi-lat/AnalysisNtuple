@@ -2,7 +2,7 @@
 @brief Uses the XxxValsTools to produce a comprehensive ntuple
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.42 2008/08/16 05:17:47 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.43 2009/03/18 23:17:08 usher Exp $
 */
 
 // Gaudi system includes
@@ -210,7 +210,7 @@ StatusCode AnalysisNtupleAlg::initialize(){
 
     //probably a better way to do this!
     // default set:
-    std::string toolnames [] = {"Mc", "Glt", "Acd", "TkrHit", "Tkr", "Vtx",  "Cal",  "Evt", "Obf", "McTkrHit", "Overlay", ""};
+    std::string toolnames [] = {"Mc", "Glt", "Acd", "TkrHit", "Tkr", "Vtx",  "Cal",  "Evt", "Obf", "McTkrHit", ""};
     unsigned int i;
     unsigned int namesSize = m_toolnames.size();
 
