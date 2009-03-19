@@ -2,6 +2,7 @@
   @brief Package AnalysisNtuple
   @verbatim
  
+ v2r54p6 19-Mar-09   LSR  Backing out latest mod to AcdValsTool, probably not correct 
  v2r54p4 18-Mar-09    TU  Add OverlayValsTool for overlay information into merit, 
                           enhance McTkrValsTool with new variables to help untie the event
  v2r54p3 17-Mar-09   LSR  AcdValsTool: condition energy and tile counts on "accept" bit
