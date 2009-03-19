@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.48 2008/07/18 06:27:56 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.49 2009/03/17 15:19:51 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -422,8 +422,9 @@ StatusCode AcdValsTool::calculate()
             const idents::AcdId& id = aHit->getAcdId();
             if ( id.na() ) {
                 continue;
-            } else if ( !aHit->getAcceptMapBit(Event::AcdHit::A) && !aHit->getAcceptMapBit(Event::AcdHit::B) ) {
-			    continue;
+            // this is not known to be correct!
+            //} else if ( !aHit->getAcceptMapBit(Event::AcdHit::A) && !aHit->getAcceptMapBit(Event::AcdHit::B) ) {
+			//    continue;
             } else if ( id.ribbon() ) {
                 float MeV_A = aHit->mips(Event::AcdHit::A) * MeVMipRibbon;
                 float MeV_B = aHit->mips(Event::AcdHit::B) * MeVMipRibbon;
