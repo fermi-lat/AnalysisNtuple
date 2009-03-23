@@ -1,7 +1,7 @@
 /** @file McTkrHitValsTool.cxx
     @brief declartion, implementaion of the class UserAlg
 
-    $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McTkrHitValsTool.cxx,v 1.7 2007/06/07 17:00:13 lsrea Exp $
+    $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McTkrHitValsTool.cxx,v 1.8 2009/03/18 23:17:08 usher Exp $
 */
 
 #include "ValBase.h"
@@ -64,6 +64,7 @@ private:
     void CntTotalHits(const Event::McParticle* primary);
     int  GetSharedHits(const Event::McParticle* daught1, const Event::McParticle* daught2);
     void CntMcPosHits(const Event::McParticle* primary);
+    int  GetInteracted();
 
     // Variables for primary track
     int          m_primType;          // Particle type of primary
@@ -177,21 +178,21 @@ StatusCode McTkrHitValsTool::initialize()
         return StatusCode::FAILURE;
     }
  
-	addItem("McTHPrimType",        &m_primType);
-	addItem("McTHNumDaughters",    &m_numDaughters);
-	addItem("McTHPrimNumHits",     &m_primNumTkrHits);
-	addItem("McTHPrimNumAcdHits",  &m_primNumAcdHits);
-	addItem("McTHPrimNumCalHits",  &m_primNumCalHits);
+    addItem("McTHPrimType",        &m_primType);
+    addItem("McTHNumDaughters",    &m_numDaughters);
+    addItem("McTHPrimNumHits",     &m_primNumTkrHits);
+    addItem("McTHPrimNumAcdHits",  &m_primNumAcdHits);
+    addItem("McTHPrimNumCalHits",  &m_primNumCalHits);
     addItem("McTHPrimInteracted",  &m_primInteracted);
-	addItem("McTHDght1Type",       &m_dght1Type);
-	addItem("McTHDght1NumTkrHits", &m_dght1NumTkrHits);
-	addItem("McTHDght1NumAcdHits", &m_dght1NumAcdHits);
-	addItem("McTHDght1NumCalHits", &m_dght1NumCalHits);
+    addItem("McTHDght1Type",       &m_dght1Type);
+    addItem("McTHDght1NumTkrHits", &m_dght1NumTkrHits);
+    addItem("McTHDght1NumAcdHits", &m_dght1NumAcdHits);
+    addItem("McTHDght1NumCalHits", &m_dght1NumCalHits);
     addItem("McTHDght1Process",     m_dght1Process);
-	addItem("McTHDght2Type",       &m_dght2Type);
-	addItem("McTHDght2NumTkrHits", &m_dght2NumTkrHits);
-	addItem("McTHDght2NumAcdHits", &m_dght2NumAcdHits);
-	addItem("McTHDght2NumCalHits", &m_dght2NumCalHits);
+    addItem("McTHDght2Type",       &m_dght2Type);
+    addItem("McTHDght2NumTkrHits", &m_dght2NumTkrHits);
+    addItem("McTHDght2NumAcdHits", &m_dght2NumAcdHits);
+    addItem("McTHDght2NumCalHits", &m_dght2NumCalHits);
     addItem("McTHDght2Process",     m_dght2Process);
     addItem("McTHPosHitPrimary",   &m_posHitPrimary);
     addItem("McTHPosHitGamma",     &m_posHitGammas);
@@ -409,7 +410,7 @@ StatusCode McTkrHitValsTool::calculate()
     }
 
     // Check to see that **something** happened
-    if (m_totalPrimTkrHits > 0 || m_totalPrimAcdHits > 0 || m_totalPrimCalHits > 0) m_primInteracted = 1;
+    m_primInteracted = GetInteracted();
 
     // Clean up after ourselves
     if (m_partToTrajTab)    {delete m_partToTrajTab;    m_partToTrajTab    = 0;}
@@ -832,4 +833,55 @@ void McTkrHitValsTool::CntMcPosHits(const Event::McParticle* primary)
 
 
     return;
+}
+
+int  McTkrHitValsTool::GetInteracted()
+{
+    int interacted = 0;
+
+    // First check McPositionHits to see if any were created by the simulated
+    // and are not from the Overlay
+    SmartDataPtr<Event::McPositionHitCol> posHitCol(m_pEventSvc, EventModel::MC::McPositionHitCol);
+
+    if (posHitCol)
+    {
+        // Loop through the McPositionHit collection
+        for (Event::McPositionHitCol::iterator posHitIter = posHitCol->begin(); posHitIter != posHitCol->end(); posHitIter++)
+        {
+            Event::McPositionHit* posHit = *posHitIter;
+
+            // If the overlay bit is NOT set then this is a hit from simulation
+            if ((posHit->getPackedFlags() & (Event::McPositionHit::overlayHit | Event::McPositionHit::simulation))
+                                          != Event::McPositionHit::overlayHit)
+            {
+                interacted = 1;
+                break;
+            }
+        }
+    }
+
+    if (!interacted)
+    {
+        // Now look at the Calorimeter
+        SmartDataPtr<Event::McIntegratingHitCol> intHitCol(m_pEventSvc, EventModel::MC::McIntegratingHitCol);
+
+        if (intHitCol)
+        {
+            // Loop through the McIntegratingHit collection
+            for (Event::McIntegratingHitCol::iterator intHitIter = intHitCol->begin(); intHitIter != intHitCol->end(); intHitIter++)
+            {
+                Event::McIntegratingHit* intHit = *intHitIter;
+
+                // Ditto as above, if overlay bit not set this is hit from simulation
+                if ((intHit->getPackedFlags() & (Event::McIntegratingHit::overlayHit | Event::McIntegratingHit::simulation))
+                                              != Event::McIntegratingHit::overlayHit)
+                {
+                    interacted = 1;
+                    break;
+                }
+            }
+        }
+    }
+
+    return interacted;
 }
