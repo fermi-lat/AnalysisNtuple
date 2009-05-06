@@ -2,6 +2,11 @@
   @brief Package AnalysisNtuple
   @verbatim
  
+ v2r55   06-May-09   LSR  Add new variables: FT1EventClass, McStatusWord
+                          Remove obsolete variables: CalLll*, CalTkl*,
+                            Mc[X/Y/Z]Dir[Err], GltMoment, GltZDir,
+                            EvtECalTrackSep
+                          Copy Obf->Fsw variables for Sim, if appropriate
  v2r54p7 23-Mar-09    TU  Fix McTHPrimInteracted to match overlay condition
  v2r54p6 19-Mar-09   LSR  Backing out latest mod to AcdValsTool, probably not correct 
  v2r54p4 18-Mar-09    TU  Add OverlayValsTool for overlay information into merit, 
