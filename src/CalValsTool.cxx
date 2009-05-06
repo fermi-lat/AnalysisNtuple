@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.91 2008/08/16 05:17:47 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.92 2009/02/20 13:07:15 kuss Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -182,10 +182,10 @@ private:
     float CAL_cfp_calfit_tmax;        // fit parameter tmax
     float CAL_cfp_calfit_fiterrflg;   // fit error flag
 
-    float CAL_lll_energy;      // Energy from the Last Layer Likelihood tool
-    float CAL_lll_energyErr;   // Chisquare from the Last Layer Likelihood
-    float CAL_tkl_energy;      // Energy from the tracker Likelihood tool
-    float CAL_tkl_energyErr;   // Chisquare from the tracker likelihood
+    //float CAL_lll_energy;      // Energy from the Last Layer Likelihood tool
+    //float CAL_lll_energyErr;   // Chisquare from the Last Layer Likelihood
+    //float CAL_tkl_energy;      // Energy from the tracker Likelihood tool
+    //float CAL_tkl_energyErr;   // Chisquare from the tracker likelihood
     float CAL_LkHd_energy;     // Energy from the Likelihood tool
     float CAL_LkHd_energyErr;  // Chisquare from the likelihood
     float CAL_LkHd_energyUB;   // Energy from the Likelihood tool unbiased
@@ -633,10 +633,10 @@ StatusCode CalValsTool::initialize()
     addItem("CalCfpCalAlpha",  &CAL_cfp_calfit_alpha);
     addItem("CalCfpCalTmax",  &CAL_cfp_calfit_tmax);
     addItem("CalCfpCalFitErrFlg",  &CAL_cfp_calfit_fiterrflg);
-    addItem("CalLllEnergy",  &CAL_lll_energy);
-    addItem("CalLllEneErr",  &CAL_lll_energyErr);
-    addItem("CalTklEnergy",  &CAL_tkl_energy);
-    addItem("CalTklEneErr",  &CAL_tkl_energyErr);
+    //addItem("CalLllEnergy",  &CAL_lll_energy);
+    //addItem("CalLllEneErr",  &CAL_lll_energyErr);
+    //addItem("CalTklEnergy",  &CAL_tkl_energy);
+    //addItem("CalTklEneErr",  &CAL_tkl_energyErr);
     addItem("CalLkHdEnergy", &CAL_LkHd_energy);
     addItem("CalLkHdEneErr", &CAL_LkHd_energyErr);
     addItem("CalLkHdEnergyUB", &CAL_LkHd_energyUB);
@@ -782,16 +782,17 @@ StatusCode CalValsTool::calculate()
                     //                    std::cout << "EvtValsTool CAL_cfp_energy " << CAL_cfp_energy << " ( " << log10(CAL_cfp_energy) << " ) " << CAL_cfp_energyUB << " ( " << log10(CAL_cfp_energyUB) << " ) " << tkr1ZDir << std::endl;
                 }
             }
-            else if (corResult.getCorrectionName() == "CalLastLayerLikelihoodTool")
-            {
-                CAL_lll_energy    = corResult.getParams().getEnergy();
-                CAL_lll_energyErr = corResult.getParams().getEnergyErr();
-            }
-            else if (corResult.getCorrectionName() == "CalTkrLikelihoodTool")
-            {
-                CAL_tkl_energy    = corResult.getParams().getEnergy();
-                CAL_tkl_energyErr = corResult.getParams().getEnergyErr();
-            }
+            // Removed 5/5/09 LSR
+            //else if (corResult.getCorrectionName() == "CalLastLayerLikelihoodTool")
+            //{
+            //    CAL_lll_energy    = corResult.getParams().getEnergy();
+            //    CAL_lll_energyErr = corResult.getParams().getEnergyErr();
+            //}
+            //else if (corResult.getCorrectionName() == "CalTkrLikelihoodTool")
+            //{
+            //    CAL_tkl_energy    = corResult.getParams().getEnergy();
+            //    CAL_tkl_energyErr = corResult.getParams().getEnergyErr();
+            //}
             else if (corResult.getCorrectionName() == "CalLikelihoodManagerTool")
             {
                 CAL_LkHd_energy    = corResult.getParams().getEnergy();

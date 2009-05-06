@@ -1,7 +1,7 @@
 /** @file FT1Alg.cxx
 @brief Declaration and implementation of Gaudi algorithm FT1Alg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.19 2008/09/13 18:22:07 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.20 2009/02/15 05:47:25 lsrea Exp $
 */
 // Include files
 
@@ -106,6 +106,7 @@ public:
     Item CTBBestEnergyRatio;
     Item CTBCORE;
     Item CTBClassLevel;
+    Item CTBParticleType;
     
 
     //FT1 entries to create
@@ -114,8 +115,9 @@ public:
     float m_ft1theta,m_ft1phi,m_ft1ra,m_ft1dec,m_ft1l,m_ft1b;
     float m_ft1zen,m_ft1azim;
     double m_ft1livetime;
-    float m_ft1convpointx,m_ft1convpointy,m_ft1convpointz,m_ft1convlayer;
-    float m_ft1eventclass;
+    //float m_ft1convpointx,m_ft1convpointy,m_ft1convpointz,
+    float m_ft1convlayer;
+    int   m_ft1eventclass;
 };
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -270,6 +272,7 @@ FT1worker::FT1worker()
 , CTBBestEnergyRatio("CTBBestEnergyRatio")
 , CTBCORE("CTBCORE")
 , CTBClassLevel("CTBClassLevel")
+, CTBParticleType("CTBParticleType")
 
 {
     //now create new items 
@@ -284,9 +287,9 @@ FT1worker::FT1worker()
     addItem( "FT1B",             m_ft1b);
     addItem( "FT1ZenithTheta",   m_ft1zen);
     addItem( "FT1EarthAzimuth",  m_ft1azim);
-    addItem( "FT1ConvPointX",    m_ft1convpointx);
-    addItem( "FT1ConvPointY",    m_ft1convpointy);
-    addItem( "FT1ConvPointZ",    m_ft1convpointz);
+    //addItem( "FT1ConvPointX",    m_ft1convpointx);
+    //addItem( "FT1ConvPointY",    m_ft1convpointy);
+    //addItem( "FT1ConvPointZ",    m_ft1convpointz);
     addItem( "FT1ConvLayer",     m_ft1convlayer);
     addItem( "FT1Livetime",      m_ft1livetime);
     addItem( "FT1EventClass",    m_ft1eventclass);
@@ -320,14 +323,11 @@ see <a href="http://glast.gsfc.nasa.gov/ssc/dev/fits_def/definitionFT1.html">FT1
 <td>F<td>  Starting layer of the best track found in the tracker 
 (Layer 0 is the one closest to the calorimeter.)
 <tr><td> FT1ConvPoint[X/Y/Z] 
-<td>F<td>  <b>Do not use; no longer filled!</b>
+<td>F<td>  REMOVED! <b>Do not use; no longer filled!</b>
 <tr><td> FT1EventClass
-<td>F<td> 
-   CTBBestEnergy<=10 || CTBBestEnergyRatio>=5 -> 0 <br>
-   else CTBClassLevel>2 && CTBCORE>0. && CTBBestEnergyProb>0.1 -> 3<br>
-   else CTBClassLevel>1 && CTBCORE>0.1 && CTBBestEnergyProb>0.1 -> 2<br>
-   else CTBClassLevel>0 && CTBCORE>0. && CTBBestEnergyProb>0. -> 1<br>
-   else 0
+<td>I<td> 
+   Combination of CTBParticleType and CTBClassLevel
+   see: https://confluence.slac.stanford.edu/display/SCIGRPS/CTBClassLevel+Definition+for+P7
 </table> 
 */
 #if 0
@@ -349,7 +349,7 @@ void FT1worker::evaluate()
     m_ft1theta = 666; m_ft1phi = 666; m_ft1ra   = 666;
     m_ft1dec   = 666; m_ft1zen = 666; m_ft1azim = 666;
     m_ft1l = 666; m_ft1b = 666;
-    m_ft1convpointx = 999; m_ft1convpointy = 999; m_ft1convpointz = 999; 
+    //m_ft1convpointx = 999; m_ft1convpointy = 999; m_ft1convpointz = 999; 
     m_ft1convlayer = -1;
     m_ft1livetime = -1;
     m_ft1livetime = EvtLiveTime;
@@ -401,18 +401,34 @@ void FT1worker::evaluate()
     m_ft1zen  = zenith_theta*R2D;;
     m_ft1azim = earth_azimuth*R2D;
 
-    // more useful class level
+    // Previous definition:
+    //m_ft1eventclass = 0;
+    //if ( (CTBBestEnergy<=10) || (CTBBestEnergyRatio>=5) ) { // Apply minimal cut first.
+    //    m_ft1eventclass = 0;
+    //} else if ( (CTBClassLevel>2) && (CTBCORE>0.1) && (CTBBestEnergyProb>0.1) ) {
+    //    m_ft1eventclass = 3;
+    //} else if ( (CTBClassLevel>1) && (CTBCORE>0.1) && (CTBBestEnergyProb>0.1) ) {
+    //    m_ft1eventclass = 2;
+    //} else if ( (CTBClassLevel>0) && (CTBCORE>0.) && (CTBBestEnergyProb>0.) ) {
+    //    m_ft1eventclass = 1;
+    //}
 
-    m_ft1eventclass = 0;
-
-    if ( (CTBBestEnergy<=10) || (CTBBestEnergyRatio>=5) ) { // Apply minimal cut first.
-        m_ft1eventclass = 0;
-    } else if ( (CTBClassLevel>2) && (CTBCORE>0.1) && (CTBBestEnergyProb>0.1) ) {
-        m_ft1eventclass = 3;
-    } else if ( (CTBClassLevel>1) && (CTBCORE>0.1) && (CTBBestEnergyProb>0.1) ) {
-        m_ft1eventclass = 2;
-    } else if ( (CTBClassLevel>0) && (CTBCORE>0.) && (CTBBestEnergyProb>0.) ) {
-        m_ft1eventclass = 1;
+    // Pass7 definition:
+    m_ft1eventclass = -1;
+    if (CTBParticleType==0) {
+        if     (CTBClassLevel < 0.049) {m_ft1eventclass = -1;} // shouldn't happen
+        else if(CTBClassLevel < 0.051) {m_ft1eventclass = 1;}  // 0.05
+        else if(CTBClassLevel < 0.101) {m_ft1eventclass = 2;}  // 0.1
+        else if(CTBClassLevel < 0.201) {m_ft1eventclass = 3;}  // 0.2
+        else if(CTBClassLevel < 0.301) {m_ft1eventclass = 4;}  // 0.3
+        else if(CTBClassLevel < 0.501) {m_ft1eventclass = 5;}  // 0.5
+        else if(CTBClassLevel < 1.001) {m_ft1eventclass = 6;}  // 1.0
+        else if(CTBClassLevel < 2.001) {m_ft1eventclass = 7;}  // 2.0
+        else if(CTBClassLevel < 3.001) {m_ft1eventclass = 8;}  // 3.0
+        else if(CTBClassLevel > 3.001) {m_ft1eventclass = -1;}  // shouldn't happen
+    } else if (CTBParticleType> -1.001 && CTBParticleType < 4.001){
+        if(CTBClassLevel>0.999 && CTBClassLevel<3.001) {
+            m_ft1eventclass = CTBParticleType*100 + CTBClassLevel;
+        }
     }
-
 }

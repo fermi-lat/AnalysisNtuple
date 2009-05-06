@@ -2,7 +2,7 @@
 @brief Calculates the Onboard Filter variables
 @authors
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfValsTool.cxx,v 1.22.10.1 2008/07/28 15:12:37 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfValsTool.cxx,v 1.23 2008/08/01 04:13:41 heather Exp $
 */
 
 // Include files
@@ -32,6 +32,11 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfValsTool.cxx,v 1.22.
 @authors 
 */
 
+namespace {
+    // save a bit of typing!
+    int _invalid = enums::Lsf::INVALID;
+}
+
 class ObfValsTool : public ValBase
 {
 public:
@@ -47,6 +52,8 @@ public:
     StatusCode calculate();
 
     StatusCode finalize();
+
+    void zeroVals();
 
 private:
 
@@ -96,6 +103,8 @@ private:
     int    m_fswDgnState;
     int    m_fswDgnPrescaleIndex;
     int    m_fswDgnPrescaleFactor;
+
+    void copyObfToFsw();
   
 };
 
@@ -247,6 +256,15 @@ StatusCode ObfValsTool::initialize()
     return sc;
 }
 
+void ObfValsTool::zeroVals() {
+    
+    // We don't want to zero these unless
+    //  there's a digi TDS around to restore them from.
+    // So we'll do the zeroing in calculate()
+
+    return;
+}
+
 StatusCode ObfValsTool::calculate()
 {
     StatusCode sc = StatusCode::SUCCESS;
@@ -256,19 +274,52 @@ StatusCode ObfValsTool::calculate()
     unsigned int filterStatusHi = 0;
     unsigned int filterStatusLo = 0;
 
-    // Start with the status information returned from the filters
-    // Look up the TDS class containing this information
+
+    // Obf variables
     SmartDataPtr<OnboardFilterTds::ObfFilterStatus> 
         obfStatus(m_pEventSvc, "/Event/Filter/ObfFilterStatus");
+    // Fsw variables
+    SmartDataPtr<LsfEvent::MetaEvent>  
+        metaEventTds(m_pEventSvc, "/Event/MetaEvent");
+    const lsfData::GammaHandler* gamma;
+    const lsfData::DgnHandler*   dgn;
+    const lsfData::HipHandler*   hip;       
+    const lsfData::MipHandler*   mip;
+    if(metaEventTds) {
+        gamma = metaEventTds->gammaFilter();
+        dgn   = metaEventTds->dgnFilter();
+        hip   = metaEventTds->hipFilter();       
+        mip   = metaEventTds->mipFilter();
+    }
 
-    m_gamState = enums::Lsf::INVALID;
-    m_dgnState = enums::Lsf::INVALID;
-    m_hipState = enums::Lsf::INVALID;
-    m_mipState = enums::Lsf::INVALID;
+    // Grb variables
+    SmartDataPtr<OnboardFilterTds::ObfFilterTrack> 
+        filterTrack(m_pEventSvc, "/Event/Filter/ObfFilterTrack");
 
-    // If it exists then fill filter status info
+    // There is no digi Tds, 
+    //  so copy Obf to Fsw if the latter is set to defaults
+    bool isMetaEventData = gamma||dgn||mip||hip;
+    if(!obfStatus && !isMetaEventData && !filterTrack) {
+        copyObfToFsw();
+        return sc;
+    }
+    
+    // Start with the status information returned from the filters
+    // Look up the TDS class containing this information
+
     if (obfStatus)
     {
+        // If obfStatus exists then fill filter status info
+
+        m_gamState = _invalid;
+        m_dgnState = _invalid;
+        m_hipState = _invalid;
+        m_mipState = _invalid;
+        m_gamStatus = _invalid;
+        m_dgnStatus = _invalid;
+        m_hipStatus = _invalid;
+        m_mipStatus = _invalid;
+
         // Pointer to our retrieved objects
         const OnboardFilterTds::IObfStatus* obfResult = 0;
 
@@ -278,10 +329,11 @@ StatusCode ObfValsTool::calculate()
         {
             m_gamStatus    = obfResult->getStatusWord();
             m_gamState     = obfResult->getState();
-            m_gamStage     = dynamic_cast<const OnboardFilterTds::ObfGammaStatus*>(obfResult)->getStage();
-            m_gamEnergy    = dynamic_cast<const OnboardFilterTds::ObfGammaStatus*>(obfResult)->getEnergy();
+            m_gamStage     = 
+                dynamic_cast<const OnboardFilterTds::ObfGammaStatus*>(obfResult)->getStage();
+            m_gamEnergy    = 
+                dynamic_cast<const OnboardFilterTds::ObfGammaStatus*>(obfResult)->getEnergy();
         }
-        else m_gamStatus = -1;
 
         // HFC Filter results
         if (obfResult   = 
@@ -290,7 +342,6 @@ StatusCode ObfValsTool::calculate()
             m_hipStatus    = obfResult->getStatusWord();
             m_hipState     = obfResult->getState();
         }
-        else m_hipStatus = -1;
 
         // MIP Filter results
         if (obfResult   = 
@@ -299,7 +350,6 @@ StatusCode ObfValsTool::calculate()
             m_mipStatus    = obfResult->getStatusWord();
             m_mipState     = obfResult->getState();
         }
-        else m_mipStatus = -1;
 
         // DFC Filter results
         if (obfResult   = 
@@ -308,7 +358,6 @@ StatusCode ObfValsTool::calculate()
             m_dgnStatus    = obfResult ? obfResult->getStatusWord() : -1;
             m_dgnState     = obfResult->getState();
         }
-        else m_dgnStatus = -1;
     }
     else 
     {
@@ -323,68 +372,71 @@ StatusCode ObfValsTool::calculate()
     }
     // Next, try to find the Fsw versions of the above
 
-    m_fswGamPrescaleIndex = LSF_INVALID_UINT;
-    m_fswGamPrescaleFactor = LSF_INVALID_UINT;
-
-    m_fswDgnPrescaleIndex = LSF_INVALID_UINT;
-    m_fswDgnPrescaleFactor = LSF_INVALID_UINT;
-
-    m_fswGamState = enums::Lsf::INVALID;
-    m_fswDgnState = enums::Lsf::INVALID;
-    m_fswHipState = enums::Lsf::INVALID;
-    m_fswMipState = enums::Lsf::INVALID;
-    
-    m_fswGamVersion = enums::Lsf::INVALID;
-
-    SmartDataPtr<LsfEvent::MetaEvent>  metaEventTds(m_pEventSvc, "/Event/MetaEvent");
     if (metaEventTds) {
-        const lsfData::GammaHandler* gamma = metaEventTds->gammaFilter();
         if (gamma) {
             // rsd is Result Summary Data 
             if(gamma->rsd()) {
                 m_fswGamStatus = gamma->rsd()->status();  
                 m_fswGamVersion = gamma->version();
-            }
+            } 
             m_fswGamState = gamma->state();  
             m_fswGamPrescaleFactor = gamma->prescaleFactor();    
             m_fswGamPrescaleIndex  = gamma->lpaHandler().prescaleIndex();
             m_fswGamEnergy         = static_cast<float>(gamma->rsd()->energyInLeus())/4.0;
             m_fswGamStage          = gamma->rsd()->stage();
+        } else {
+            m_fswGamPrescaleIndex = LSF_INVALID_UINT;
+            m_fswGamPrescaleFactor = LSF_INVALID_UINT;
+            m_fswGamState = _invalid;
+            m_fswGamStatus = _invalid;
+            m_fswGamEnergy = 0.0;
+            m_fswGamStage = _invalid;
+            m_fswGamVersion = _invalid;
         }
-        const lsfData::DgnHandler* dgn = metaEventTds->dgnFilter();
+
         if (dgn) {
             // rsd is Result Summary Data 
             if(dgn->rsd()) m_fswDgnStatus = dgn->rsd()->status();  
             m_fswDgnState = dgn->state();  
             m_fswDgnPrescaleFactor = dgn->prescaleFactor();  
             m_fswDgnPrescaleIndex  = dgn->lpaHandler().prescaleIndex(); 
+        } else {
+            m_fswDgnPrescaleIndex = LSF_INVALID_UINT;
+            m_fswDgnPrescaleFactor = LSF_INVALID_UINT;
+            m_fswDgnState = _invalid;
+            m_fswDgnStatus = _invalid;
         }
-
-        const lsfData::HipHandler* hip = metaEventTds->hipFilter();       if (hip) {
+ 
+        if (hip) {
             // rsd is Result Summary Data 
             if(hip->rsd()) m_fswHipStatus = hip->rsd()->status();  
             m_fswHipState = hip->state();  
             //m_fswHipPrescaleFactor = hip->prescaleFactor();  
             //m_fswHipPrescaleIndex  = hip->lpaHandler().prescaleIndex(); 
+        } else {
+            m_fswHipState = _invalid;
+            m_fswHipStatus = _invalid;
         }
 
-        const lsfData::MipHandler* mip = metaEventTds->mipFilter();
         if (mip) {
             // rsd is Result Summary Data 
             if(mip->rsd()) m_fswMipStatus = mip->rsd()->status();  
             m_fswMipState = mip->state();  
             //m_fswMipPrescaleFactor = mip->prescaleFactor();  
             //m_fswMipPrescaleIndex  = mip->lpaHandler().prescaleIndex(); 
+        } else {
+            m_fswMipState = _invalid;
+            m_fswMipStatus = _invalid;
         }
 
-
-    } else {
-        log << MSG::DEBUG << "No MetaEvent" << endreq;
+        if(!gamma && !dgn && !mip && !hip) {
+            log << MSG::DEBUG << "No MetaEvent" << endreq;
+            // copy Obf to Fsw if appropriate
+            copyObfToFsw();
+        }
     }
 
     // Get the summary tracking information on the "best" track
-    SmartDataPtr<OnboardFilterTds::ObfFilterTrack> 
-        filterTrack(m_pEventSvc, "/Event/Filter/ObfFilterTrack");
 
     if( filterTrack )
     {
@@ -411,23 +463,39 @@ StatusCode ObfValsTool::calculate()
             m_grbZdir = cos(beta);
 
             // Look up the McParticle collection in case its there... 
-            SmartDataPtr<Event::McParticleCol> mcParticleCol(m_pEventSvc, EventModel::MC::McParticleCol);
+            SmartDataPtr<Event::McParticleCol> 
+                mcParticleCol(m_pEventSvc, EventModel::MC::McParticleCol);
 
             // If running Monte Carlo, determine FilterAngSep here
+            m_grbAngSep = 0.0;
             if (mcParticleCol)
             {
-                // We only care about incident particle direction here, so can use the first particle
-                // in the McParticleCol
+                // We only care about incident particle direction here, 
+                //   so can use the first particle in the McParticleCol
                 Event::McParticle* mcPart = *(mcParticleCol->begin());
 
                 CLHEP::HepLorentzVector Mc_p0 = mcPart->initialFourMomentum();
-                Vector                  Mc_t0 = Vector(Mc_p0.x(),Mc_p0.y(), Mc_p0.z()).unit();
-                Vector                  filtDir(-m_grbXdir, -m_grbYdir, -m_grbZdir);
+
+                Vector Mc_t0 = Vector(Mc_p0.x(),Mc_p0.y(), Mc_p0.z()).unit();
+                Vector filtDir(-m_grbXdir, -m_grbYdir, -m_grbZdir);
 
                 double cosTheta = filtDir.dot(Mc_t0);
 
                 m_grbAngSep = acos(cosTheta);
             }
+        } else {
+            m_nGrbHitsX = 0;
+            m_nGrbHitsY = 0;
+            m_grbSlpX   = 0.0;
+            m_grbSlpY   = 0.0;
+            m_grbIntX   = 0.0;
+            m_grbIntY   = 0.0;
+            m_grbZ      = 0.0;
+
+            m_grbXdir   = 0.0;
+            m_grbYdir   = 0.0;
+            m_grbZdir   = 0.0;
+            m_grbAngSep = 0.0;
         }
     }
 
@@ -447,5 +515,24 @@ StatusCode ObfValsTool::finalize() {
     //setFinalized(); //  prevent being called again
 
     return StatusCode::SUCCESS;
+}
+
+void ObfValsTool::copyObfToFsw()
+{
+    if(m_fswGamState == _invalid && m_fswDgnState == _invalid
+        && m_fswHipState == _invalid && m_fswMipState == _invalid) 
+    {
+
+        m_fswGamStatus = m_gamStatus;
+        m_fswGamState  = m_gamState;
+        m_fswGamStage  = m_gamStage;
+        m_fswGamEnergy = m_gamEnergy;
+        m_fswMipStatus = m_mipStatus;
+        m_fswMipState  = m_mipState;
+        m_fswHipStatus = m_hipStatus;
+        m_fswHipState  = m_hipState;
+        m_fswDgnStatus = m_dgnStatus;
+        m_fswDgnState  = m_dgnState;
+    }
 }
 

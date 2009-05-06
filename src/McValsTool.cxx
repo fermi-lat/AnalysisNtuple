@@ -2,7 +2,7 @@
 @brief Calculates the Mc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.50.126.1 2008/08/14 00:15:24 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.51 2008/08/16 05:17:47 heather Exp $
 */
 // Include files
 
@@ -76,6 +76,7 @@ private:
     float MC_OpenAngle; 
     float MC_TkrExitEne;
 
+    unsigned int   MC_StatusWord;
     
     float MC_x0;
     float MC_y0;
@@ -91,13 +92,13 @@ private:
     //MC - Compared to Recon Items
 
     // TKR
-    float MC_x_err; 
-    float MC_y_err;
-    float MC_z_err;
+    //float MC_x_err; 
+    //float MC_y_err;
+    //float MC_z_err;
     
-    float MC_xdir_err; 
-    float MC_ydir_err;
-    float MC_zdir_err;
+    //float MC_xdir_err; 
+    //float MC_ydir_err;
+    //float MC_zdir_err;
     
     float MC_dir_err;
 	float MC_dir_errN;
@@ -161,17 +162,19 @@ McValsTool::McValsTool(const std::string& type,
             these will ordinarily be the electron and positron.) 
 <tr><td> McTkrExitEne 
 <td>F<td>   Attempt to calculate the total energy <strong>leaving</strong> the tracker volume 
+<tr><td> McStatusWord
+<td>U<td>   Status bits from G4Generator
 <tr><td> Mc[X/Y/Z]0 
 <td>F<td>   [x/y/z] coordinate of photon conversion or charged particle origin
 <tr><td> Mc[X/Y/Z]Dir 
-<td>F<td>   [x/y/z] direction cosine of primary particle 
+<td>F<td>   [x/y/z] initial direction cosines of primary particle
 <tr><td> Mc[X/Y]Err 
-<td>F<td>   [x/y] (found) - [x/y] (Mc) (Mc position taken at the z of the 
+<td>F<td>   REMOVED! [x/y] (found) - [x/y] (Mc) (Mc position taken at the z of the 
             found vertex or first hit)
 <tr><td> McZErr 
-<td>F<td>   z(<strong>actual</strong> vertex or first hit) - McZ0 
+<td>F<td>   REMOVED! z(<strong>actual</strong> vertex or first hit) - McZ0 
 <tr><td> Mc[X/Y/Z]DirErr 
-<td>F<td>   [x/y/z]dir (found) - [x/y/z]dir (Mc )
+<td>F<td>   REMOVED! [x/y/z]dir (found) - [x/y/z]dir (Mc )
 <tr><td> McDirErr 
 <td>F<td>   Angle between found direction and Mc direction (radians )
 <tr><td> McTkr[1/2]DirErr 
@@ -216,6 +219,10 @@ StatusCode McValsTool::initialize()
     addItem("McEFrac",        &MC_EFrac);
     addItem("McOpenAngle",    &MC_OpenAngle);
     addItem("McTkrExitEne",   &MC_TkrExitEne);
+
+    // added 5/5/09 LSR
+    addItem("McStatusWord",   &MC_StatusWord);
+    
     addItem("McX0",           &MC_x0);           
     addItem("McY0",           &MC_y0);           
     addItem("McZ0",           &MC_z0);  
@@ -224,13 +231,14 @@ StatusCode McValsTool::initialize()
     addItem("McYDir",         &MC_ydir);         
     addItem("McZDir",         &MC_zdir);         
     
-    addItem("McXErr",         &MC_x_err);        
-    addItem("McYErr",         &MC_y_err);        
-    addItem("McZErr",         &MC_z_err);        
+    // removed 5/5/09 LSR
+    //addItem("McXErr",         &MC_x_err);        
+    //addItem("McYErr",         &MC_y_err);        
+    //addItem("McZErr",         &MC_z_err);        
     
-    addItem("McXDirErr",      &MC_xdir_err);     
-    addItem("McYDirErr",      &MC_ydir_err);     
-    addItem("McZDirErr",      &MC_zdir_err);     
+    //addItem("McXDirErr",      &MC_xdir_err);     
+    //addItem("McYDirErr",      &MC_ydir_err);     
+    //addItem("McZDirErr",      &MC_zdir_err);     
     
     addItem("McDirErr",       &MC_dir_err);      
     addItem("McTkr1DirErr",   &MC_TKR1_dir_err); 
@@ -307,9 +315,11 @@ StatusCode McValsTool::calculate()
         }
         
         HepPoint3D Mc_x0;
+        CLHEP::HepLorentzVector Mc_p0;
         // launch point for charged particle; conversion point for neutral
         Mc_x0 = (MC_Charge==0 ? (*pMCPrimary)->finalPosition() : (*pMCPrimary)->initialPosition());
-        CLHEP::HepLorentzVector Mc_p0 = (*pMCPrimary)->initialFourMomentum();
+        Mc_p0 = (*pMCPrimary)->initialFourMomentum();
+
         // there's a method v.m(), but it does something tricky if m2<0
         double mass = sqrt(std::max(Mc_p0.m2(),0.0));
         
@@ -332,6 +342,8 @@ StatusCode McValsTool::calculate()
  
         //Attempt to estimate energy exiting the tracker
         MC_TkrExitEne = getEnergyExitingTkr(*pMCPrimary);
+        
+        MC_StatusWord = (*pMCPrimary)->statusFlags();
 
         if((*pMCPrimary)->daughterList().size() > 0) {
             SmartRefVector<Event::McParticle> daughters = (*pMCPrimary)->daughterList();
@@ -381,17 +393,18 @@ StatusCode McValsTool::calculate()
             Point  x0 = gamma->getPosition();
             Vector t0 = gamma->getDirection();
 
+            // removed 5/5/09
             // Reference position errors at the start of recon track(s)
-            double arc_len = (x0.z()-Mc_x0.z())/Mc_t0.z();
-            HepPoint3D x_start = Mc_x0 + arc_len*Mc_t0;
-            MC_x_err  = x0.x()-x_start.x(); 
-            MC_y_err  = x0.y()-x_start.y();
-            // except for z, use the difference between MC conversion point and start of vertex track
-            MC_z_err  = x0.z()-Mc_x0.z();
-            
-            MC_xdir_err = t0.x()-Mc_t0.x(); 
-            MC_ydir_err = t0.y()-Mc_t0.y();
-            MC_zdir_err = t0.z()-Mc_t0.z();
+            //double arc_len = (x0.z()-Mc_x0.z())/Mc_t0.z();
+            //HepPoint3D x_start = Mc_x0 + arc_len*Mc_t0;
+            //MC_x_err  = x0.x()-x_start.x(); 
+            //MC_y_err  = x0.y()-x_start.y();
+            //// except for z, use the difference between MC conversion point and start of vertex track
+            //MC_z_err  = x0.z()-Mc_x0.z();
+            //
+            //MC_xdir_err = t0.x()-Mc_t0.x(); 
+            //MC_ydir_err = t0.y()-Mc_t0.y();
+            //MC_zdir_err = t0.z()-Mc_t0.z();
 
 			bool VTX_set = false;
 			for(;pVtxr != pVerts->end(); pVtxr++) {

@@ -2,7 +2,7 @@
 @brief Calculates the Trigger analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.41 2008/09/10 01:24:33 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.42 2009/02/07 21:36:27 lsrea Exp $
 */
 
 // Include files
@@ -74,8 +74,8 @@ private:
     float Trig_total; 
     float Trig_numTowers;
     float Trig_type; // was: 1= corner, 2 = side, 3 = core, now number of exposed sides (0-4)
-    float Trig_moment; 
-    float Trig_zDir; 
+    //float Trig_moment; 
+    //float Trig_zDir; 
     int   Trig_engine;
     int   Trig_gemengine;
     int   Trig_gltprescale;
@@ -140,9 +140,9 @@ produces 13 potential triggers
             0 = central tower, 1 = side tower, <br> 
             2 = edge edge tower, 4 = any single-tower setup 	
 <tr><td> GltMoment 
-<td>F<td>   Do not use 
+<td>F<td>   REMOVED!
 <tr><td> GltZDir 
-<td>F<td>   Do not use 
+<td>F<td>   REMOVED! 
 <tr><td> GltEngine 
 <td>I<td>   The engine number corresponding to GltWord  
 <tr><td> GltGemEngine
@@ -226,8 +226,8 @@ StatusCode GltValsTool::initialize()
     addItem("GltTotal",      &Trig_total);
     addItem("GltNumTowers",  &Trig_numTowers);
     addItem("GltType",       &Trig_type);  
-    addItem("GltMoment",     &Trig_moment);
-    addItem("GltZDir",       &Trig_zDir);  
+    //addItem("GltMoment",     &Trig_moment);
+    //addItem("GltZDir",       &Trig_zDir);  
     addItem("GltEngine",     &Trig_engine);  
     addItem("GltGemEngine",  &Trig_gemengine);
     addItem("GltGemDeltaEventTime",      &Trig_gemDeltaEventTime);
@@ -417,91 +417,94 @@ StatusCode GltValsTool::calculate()
             iTrig_yTower = towerId.iy();
         }
 
+        // Removed 5/5/09
         // Now find the average location of all hits
         // This is probably too coarse to be useful
-        double x_sum, y_sum, z_sum, wts, g1, g2, L11, L12, L22, zmax, zmin;
-        x_sum = y_sum = z_sum = wts = g1 = g2 = L11 = L12 = L22 = 0.;
-        zmax = 0.;
-        zmin = 20.; 
-        CLHEP::HepSymMatrix moments(3,0); 
+        //double x_sum, y_sum, z_sum, wts, g1, g2, L11, L12, L22, zmax, zmin;
+        //x_sum = y_sum = z_sum = wts = g1 = g2 = L11 = L12 = L22 = 0.;
+        //zmax = 0.;
+        //zmin = 20.; 
+        //CLHEP::HepSymMatrix moments(3,0); 
 
-        if(iTrig_tower >= 0) {
-            for(tower = 0; tower<_nTowers; ++tower) {
-                idents::TowerId towerId = idents::TowerId(tower);
-                int ix = towerId.ix();
-                int iy = towerId.iy();
-                if (ix+1==nXTowers || iy+1==nYTowers) continue;
-                for(layer=0; layer<nLayers; ++layer){
-                    int x_counts = x_hits[tower][layer];
-                    int y_counts = y_hits[tower][layer];
-                    double weight = x_counts+y_counts;
-                    if(x_counts>0 && y_counts>0) { // Don't count random noise hits
-                        wts += weight;
-                        double x = (ix+1)*5.;
-                        double y = (iy+1)*5.;
-                        double z = (layer+1);
-                        x_sum += x * weight;
-                        y_sum += y * weight;
-                        z_sum += z * weight;
-                        g1    += 1.;
-                        g2    += z;
-                        L11   += 1./weight;
-                        L12   += z /weight;
-                        L22   += z*z/weight; 
-                        if(zmax < z ) zmax = z;
-                        if(zmin > z ) zmin = z; 
+        //if(iTrig_tower >= 0) {
+        //    for(tower = 0; tower<_nTowers; ++tower) {
+        //        idents::TowerId towerId = idents::TowerId(tower);
+        //        int ix = towerId.ix();
+        //        int iy = towerId.iy();
+        //        if (ix+1==nXTowers || iy+1==nYTowers) continue;
+        //        for(layer=0; layer<nLayers; ++layer){
+        //            int x_counts = x_hits[tower][layer];
+        //            int y_counts = y_hits[tower][layer];
+        //            double weight = x_counts+y_counts;
+        //            if(x_counts>0 && y_counts>0) { // Don't count random noise hits
+        //                wts += weight;
+        //                double x = (ix+1)*5.;
+        //                double y = (iy+1)*5.;
+        //                double z = (layer+1);
+        //                x_sum += x * weight;
+        //                y_sum += y * weight;
+        //                z_sum += z * weight;
+        //                g1    += 1.;
+        //                g2    += z;
+        //                L11   += 1./weight;
+        //                L12   += z /weight;
+        //                L22   += z*z/weight; 
+        //                if(zmax < z ) zmax = z;
+        //                if(zmin > z ) zmin = z; 
 
-                    }
-                }
-            }
+        //            }
+        //        }
+        //    }
 
             // Now form moment tensor, etc..... 
-            if(wts > 0) {
-                x_sum /= wts;
-                y_sum /= wts;
-                z_sum /= wts;
-                for(tower = 0; tower<_nTowers; ++tower) {
-                    idents::TowerId towerId = idents::TowerId(tower);
-                    int ix = towerId.ix();
-                    int iy = towerId.iy();
-                    if (ix+1==nXTowers || iy+1==nYTowers) continue;
-                    for(layer=0; layer<nLayers-2; ++layer){
-                        int x_counts = x_hits[tower][layer];
-                        int y_counts = y_hits[tower][layer];
-                        double weight = x_counts+y_counts;
-                        if(x_counts>0 && y_counts>0) { // Don't count random noise hits
-                            double xres = (ix+1)*5.  - x_sum;
-                            double yres = (iy+1)*5.  - y_sum;
-                            double zres = (layer+1)  - z_sum;
-                            moments(1,1) += xres * xres * weight;
-                            moments(1,2) += xres * yres * weight;
-                            moments(1,3) += xres * zres * weight;
-                            moments(2,2) += yres * yres * weight;
-                            moments(2,3) += yres * zres * weight;
-                            moments(3,3) += zres * zres * weight;
-                        }
-                    }
-                }
-                moments /= wts;
+            //if(wts > 0) {
+            //    x_sum /= wts;
+            //    y_sum /= wts;
+            //    z_sum /= wts;
+            //    for(tower = 0; tower<_nTowers; ++tower) {
+            //        idents::TowerId towerId = idents::TowerId(tower);
+            //        int ix = towerId.ix();
+            //        int iy = towerId.iy();
+            //        if (ix+1==nXTowers || iy+1==nYTowers) continue;
+            //        for(layer=0; layer<nLayers-2; ++layer){
+            //            int x_counts = x_hits[tower][layer];
+            //            int y_counts = y_hits[tower][layer];
+            //            double weight = x_counts+y_counts;
+            //            if(x_counts>0 && y_counts>0) { // Don't count random noise hits
+            //                double xres = (ix+1)*5.  - x_sum;
+            //                double yres = (iy+1)*5.  - y_sum;
+            //                double zres = (layer+1)  - z_sum;
+            //                moments(1,1) += xres * xres * weight;
+            //                moments(1,2) += xres * yres * weight;
+            //                moments(1,3) += xres * zres * weight;
+            //                moments(2,2) += yres * yres * weight;
+            //                moments(2,3) += yres * zres * weight;
+            //                moments(3,3) += zres * zres * weight;
+            //            }
+            //        }
+            //    }
+            //    moments /= wts;
 
                 // Now find transformation to diagonalize
-                CLHEP::HepMatrix U(3,3);
-                U = diagonalize(&moments);
+                //CLHEP::HepMatrix U(3,3);
+                //U = diagonalize(&moments);
 
                 // Now get directions, etc. 
-                double Det = L11*L22 - L12*L12;
-                if(fabs(Det) > 0) {
-                    double z_hit_slope = (g2*L11 - g1*L12)/Det;
-                    Trig_zDir = z_hit_slope*(zmax-zmin)*wts; 
-                }
-                int sm = 1;
-                if(moments(2,2) > moments(1,1))   sm = 2;
-                if(moments(3,3) > moments(sm,sm)) sm = 3;
+                //double Det = L11*L22 - L12*L12;
+                //Removed 5/5/09
+                //if(fabs(Det) > 0) {
+                //    double z_hit_slope = (g2*L11 - g1*L12)/Det;
+                //    Trig_zDir = z_hit_slope*(zmax-zmin)*wts; 
+                //}
+                //int sm = 1;
+                //if(moments(2,2) > moments(1,1))   sm = 2;
+                //if(moments(3,3) > moments(sm,sm)) sm = 3;
 
-                Trig_moment = moments(sm,sm);
+                //Trig_moment = moments(sm,sm);
+
                 //            Vector t_moment(U(1,sm),U(2,sm),U(3,sm));
-            }
-        }
+            //}
+        //}
     }
 
     Trig_layer  = iTrig_layer;

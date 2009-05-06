@@ -1,7 +1,7 @@
 /** @file ObfCoordsAlg.cxx
 @brief Declaration and implementation of Gaudi algorithm ObfCoordsAlg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfCoordsAlg.cxx,v 1.14 2008/06/16 22:23:23 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfCoordsAlg.cxx,v 1.15 2008/06/17 02:52:29 usher Exp $
 */
 // Include files
 
@@ -131,9 +131,9 @@ StatusCode ObfCoordsAlg::finalize()
 
 <table>
 <tr><th> Variable <th> Type <th> Description
-<tr><td> FilterRa, FilterDec 
+<tr><td> GrbRa, GrbDec 
 <td>F<td>  (deg) reconstructed direction in equatorial coordinates       
-<tr><td> FilterL, FilterB 
+<tr><td> GrbL, GrbB 
 <td>F<td>  (deg) galactic longitude and latitude of reconstructed direction
 </table> 
 */
