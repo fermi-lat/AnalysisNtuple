@@ -1,7 +1,7 @@
 /** @file FT1Alg.cxx
 @brief Declaration and implementation of Gaudi algorithm FT1Alg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.20 2009/02/15 05:47:25 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.21 2009/05/06 23:30:07 lsrea Exp $
 */
 // Include files
 
@@ -36,8 +36,10 @@ namespace { // anonymous namespace for file-global
     std::string treename("MeritTuple");
 
     const double R2D = 180./M_PI;
+    const int _invalidEventClass = -101;
 
     astro::GPS* gps(0);  // pointer to relevant GPS entry
+
 #include "Item.h"
 }
 
@@ -287,7 +289,7 @@ FT1worker::FT1worker()
     addItem( "FT1B",             m_ft1b);
     addItem( "FT1ZenithTheta",   m_ft1zen);
     addItem( "FT1EarthAzimuth",  m_ft1azim);
-    //addItem( "FT1ConvPointX",    m_ft1convpointx);
+    //addItem( "FT1ConvPointX",    m_ft1convpointx); //gone
     //addItem( "FT1ConvPointY",    m_ft1convpointy);
     //addItem( "FT1ConvPointZ",    m_ft1convpointz);
     addItem( "FT1ConvLayer",     m_ft1convlayer);
@@ -349,10 +351,34 @@ void FT1worker::evaluate()
     m_ft1theta = 666; m_ft1phi = 666; m_ft1ra   = 666;
     m_ft1dec   = 666; m_ft1zen = 666; m_ft1azim = 666;
     m_ft1l = 666; m_ft1b = 666;
-    //m_ft1convpointx = 999; m_ft1convpointy = 999; m_ft1convpointz = 999; 
+    //m_ft1convpointx = 999; m_ft1convpointy = 999; m_ft1convpointz = 999; //gone 
     m_ft1convlayer = -1;
     m_ft1livetime = -1;
     m_ft1livetime = EvtLiveTime;
+    m_ft1eventclass = _invalidEventClass;
+
+    // first calculate the EventClass, pass-7 style
+
+    int particleType = floor(CTBParticleType + 0.001);
+    int classLevel   = floor(100*CTBClassLevel + 0.001);
+
+    if (particleType==0) { // some kind of gamma
+        if     (classLevel == 5)   {m_ft1eventclass = 1;}  // 0.05
+        else if(classLevel == 10)  {m_ft1eventclass = 2;}  // 0.1
+        else if(classLevel == 20)  {m_ft1eventclass = 3;}  // 0.2
+        else if(classLevel == 30)  {m_ft1eventclass = 4;}  // 0.3
+        else if(classLevel == 50)  {m_ft1eventclass = 5;}  // 0.5
+        else if(classLevel == 100) {m_ft1eventclass = 6;}  // 1.0
+        else if(classLevel == 200) {m_ft1eventclass = 7;}  // 2.0
+        else if(classLevel == 300) {m_ft1eventclass = 8;}  // 3.0
+        else  {m_ft1eventclass = _invalidEventClass;}  // shouldn't happen
+    } else if (particleType>=-1 && particleType<=4){
+        if(classLevel==100||classLevel==200||classLevel==300) { // only levels for these types
+            m_ft1eventclass = particleType*100 + classLevel/100;
+        }
+    }
+
+    // all the rest requires a track
 
     if( TkrNumTracks==0) return;
     m_ft1convlayer   = Tkr1FirstLayer;
@@ -401,34 +427,4 @@ void FT1worker::evaluate()
     m_ft1zen  = zenith_theta*R2D;;
     m_ft1azim = earth_azimuth*R2D;
 
-    // Previous definition:
-    //m_ft1eventclass = 0;
-    //if ( (CTBBestEnergy<=10) || (CTBBestEnergyRatio>=5) ) { // Apply minimal cut first.
-    //    m_ft1eventclass = 0;
-    //} else if ( (CTBClassLevel>2) && (CTBCORE>0.1) && (CTBBestEnergyProb>0.1) ) {
-    //    m_ft1eventclass = 3;
-    //} else if ( (CTBClassLevel>1) && (CTBCORE>0.1) && (CTBBestEnergyProb>0.1) ) {
-    //    m_ft1eventclass = 2;
-    //} else if ( (CTBClassLevel>0) && (CTBCORE>0.) && (CTBBestEnergyProb>0.) ) {
-    //    m_ft1eventclass = 1;
-    //}
-
-    // Pass7 definition:
-    m_ft1eventclass = -1;
-    if (CTBParticleType==0) {
-        if     (CTBClassLevel < 0.049) {m_ft1eventclass = -1;} // shouldn't happen
-        else if(CTBClassLevel < 0.051) {m_ft1eventclass = 1;}  // 0.05
-        else if(CTBClassLevel < 0.101) {m_ft1eventclass = 2;}  // 0.1
-        else if(CTBClassLevel < 0.201) {m_ft1eventclass = 3;}  // 0.2
-        else if(CTBClassLevel < 0.301) {m_ft1eventclass = 4;}  // 0.3
-        else if(CTBClassLevel < 0.501) {m_ft1eventclass = 5;}  // 0.5
-        else if(CTBClassLevel < 1.001) {m_ft1eventclass = 6;}  // 1.0
-        else if(CTBClassLevel < 2.001) {m_ft1eventclass = 7;}  // 2.0
-        else if(CTBClassLevel < 3.001) {m_ft1eventclass = 8;}  // 3.0
-        else if(CTBClassLevel > 3.001) {m_ft1eventclass = -1;}  // shouldn't happen
-    } else if (CTBParticleType> -1.001 && CTBParticleType < 4.001){
-        if(CTBClassLevel>0.999 && CTBClassLevel<3.001) {
-            m_ft1eventclass = CTBParticleType*100 + CTBClassLevel;
-        }
-    }
-}
+ }
