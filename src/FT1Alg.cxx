@@ -1,7 +1,7 @@
 /** @file FT1Alg.cxx
 @brief Declaration and implementation of Gaudi algorithm FT1Alg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.21 2009/05/06 23:30:07 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.22 2009/05/12 17:07:26 lsrea Exp $
 */
 // Include files
 
@@ -373,7 +373,8 @@ void FT1worker::evaluate()
         else if(classLevel == 300) {m_ft1eventclass = 8;}  // 3.0
         else  {m_ft1eventclass = _invalidEventClass;}  // shouldn't happen
     } else if (particleType>=-1 && particleType<=4){
-        if(classLevel==100||classLevel==200||classLevel==300) { // only levels for these types
+        if(classLevel==100||classLevel==200||classLevel==300 ||
+            (particleType==-1&&classLevel==400)) { // only levels for these types
             m_ft1eventclass = particleType*100 + classLevel/100;
         }
     }
