@@ -1,7 +1,7 @@
 /** @file FT1Alg.cxx
 @brief Declaration and implementation of Gaudi algorithm FT1Alg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.22 2009/05/12 17:07:26 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.23 2009/05/12 20:25:51 lsrea Exp $
 */
 // Include files
 
@@ -379,16 +379,23 @@ void FT1worker::evaluate()
         }
     }
 
-    // all the rest requires a track
 
-    if( TkrNumTracks==0) return;
     m_ft1convlayer   = Tkr1FirstLayer;
+
+    // CTBBest[X/Y/Z]Dir can be set even if there's no track, 
+    // by Cal-only events, for example!
 
     Hep3Vector glastDir;
     if( CTBBestZDir!=0){ // check that this was set
         glastDir= Hep3Vector(CTBBestXDir, CTBBestYDir, CTBBestZDir);
-    }else{
-        glastDir= Hep3Vector(Tkr1XDir, Tkr1YDir, Tkr1ZDir);
+    } else {
+        if(TkrNumTracks>0) {
+            // Track exists, use it
+            glastDir= Hep3Vector(Tkr1XDir, Tkr1YDir, Tkr1ZDir);
+        } else {
+            // nothing to do, leave quietly!
+            return;
+        }
     }
 
     // instrument coords
