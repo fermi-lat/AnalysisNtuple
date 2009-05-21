@@ -2,6 +2,7 @@
   @brief Package AnalysisNtuple
   @verbatim
  
+ v2r55p3 20-May-09   LSR  Calculate celestial coords for no-track events (cal-only)
  v2r55p2 12-May-09   LSR  One more tweak
  v2r55p1 12-May-09   LSR  Fix calculation of FT1EventClass
  v2r55   06-May-09   LSR  Add new variables: FT1EventClass, McStatusWord
