@@ -1,7 +1,7 @@
 /** @file FT1Alg.cxx
 @brief Declaration and implementation of Gaudi algorithm FT1Alg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.23 2009/05/12 20:25:51 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.24 2009/05/21 00:29:28 lsrea Exp $
 */
 // Include files
 
@@ -379,9 +379,6 @@ void FT1worker::evaluate()
         }
     }
 
-
-    m_ft1convlayer   = Tkr1FirstLayer;
-
     // CTBBest[X/Y/Z]Dir can be set even if there's no track, 
     // by Cal-only events, for example!
 
@@ -399,6 +396,8 @@ void FT1worker::evaluate()
     }
 
     // instrument coords
+
+    m_ft1convlayer   = Tkr1FirstLayer;
 
     m_ft1theta = (-glastDir).theta()*R2D;
     double phi_deg = (-glastDir).phi(); 
