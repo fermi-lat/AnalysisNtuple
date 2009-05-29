@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.94 2009/01/30 17:13:13 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.95 2009/02/21 02:36:56 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -424,13 +424,17 @@ This is used primarily to order the tracks during patrec.
 <tr><td> Tkr[1/2]Type  
 <td>F<td>   These are the status bits from the trackign, containing information
 about how the track was found and fitted.   
-See TkrTrack.h in the Event package for the current description.     
-As of GlastRelease v7r2, the status word bits organized as follows:
+See Event/Recon/TkrRecon/TkrTrack.h for the current description.     
+As of GlastRelease v17r31 (June 2009), the status word bits organized as follows:
 
 @verbatim
 
-|  0   0   0   0  |  0   0   0   0  |  0   0   0   0  |  0   0   0   0   |
-[ Pat Rec Info  ]  [Pass ][ E-Loss] [ Track Energy ]  [Track Fit Status]
+Low-order bits:
+ |  0   0   0   0  |  0   0   0   0  |  0   0   0   0  |  0   0   0   0   |
+  [ Pat Rec Info  ] [Pass ] [ E-Loss] [ Track Energy ]  [Track Fit Status]
+High-order bits:
+ |  0   0   0   0  |  0   0   0   0  |  0   0   0   0  |  0   0   0   0   |
+                                                                 [Ghosts]
 
 FOUND    = 0x0001,  //Set if track has been "found" by pat rec
 FILTERED = 0x0002,  //Set if track fit filter stage has been run
@@ -449,6 +453,9 @@ PRBLNSRCH= 0x2000,  //Set if Pat. Rec. used only Track info.
 TOP      = 0x4000,  //Set if track traj. intercepts top tracker plane
 BOTTOM   = 0x8000   //Set if track traj. intercepts first Cal layer
 
+GHOST      = 0x10000, // set if track contains ghost clusters
+DIAGNOSTIC = 0x20000  // set if track contains diagnostic ghost clusters
+ 
 @endverbatim
 The definitions should be fairly stable.
 <tr><td> Tkr[1/2]TwrEdge  
