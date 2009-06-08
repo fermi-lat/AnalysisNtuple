@@ -2,6 +2,7 @@
   @brief Package AnalysisNtuple
   @verbatim
  
+ v2r56p0gr2 08-Jun-09 EAC Fix AcdValsTool to compile with latest version of Event
  v2r56p0gr1 08-Jun-09 EAC Added AcdValsToolV2
  v2r55p3 20-May-09   LSR  Calculate celestial coords for no-track events (cal-only)
  v2r55p2 12-May-09   LSR  One more tweak

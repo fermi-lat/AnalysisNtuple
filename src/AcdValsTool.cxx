@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.50 2009/03/19 15:25:06 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.50.42.1 2009/06/08 18:03:07 echarles Exp $
 */
 
 #include "ValBase.h"
@@ -764,7 +764,7 @@ void AcdValsTool::reconId(const Event::AcdRecon *pACD)
         // could be vertex (-1) or best track (0)            
         if ((*itrTrackIntersect)->getTrackIndex() > 0 ) continue;
 
-        double arcLen = (*itrTrackIntersect)->getArclengthToPlane();
+        double arcLen = (*itrTrackIntersect)->getArcLengthToIntersection();
 
         if (((*itrTrackIntersect)->getTrackIndex() == 0)){ // tracks
             if (arcLen > 0) // upward track
@@ -816,10 +816,10 @@ void AcdValsTool::findId(const std::vector<Event::AcdTkrIntersection*> vec,
 
     // If there is only one TkrIntesection object, then we can return the one id we have
     if (vec.size() == 1) {
-        if ( (!findRibbon) && (vec[0]->getId().tile()) )
-            retId = vec[0]->getId();
-        else if ( (findRibbon) && (vec[0]->getId().ribbon()) ) 
-            retId = vec[0]->getId();
+        if ( (!findRibbon) && (vec[0]->getTileId().tile()) )
+            retId = vec[0]->getTileId();
+        else if ( (findRibbon) && (vec[0]->getTileId().ribbon()) ) 
+            retId = vec[0]->getTileId();
         return;
     }
 
@@ -828,7 +828,7 @@ void AcdValsTool::findId(const std::vector<Event::AcdTkrIntersection*> vec,
     Event::AcdTkrIntersectionCol::const_iterator itrTrackIntersect;
     itrTrackIntersect = vec.begin();
     for ( ; itrTrackIntersect != vec.end(); itrTrackIntersect++ ) {
-        idents::AcdId id = (*itrTrackIntersect)->getId();
+        idents::AcdId id = (*itrTrackIntersect)->getTileId();
         if ( (!findRibbon) && (id.tile()) ) {
             if (tileIndex < 0) {  // haven't seen another tile yet
                 tileIndex = ind;
@@ -838,7 +838,7 @@ void AcdValsTool::findId(const std::vector<Event::AcdTkrIntersection*> vec,
                 // chose the greater Z value
                 if ( (retId.top()) || (id.top()) ) {
                     if (vec[tileIndex]->getGlobalPosition().z() < (*itrTrackIntersect)->getGlobalPosition().z()) {
-                        retId = (*itrTrackIntersect)->getId();
+                        retId = (*itrTrackIntersect)->getTileId();
                         tileIndex = ind;
                     }
                 }   
