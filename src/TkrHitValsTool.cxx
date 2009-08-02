@@ -2,7 +2,7 @@
 @brief Calculates the Tkr hit analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrHitValsTool.cxx,v 1.14 2008/04/21 21:05:35 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrHitValsTool.cxx,v 1.15 2008/04/23 20:27:42 lsrea Exp $
 */
 
 // Include files
@@ -50,6 +50,18 @@ private:
     
     //TkrClusters Tuple Items
     int Tkr_Cnv_Lyr_Hits;
+    int Tkr_numHitsOnTracks;
+    int Tkr_numGhosts;
+    int Tkr_numToT255s;
+    int Tkr_numSaturated;
+    int Tkr_numWideClusters;
+    int Tkr_numWiderClusters;
+    int Tkr_numGhostsOnTracks;
+    int Tkr_numToT255sOnTracks;
+    int Tkr_numSaturatedOnTracks;
+    int Tkr_numFlaggedTrackHits;
+    int Tkr_numWideClustersOnTracks;
+    int Tkr_numWiderClustersOnTracks;
     int Tkr_Max_controller_hits;
     int Tkr_Fst_Cnv_Lyr;
     int Tkr_NCnv_Lyrs_Hit;
@@ -57,6 +69,8 @@ private:
     int Tkr_HitsPerLyr[_nLayers];
 
     ITkrQueryClustersTool* m_clusTool;
+    int m_minWide;
+    int m_minWider;
 };
 
 // Static factory for instantiation of algtool objects
@@ -71,6 +85,8 @@ TkrHitValsTool::TkrHitValsTool(const std::string& type,
 {    
     // Declare additional interface
     declareInterface<IValsTool>(this); 
+    declareProperty("minWide", m_minWide=5);
+    declareProperty("minWider", m_minWider=9);
 }
 
 /** @page anatup_vars 
@@ -80,6 +96,31 @@ TkrHitValsTool::TkrHitValsTool(const std::string& type,
 <tr><th> Variable <th> Type  <th> Description					
 <tr><td> TkrNumHits 	
 <td>I<td>   Total number of TKR clusters 
+<tr><td> TkrNumHitsOnTracks 	
+<td>I<td>   Total number of TKR clusters on tracks
+<tr><td> TkrNumSaturated
+<td>I<td>   Number of saturated clusters
+<tr><td> TkrNumGhosts 	
+<td>I<td>   Total number of TKR ghost clusters 
+<tr><td> TkrNumToT255s 	
+<td>I<td>   Total number of clusters with ToT==255 
+<tr><td> TkrNumWideClusters	
+<td>I<td>   Number of clusters 5 or more strips wide
+<tr><td> TkrNumWiderClusters	
+<td>I<td>   Number of clusters 9 or more strips wide
+<tr><td> TkrNumSaturatedOnTracks
+<td>I<td>   Number of saturated clusters on tracks
+<tr><td> TkrNumGhostsOnTracks 	
+<td>I<td>   Total number of ghost clusters on tracks
+<tr><td> TkrNumToT255sOnTracks 	
+<td>I<td>   Total number of ToT==255 clusters on tracks
+<tr><td> TkrNumFlaggedTrackHits 	
+<td>I<td>   Total number of track hits flagged because
+the track had some 255 or ghost hits
+<tr><td> TkrNumWideClustersOnTracks	
+<td>I<td>   Number of clusters 5 or more strips wide on tracks
+<tr><td> TkrNumWiderClustersOnTracks	
+<td>I<td>   Number of clusters 9 or more strips wide on tracks
 <tr><td> TkrFirstLayer
 <td>I<td>   First layer containing a cluster 
 <tr><td> TkrNumLayersHit
@@ -114,8 +155,20 @@ StatusCode TkrHitValsTool::initialize()
     // load up the map
 
     addItem("TkrNumHits",            &Tkr_Cnv_Lyr_Hits);       
+    addItem("TkrNumHitsOnTracks",     &Tkr_numHitsOnTracks);
     addItem("TkrFirstLayer",         &Tkr_Fst_Cnv_Lyr);        
     addItem("TkrNumLayersHit",       &Tkr_NCnv_Lyrs_Hit);
+    addItem("TkrNumSaturated",        &Tkr_numSaturated);
+    addItem("TkrNumGhosts",           &Tkr_numGhosts);
+    addItem("TkrNumToT255s",          &Tkr_numToT255s);
+    addItem("TkrNumWideClusters",     &Tkr_numWideClusters);
+    addItem("TkrNumWiderClusters",    &Tkr_numWiderClusters);
+    addItem("TkrNumSaturatedOnTracks",        &Tkr_numSaturatedOnTracks);
+    addItem("TkrNumGhostsOnTracks",   &Tkr_numGhostsOnTracks);
+    addItem("TkrNumToT255sOnTracks",  &Tkr_numToT255sOnTracks);
+    addItem("TkrNumFlaggedTrackHits", &Tkr_numFlaggedTrackHits);
+    addItem("TkrNumWideClustersOnTracks",     &Tkr_numWideClustersOnTracks);
+    addItem("TkrNumWiderClustersOnTracks",    &Tkr_numWiderClustersOnTracks);
 
     int i;
     char buffer[20];
@@ -139,15 +192,13 @@ StatusCode TkrHitValsTool::calculate()
     SmartDataPtr<Event::TkrClusterCol>   
         pClusters(m_pEventSvc,EventModel::TkrRecon::TkrClusterCol);
 
-    if (!pClusters) return sc;
 
     //Make sure we have valid cluster data
-    if (pClusters)
-    {
-        int layerIdx = _nLayers;
-        while(layerIdx--)
-        {
-            int hitCount = m_clusTool->getClusters(idents::TkrId::eMeasureX,layerIdx).size()
+    if (!pClusters) return sc;
+    int layerIdx;
+    for(layerIdx=0;layerIdx<_nLayers;++layerIdx) {
+        int hitCount = 
+            m_clusTool->getClusters(idents::TkrId::eMeasureX,layerIdx).size()
                          + m_clusTool->getClusters(idents::TkrId::eMeasureY,layerIdx).size();
             
             if (hitCount > 0)
@@ -160,6 +211,27 @@ StatusCode TkrHitValsTool::calculate()
         }
         
         Tkr_Cnv_Lyr_Hits = pClusters->size();
+    Event::TkrClusterColConItr iter = pClusters->begin();
+    for(; iter!=pClusters->end();++iter) {
+        bool isGhost, is255, isSaturated, isWide, isWider;
+        Event::TkrCluster* clust = *iter;
+        if(isGhost=clust->isSet(Event::TkrCluster::maskGHOST)) Tkr_numGhosts++;
+        if(is255=clust->isSet(Event::TkrCluster::mask255))     Tkr_numToT255s++;
+        if(isSaturated=((clust->getRawToT())==250)) Tkr_numSaturated++;
+        if(isWide=clust->size()>=m_minWide) Tkr_numWideClusters++;
+        if(isWider=clust->size()>=m_minWider) Tkr_numWiderClusters++;
+        bool onTrack = clust->hitFlagged();
+        if(onTrack) {
+            Tkr_numHitsOnTracks++;
+            if(isGhost) Tkr_numGhostsOnTracks++;
+            if(is255) Tkr_numToT255sOnTracks++;
+            if(isSaturated) Tkr_numSaturatedOnTracks++;
+            if(clust->isSet(Event::TkrCluster::maskSAMETRACK)) {
+                Tkr_numFlaggedTrackHits++;
+            }
+            if(isWide)  Tkr_numWideClustersOnTracks++;
+            if(isWider) Tkr_numWiderClustersOnTracks++;
+        }
     }
     
     return sc;

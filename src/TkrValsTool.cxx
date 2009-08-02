@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.90.82.3 2008/08/15 04:50:33 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.91 2008/08/16 05:17:47 heather Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -117,6 +117,8 @@ private:
     double m_maxVetoError;
     double m_vetoNSigma;
     bool   m_testExceptions;
+    int    m_minWide;
+    int    m_minWider;
 
 
     //Global Track Tuple Items
@@ -150,6 +152,11 @@ private:
     float Tkr_1_FirstHits;
     float Tkr_1_FirstLayer; 
     float Tkr_1_LastLayer; 
+    float Tkr_1_GhostFrac;
+    float Tkr_1_SaturatedFrac;
+    float Tkr_1_ToT255Frac;
+    float Tkr_1_WideFrac;
+    float Tkr_1_WiderFrac;
 
     float Tkr_1_Qual;
     float Tkr_1_Type;
@@ -211,6 +218,11 @@ private:
     float Tkr_2_FirstHits;
     float Tkr_2_FirstLayer; 
     float Tkr_2_LastLayer; 
+    float Tkr_2_GhostFrac;
+    float Tkr_2_SaturatedFrac;
+    float Tkr_2_ToT255Frac;
+    float Tkr_2_WideFrac;
+    float Tkr_2_WiderFrac;
 
     float Tkr_2_Gaps;
     float Tkr_2_DifHits;
@@ -293,6 +305,8 @@ TkrValsTool::TkrValsTool(const std::string& type,
     declareProperty("maxVetoError", m_maxVetoError=100000.0);
     declareProperty("vetoNSigma", m_vetoNSigma=2.0);
     declareProperty("testExceptions", m_testExceptions=false);
+    declareProperty("minWide", m_minWide=5);
+    declareProperty("minWider", m_minWider=9);
 }
 
 /** @page anatup_vars 
@@ -382,6 +396,16 @@ in which case the usual DOCA is poorly measured.
 <td>F<td>   Track chisquared for first Tkr[1/2]FirstHits layers  
 <tr><td> Tkr[1/2]Hits  
 <td>F<td>   Number of clusters in track  
+<tr><td> Tkr[1/2]GhostFrac
+<td>F<td>   Fraction of good hits on track that are ghosts
+<tr><td> Tkr[1/2]ToT255Frac
+<td>F<td>   Fraction of good hits on track that have ToT==255
+<tr><td> Tkr[1/2]SaturatedFrac
+<td>F<td>   Fraction of good hits on track that are saturated
+<tr><td> Tkr[1/2]WideFrac
+<td>F<td>   Fraction of good hits on track whose with is >= m_minWide (default=5)
+<tr><td> Tkr[1/2]WiderFrac
+<td>F<td>   Fraction of good hits on track whose with is >= m_minWider (default=9)
 <tr><td> Tkr[1/2][First/Last]Layer  
 <td>F<td>   [First/Last] layer in track  (layer 0 is the bottom of the tracker)
 <tr><td> Tkr1FirstGapPlane  
@@ -684,6 +708,11 @@ StatusCode TkrValsTool::initialize()
     addItem("Tkr1FirstLayer", &Tkr_1_FirstLayer);
     addItem("Tkr1LastLayer",  &Tkr_1_LastLayer);
     addItem("Tkr1DifHits",    &Tkr_1_DifHits);
+    addItem("Tkr1GhostFrac",  &Tkr_1_GhostFrac);
+    addItem("Tkr1ToT255Frac", &Tkr_1_ToT255Frac);
+    addItem("Tkr1SaturatedFrac",  &Tkr_1_SaturatedFrac);
+    addItem("Tkr1WideFrac",   &Tkr_1_WideFrac);
+    addItem("Tkr1WiderFrac",  &Tkr_1_WiderFrac);
 
     addItem("Tkr1Gaps",       &Tkr_1_Gaps);
     addItem("Tkr1FirstGapPlane",&Tkr_1_FirstGapPlane);
@@ -755,6 +784,11 @@ StatusCode TkrValsTool::initialize()
 
     //  addItem("Tkr2Gaps",       &Tkr_2_Gaps);
     //  addItem("Tkr2FirstGaps",  &Tkr_2_FirstGaps);
+    addItem("Tkr2GhostFrac",  &Tkr_2_GhostFrac);
+    addItem("Tkr2ToT255Frac", &Tkr_2_ToT255Frac);
+    addItem("Tkr2SaturatedFrac",  &Tkr_2_SaturatedFrac);
+    addItem("Tkr2WideFrac",   &Tkr_2_WideFrac);
+    addItem("Tkr2WiderFrac",  &Tkr_2_WiderFrac);
 
     addItem("Tkr2Qual",       &Tkr_2_Qual);
     addItem("Tkr2Type",       &Tkr_2_Type);
@@ -997,24 +1031,55 @@ StatusCode TkrValsTool::calculate()
         int plane = m_tkrGeom->getPlane((*pHit)->getTkrId());
         int gapId = -1;
         bool gapFound = false;
+        // count up different types of hits for track 1 (same below for track 2)
 
 
         // count the number of real hits... may not be necessary but I'm nervous!
         int clustersOnTrack = 0;
+        int ghostCount     = 0;
+        int toT255Count    = 0;
+        int saturatedCount = 0;
+        int wideCount      = 0;
+        int widerCount     = 0;
+        int nToTs = 0; // count the good ToTs at the same time
         while(pHit != track_1->end()) {
             const Event::TkrTrackHit* hit = *pHit++;
             unsigned int bits = hit->getStatusBits();
             if((bits & Event::TkrTrackHit::HITISSSD)==0) continue;
             const Event::TkrCluster* cluster = hit->getClusterPtr();
+            if(cluster->isSet(Event::TkrCluster::mask255))   toT255Count++;
             double mips = cluster->getMips();
-            if (mips<0.0 || mips>10.0) continue;
+            // we want the 255s in the clustersOnTrack count
+            //   so comment the next statement
+            // There should be no totally bad clusters, they're killed in MakeClusters
+            //if (mips<-0.5) continue;
+            if(mips>-0.5) nToTs++;
+            int rawToT = cluster->ToT();
+            if(rawToT==250) { saturatedCount++;}
+            if(cluster->isSet(Event::TkrCluster::maskGHOST)) ghostCount++;
+            int width = cluster->size();
+            if(width>=m_minWide) wideCount++;
+            if(width>=m_minWider) widerCount++;
             clustersOnTrack++;
         }
+        if(clustersOnTrack>0) {
+            Tkr_1_GhostFrac     = ((float)ghostCount)/clustersOnTrack;
+            Tkr_1_ToT255Frac    = ((float)toT255Count)/clustersOnTrack;
+            Tkr_1_SaturatedFrac = ((float)saturatedCount)/clustersOnTrack;
+            Tkr_1_WideFrac      = ((float)wideCount)/clustersOnTrack;
+            Tkr_1_WiderFrac     = ((float)widerCount)/clustersOnTrack;
+        }
+        // commented statements are part of the debug
+        //std::vector<float> mipsVec(trackSize, 0.0);
+        //std::vector<float> mipsBefore(trackSize, 0.0);
+        //int seq = -1;
+        //float maxMips = -1000;
 
         pHit = track_1->begin();
         const Event::TkrTrackParams params((*pHit)->getTrackParams(Event::TkrTrackHit::SMOOTHED));
         while(pHit != track_1->end()) {
             const Event::TkrTrackHit* hit = *pHit++;
+            //seq++;
             unsigned int bits = hit->getStatusBits();
 
             int layer = m_tkrGeom->getLayer(hit->getTkrId());
@@ -1048,26 +1113,22 @@ StatusCode TkrValsTool::calculate()
             double theta1       = atan(slope1);
 
             double aspectRatio = 0.228/0.400;
-            double totMax      =  250.;   // counts
             double threshold   =  0.25;   // Mips
             double countThreshold = 15; // counts
             double normFactor  =  1./53.;
 
             double mips = cluster->getMips();
-            if(mips<0.0 || mips>10.0) continue;
+            //mipsBefore[seq] = mips;
 
-            double tot = cluster->ToT();
-            if(tot>=totMax) tot = totMax;
+            if(mips<-0.5) continue;
             double path1 = 1.0;
 
             // get the path length for the hit
-            // tries to get the average
+            // tries to get the average length
             // the calculation is part analytic, part approximation and part fudge.
             //   more work is definitely in order!
 
             // theta1 first
-            if (tot>=totMax) { tot = normFactor*(totMax+countThreshold); }
-            else {
                 double costh1 = cos(theta1);
                 if (size==1) {
                     double sinth1 = sin(theta1);
@@ -1076,9 +1137,9 @@ StatusCode TkrValsTool::calculate()
                             (1/costh1 - 0.5*threshold)*(2*threshold*sinth1))
                             /(aspectRatio - slope1 + 2*threshold*sinth1);
                     } else if (slope1<aspectRatio/(1-2.*threshold*costh1)) {
-                        path1 = 1; //1/costh1 - threshold*costh1;
+                    path1 = 1.0; //1/costh1 - threshold*costh1;
                     } else { 
-                        path1 = 1;
+                    path1 = 1.0;
                     }
                 }
                 else if (size==2) {
@@ -1099,7 +1160,7 @@ StatusCode TkrValsTool::calculate()
                 double factor = path1*costh1*slope;
                 double path2 = sqrt(path1*path1 + factor*factor);
                 mips /= path2;
-            }
+            //mipsVec[seq] = mips;
 
             if(mips > max_ToT) max_ToT = mips; 
             if(mips < min_ToT) min_ToT = mips; 
@@ -1112,19 +1173,59 @@ StatusCode TkrValsTool::calculate()
                 chisq_first += hit->getChiSquareSmooth();
             }
             // last 2 valid clusters
-            if(hit_counter > clustersOnTrack-2){
+            if(hit_counter > nToTs-2){
                 last_ToTs += mips;
                 chisq_last += hit->getChiSquareSmooth();
             }
         }
 
-        if(clustersOnTrack>3) {
-            Tkr_1_ToTTrAve = (Tkr_1_ToTAve - max_ToT - min_ToT)/(clustersOnTrack-2.);
-            Tkr_1_ToTAve /= clustersOnTrack;
-            if(first_ToTs+last_ToTs>0) {
+        // need 4 clusters to calculate an asymmetry
+        if(nToTs>3&&first_ToTs+last_ToTs>0) {
                 Tkr_1_ToTAsym = (last_ToTs - first_ToTs)/(first_ToTs + last_ToTs);
             }
+        Tkr_1_ToTAve /= std::max(1, nToTs);
+        // at least three tracks to do a real truncated mean, if not use normal mean
+        if (nToTs>2) {
+            Tkr_1_ToTTrAve = (Tkr_1_ToTAve*nToTs - max_ToT - min_ToT)/(nToTs-2.);
+        } else { 
+            Tkr_1_ToTTrAve = Tkr_1_ToTAve;
         }
+        // save this for future debugging
+        /*       
+        if(maxMips>50) {
+            std::cout << "New Track Ave = " << Tkr_1_ToTAve << " TrAve= "
+                << Tkr_1_ToTTrAve << " Size/ClsOnTrk " << trackSize << " " 
+                <<nToTs << " maxMips " << maxMips << std::endl;
+            int ihit = -1;
+            int ihitgood = -1;
+            pHit = track_1->begin();
+            while(pHit != track_1->end()) {
+                ihit++;
+                bool skip = false;
+                const Event::TkrTrackHit* hit = *pHit++;
+                unsigned int bits = hit->getStatusBits();
+                if((bits & Event::TkrTrackHit::HITISSSD)==0) skip = true;
+                if(skip) continue;
+                const Event::TkrCluster* cluster = hit->getClusterPtr();
+                int tower = cluster->tower();
+                int layer = cluster->getLayer();
+                int plane = cluster->getPlane();
+                int strip0 = cluster->firstStrip();
+                int stripf = cluster->lastStrip();
+                double mips = cluster->getMips();
+                if(mips<-0.5) skip = true;
+                mips = mipsVec[ihit];
+                float mipsBef = mipsBefore[ihit];
+                int tot = cluster->ToT();
+                std::string ast = (skip ? "*" : " ");
+                std::cout << "hit " << ihit << ast << "twr/lyr/plane/strip " << tower 
+                    << " " << layer << " " << plane << " " << strip0 << " " << stripf ;
+                std::cout << " tot/MipBefore/Mips " << tot << " " 
+                    << mipsBef << " " << mips  << std::endl;
+                std::cout << *cluster <<std::endl;
+        }
+        }
+        */
 
         tkrTrackEnergy1 /= fabs(Tkr_1_zdir);
 
@@ -1304,6 +1405,42 @@ StatusCode TkrValsTool::calculate()
                 else if (type==SUPER) {tkrTrackEnergy2 += cfThick;}
             }
             tkrTrackEnergy2 /= fabs(Tkr_2_zdir);
+            // count up different types of hits for track 2
+            // count the number of real hits... may not be necessary but I'm nervous!
+            // skip bad hits (mips<-0.5)
+            int clustersOnTrack2 = 0;
+            ghostCount     = 0;
+            toT255Count    = 0;
+            saturatedCount = 0;
+            wideCount      = 0;
+            widerCount     = 0;
+            pHit = track_2->begin();
+            while(pHit != track_2->end()) {
+                const Event::TkrTrackHit* hit = *pHit++;
+                unsigned int bits = hit->getStatusBits();
+                if((bits & Event::TkrTrackHit::HITISSSD)==0) continue;
+                const Event::TkrCluster* cluster = hit->getClusterPtr();
+                if(cluster->isSet(Event::TkrCluster::mask255))   toT255Count++;
+                double mips = cluster->getMips();
+                // we want the 255s in the clustersOnTrack count
+                //   so comment the next statement
+                // There should be no totally bad clusters; they're killed in MakeClusters
+                //if (mips<-0.5) continue;
+                int rawToT = cluster->ToT();
+                if(rawToT==250) { saturatedCount++;}
+                if(cluster->isSet(Event::TkrCluster::maskGHOST)) ghostCount++;
+                int width = cluster->size();
+                if(width>=m_minWide) wideCount++;
+                if(width>=m_minWider) widerCount++;
+                clustersOnTrack2++;
+            }
+            if(clustersOnTrack2>0) {
+                Tkr_2_GhostFrac     = ((float)ghostCount)/clustersOnTrack2;
+                Tkr_2_ToT255Frac    = ((float)toT255Count)/clustersOnTrack2;
+                Tkr_2_SaturatedFrac = ((float)saturatedCount)/clustersOnTrack2;
+                Tkr_2_WideFrac      = ((float)wideCount)/clustersOnTrack2;
+                Tkr_2_WiderFrac     = ((float)widerCount)/clustersOnTrack2;
+            }
         }
 
         Tkr_Sum_KalEne    = Tkr_1_KalEne+Tkr_2_KalEne; 
