@@ -1,7 +1,7 @@
 /** @file FT1Alg.cxx
 @brief Declaration and implementation of Gaudi algorithm FT1Alg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.24 2009/05/21 00:29:28 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.25 2009/05/24 16:55:34 lsrea Exp $
 */
 // Include files
 
@@ -91,12 +91,12 @@ public:
     TypedItem<unsigned long long , 'l'> EvtEventId64;
 
     // these all float or double
+    Item EvtElapsedTime;
     Item EvtLiveTime;
     Item EvtEnergyCorr;
-    Item EvtElapsedTime;
+    Item TkrNumTracks;
     Item VtxXDir, VtxYDir, VtxZDir;
     Item VtxX0, VtxY0, VtxZ0;
-    Item TkrNumTracks;
     Item Tkr1XDir, Tkr1YDir, Tkr1ZDir;
     Item Tkr1X0, Tkr1Y0, Tkr1Z0;
     Item Tkr1FirstLayer;
@@ -359,8 +359,8 @@ void FT1worker::evaluate()
 
     // first calculate the EventClass, pass-7 style
 
-    int particleType = floor(CTBParticleType + 0.001);
-    int classLevel   = floor(100*CTBClassLevel + 0.001);
+    int particleType = (int)floor(CTBParticleType + 0.001);
+    int classLevel   = (int)floor(100*CTBClassLevel + 0.001);
 
     if (particleType==0) { // some kind of gamma
         if     (classLevel == 5)   {m_ft1eventclass = 1;}  // 0.05

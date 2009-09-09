@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.49 2009/03/17 15:19:51 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.50 2009/03/19 15:25:06 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -441,12 +441,12 @@ StatusCode AcdValsTool::calculate()
 
                 // WBA: Insert the Tile_counts_by region here with energy threshold
                 if(MeV > TileCountThreshold) {
-                    if(id.top()) {ACD_tileTopCount += 1.0;}
+                    if(id.top()) {ACD_tileTopCount++;}
                     else {
-                        if(id.row()==0) ACD_tileCount0 += 1.0;
-                        if(id.row()==1) ACD_tileCount1 += 1.0;
-                        if(id.row()==2) ACD_tileCount2 += 1.0;
-                        if(id.row()==3) ACD_tileCount3 += 1.0;
+                        if(id.row()==0) ACD_tileCount0++;
+                        if(id.row()==1) ACD_tileCount1++;
+                        if(id.row()==2) ACD_tileCount2++;
+                        if(id.row()==3) ACD_tileCount3++;
                     }
                 } 
 
@@ -459,7 +459,7 @@ StatusCode AcdValsTool::calculate()
                     if(id.row()==2) ACD_energyRow2 += MeV;
                     if(id.row()==3) {
                         ACD_energyRow3 += MeV;
-                        ACD_countRow3Readout += 1.0;
+                        ACD_countRow3Readout++;
                     }
                 }
             }	  
@@ -514,8 +514,9 @@ StatusCode AcdValsTool::calculate()
             bool isTrack = aPoca->trackIndex() >= 0;
 
             bool doneHole = false;
-            double holeDoca(0.), holeDocaError(0.); 
-            int iHole = -1;
+            double holeDoca(0.);  
+            //double  holeDocaError(0.); 
+            //int iHole = -1;
 
             bool donePlaneError = false;
             double planeError = 0.;
@@ -627,8 +628,9 @@ StatusCode AcdValsTool::calculate()
             idents::AcdId theId = tile_vetoPoca->getId();
             ACD_ActiveDist_Energy = tileEnergyIdMap[theId];
             ACD_ActiveDist_TrackNum = tile_vetoPoca->trackIndex(); // Index starts from 0
-            double holeDoca(0.), holeDocaError(0.); 
-            int iHole = -1;
+            double holeDoca(0.);
+            //double holeDocaError(0.); 
+            //int iHole = -1;
             //AcdTileUtil::tileScrewHoleDoca(aPoca->getId(),aPoca->getActiveX(),aPoca->getActiveY(),
             //				   aPoca->getLocalXXCov(),aPoca->getLocalYYCov(),aPoca->getLocalXYCov(),
             //				   holeDoca,holeDocaError,iHole);

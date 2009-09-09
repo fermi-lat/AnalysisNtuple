@@ -3,7 +3,7 @@
 @brief Calculates the "Event" analysis variables from the other ntuple variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.42 2009/02/20 13:07:16 kuss Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.43 2009/05/06 23:30:07 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -350,7 +350,7 @@ StatusCode EvtValsTool::calculate()
 
     // we may want to add TDS stuff to this method, but we haven't needed it yet.
 
-    int firstCheck = m_check;
+    //int firstCheck = m_check;
     int nextCheck = NOCALC;
 
 

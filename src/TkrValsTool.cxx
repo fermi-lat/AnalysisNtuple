@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.95 2009/02/21 02:36:56 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.96 2009/05/29 16:14:10 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -1076,11 +1076,11 @@ StatusCode TkrValsTool::calculate()
             // There should be no totally bad clusters, they're killed in MakeClusters
             //if (mips<-0.5) continue;
             if(mips>-0.5) nToTs++;
-            int rawToT = cluster->ToT();
+            int rawToT = (int)cluster->ToT();
             if(rawToT==250) { saturatedCount++;}
             if(cluster->isSet(Event::TkrCluster::maskGHOST)) ghostCount++;
 
-            int width = cluster->size();
+            int width = (int)cluster->size();
             if(width>=m_minWide) wideCount++;
             if(width>=m_minWider) widerCount++;
             clustersOnTrack++;
@@ -1100,7 +1100,8 @@ StatusCode TkrValsTool::calculate()
         //float maxMips = -1000;
 
         pHit = track_1->begin();
-        const Event::TkrTrackParams params((*pHit)->getTrackParams(Event::TkrTrackHit::SMOOTHED));
+        //const Event::TkrTrackParams 
+        //    params((*pHit)->getTrackParams(Event::TkrTrackHit::SMOOTHED));
         while(pHit != track_1->end()) {
             
             const Event::TkrTrackHit* hit = *pHit++;
@@ -1139,8 +1140,8 @@ StatusCode TkrValsTool::calculate()
 
             double aspectRatio = 0.228/0.400;
             double threshold   =  0.25;   // Mips
-            double countThreshold = 15; // counts
-            double normFactor  =  1./53.;
+            //double countThreshold = 15.0; // counts
+            //double normFactor  =  1./53.;
 
             double mips = cluster->getMips();
             //mipsBefore[seq] = mips;
@@ -1278,22 +1279,22 @@ StatusCode TkrValsTool::calculate()
         double secthX = 1./sqrt(1.0 - t1.x()*t1.x());
         double secthY = 1./sqrt(1.0 - t1.y()*t1.y());
 
-        double xVetoRgn = _vetoRegion*secthX;
-        double yVetoRgn = _vetoRegion*secthY;
+        //double xVetoRgn = _vetoRegion*secthX;
+        //double yVetoRgn = _vetoRegion*secthY;
 
         // SSD Veto stuff here:
         // First Track stuff as before
         Tkr_1_SSDVeto = SSDEvaluation(track_1); 
 
-        Tkr_1_VetoPlaneCrossed = m_VetoPlaneCrossed; 
-        Tkr_1_VetoTrials = m_VetoTrials;
-        Tkr_1_VetoUnknown = m_VetoUnknown;
-        Tkr_1_VetoDeadPlane = m_VetoDeadPlane;
-        Tkr_1_VetoTruncated = m_VetoTruncated; 
-        Tkr_1_VetoTower = m_VetoTower;   
-        Tkr_1_VetoGapCorner = m_VetoGapCorner;
-        Tkr_1_VetoGapEdge = m_VetoGapEdge;   
-        Tkr_1_VetoBadCluster = m_VetoBadCluster;
+        Tkr_1_VetoPlaneCrossed = (int)floor(m_VetoPlaneCrossed + 0.5); 
+        Tkr_1_VetoTrials       = (int)floor(m_VetoTrials + 0.5);
+        Tkr_1_VetoUnknown      = (int)floor(m_VetoUnknown + 0.5);
+        Tkr_1_VetoDeadPlane    = (int)floor(m_VetoDeadPlane + 0.5);
+        Tkr_1_VetoTruncated    = (int)floor(m_VetoTruncated + 0.5); 
+        Tkr_1_VetoTower        = (int)floor(m_VetoTower + 0.5);   
+        Tkr_1_VetoGapCorner    = (int)floor(m_VetoGapCorner + 0.5);
+        Tkr_1_VetoGapEdge      = (int)floor(m_VetoGapEdge + 0.5);   
+        Tkr_1_VetoBadCluster   = (int)floor(m_VetoBadCluster + 0.5);
 
         int veto_track_num = -1;
         // Most likely track from AcdValsTool
@@ -1454,16 +1455,16 @@ StatusCode TkrValsTool::calculate()
                 if((bits & Event::TkrTrackHit::HITISSSD)==0) continue;
                 const Event::TkrCluster* cluster = hit->getClusterPtr();
                 if(cluster->isSet(Event::TkrCluster::mask255))   toT255Count++;
-                double mips = cluster->getMips();
+                //double mips = cluster->getMips();
                 // we want the 255s in the clustersOnTrack count
                 //   so comment the next statement
                 // There should be no totally bad clusters; they're killed in MakeClusters
                 //if (mips<-0.5) continue;
-                int rawToT = cluster->ToT();
+                int rawToT = (int)cluster->ToT();
                 if(rawToT==250) { saturatedCount++;}
                 if(cluster->isSet(Event::TkrCluster::maskGHOST)) ghostCount++;
 
-                int width = cluster->size();
+                int width = (int)cluster->size();
                 if(width>=m_minWide) wideCount++;
                 if(width>=m_minWider) widerCount++;
                 clustersOnTrack2++;
@@ -1761,7 +1762,7 @@ StatusCode TkrValsTool::calculate()
                 double layer_edge = towerEdge(x_hit);
 
                 double delta_rad= radlen-radlen_old;
-                double thisRad;
+                double thisRad = 0.0;
                 //A bit cleaner
                 switch (m_tkrGeom->getLayerType(layer)) 
                 {
@@ -1930,12 +1931,12 @@ float TkrValsTool::SSDEvaluation(const Event::TkrTrack* track)
     idents::VolumeIdentifier volId;
     idents::VolumeIdentifier prefix = m_detSvc->getIDPrefix();
 
-    int firstPlane = m_tkrGeom->getPlane(track->front()->getTkrId()); 
-    int firstLayer = m_tkrGeom->getLayer(firstPlane);
-    double zFirstLayer = m_tkrGeom->getLayerZ(firstLayer);
+    //int firstPlane = m_tkrGeom->getPlane(track->front()->getTkrId()); 
+    //int firstLayer = m_tkrGeom->getLayer(firstPlane);
+    //double zFirstLayer = m_tkrGeom->getLayerZ(firstLayer);
 
-    double costh = fabs(t1.z());
-    double secth = 1./costh;
+    //double costh = fabs(t1.z());
+    //double secth = 1./costh;
 
     // for the footprints
     double secthX = 1./sqrt(1.0 - t1.x()*t1.x());
@@ -1975,14 +1976,14 @@ float TkrValsTool::SSDEvaluation(const Event::TkrTrack* track)
         // if there is, reset the veto counter... we want leading non-hits
         //std::cout << "Tkr1SSDVeto volId " << volId.name() << std::endl;
 
-        int tower = idents::TowerId(volId[2], volId[1]).id();
+        //int tower = idents::TowerId(volId[2], volId[1]).id();
         int tray = volId[4];
         int view = volId[5];
         int face = volId[6];
         int layer = m_tkrGeom->trayToBiLayer(tray, face);
         int plane = m_tkrGeom->trayToPlane(tray, face);
 
-        int firstPlane;
+        int firstPlane = -1;
         if(isFirstPlane) {
             isFirstPlane = false;
             firstPlane = plane;
@@ -2036,7 +2037,7 @@ float TkrValsTool::SSDEvaluation(const Event::TkrTrack* track)
                     m_VetoTruncated++;
                     break;
                 case 3:
-                    m_VetoTower;
+                    m_VetoTower++;
                     break;
                 case 4:
                     m_VetoGapCorner++;

@@ -1,7 +1,7 @@
 /** @file PtValsAlg.cxx
 @brief declaration and definition of the class PtValsAlg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/PtValsAlg.cxx,v 1.10 2008/06/23 18:10:58 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/PtValsAlg.cxx,v 1.11 2008/10/01 07:02:16 lsrea Exp $
 
 */
 
@@ -170,7 +170,7 @@ StatusCode PtValsAlg::initialize(){
 //! process an event
 StatusCode PtValsAlg::execute()
 {
-    StatusCode  sc = StatusCode::SUCCESS;
+    //StatusCode  sc = StatusCode::SUCCESS;
     MsgStream   log( msgSvc(), name() );
     //
     // Purpose: set tuple items

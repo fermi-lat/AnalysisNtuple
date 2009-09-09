@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.92 2009/02/20 13:07:15 kuss Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.93 2009/05/06 23:30:07 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -985,7 +985,7 @@ StatusCode CalValsTool::calculate()
     if(pTracks) num_tracks = pTracks->size();
 
     Event::TkrTrackColConPtr pTrack1;
-    Event::TkrTrack* track_1;
+    Event::TkrTrack* track_1 = 0;
 
     if(num_tracks > 0) { 
         // Get the first track
@@ -1508,7 +1508,7 @@ int CalValsTool::TSfillTS(int optts)
     }
   if(TStotalenergy<=0) return 1;
   double mindist = 9999999;
-  int imin;
+  int imin = 0;
   for(i=0;i<TSnlog;++i)
     {
       mindist = 9999999;

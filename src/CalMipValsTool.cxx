@@ -3,7 +3,7 @@
 @brief Calculates the Cal Mip analysis variables
 @author F. Piron
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalMipValsTool.cxx,v 1.8 2007/06/06 10:00:03 guiriec Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalMipValsTool.cxx,v 1.9 2007/06/07 17:00:13 lsrea Exp $
 */
 
 // Include files
@@ -325,7 +325,7 @@ StatusCode CalMipValsTool::calculate()
       {
 	// Count number of tracks
 	int nTracks = pTracks->size();
-	int Tkr_No_Tracks   = nTracks;
+	//int Tkr_No_Tracks   = nTracks;
 	
 	if(nTracks < 1) return sc;
 	

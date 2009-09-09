@@ -1,7 +1,7 @@
 /** @file OverlayValsTool.cxx
 @brief declaration and definition of the class OverlayValsTool
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/OverlayValsTool.cxx,v 1.0 2008/10/01 07:02:16 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/OverlayValsTool.cxx,v 1.1 2009/03/19 15:06:37 usher Exp $
 
 */
 
@@ -281,7 +281,7 @@ StatusCode OverlayValsTool::initialize()
 //! process an event
 StatusCode OverlayValsTool::calculate()
 {
-    StatusCode  sc = StatusCode::SUCCESS;
+    //StatusCode  sc = StatusCode::SUCCESS;
     MsgStream   log( msgSvc(), name() );
     //
     // Purpose: set tuple items

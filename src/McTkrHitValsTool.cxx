@@ -1,7 +1,7 @@
 /** @file McTkrHitValsTool.cxx
     @brief declartion, implementaion of the class UserAlg
 
-    $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McTkrHitValsTool.cxx,v 1.8 2009/03/18 23:17:08 usher Exp $
+    $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McTkrHitValsTool.cxx,v 1.9 2009/03/23 20:04:12 usher Exp $
 */
 
 #include "ValBase.h"
@@ -424,7 +424,7 @@ StatusCode McTkrHitValsTool::calculate()
 }
 
 
-void McTkrHitValsTool::CntTotalHits(const Event::McParticle* primary)
+void McTkrHitValsTool::CntTotalHits(const Event::McParticle* /* primary */)
 {
     m_totalTkrHits     = 0;
     m_totalPrimTkrHits = 0;
