@@ -2,7 +2,7 @@
 @brief header file for ValBase.cxx
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.h,v 1.37.18.2 2008/08/15 04:50:33 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.h,v 1.38 2008/08/16 05:17:47 heather Exp $
 */
 
 #ifndef ValBase_h
@@ -90,12 +90,12 @@ public:
  
 // LSR 14-Jul-08 code for ntuple types
    /// get a particular value, using ntuple name default forces calculation
-    virtual StatusCode getVal(std::string varName, double& value, int check = CALC);
-    virtual StatusCode getVal(std::string varName, float& value, int check = CALC);
-    virtual StatusCode getVal(std::string varName, int& value, int check = CALC);
-    virtual StatusCode getVal(std::string varName, unsigned int& value, int check = CALC);
-    virtual StatusCode getVal(std::string varName, unsigned long long& value, int check = CALC);
-    virtual StatusCode getVal(std::string varName, std::string& value, int check = CALC);
+    virtual StatusCode getVal(std::string varName, double& value, int flag = CALC);
+    virtual StatusCode getVal(std::string varName, float& value, int flag = CALC);
+    virtual StatusCode getVal(std::string varName, int& value, int flag = CALC);
+    virtual StatusCode getVal(std::string varName, unsigned int& value, int flag = CALC);
+    virtual StatusCode getVal(std::string varName, unsigned long long& value, int flag = CALC);
+    virtual StatusCode getVal(std::string varName, std::string& value, int flag = CALC);
     /// get a particular value, using ntuple name, with calc checking (called by AnaTup)
  
 // LSR 14-Jul-08 code for ntuple types
@@ -133,7 +133,7 @@ public:
     virtual int  getLoadOrder()          { return m_loadOrder; }
     
 protected:
-    StatusCode getTypedPointer(std::string varName, TypedPointer*& ptr, int check);
+    StatusCode getTypedPointer(std::string varName, TypedPointer*& ptr, int flag);
 
     /// some static methods
 

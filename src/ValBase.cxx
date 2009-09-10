@@ -2,7 +2,7 @@
 @brief implements all the methods of the XxxValsTools
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.cxx,v 1.36.18.2 2008/08/15 04:50:33 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.cxx,v 1.37 2008/08/16 05:17:47 heather Exp $
 */
 
 #include "ValBase.h"
@@ -389,13 +389,13 @@ StatusCode ValBase::getValCheck(std::string varName, std::string& value)
     return getVal(varName, value, CHECK);
 }
 
-StatusCode ValBase::getTypedPointer(std::string varName, TypedPointer*& ptr, int check)
+StatusCode ValBase::getTypedPointer(std::string varName, TypedPointer*& ptr, int flag)
 {
     // optional check flag
 
     StatusCode sc = StatusCode::SUCCESS;
 
-    m_check = check;
+    m_check = flag;
     
     constMapIter it = m_ntupleMap.begin();
     for ( ; it!=m_ntupleMap.end(); ++it) {
@@ -417,7 +417,7 @@ StatusCode ValBase::getTypedPointer(std::string varName, TypedPointer*& ptr, int
     return sc;
 }
 
-StatusCode ValBase::getVal(std::string varName, std::string& value, int check)
+StatusCode ValBase::getVal(std::string varName, std::string& value, int flag)
 {
     MsgStream log(msgSvc(), name());
 
@@ -429,7 +429,7 @@ StatusCode ValBase::getVal(std::string varName, std::string& value, int check)
     int element;
     bool hasArg = getArrayArg(varName, baseName, element);
     if(!hasArg) element = 0;
-    StatusCode sc = getTypedPointer(baseName, ptr, check);
+    StatusCode sc = getTypedPointer(baseName, ptr, flag);
     if(sc.isFailure()) return sc;
 
     void* vPtr = ptr->getPointer();
@@ -452,9 +452,9 @@ StatusCode ValBase::getVal(std::string varName, std::string& value, int check)
             *(reinterpret_cast<double*>(vPtr)+element));}
         else if (type==INT)     { sprintf(buffer, "%i", 
             *(reinterpret_cast<int*>(vPtr)+element));}
-        else if (type==UINT)    { sprintf(buffer, "%u", 
+        else if (type==UINT)    { sprintf(buffer, "%llu", 
             *(reinterpret_cast<unsigned int*>(vPtr)+element));}
-        else if (type==ULONG64)    { sprintf(buffer, "%u", 
+        else if (type==ULONG64)    { sprintf(buffer, "%llu", 
             *(reinterpret_cast<unsigned long long*>(vPtr)+element));}
     }
     value = std::string(buffer);
@@ -463,7 +463,7 @@ StatusCode ValBase::getVal(std::string varName, std::string& value, int check)
  
 // LSR 14-Jul-08 code for ntuple types
 
-StatusCode ValBase::getVal(std::string varName, int& value, int check)
+StatusCode ValBase::getVal(std::string varName, int& value, int flag)
 {
     MsgStream log(msgSvc(), name());
     TypedPointer* ptr = 0;
@@ -474,7 +474,7 @@ StatusCode ValBase::getVal(std::string varName, int& value, int check)
     bool hasArg = getArrayArg(varName, baseName, element);
     if(!hasArg) element = 0;
 
-    StatusCode sc = getTypedPointer(baseName, ptr, check);
+    StatusCode sc = getTypedPointer(baseName, ptr, flag);
     if(sc.isFailure()) return sc;
 
     int dim = ptr->getDim();
@@ -489,7 +489,7 @@ StatusCode ValBase::getVal(std::string varName, int& value, int check)
     return sc;
 }
 
-StatusCode ValBase::getVal(std::string varName, unsigned int& value, int check)
+StatusCode ValBase::getVal(std::string varName, unsigned int& value, int flag)
 {
     MsgStream log(msgSvc(), name());
     TypedPointer* ptr = 0;
@@ -499,7 +499,7 @@ StatusCode ValBase::getVal(std::string varName, unsigned int& value, int check)
     int element;
     bool hasArg = getArrayArg(varName, baseName, element);
 
-    StatusCode sc = getTypedPointer(baseName, ptr, check);
+    StatusCode sc = getTypedPointer(baseName, ptr, flag);
     if(sc.isFailure()) return sc;
 
     if(!hasArg) element = 0;
@@ -515,7 +515,7 @@ StatusCode ValBase::getVal(std::string varName, unsigned int& value, int check)
     return sc;
 }
 
-StatusCode ValBase::getVal(std::string varName, unsigned long long& value, int check)
+StatusCode ValBase::getVal(std::string varName, unsigned long long& value, int flag)
 {
     MsgStream log(msgSvc(), name());
     TypedPointer* ptr = 0;
@@ -525,7 +525,7 @@ StatusCode ValBase::getVal(std::string varName, unsigned long long& value, int c
     int element;
     bool hasArg = getArrayArg(varName, baseName, element);
 
-    StatusCode sc = getTypedPointer(baseName, ptr, check);
+    StatusCode sc = getTypedPointer(baseName, ptr, flag);
     if(sc.isFailure()) return sc;
 
     if(!hasArg) element = 0;
@@ -542,7 +542,7 @@ StatusCode ValBase::getVal(std::string varName, unsigned long long& value, int c
 }
 
 
-StatusCode ValBase::getVal(std::string varName, double& value, int check)
+StatusCode ValBase::getVal(std::string varName, double& value, int flag)
 {
     MsgStream log(msgSvc(), name());
     TypedPointer* ptr = 0;
@@ -553,7 +553,7 @@ StatusCode ValBase::getVal(std::string varName, double& value, int check)
     bool hasArg = getArrayArg(varName, baseName, element);
     if(!hasArg) element = 0;
 
-    StatusCode sc = getTypedPointer(baseName, ptr, check);
+    StatusCode sc = getTypedPointer(baseName, ptr, flag);
     if(sc.isFailure()) return sc;
     int dim = ptr->getDim();
     if (element>=dim || element<0) 
@@ -567,7 +567,7 @@ StatusCode ValBase::getVal(std::string varName, double& value, int check)
     return sc;
 }
 
-StatusCode ValBase::getVal(std::string varName, float& value, int check)
+StatusCode ValBase::getVal(std::string varName, float& value, int flag)
 {
     MsgStream log(msgSvc(), name());
     TypedPointer* ptr = 0;
@@ -577,7 +577,7 @@ StatusCode ValBase::getVal(std::string varName, float& value, int check)
     int element;
     bool hasArg = getArrayArg(varName, baseName, element);
 
-    StatusCode sc = getTypedPointer(baseName, ptr, check);
+    StatusCode sc = getTypedPointer(baseName, ptr, flag);
     if(sc.isFailure()) return sc;
 
     int dim = ptr->getDim();

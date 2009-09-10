@@ -2,7 +2,7 @@
 @brief common abstract inteface for all the XxxValsTools
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/AnalysisNtuple/IValsTool.h,v 1.21.18.1 2008/08/14 00:15:23 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/AnalysisNtuple/IValsTool.h,v 1.22 2008/08/16 05:17:45 heather Exp $
 */
 
 #ifndef _H_IValsTool
@@ -35,11 +35,11 @@ public:
 // LSR 14-Jul-08 code for ntuple types
     
     /// get a particular value, using ntuple name
-    virtual StatusCode getVal(std::string varName, double& value, int check = CALC) = 0;
-    virtual StatusCode getVal(std::string varName, float& value, int check = CALC) = 0;
-    virtual StatusCode getVal(std::string varName, int& value, int check = CALC) = 0;
-    virtual StatusCode getVal(std::string varName, unsigned int& value, int check = CALC) = 0;
-    virtual StatusCode getVal(std::string varName, unsigned long long& value, int check = CALC) = 0;
+    virtual StatusCode getVal(std::string varName, double& value, int flag = CALC) = 0;
+    virtual StatusCode getVal(std::string varName, float& value, int flag = CALC) = 0;
+    virtual StatusCode getVal(std::string varName, int& value, int flag = CALC) = 0;
+    virtual StatusCode getVal(std::string varName, unsigned int& value, int flag = CALC) = 0;
+    virtual StatusCode getVal(std::string varName, unsigned long long& value, int flag = CALC) = 0;
  
 // LSR 14-Jul-08 code for ntuple types
     /// get a particular value, using ntuple name, with calc checking
@@ -58,7 +58,7 @@ public:
     /// number of times a tool did its calculation for this event
     virtual int getCalcCount() = 0;
     /// return a string containing the value, as above
-    virtual StatusCode getVal(std::string varName, std::string& value, int check = CALC) = 0;
+    virtual StatusCode getVal(std::string varName, std::string& value, int flag = CALC) = 0;
     virtual StatusCode getValCheck(std::string varName, std::string& value) =0;
     virtual void setLoadOrder(int index) = 0;
     virtual int  getLoadOrder() = 0;
