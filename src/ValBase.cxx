@@ -2,7 +2,7 @@
 @brief implements all the methods of the XxxValsTools
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.cxx,v 1.37 2008/08/16 05:17:47 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.cxx,v 1.38 2009/09/10 20:13:03 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -452,7 +452,7 @@ StatusCode ValBase::getVal(std::string varName, std::string& value, int flag)
             *(reinterpret_cast<double*>(vPtr)+element));}
         else if (type==INT)     { sprintf(buffer, "%i", 
             *(reinterpret_cast<int*>(vPtr)+element));}
-        else if (type==UINT)    { sprintf(buffer, "%llu", 
+        else if (type==UINT)    { sprintf(buffer, "%u", 
             *(reinterpret_cast<unsigned int*>(vPtr)+element));}
         else if (type==ULONG64)    { sprintf(buffer, "%llu", 
             *(reinterpret_cast<unsigned long long*>(vPtr)+element));}
