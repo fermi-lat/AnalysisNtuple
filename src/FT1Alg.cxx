@@ -1,7 +1,7 @@
 /** @file FT1Alg.cxx
 @brief Declaration and implementation of Gaudi algorithm FT1Alg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.17 2008/07/24 19:48:32 burnett Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.18 2008/07/31 12:11:52 burnett Exp $
 */
 // Include files
 
@@ -344,15 +344,19 @@ void FT1worker::evaluate()
     m_ft1energy = CTBBestEnergy;
     if( m_ft1energy==0) m_ft1energy = EvtEnergyCorr;
 
+    // default values -- need to be set before *any* return from this method
+
     m_ft1theta = 666; m_ft1phi = 666; m_ft1ra   = 666;
     m_ft1dec   = 666; m_ft1zen = 666; m_ft1azim = 666;
     m_ft1l = 666; m_ft1b = 666;
     m_ft1convpointx = 999; m_ft1convpointy = 999; m_ft1convpointz = 999; 
-    m_ft1convlayer = -1;
-    m_ft1livetime = -1;
-    m_ft1livetime = EvtLiveTime;
+    m_ft1convlayer  = -1;
+    m_ft1livetime   = -1;
+    m_ft1livetime   = EvtLiveTime;
+    m_ft1eventclass = 0;
 
     if( TkrNumTracks==0) return;
+
     m_ft1convlayer   = Tkr1FirstLayer;
 
     Hep3Vector glastDir;
@@ -400,8 +404,6 @@ void FT1worker::evaluate()
     m_ft1azim = earth_azimuth*180/M_PI;
 
     // more useful class level
-
-    m_ft1eventclass = 0;
 
     if ( (CTBBestEnergy<=10) || (CTBBestEnergyRatio>=5) ) { // Apply minimal cut first.
         m_ft1eventclass = 0;
