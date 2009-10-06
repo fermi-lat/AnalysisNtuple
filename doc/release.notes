@@ -3,6 +3,7 @@
   @verbatim
    * EOH *
  
+ AnalysisNtuple-02-55-09 06-Oct-2009  lsrea added new classes to FT1Alg
  AnalysisNtuple-02-55-08 10-Sep-2009  lsrea one more fix
  AnalysisNtuple-02-55-07 10-Sep-2009  lsrea cleanup on unix warnings
  AnalysisNtuple-02-55-06 08-Sep-2009  lsrea fix unix warnings
