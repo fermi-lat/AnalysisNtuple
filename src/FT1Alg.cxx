@@ -1,7 +1,7 @@
 /** @file FT1Alg.cxx
 @brief Declaration and implementation of Gaudi algorithm FT1Alg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.25 2009/05/24 16:55:34 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.26 2009/09/09 06:05:19 lsrea Exp $
 */
 // Include files
 
@@ -363,15 +363,33 @@ void FT1worker::evaluate()
     int classLevel   = (int)floor(100*CTBClassLevel + 0.001);
 
     if (particleType==0) { // some kind of gamma
-        if     (classLevel == 5)   {m_ft1eventclass = 1;}  // 0.05
-        else if(classLevel == 10)  {m_ft1eventclass = 2;}  // 0.1
-        else if(classLevel == 20)  {m_ft1eventclass = 3;}  // 0.2
-        else if(classLevel == 30)  {m_ft1eventclass = 4;}  // 0.3
-        else if(classLevel == 50)  {m_ft1eventclass = 5;}  // 0.5
-        else if(classLevel == 100) {m_ft1eventclass = 6;}  // 1.0
-        else if(classLevel == 200) {m_ft1eventclass = 7;}  // 2.0
-        else if(classLevel == 300) {m_ft1eventclass = 8;}  // 3.0
-        else  {m_ft1eventclass = _invalidEventClass;}  // shouldn't happen
+
+    // The code below replaces this:
+        // if     (classLevel == 5)   {m_ft1eventclass = 1;}   // 0.05
+        // else if(classLevel == 10)  {m_ft1eventclass = 2;}   // 0.1
+        // else if(classLevel == 20)  {m_ft1eventclass = 3;}   // 0.2
+        // else if(classLevel == 30)  {m_ft1eventclass = 4;}   // 0.3
+        // else if(classLevel == 50)  {m_ft1eventclass = 5;}   // 0.5
+        // else if(classLevel == 100) {m_ft1eventclass = 6;}   // 1.0
+        // else if(classLevel == 200) {m_ft1eventclass = 7;}   // 2.0
+        // else if(classLevel == 300) {m_ft1eventclass = 8;}   // 3.0
+        // else if(classLevel == 400) {m_ft1eventclass = 9;}   // 4.0
+        // else if(classLevel == 500) {m_ft1eventclass = 10;}  // 5.0        
+ 
+        switch (classLevel) {
+            // these are the only allowed values
+            case   5: m_ft1eventclass =  1; break;  // 0.05
+            case  10: m_ft1eventclass =  2; break;  // 0.1
+            case  20: m_ft1eventclass =  3; break;  // 0.2
+            case  30: m_ft1eventclass =  4; break;  // 0.3
+            case  50: m_ft1eventclass =  5; break;  // 0.5
+            case 100: m_ft1eventclass =  6; break;  // 1.0
+            case 200: m_ft1eventclass =  7; break;  // 2.0
+            case 300: m_ft1eventclass =  8; break;  // 3.0
+            case 400: m_ft1eventclass =  9; break;  // 4.0
+            case 500: m_ft1eventclass = 10; break; // 5.0
+            default:  m_ft1eventclass = _invalidEventClass;  // should never happen   
+        }            
     } else if (particleType>=-1 && particleType<=4){
         if(classLevel==100||classLevel==200||classLevel==300 ||
             (particleType==-1&&classLevel==400)) { // only levels for these types
