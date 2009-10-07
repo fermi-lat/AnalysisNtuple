@@ -2,6 +2,9 @@
   @brief Package AnalysisNtuple
   @verbatim
 
+ 02-51-00-gr03 6-Oct-09 HMK Remove obsolete CAL merit variables as requested
+                      by Philippe Bruel
+ 02-51-00-gr02 1-Oct-09 LSR Fix init of FT1EventClass
  v2r51   14-Aug-08   HMK  Merge in GlastReleasev15r36 branch
  v2r50   31-Jul-08   HMK  Merge in addition of FswGamVersion to ntuple
  v2r49p2 31-Jul-08   THB  Fix alignment code
