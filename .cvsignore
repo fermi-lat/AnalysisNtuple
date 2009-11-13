@@ -3,4 +3,6 @@ Visual
 VC*
 rh*
 Linux*
+build
+*.pyc
 
