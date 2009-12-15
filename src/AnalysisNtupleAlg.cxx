@@ -2,7 +2,7 @@
 @brief Uses the XxxValsTools to produce a comprehensive ntuple
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.43 2009/03/18 23:17:08 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.44.42.1 2009/06/08 18:05:45 echarles Exp $
 */
 
 // Gaudi system includes
@@ -210,7 +210,7 @@ StatusCode AnalysisNtupleAlg::initialize(){
 
     //probably a better way to do this!
     // default set:
-    std::string toolnames [] = {"Mc", "Glt", "Acd", "TkrHit", "Tkr", "Vtx",  "Cal",  "Evt", "Obf", "McTkrHit", ""};
+    std::string toolnames [] = {"Mc", "Glt", "Acd", "Acd2", "TkrHit", "Tkr", "Vtx",  "Cal",  "Evt", "Obf", "McTkrHit", ""};
     unsigned int i;
     unsigned int namesSize = m_toolnames.size();
 
@@ -404,6 +404,7 @@ StatusCode AnalysisNtupleAlg::execute()
 	    //else if (toolname=="GcrSelectValsTool" ) {varname = "GcrSelect[1536]","InferedZ";}
 	    //else if (toolname=="GcrReconValsTool" )  {varname = "GcrRecon[1536]";}
             else if (toolname=="AcdValsTool"    ) {varname = "AcdTileCount";}
+            else if (toolname=="Acd2ValsTool"   ) {varname = "Acd2TileCount";}
             else if (toolname=="EvtValsTool"    ) {varname = "EvtEnergyRaw";}
             else if (toolname=="McAnalValsTool" ) {varname = "McaPrmEnegy";}
             else                                  {varname = "";}

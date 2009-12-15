@@ -2,7 +2,7 @@
 @brief Calculates the Mc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.51 2008/08/16 05:17:47 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.52.28.1 2009/06/08 18:04:44 echarles Exp $
 */
 // Include files
 
@@ -568,7 +568,7 @@ void McValsTool::getAcdReconVars() {
     MC_AcdXEnter = MC_AcdYEnter = MC_AcdZEnter = -2000.;
   } else {
     const Event::AcdTkrPoint* entryPoint = (*acdPoints)[0];
-    const Point& thePoint = entryPoint->point();
+    const HepPoint3D& thePoint = entryPoint->getGlobalPosition();
     
     // latch values
     MC_AcdXEnter = thePoint.x(); 

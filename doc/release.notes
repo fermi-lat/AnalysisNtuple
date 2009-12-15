@@ -3,6 +3,8 @@
   @verbatim
    * EOH *
  
+ AnalysisNtuple-02-56-01 14-Dec-2009    hmk Merge in Eric's AcdRecon updates 
+      from the GlastReleasev17r31p1 branch
  AnalysisNtuple-02-55-11 13-Nov-2009    jrb Updates for SCons
  AnalysisNtuple-02-55-10 05-Nov-2009  HMK add unit RootConvert for unit test
  AnalysisNtuple-02-55-09 06-Oct-2009  lsrea added new classes to FT1Alg
@@ -11,6 +13,10 @@
  AnalysisNtuple-02-55-06 08-Sep-2009  lsrea fix unix warnings
  AnalysisNtuple-02-55-05 08-Sep-2009  lsrea update the docs
  v2r55p4 24-May-09   LSR  FT1ConvLayer should be -1, not zero, if there's no track
+ END GlastReleasev17r31p1 branch
+ v2r56p0gr2 08-Jun-09 EAC Fix AcdValsTool to compile with latest version of Event
+ v2r56p0gr1 08-Jun-09 EAC Added AcdValsToolV2
+ START GlastReleasev17r31p1 branch
  v2r55p3 20-May-09   LSR  Calculate celestial coords for no-track events (cal-only)
  v2r55p2 12-May-09   LSR  One more tweak
  v2r55p1 12-May-09   LSR  Fix calculation of FT1EventClass

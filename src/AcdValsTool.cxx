@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.50 2009/03/19 15:25:06 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.51 2009/09/09 06:05:18 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -83,12 +83,14 @@ private:
 
     // Variables computed by looping over all tracks w.r.t. hit tiles
     float ACD_ActiveDist3D;
+    int   ACD_ActiveDist3D_ID;
     float ACD_ActiveDist3D_Err;
     float ACD_ActiveDist_Energy;
 
 
     // Variables computed by looping over all tracks w.r.t. hit ribbons
     float ACD_ribbon_ActiveDist;
+    int   ACD_ribbon_ActiveDist_ID;
     float ACD_ribbon_ActiveDist_Err;
     float ACD_ribbon_ActiveLength;
     float ACD_ribbon_EnergyPmtA;
@@ -98,15 +100,18 @@ private:
     float ACD_Corner_DOCA;
     float ACD_TkrHole_Dist;
     float ACD_TkrRibbon_Dist; 
+    int   ACD_TkrRibbon_Dist_ID; 
     float ACD_TkrRibbonLength; 
 
     // Variables computed by taking best track w.r.t. hit tiles
     float ACD_Tkr1ActiveDist;
+    int   ACD_Tkr1ActiveDist_ID;
     float ACD_Tkr1ActiveDist_Err;
     float ACD_Tkr1ActiveDist_Energy;
 
     // Variables computed by taking best track w.r.t. hit ribbons
     float ACD_Tkr1_ribbon_ActiveDist;
+    int   ACD_Tkr1_ribbon_ActiveDist_ID;
     float ACD_Tkr1_ribbon_ActiveDist_Err;
     float ACD_Tkr1_ribbon_ActiveLength;
     float ACD_Tkr1_ribbon_EnergyPmtA;
@@ -116,6 +121,7 @@ private:
     float ACD_Tkr1Corner_DOCA;
     float ACD_Tkr1Hole_Dist;
     float ACD_Tkr1Ribbon_Dist;
+    int   ACD_Tkr1Ribbon_Dist_ID;
     float ACD_Tkr1RibbonLength;
 
     // Variables computed by taking vertex w.r.t. hit tiles
@@ -325,11 +331,13 @@ StatusCode AcdValsTool::initialize()
     addItem("AcdRibbonIdRecon", &ACD_RibbonIdRecon);
 
     addItem("AcdActiveDist3D",   &ACD_ActiveDist3D);
+    addItem("AcdActiveDist3DId",   &ACD_ActiveDist3D_ID);
     addItem("AcdActiveDist3DErr",   &ACD_ActiveDist3D_Err);
     addItem("AcdActDistTileEnergy",   &ACD_ActiveDist_Energy);
     addItem("AcdActDistTrackNum", &ACD_ActiveDist_TrackNum);
 
     addItem("AcdRibbonActDist", &ACD_ribbon_ActiveDist);
+    addItem("AcdRibbonActDistId", &ACD_ribbon_ActiveDist_ID);
     addItem("AcdRibbonActDistErr", &ACD_ribbon_ActiveDist_Err);
     addItem("AcdRibbonActLength", &ACD_ribbon_ActiveLength);
     addItem("AcdRibbonActEnergyPmtA", &ACD_ribbon_EnergyPmtA);
@@ -337,14 +345,17 @@ StatusCode AcdValsTool::initialize()
 
     addItem("AcdCornerDoca",    &ACD_Corner_DOCA);
     addItem("AcdTkrHoleDist",    &ACD_TkrHole_Dist);
+    addItem("AcdTkrRibbonDistId",    &ACD_TkrRibbon_Dist_ID);
     addItem("AcdTkrRibbonDist",    &ACD_TkrRibbon_Dist);
     addItem("AcdTkrRibbonLength",    &ACD_TkrRibbonLength);
 
     addItem("AcdTkr1ActiveDist", &ACD_Tkr1ActiveDist);
+    addItem("AcdTkr1ActiveDistId", &ACD_Tkr1ActiveDist_ID);
     addItem("AcdTkr1ActiveDistErr", &ACD_Tkr1ActiveDist_Err);
     addItem("AcdTkr1ActDistTileEnergy", &ACD_Tkr1ActiveDist_Energy);
 
     addItem("AcdTkr1RibbonActDist", &ACD_Tkr1_ribbon_ActiveDist);
+    addItem("AcdTkr1RibbonActDistId", &ACD_Tkr1_ribbon_ActiveDist_ID);
     addItem("AcdTkr1RibbonActDistErr", &ACD_Tkr1_ribbon_ActiveDist_Err);
     addItem("AcdTkr1RibbonActLength", &ACD_Tkr1_ribbon_ActiveLength);
     addItem("AcdTkr1RibbonActEnergyPmtA", &ACD_Tkr1_ribbon_EnergyPmtA);
@@ -353,6 +364,7 @@ StatusCode AcdValsTool::initialize()
     addItem("AcdTkr1CornerDoca",    &ACD_Tkr1Corner_DOCA);
     addItem("AcdTkr1HoleDist",    &ACD_Tkr1Hole_Dist);
     addItem("AcdTkr1RibbonDist",    &ACD_Tkr1Ribbon_Dist);
+    addItem("AcdTkr1RibbonDistId",    &ACD_Tkr1Ribbon_Dist_ID);
     addItem("AcdTkr1RibbonLength",    &ACD_Tkr1RibbonLength);    
 
     addItem("AcdVtxActiveDist", &ACD_VtxActiveDist);
@@ -478,6 +490,7 @@ StatusCode AcdValsTool::calculate()
 
         // Reset variables for loop over all tracks
         ACD_ActiveDist3D = ACD_ribbon_ActiveDist = -2000.;
+	ACD_ActiveDist3D_ID = ACD_ribbon_ActiveDist_ID = ACD_TkrRibbon_Dist_ID = 700;
         ACD_ActiveDist_Energy = ACD_ribbon_EnergyPmtA = ACD_ribbon_EnergyPmtB = 0.;
         ACD_ActiveDist3D_Err = ACD_ribbon_ActiveDist_Err = -1.;	
         ACD_Corner_DOCA = ACD_TkrRibbon_Dist = ACD_TkrHole_Dist = -2000.;
@@ -485,6 +498,7 @@ StatusCode AcdValsTool::calculate()
 
         // Reset variables for best track
         ACD_Tkr1ActiveDist = ACD_Tkr1_ribbon_ActiveDist = -2000.;
+        ACD_Tkr1ActiveDist_ID = ACD_Tkr1_ribbon_ActiveDist_ID = ACD_Tkr1Ribbon_Dist_ID = 700;
         ACD_Tkr1ActiveDist_Energy = ACD_Tkr1_ribbon_EnergyPmtA 
             = ACD_Tkr1_ribbon_EnergyPmtB = 0.;
         ACD_Tkr1ActiveDist_Err = ACD_Tkr1_ribbon_ActiveDist_Err = -1.;
@@ -515,8 +529,6 @@ StatusCode AcdValsTool::calculate()
 
             bool doneHole = false;
             double holeDoca(0.);  
-            //double  holeDocaError(0.); 
-            //int iHole = -1;
 
             bool donePlaneError = false;
             double planeError = 0.;
@@ -534,6 +546,7 @@ StatusCode AcdValsTool::calculate()
                             max_tile_energy = tileEnergyIdMap[theId];
                             tile_vetoPoca = aPoca;
                             ACD_ActiveDist3D = aPoca->getDoca();
+			    ACD_ActiveDist3D_ID = aPoca->getId().id();
                         }
                     }	
                 } else if ( theId.ribbon() ) {
@@ -542,10 +555,11 @@ StatusCode AcdValsTool::calculate()
                             donePlaneError = true;
                             AcdTileUtil::planeErrorProjection(
                                 aPoca->getActiveX(),aPoca->getActiveY(),
-                                aPoca->getLocalXXCov(),aPoca->getLocalYYCov(),
+                                aPoca->getLocalCovProj()(1,1),aPoca->getLocalCovProj()(2,2),
                                 planeError);  
                         }
                         ACD_ribbon_ActiveDist =  aPoca->getDoca();
+			ACD_ribbon_ActiveDist_ID = aPoca->getId().id();
                         ACD_ribbon_ActiveDist_Err = planeError;
                         ACD_ribbon_ActiveLength = aPoca->getActiveY();
                         ACD_ribbon_EnergyPmtA = ribbonEnergyIdMap[theId].first;
@@ -568,10 +582,11 @@ StatusCode AcdValsTool::calculate()
                                 donePlaneError = true;
                                 AcdTileUtil::planeErrorProjection(
                                     aPoca->getActiveX(),aPoca->getActiveY(),
-                                    aPoca->getLocalXXCov(),aPoca->getLocalYYCov(),
+                                    aPoca->getLocalCovProj()(1,1),aPoca->getLocalCovProj()(2,2),
                                     planeError);  
                             }
                             ACD_Tkr1ActiveDist = aPoca->getDoca();
+			    ACD_Tkr1ActiveDist_ID = aPoca->getId().id();
                             ACD_Tkr1ActiveDist_Err = planeError;
                             ACD_Tkr1ActiveDist_Energy = tileEnergyIdMap[theId];
                             ACD_Tkr1Hole_Dist = holeDoca;
@@ -582,9 +597,11 @@ StatusCode AcdValsTool::calculate()
                             if ( ! donePlaneError ) {
                                 donePlaneError = true;
                                 AcdTileUtil::planeErrorProjection(aPoca->getActiveX(),aPoca->getActiveY(),
-                                    aPoca->getLocalXXCov(),aPoca->getLocalYYCov(),planeError);  
+								  aPoca->getLocalCovProj()(1,1),aPoca->getLocalCovProj()(2,2),
+								  planeError);  
                             }
                             ACD_Tkr1_ribbon_ActiveDist =  aPoca->getDoca();
+			    ACD_Tkr1_ribbon_ActiveDist_ID = aPoca->getId().id();
                             ACD_Tkr1_ribbon_ActiveDist_Err = planeError;
                             ACD_Tkr1_ribbon_ActiveLength = aPoca->getActiveY();
                             ACD_Tkr1_ribbon_EnergyPmtA = ribbonEnergyIdMap[theId].first;
@@ -621,16 +638,14 @@ StatusCode AcdValsTool::calculate()
             double planeError = 0.;
             AcdTileUtil::planeErrorProjection(tile_vetoPoca->getActiveX(),
                 tile_vetoPoca->getActiveY(),
-                tile_vetoPoca->getLocalXXCov(),
-                tile_vetoPoca->getLocalYYCov(),planeError);  
+                tile_vetoPoca->getLocalCovProj()(1,1),
+		tile_vetoPoca->getLocalCovProj()(2,2),planeError);  
             //ACD_ActiveDist3D = tile_vetoPoca->getDoca(); Already done in selection process
             ACD_ActiveDist3D_Err = planeError;
             idents::AcdId theId = tile_vetoPoca->getId();
             ACD_ActiveDist_Energy = tileEnergyIdMap[theId];
             ACD_ActiveDist_TrackNum = tile_vetoPoca->trackIndex(); // Index starts from 0
             double holeDoca(0.);
-            //double holeDocaError(0.); 
-            //int iHole = -1;
             //AcdTileUtil::tileScrewHoleDoca(aPoca->getId(),aPoca->getActiveX(),aPoca->getActiveY(),
             //				   aPoca->getLocalXXCov(),aPoca->getLocalYYCov(),aPoca->getLocalXYCov(),
             //				   holeDoca,holeDocaError,iHole);
@@ -664,6 +679,7 @@ StatusCode AcdValsTool::calculate()
             case 3: //AcdRecon::Y_RibbonTop:
                 isRibbonGap = true;
                 break;
+	    case 4: //AcdRecon::SideCornerEdge
             case 7: //AcdRecon::CornerRay:
                 isCornerGap = true;
                 break;
@@ -676,14 +692,16 @@ StatusCode AcdValsTool::calculate()
                 // Fill variables for best track
                 if ( isBestTrack ) {
                     if ( gapDoca > ACD_Tkr1Ribbon_Dist ) {
-                        ACD_Tkr1Ribbon_Dist = gapDoca;
-                        ACD_Tkr1RibbonLength = (*itrGap)->getActiveY();
+   		        ACD_Tkr1Ribbon_Dist = gapDoca;
+			ACD_Tkr1Ribbon_Dist_ID = (*itrGap)->getId().asDecimal();
+                        ACD_Tkr1RibbonLength = (*itrGap)->getLocalY();
                     }
                 }
                 // Fill variables for all tracks
                 if ( gapDoca > ACD_TkrRibbon_Dist ) {
                     ACD_TkrRibbon_Dist = gapDoca;
-                    ACD_TkrRibbonLength = (*itrGap)->getActiveY();
+		    ACD_TkrRibbon_Dist_ID = (*itrGap)->getId().asDecimal();
+                    ACD_TkrRibbonLength = (*itrGap)->getLocalY();
                 }
             } else if ( isCornerGap ) {
                 //if ( (*itrGap)->getArcLength() < 0. ) continue;
