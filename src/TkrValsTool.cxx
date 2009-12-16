@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.96 2009/05/29 16:14:10 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.97 2009/09/09 06:05:19 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -153,9 +153,11 @@ private:
     float Tkr_1_FirstLayer; 
     float Tkr_1_LastLayer; 
 
-    float Tkr_1_GhostFrac;
     float Tkr_1_SaturatedFrac;
     float Tkr_1_ToT255Frac;
+    float Tkr_1_BothFrac;
+    float Tkr_1_GhostFrac;
+    float Tkr_1_DiagFrac;
     float Tkr_1_WideFrac;
     float Tkr_1_WiderFrac;
 
@@ -220,9 +222,11 @@ private:
     float Tkr_2_FirstLayer; 
     float Tkr_2_LastLayer; 
 
-    float Tkr_2_GhostFrac;
     float Tkr_2_SaturatedFrac;
     float Tkr_2_ToT255Frac;
+    float Tkr_2_BothFrac;
+    float Tkr_2_GhostFrac;
+    float Tkr_2_DiagFrac;
     float Tkr_2_WideFrac;
     float Tkr_2_WiderFrac;
 
@@ -728,8 +732,10 @@ StatusCode TkrValsTool::initialize()
     addItem("Tkr1LastLayer",  &Tkr_1_LastLayer);
     addItem("Tkr1DifHits",    &Tkr_1_DifHits);
 
-    addItem("Tkr1GhostFrac",  &Tkr_1_GhostFrac);
     addItem("Tkr1ToT255Frac", &Tkr_1_ToT255Frac);
+    addItem("Tkr1BothFrac",   &Tkr_1_BothFrac);
+    addItem("Tkr1GhostFrac",  &Tkr_1_GhostFrac);
+    addItem("Tkr1DiagFrac",   &Tkr_1_DiagFrac);
     addItem("Tkr1SaturatedFrac",  &Tkr_1_SaturatedFrac);
     addItem("Tkr1WideFrac",   &Tkr_1_WideFrac);
     addItem("Tkr1WiderFrac",  &Tkr_1_WiderFrac);
@@ -805,8 +811,10 @@ StatusCode TkrValsTool::initialize()
     //  addItem("Tkr2Gaps",       &Tkr_2_Gaps);
     //  addItem("Tkr2FirstGaps",  &Tkr_2_FirstGaps);
 
-    addItem("Tkr2GhostFrac",  &Tkr_2_GhostFrac);
     addItem("Tkr2ToT255Frac", &Tkr_2_ToT255Frac);
+    addItem("Tkr2BothFrac",   &Tkr_2_BothFrac);
+    addItem("Tkr2GhostFrac",  &Tkr_2_GhostFrac);
+    addItem("Tkr2DiagFrac",   &Tkr_2_DiagFrac);
     addItem("Tkr2SaturatedFrac",  &Tkr_2_SaturatedFrac);
     addItem("Tkr2WideFrac",   &Tkr_2_WideFrac);
     addItem("Tkr2WiderFrac",  &Tkr_2_WiderFrac);
@@ -1057,37 +1065,48 @@ StatusCode TkrValsTool::calculate()
         // count up different types of hits for track 1 (same below for track 2)
         // count the number of real hits... may not be necessary but I'm nervous!
         int clustersOnTrack = 0;
-        int ghostCount     = 0;
         int toT255Count    = 0;
+        int bothCount      = 0;
+        int ghostCount     = 0;
+        int diagCount      = 0;
         int saturatedCount = 0;
         int wideCount      = 0;
         int widerCount     = 0;
         int nToTs = 0; // count the good ToTs at the same time
 
+        double mips;
         while(pHit != track_1->end()) {
             const Event::TkrTrackHit* hit = *pHit++;
             unsigned int bits = hit->getStatusBits();
             if((bits & Event::TkrTrackHit::HITISSSD)==0) continue;
             const Event::TkrCluster* cluster = hit->getClusterPtr();
-            if(cluster->isSet(Event::TkrCluster::mask255))   toT255Count++;
-            double mips = cluster->getMips();
-            // we want the 255s in the clustersOnTrack count
-            //   so comment the next statement
-            // There should be no totally bad clusters, they're killed in MakeClusters
-            //if (mips<-0.5) continue;
+
+            // maskZAPGHOSTS has all the ghost bits set, isSet() is true if any bit is set
+            bool isMarked    = cluster->isSet(Event::TkrCluster::maskZAPGHOSTS);
+            if(isMarked) {
+                bool is255 = cluster->isSet(Event::TkrCluster::mask255);
+                bool isGhost = cluster->isSet(Event::TkrCluster::maskGHOST);
+                bool isDiagGhost = cluster->isSet(Event::TkrCluster::maskDIAGNOSTIC);
+                if     (is255)                toT255Count++;
+                else if(isGhost&&isDiagGhost) bothCount++;
+                else if(isGhost)              ghostCount++;
+                else if(isDiagGhost)          diagCount++;
+            }
+            mips = cluster->getMips();
             if(mips>-0.5) nToTs++;
             int rawToT = (int)cluster->ToT();
             if(rawToT==250) { saturatedCount++;}
-            if(cluster->isSet(Event::TkrCluster::maskGHOST)) ghostCount++;
-
             int width = (int)cluster->size();
             if(width>=m_minWide) wideCount++;
             if(width>=m_minWider) widerCount++;
+            
             clustersOnTrack++;
         }
         if(clustersOnTrack>0) {
-            Tkr_1_GhostFrac     = ((float)ghostCount)/clustersOnTrack;
             Tkr_1_ToT255Frac    = ((float)toT255Count)/clustersOnTrack;
+            Tkr_1_BothFrac      = ((float)bothCount)/clustersOnTrack;
+            Tkr_1_DiagFrac      = ((float)diagCount)/clustersOnTrack;
+            Tkr_1_GhostFrac     = ((float)ghostCount)/clustersOnTrack;
             Tkr_1_SaturatedFrac = ((float)saturatedCount)/clustersOnTrack;
             Tkr_1_WideFrac      = ((float)wideCount)/clustersOnTrack;
             Tkr_1_WiderFrac     = ((float)widerCount)/clustersOnTrack;
@@ -1444,9 +1463,12 @@ StatusCode TkrValsTool::calculate()
             int clustersOnTrack2 = 0;
             ghostCount     = 0;
             toT255Count    = 0;
+            bothCount      = 0;
+            diagCount      = 0;
             saturatedCount = 0;
             wideCount      = 0;
             widerCount     = 0;
+            nToTs          = 0;
 
             pHit = track_2->begin();
             while(pHit != track_2->end()) {
@@ -1454,30 +1476,40 @@ StatusCode TkrValsTool::calculate()
                 unsigned int bits = hit->getStatusBits();
                 if((bits & Event::TkrTrackHit::HITISSSD)==0) continue;
                 const Event::TkrCluster* cluster = hit->getClusterPtr();
-                if(cluster->isSet(Event::TkrCluster::mask255))   toT255Count++;
-                //double mips = cluster->getMips();
-                // we want the 255s in the clustersOnTrack count
-                //   so comment the next statement
-                // There should be no totally bad clusters; they're killed in MakeClusters
-                //if (mips<-0.5) continue;
-                int rawToT = (int)cluster->ToT();
-                if(rawToT==250) { saturatedCount++;}
-                if(cluster->isSet(Event::TkrCluster::maskGHOST)) ghostCount++;
 
-                int width = (int)cluster->size();
-                if(width>=m_minWide) wideCount++;
-                if(width>=m_minWider) widerCount++;
+            // maskZAPGHOSTS has all the ghost bits set, isSet() is true if any bit is set
+            bool isMarked    = cluster->isSet(Event::TkrCluster::maskZAPGHOSTS);
+            if(isMarked) {
+                bool is255 = cluster->isSet(Event::TkrCluster::mask255);
+                bool isGhost = cluster->isSet(Event::TkrCluster::maskGHOST);
+                bool isDiagGhost = cluster->isSet(Event::TkrCluster::maskDIAGNOSTIC);
+                if     (is255)                toT255Count++;
+                else if(isGhost&&isDiagGhost) bothCount++;
+                else if(isGhost)              ghostCount++;
+                else if(isDiagGhost)          diagCount++;
+            } 
+            mips = cluster->getMips();
+            if(mips>-0.5) nToTs++;
+            int rawToT = (int)cluster->ToT();
+            if(rawToT==250) { saturatedCount++;}
+            int width = (int)cluster->size();
+            if(width>=m_minWide) wideCount++;
+            if(width>=m_minWider) widerCount++;
+              
                 clustersOnTrack2++;
-            }
 
-            if(clustersOnTrack2>0) {
-                Tkr_2_GhostFrac     = ((float)ghostCount)/clustersOnTrack2;
-                Tkr_2_ToT255Frac    = ((float)toT255Count)/clustersOnTrack2;
-                Tkr_2_SaturatedFrac = ((float)saturatedCount)/clustersOnTrack2;
-                Tkr_2_WideFrac      = ((float)wideCount)/clustersOnTrack2;
-                Tkr_2_WiderFrac     = ((float)widerCount)/clustersOnTrack2;
+                if(clustersOnTrack2>0) {
+                    Tkr_2_BothFrac      = ((float)bothCount)/clustersOnTrack2;
+                    Tkr_2_DiagFrac      = ((float)diagCount)/clustersOnTrack2;
+                    Tkr_2_GhostFrac     = ((float)ghostCount)/clustersOnTrack2;
+                    Tkr_2_ToT255Frac    = ((float)toT255Count)/clustersOnTrack2;
+                    Tkr_2_SaturatedFrac = ((float)saturatedCount)/clustersOnTrack2;
+                    Tkr_2_WideFrac      = ((float)wideCount)/clustersOnTrack2;
+                    Tkr_2_WiderFrac     = ((float)widerCount)/clustersOnTrack2;
+                }
             }
         }
+
 
         Tkr_Sum_KalEne    = Tkr_1_KalEne+Tkr_2_KalEne; 
         Tkr_Sum_ConEne    = Tkr_1_ConEne+Tkr_2_ConEne;      

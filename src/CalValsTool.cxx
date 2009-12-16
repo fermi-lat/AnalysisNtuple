@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.93 2009/05/06 23:30:07 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.94 2009/09/09 06:05:19 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -163,6 +163,26 @@ private:
 
     float CAL_MIP_Diff; 
     float CAL_MIP_Ratio;
+
+    // Stuff to study clustering
+    float CAL_energy_uber;
+    float CAL_xEcntr_uber;
+    float CAL_yEcntr_uber;
+    float CAL_zEcntr_uber;
+    float CAL_xdir_uber;
+    float CAL_ydir_uber;
+    float CAL_zdir_uber;
+
+    float CAL_xEcntr2_uber;
+    float CAL_yEcntr2_uber;
+    float CAL_zEcntr2_uber;
+    float CAL_xdir2_uber;
+    float CAL_ydir2_uber;
+    float CAL_zdir2_uber;
+
+    float CAL_num_clusters;
+    float CAL_rest_energy;
+    float CAL_rest_numXtals;
 
     // New variables for new energy correction tools
     // Full profile fit
@@ -614,6 +634,25 @@ StatusCode CalValsTool::initialize()
     addItem("CalPosDirNLayers",       &CAL_posdir_nlayers);
     addItem("CalNSaturated",       &CAL_nsaturated);
 
+    addItem("CalUberEnergy",     &CAL_energy_uber);
+    addItem("CalUberXEcntr",     &CAL_xEcntr_uber);
+    addItem("CalUberYEcntr",     &CAL_yEcntr_uber);
+    addItem("CalUberZEcntr",     &CAL_zEcntr_uber);
+    addItem("CalUberXDir",       &CAL_xdir_uber);
+    addItem("CalUberYDir",       &CAL_ydir_uber);
+    addItem("CalUberZDir",       &CAL_zdir_uber);
+
+    addItem("CalUberXEcntr2",     &CAL_xEcntr2_uber);
+    addItem("CalUberYEcntr2",     &CAL_yEcntr2_uber);
+    addItem("CalUberZEcntr2",     &CAL_zEcntr2_uber);
+    addItem("CalUberXDir2",       &CAL_xdir2_uber);
+    addItem("CalUberYDir2",       &CAL_ydir2_uber);
+    addItem("CalUberZDir2",       &CAL_zdir2_uber);
+
+    addItem("CalNumClusters",     &CAL_num_clusters);
+    addItem("CalRestEnergy",      &CAL_rest_energy);
+    addItem("CalRestNumXtals",    &CAL_rest_numXtals);
+
     addItem("CalTrkXtalRms",       &CAL_track_rms);
     addItem("CalTrkXtalRmsE",      &CAL_track_E_rms);
     addItem("CalTrkXtalRmsTrunc",  &CAL_track_rms_trunc);
@@ -806,7 +845,51 @@ StatusCode CalValsTool::calculate()
     //Make sure we have valid cluster data and some energy
     if (!pCals) return sc;
     if (pCals->empty()) return sc;
-    Event::CalCluster* calCluster = pCals->front();
+
+    // Extract the uber information which is located at the end of the list
+    Event::CalCluster* calCluster = pCals->back();
+
+    CAL_energy_uber = calCluster->getCalParams().getEnergy();
+
+    CAL_xEcntr_uber   = calCluster->getPosition().x();
+    CAL_yEcntr_uber   = calCluster->getPosition().y();
+    CAL_zEcntr_uber   = calCluster->getPosition().z();
+    CAL_xdir_uber     = calCluster->getDirection().x();
+    CAL_ydir_uber     = calCluster->getDirection().y();
+    CAL_zdir_uber     = calCluster->getDirection().z();
+
+    // Get pos and dir determined using only the transverse position information
+    CAL_xEcntr2_uber  = calCluster->getCalParams().getxPosxPos();
+    CAL_yEcntr2_uber  = calCluster->getCalParams().getyPosyPos();
+    CAL_zEcntr2_uber  = calCluster->getCalParams().getzPoszPos();
+    CAL_nsaturated    = calCluster->getCalParams().getyPoszPos();
+    CAL_xdir2_uber    = calCluster->getCalParams().getxDirxDir();
+    CAL_ydir2_uber    = calCluster->getCalParams().getyDiryDir();
+    CAL_zdir2_uber    = calCluster->getCalParams().getzDirzDir();
+
+    CAL_num_clusters  = pCals->size();
+    CAL_rest_energy   = 0.;
+    CAL_rest_numXtals = 0.;
+
+    // If the collection contains more than one entry then we have multiple
+    // clusters. If we don't then our current pointer points to the lone cluster
+    if (pCals->size() > 1)
+    {
+        Event::CalClusterCol::iterator calClusIter = pCals->begin();
+        calCluster = *calClusIter++;
+
+        // Loop through remaining crystals and add up the energy
+        while(calClusIter != pCals->end())
+        {
+            Event::CalCluster* cluster = *calClusIter++;
+
+            CAL_rest_energy += cluster->getCalParams().getEnergy();
+        }
+
+        // Remove the uber cluster energy
+        CAL_rest_energy -= CAL_energy_uber;
+    }
+
     CAL_EnergyRaw  = calCluster->getCalParams().getEnergy();
     if(CAL_EnergyRaw<1.0) return sc;
 

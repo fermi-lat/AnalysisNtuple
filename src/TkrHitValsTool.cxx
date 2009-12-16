@@ -2,7 +2,7 @@
 @brief Calculates the Tkr hit analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrHitValsTool.cxx,v 1.18 2008/10/01 07:02:16 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrHitValsTool.cxx,v 1.19 2009/01/21 06:28:40 lsrea Exp $
 */
 
 // Include files
@@ -52,16 +52,26 @@ private:
     int Tkr_Cnv_Lyr_Hits;
     int Tkr_numHitsOnTracks;
     int Tkr_numGhosts;
+    int Tkr_numDiags;
+    int Tkr_numBoth;
     int Tkr_numToT255s;
     int Tkr_numSaturated;
     int Tkr_numWideClusters;
     int Tkr_numWiderClusters;
+    int Tkr_numSaturatedGhosts;
+    int Tkr_numWideGhostClusters;
+    int Tkr_numWiderGhostClusters;
     int Tkr_numGhostsOnTracks;
+    int Tkr_numDiagsOnTracks;
+    int Tkr_numBothOnTracks;
     int Tkr_numToT255sOnTracks;
-    int Tkr_numSaturatedOnTracks;
     int Tkr_numFlaggedTrackHits;
+    int Tkr_numSaturatedOnTracks;
     int Tkr_numWideClustersOnTracks;
     int Tkr_numWiderClustersOnTracks;
+    int Tkr_numSaturatedGhostsOnTracks;
+    int Tkr_numWideGhostClustersOnTracks;
+    int Tkr_numWiderGhostClustersOnTracks;
     int Tkr_Max_controller_hits;
     int Tkr_Fst_Cnv_Lyr;
     int Tkr_NCnv_Lyrs_Hit;
@@ -161,17 +171,27 @@ StatusCode TkrHitValsTool::initialize()
     addItem("TkrNumHitsOnTracks",     &Tkr_numHitsOnTracks);
     addItem("TkrFirstLayer",          &Tkr_Fst_Cnv_Lyr);        
     addItem("TkrNumLayersHit",        &Tkr_NCnv_Lyrs_Hit);
-    addItem("TkrNumSaturated",        &Tkr_numSaturated);
     addItem("TkrNumGhosts",           &Tkr_numGhosts);
+    addItem("TkrNumDiags",            &Tkr_numDiags);
+    addItem("TkrNumBoth",             &Tkr_numBoth);
     addItem("TkrNumToT255s",          &Tkr_numToT255s);
+    addItem("TkrNumSaturated",        &Tkr_numSaturated);
     addItem("TkrNumWideClusters",     &Tkr_numWideClusters);
     addItem("TkrNumWiderClusters",    &Tkr_numWiderClusters);
-    addItem("TkrNumSaturatedOnTracks",        &Tkr_numSaturatedOnTracks);
-    addItem("TkrNumGhostsOnTracks",   &Tkr_numGhostsOnTracks);
-    addItem("TkrNumToT255sOnTracks",  &Tkr_numToT255sOnTracks);
-    addItem("TkrNumFlaggedTrackHits", &Tkr_numFlaggedTrackHits);
-    addItem("TkrNumWideClustersOnTracks",     &Tkr_numWideClustersOnTracks);
-    addItem("TkrNumWiderClustersOnTracks",    &Tkr_numWiderClustersOnTracks);
+    addItem("TkrNumSaturatedGhosts",        &Tkr_numSaturatedGhosts);
+    addItem("TkrNumWideGhosts",      &Tkr_numWideGhostClusters);
+    addItem("TkrNumWiderGhosts",     &Tkr_numWiderGhostClusters);
+    addItem("TkrNumGhostsOnTracks",    &Tkr_numGhostsOnTracks);
+    addItem("TkrNumDiagsOnTracks",     &Tkr_numDiagsOnTracks);
+    addItem("TkrNumBothOnTracks",     &Tkr_numBothOnTracks);
+    addItem("TkrNumToT255sOnTracks",    &Tkr_numToT255sOnTracks);
+    addItem("TkrNumFlaggedTrackHits",   &Tkr_numFlaggedTrackHits);
+    addItem("TkrNumSaturatedOnTracks", &Tkr_numSaturatedOnTracks);
+    addItem("TkrNumWideClustersOnTracks",  &Tkr_numWideClustersOnTracks);
+    addItem("TkrNumWiderClustersOnTracks", &Tkr_numWiderClustersOnTracks);
+    addItem("TkrNumSaturatedGhostsOnTracks", &Tkr_numSaturatedGhostsOnTracks);
+    addItem("TkrNumWideGhostsOnTracks",  &Tkr_numWideGhostClustersOnTracks);
+    addItem("TkrNumWiderGhostsOnTracks", &Tkr_numWiderGhostClustersOnTracks);
 
     int i;
     char buffer[20];
@@ -217,24 +237,51 @@ StatusCode TkrHitValsTool::calculate()
 
     Event::TkrClusterColConItr iter = pClusters->begin();
     for(; iter!=pClusters->end();++iter) {
-        bool isGhost, is255, isSaturated, isWide, isWider;
+        bool isGhost, isDiagGhost, isBoth, is255, isSaturated, isWide, isWider, isMarked;
         Event::TkrCluster* clust = *iter;
-        if(isGhost=clust->isSet(Event::TkrCluster::maskGHOST)) Tkr_numGhosts++;
-        if(is255=clust->isSet(Event::TkrCluster::mask255))     Tkr_numToT255s++;
-        if(isSaturated=((clust->getRawToT())==250)) Tkr_numSaturated++;
-        if(isWide=clust->size()>=m_minWide) Tkr_numWideClusters++;
-        if(isWider=clust->size()>=m_minWider) Tkr_numWiderClusters++;
+
+        is255       = clust->isSet(Event::TkrCluster::mask255);
+        isGhost     = clust->isSet(Event::TkrCluster::maskGHOST);
+        isDiagGhost = clust->isSet(Event::TkrCluster::maskDIAGNOSTIC);
+        isBoth      = isGhost&&isDiagGhost;
+        isSaturated = (clust->getRawToT()==250);
+        isWide      = (clust->size()>=m_minWide);
+        isWider     = (clust->size()>=m_minWider);
+        isMarked = 
+            clust->isSet(Event::TkrCluster::maskZAPGHOSTS);
+
+        if(isMarked) {
+            if     (is255)       Tkr_numToT255s++;
+            else if(isBoth)      Tkr_numBoth++;
+            else if(isGhost)     Tkr_numGhosts++;
+            else if(isDiagGhost) Tkr_numDiags++;
+            if(isSaturated) Tkr_numSaturatedGhosts++;
+            if(isWide)      Tkr_numWideGhostClusters++;
+            if(isWider)     Tkr_numWiderGhostClusters++;
+        } else {
+            if(isSaturated) Tkr_numSaturated++;
+            if(isWide)      Tkr_numWideClusters++;
+            if(isWider)     Tkr_numWiderClusters++;
+        }
+
         bool onTrack = clust->hitFlagged();
         if(onTrack) {
             Tkr_numHitsOnTracks++;
-            if(isGhost) Tkr_numGhostsOnTracks++;
-            if(is255) Tkr_numToT255sOnTracks++;
-            if(isSaturated) Tkr_numSaturatedOnTracks++;
-            if(clust->isSet(Event::TkrCluster::maskSAMETRACK)) {
-                Tkr_numFlaggedTrackHits++;
+            if(isMarked) {
+                if(is255)            Tkr_numToT255sOnTracks++;
+                else if(isBoth)      Tkr_numBothOnTracks++;
+                else if(isGhost)     Tkr_numGhostsOnTracks++;
+                else if(isDiagGhost) Tkr_numDiagsOnTracks++;
+                else                 Tkr_numFlaggedTrackHits++;
+                if(isSaturated) Tkr_numSaturatedGhostsOnTracks++;
+                if(isWide)      Tkr_numWideGhostClustersOnTracks++;
+                if(isWider)     Tkr_numWiderGhostClustersOnTracks++;
             }
-            if(isWide)  Tkr_numWideClustersOnTracks++;
-            if(isWider) Tkr_numWiderClustersOnTracks++;
+            else {
+                if(isSaturated) Tkr_numSaturatedOnTracks++;
+                if(isWide)      Tkr_numWideClustersOnTracks++;
+                if(isWider)     Tkr_numWiderClustersOnTracks++;
+            }
         }
     }
     return sc;
