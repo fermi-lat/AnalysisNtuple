@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/Attic/AcdValsToolV2.cxx,v 1.1.2.1 2009/06/08 18:05:14 echarles Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsToolV2.cxx,v 1.1.2.1.2.1 2009/12/19 15:50:48 echarles Exp $
 */
 
 #include "ValBase.h"
@@ -435,8 +435,7 @@ StatusCode Acd2ValsTool::calculate()
   StatusCode sc = StatusCode::SUCCESS;
   
   // Recover pointers to ACD Recon results
-  //SmartDataPtr<Event::AcdRecon> pACD(m_pEventSvc,EventModel::AcdRecon::Event);
-  Event::AcdReconV2* pACD = Event::AcdReconV2::s_theAcdReconV2Ptr;
+  SmartDataPtr<Event::AcdReconV2> pACD(m_pEventSvc,EventModel::AcdReconV2::Event);
 
   // Recover pointers to CalClusters and Xtals(not currently used)
   //SmartDataPtr<Event::CalClusterCol>   pCals(m_pEventSvc,EventModel::CalRecon::CalClusterCol);
