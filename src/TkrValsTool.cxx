@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.97 2009/09/09 06:05:19 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.98 2009/12/16 05:53:19 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -403,10 +403,14 @@ in which case the usual DOCA is poorly measured.
 <td>F<td>   Track chisquared for first Tkr[1/2]FirstHits layers  
 <tr><td> Tkr[1/2]Hits  
 <td>F<td>   Number of clusters in track  
-<tr><td> Tkr[1/2]GhostFrac
-<td>F<td>   Fraction of good hits on track that are ghosts
 <tr><td> Tkr[1/2]ToT255Frac
 <td>F<td>   Fraction of good hits on track that have ToT==255
+<tr><td> Tkr[1/2]BothFrac
+<td>F<td>   Fraction of good hits on track that are both regular and diagnostic ghosts
+<tr><td> Tkr[1/2]GhostFrac
+<td>F<td>   Fraction of good hits on track that are regular ghosts
+<tr><td> Tkr[1/2]DiagFrac
+<td>F<td>   Fraction of good hits on track that are diagnostic ghosts
 <tr><td> Tkr[1/2]SaturatedFrac
 <td>F<td>   Fraction of good hits on track that are saturated
 <tr><td> Tkr[1/2]WideFrac

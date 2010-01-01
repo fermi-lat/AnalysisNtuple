@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.51 2009/09/09 06:05:18 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.52 2009/12/15 15:12:21 heather Exp $
 */
 
 #include "ValBase.h"
@@ -162,7 +162,6 @@ positive if inside.
 
 <table>
 <tr><th> Variable <th> Type <th> Description					
-
 <tr><td> AcdTileCount 
 <td>U<td>   Number of tiles fired
 <tr><td> AcdRibbonCount 

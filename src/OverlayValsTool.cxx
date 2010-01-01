@@ -1,7 +1,7 @@
 /** @file OverlayValsTool.cxx
 @brief declaration and definition of the class OverlayValsTool
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/OverlayValsTool.cxx,v 1.1 2009/03/19 15:06:37 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/OverlayValsTool.cxx,v 1.2 2009/09/09 06:05:19 lsrea Exp $
 
 */
 
@@ -143,7 +143,7 @@ OverlayValsTool::OverlayValsTool(const std::string& type,
 
 
 /** @page anatup_vars 
-    @section Pt  Pt Variables
+    @section Overlay  Overlay Variables, mostly Pt*
 
     These items are added to the merit tuple  to give the current instrument orientation 
 
@@ -154,9 +154,9 @@ OverlayValsTool::OverlayValsTool(const std::string& type,
 <tr><td> OvrEvtEventId 
 <td>U<td>   Sequence number of event in the run
 <tr><td> OvrEvtEventId64
+<td>UL<td>   Sequence number of event in the run, 64-bit unsigned version
 <tr><td> OvrTriggerBits
 <td>U<td>   The overlay event's trigger bits
-<td>UL<td>   Sequence number of event in the run, 64-bit unsigned version
 <tr><td> OvrPtTime       <td>D<td> (s) Current time, same as the elapsed time
 <tr><td> OvrPtLat,PtLon  <td>F<td> (deg) lattitude and longitude
 <tr><td> OvrPtAlt        <td>F<td> (km) altitude

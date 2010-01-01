@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsToolV2.cxx,v 1.1.2.1.2.1 2009/12/19 15:50:48 echarles Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsToolV2.cxx,v 1.3 2009/12/21 20:07:27 jrb Exp $
 */
 
 #include "ValBase.h"
@@ -161,7 +161,7 @@ private:
 };
 
 /** @page anatup_vars
-@section acdvalstool Acd2ValsTool Variables
+@section acd2valstool AcdValsV2Tool Variables
 Notes
 - Default Doca/ActiveDistance is -2000.
 - Active distance is negative if a track is outside a tile, 
@@ -169,136 +169,134 @@ positive if inside.
 
 <table>
 <tr><th> Variable <th> Type <th> Description					
-
-<tr><td> AcdTileCount 
+<tr><td> Acd2TileCount 
 <td>U<td>   Number of tiles fired
-<tr><td> AcdRibbonCount 
+<tr><td> Acd2RibbonCount 
 <td>U<td>   Number of ribbons fired
-<tr><td> AcdVetoCount 
-<td>U<td>   Number of veots fired
-<tr><td> AcdVetoFaces
-<td>U<td>   Number of ribbons fired
-<tr><td> AcdTotalEnergy 	
+<tr><td> Acd2VetoCount 
+<td>U<td>   Number of vetos fired
+<tr><td> Acd2VetoFaces
+<td>U<td>   Number of Acd faces with vetos
+<tr><td> Acd2TotalEnergy 	
 <td>F<td>   Total energy deposited in ACD Tiles
-<tr><td> AcdRibbonEnergy 	
+<tr><td> Acd2RibbonEnergy 	
 <td>F<td>   Total energy deposited in ACD Ribbons
 
-<tr><td> AcdTileIdRecon
+<tr><td> Acd2TileIdRecon
 <td>U<td> Tile identifier that was pierced by the reconstructed track.  
 A value of 899 (N/A) is the default and denotes that no ACD tile was 
 intersected by a reconstructed track.
-<tr><td> AcdRibbonIdRecon
+<tr><td> Acd2RibbonIdRecon
 <td>U<td> Ribbon identifier that was pierced by the reconstructed track.  
 A value of 899 (N/A) is the default and denotes that no ACD ribbon was 
 intersected by a reconstructed track.
 
 
-<tr><td> AcdActiveDist3D  	
+<tr><td> Acd2ActiveDist3D  	
 <td>F<td>   Active Distance most likely to give a veto.  
 Corresponds to Act. Dist. that is greater than a set 
 an energy dep. min. distance and has the largest pulse height
-<tr><td> AcdActiveDist3DErr
+<tr><td> Acd2ActiveDist3DErr
 <td>F<td>   Error on most likely veto active distance of any track 
 to the edge of any tile 
-<tr><td> AcdActDistTileEnergy 
+<tr><td> Acd2ActDistTileEnergy 
 <td>F<td>   The deposited energy in the corresponding hit tile 
-<tr><td> AcdActDistTrackNum
+<tr><td> Acd2ActDistTrackNum
 <td>F<td>   Track number of track which was used for AcdActiveDist3D. 
 Track numbering starts at zero; best track number is zero; -1 means no track
 
-<tr><td> AcdRibbonActDist
+<tr><td> Acd2RibbonActDist
 <td>F<td>   Largest active distance to any ribbon 
 (considered as a straight at the center of the ribbon) 
-<tr><td> AcdRibbonActDistErr  
+<tr><td> Acd2RibbonActDistErr  
 <td>F<td>   Error on the smallest active distance to any ribbon 
 (considered as a straight line of no thickness) 
-<tr><td> AcdRibbonActLength
+<tr><td> Acd2RibbonActLength
 <td>F<td>   Length along ribbon where point of closest approach occured. 
 0 is center of ribbon; + going towards +x or +y side of ACD
-<tr><td> AcdRibbonActEnergyPmtA
+<tr><td> Acd2RibbonActEnergyPmtA
 <td>F<td>   The deposited energy in the A PMT of the corresponding hit ribbon
-<tr><td> AcdRibbonActEnergyPmtB
+<tr><td> Acd2RibbonActEnergyPmtB
 
 <td>F<td>   The deposited energy in the B PMT of the corresponding hit ribbon
-<tr><td> AcdCornerDoca 
+<tr><td> Acd2CornerDoca 
 <td>F<td>   Minimum Distance of Closest Approach of best track to the corner side gaps
 This variable is signed to match the direction of the overlaps in the tiles. 
 The gap appears larger for tracks coming from the + side than the - side.  
-<tr><td> AcdTkrHoleDist (fixme)
+<tr><td> Acd2TkrHoleDist (fixme)
 <td>F<td>   Minimum Distance of Closest Approach of any track to any of the tile screw holes
-<tr><td> AcdTkrRibbonDist
+<tr><td> Acd2TkrRibbonDist
 <td>F<td>   Minimum Distance of Closest Approach of any track to any ribbons that cover gaps
-<tr><td> AcdTkrRibbonDistErr
+<tr><td> Acd2TkrRibbonDistErr
 <td>F<td>   Error On Minimum Distance of Closest Approach of any track to any ribbons that cover gaps
-<tr><td> AcdTkrRibbonLength
+<tr><td> Acd2TkrRibbonLength
 <td>F<td>   Length along ribbon where point of closest approach occured.
 0 is center of ribbon + going towards +x or +y side of ACD.
 
 
-<tr><td>AcdTkr1ActiveDist 
+<tr><td> Acd2Tkr1ActiveDist 
 <td>F<td>   Largest active distance from  track 1 to the edge of any tile
-<tr><td>AcdTkr1ActiveDistErr
+<tr><td> Acd2Tkr1ActiveDistErr
 <td>F<td>   Error on largest active distance from track 1 to the edge of any tile
-<tr><td>AcdTkr1ActDistTileEnergy
+<tr><td> Acd2Tkr1ActDistTileEnergy
 <td>F<td>   The deposited energy in the corresponding hit tile
-<tr><td>AcdTkr1ActDistTileArc
+<tr><td> Acd2Tkr1ActDistTileArc
 <td>F<td>   Length from head of track to point where active distances was calculated
-<tr><td>AcdTkr1Energy15
+<tr><td> Acd2Tkr1Energy15
 <td>F<td>   Energy in 15 deg. cone ahead of Track
-<tr><td>AcdTkr1Energy30
+<tr><td> Acd2Tkr1Energy30
 <td>F<td>   Energy in 45 deg. cone ahead of Track
-<tr><td>AcdTkr1Energy45
+<tr><td> Acd2Tkr1Energy45
 <td>F<td>   Energy in 45 deg. cone ahead of Track
 
-<tr><td> AcdTkr1RibbonActDist   
+<tr><td> Acd2Tkr1RibbonActDist   
 <td>F<td>   Largest active distance to any ribbon 
 (considered as a straight line at the center of the ribbon) 
-<tr><td> AcdTkr1RibbonActDistErr   
+<tr><td> Acd2Tkr1RibbonActDistErr   
 <td>F<td>   Error on the smallest active distance to any ribbon 
-<tr><td> AcdTkr1RibbonActLength
+<tr><td> Acd2Tkr1RibbonActLength
 <td>F<td>   Length along ribbon where point of closest approach occured. 
 0 is center of ribbon + going towards +x or +y side of ACD
-<tr><td> AcdTkr1RibbonActEnergyPmtA   
+<tr><td> Acd2Tkr1RibbonActEnergyPmtA   
 <td>F<td>   The deposited energy in the A PMT of the corresponding hit ribbon
-<tr><td> AcdTkr1RibbonActEnergyPmtB   
+<tr><td> Acd2Tkr1RibbonActEnergyPmtB   
 <td>F<td>   The deposited energy in the A PMT of the corresponding hit ribbon
 
-<tr><td> AcdTkr1CornerDoca 
+<tr><td> Acd2Tkr1CornerDoca 
 <td>F<td>   Minimum Distance of Closest Approach of best track to the corner side gaps 
 This variable is signed to match the direction of the overlaps in the tiles. 
 The gap appears larger for tracks coming from the + side than the - side.  
-<tr><td> AcdTkr1HoleDist (fixme)
+<tr><td> Acd2Tkr1HoleDist (fixme)
 <td>F<td>   Minimum Distance of Closest Approach to best track to any of the tile screw holes
-<tr><td> AcdTkr1RibbonDist
+<tr><td> Acd2Tkr1RibbonDist
 <td>F<td>   Minimum Distance of Closest Approach to best track to any ribbons that cover gaps 
-<tr><td> AcdTkr1RibbonDistErr
+<tr><td> Acd2Tkr1RibbonDistErr
 <td>F<td>   Error on Minimum Distance of Closest Approach to best track to any ribbons that cover gaps 
-<tr><td> AcdTkr1RibbonLength 
+<tr><td> Acd2Tkr1RibbonLength 
 <td>F<td>   Length along ribbon where point of closest approach occured. 
 0 is center of ribbon; + going towards +x or +y side of ACD
 
-<tr><td>AcdTkr1VetoSigmaHit
-<td>F<td>Number of sigmas less that an expected mip for signal combined with the
-number of sigmas track propagation is away from tile or ribbon most the signal most likely to veto the best track.
-<tr><td>ACD_Tkr1_VetoSigmaGap
+<tr><td> Acd2Tkr1VetoSigmaHit
+<td>F<td>Number of sigmas less than an expected mip for signal combined with the
+number of sigmas track propagation is away from tile or ribbon most likely to veto the best track.
+<tr><td> Acd2Tkr1VetoSigmaGap
 <td>F<td>Number of sigmas track propagation is away from clostest GAP in ACD for the best track.
-<tr><td>ACD_Tkr_VetoSigmaHit
-<td>F<td>Number of sigmas less that an expected mip for signal combined with the
-number of sigmas track propagation is away from tile or ribbon most the signal most likely to any track.
-<tr><td>ACD_Tkr_VetoSigmaGap
-<td>F<td>Number of sigmas track propagation is away from clostest GAP in ACD for any track.
+<tr><td> Acd2TkrVetoSigmaHit
+<td>F<td>Number of sigmas less than an expected mip for signal combined with the
+number of sigmas track propagation is away from tile or ribbon most likely to veto any track.
+<tr><td> Acd2TkrVetoSigmaGap
+<td>F<td>Number of sigmas track propagation is away from closest GAP in ACD for any track.
 
-<tr><td> AcdNoTop
+<tr><td> Acd2NoTop
 <td>U<td>   Hit Tile counts top of ACD
-<tr><td> AcdNoSideRow[0...3] 
+<tr><td> Acd2NoSideRow[0...3] 
 <td>U<td>   Hit Tile counts for side row [0...3] that have energy > TileCountThreshold (= .8)
-<tr><td> AcdNoRow3Readout
+<tr><td> Acd2NoRow3Readout
 <td>U<td>   Hit Tile counds for side row 3, no threshold cut
-<tr><td> AcdEnergyTop
+<tr><td> Acd2EnergyTop
 <td>F<td>   Total energy deposited in top tiles
-<tr><td> AcdEnergyRow[0...3]
+<tr><td> Acd2EnergyRow[0...3]
 <td>F<td>   Total energy deposited in the tiles in side row 0 to 3
-
 </table>
 */
 

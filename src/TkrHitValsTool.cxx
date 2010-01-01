@@ -2,7 +2,7 @@
 @brief Calculates the Tkr hit analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrHitValsTool.cxx,v 1.19 2009/01/21 06:28:40 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrHitValsTool.cxx,v 1.20 2009/12/16 05:53:19 lsrea Exp $
 */
 
 // Include files
@@ -111,33 +111,53 @@ TkrHitValsTool::TkrHitValsTool(const std::string& type,
 <td>I<td>   Total number of TKR clusters 
 <tr><td> TkrNumHitsOnTracks 	
 <td>I<td>   Total number of TKR clusters on tracks
-<tr><td> TkrNumSaturated
-<td>I<td>   Number of saturated clusters
+<tr><td> TkrFirstLayer
+<td>I<td>   First layer containing a cluster 
+<tr><td> TkrNumLayersHit
+<td>I<td>   Total number of hit layers 
 <tr><td> TkrNumGhosts 	
 <td>I<td>   Total number of TKR ghost clusters 
+<tr><td> TkrNumDiags	
+<td>I<td>   Total number of TKR ghost clusters as identified by TEM diagnostic info 
+<tr><td> TkrNumBoth	
+<td>I<td>   Total number of TKR clusters as regular and diagnostic ghosts 
 <tr><td> TkrNumToT255s 	
-<td>I<td>   Total number of clusters with ToT==255 
-<tr><td> TkrNumWideClusters	
+<td>I<td>   Total number of clusters with ToT==255
+<tr><td> TkrNumSaturated
+<td>I<td>   Number of clusters marked as saturated (all hits in each half-plane share the same ToT!)
+<tr><td> TkrNumWideClusters 	
 <td>I<td>   Number of clusters 5 or more strips wide
 <tr><td> TkrNumWiderClusters	
 <td>I<td>   Number of clusters 9 or more strips wide
-<tr><td> TkrNumSaturatedOnTracks
-<td>I<td>   Number of saturated clusters on tracks
+<tr><td> TkrNumSaturatedGhosts
+<td>I<td>   Number of saturated ghost clusters
+<tr><td> TkrNumWideGhosts
+<td>I<td>   Number of wide ghost clusters
+<tr><td> TkrNumWiderClusters	
+<td>I<td>   Number of wider ghost clusters
 <tr><td> TkrNumGhostsOnTracks 	
 <td>I<td>   Total number of ghost clusters on tracks
+<tr><td> TkrNumDiagsOnTracks
+<td>I<td>   Total number of track hits flagged as diagnostic ghosts
+<tr><td> TkrNumBothOnTracks
+<td>I<td>   Total number of hits flagged as both regular and diagnostic ghosts
 <tr><td> TkrNumToT255sOnTracks 	
 <td>I<td>   Total number of ToT==255 clusters on tracks
 <tr><td> TkrNumFlaggedTrackHits 	
 <td>I<td>   Total number of track hits flagged because
 the track had some 255 or ghost hits
+<tr><td> TkrNumSaturatedOnTracks
+<td>I<td>   Number of saturated clusters on tracks
 <tr><td> TkrNumWideClustersOnTracks	
-<td>I<td>   Number of clusters 5 or more strips wide on tracks
+<td>I<td>   Number of wide clusters on tracks
 <tr><td> TkrNumWiderClustersOnTracks	
-<td>I<td>   Number of clusters 9 or more strips wide on tracks
-<tr><td> TkrFirstLayer
-<td>I<td>   First layer containing a cluster 
-<tr><td> TkrNumLayersHit
-<td>I<td>   Total number of hit layers 
+<td>I<td>   Number of wider clusters on tracks
+<tr><td> TkrNumSaturatedGhostsOnTracks
+<td>I<td>   Number of ghost clusters with saturated ToT
+<tr><td> TkrNumWideGhostsOnTracks
+<td>I<td>   Number of wide ghost clusters on tracks
+<tr><td> TkrNumWiderGhostsOnTracks
+<td>I<td>   Number of wider ghost clusters on tracks
 <tr><td> TkrHitsInLyrNN, NN=(00,17)   
 <td>I<td>   Number of clusters in (bi)layer NN 
 (numbered from the bottom of the tracker) 

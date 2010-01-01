@@ -15,7 +15,7 @@
 *
 * Experiment the monitoring of algorithms.
 *
-* $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EventAuditor.cxx,v 1.3 2008/04/17 17:01:08 heather Exp $
+* $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EventAuditor.cxx,v 1.4 2008/07/27 22:45:48 lsrea Exp $
 */
 
 class EventAuditor : virtual public Auditor
@@ -66,12 +66,26 @@ DECLARE_AUDITOR_FACTORY(EventAuditor) ;
 
 @section timing  EventAuditor Times for Selected Algorithms/Sequences
 
-Times for selected entities are given in seconds. The granularity is ~16msec (60Hz).
-The variables are named "Aud"+Entity Name. The current default set is:
-
-AudEvent, AudGeneration, AudReconstruction, AudTkr, AudCal2
+Times for selected entities are given in seconds. The granularity is ~16msec (60Hz). The minimum time is recorded if the clock changes between the start and stop calls of the process.
 
 Note: the time for the first event in a run includes initialization overhead.
+
+The variables are named "Aud"+Entity Name. The current default set is:
+
+<table>
+<tr><th> Variable <th> Type <th> Description					
+<tr><td> AudEvent 
+<td>F<td>   Time for the entire event
+<tr><td> AudGeneration 
+<td>F<td>   Time for the generation
+<tr><td> AudReconstruction
+<td>F<td>   Time for the reconstruction
+<tr><td> AudTkr 
+<td>F<td>   Time for the tracker part of the reconstruction (pass 1)
+<tr><td> AudCal2
+<td>F<td>   Time for the calorimeter part of the reconstruction (pass 2)
+</table>
+
 */
 
 
