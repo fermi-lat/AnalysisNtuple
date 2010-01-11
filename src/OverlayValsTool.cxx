@@ -1,7 +1,7 @@
 /** @file OverlayValsTool.cxx
 @brief declaration and definition of the class OverlayValsTool
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/OverlayValsTool.cxx,v 1.2 2009/09/09 06:05:19 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/OverlayValsTool.cxx,v 1.3 2010/01/01 02:06:13 lsrea Exp $
 
 */
 
@@ -145,8 +145,7 @@ OverlayValsTool::OverlayValsTool(const std::string& type,
 /** @page anatup_vars 
     @section Overlay  Overlay Variables, mostly Pt*
 
-    These items are added to the merit tuple  to give the current instrument orientation 
-
+These items are added to the merit tuple  to give the current instrument orientation and some information about the contributions from the detectors
 <table>
 <tr><th> Variable <th>Type<th> Description
 <tr><td> OvrEvtRun 
@@ -157,6 +156,16 @@ OverlayValsTool::OverlayValsTool(const std::string& type,
 <td>UL<td>   Sequence number of event in the run, 64-bit unsigned version
 <tr><td> OvrTriggerBits
 <td>U<td>   The overlay event's trigger bits
+<tr><td> OvrNumAcdHits
+<td>I<td>   Number of Acd Hits in the overlay event
+<tr><td> OvrAcdDepEnergy
+<td>F<td>   Total energy in the ACD hits
+<tr><td> OvrNumCalHits
+<td>I<td>   Number of CAL xtals in the overlay event
+<tr><td> OvrCalDepEnergy
+<td>F<td>   Energy in the CAL xtals
+<tr><td> OvrNumTkrHits
+<td>I<td>   Number of hit TKR strips in the overlay event
 <tr><td> OvrPtTime       <td>D<td> (s) Current time, same as the elapsed time
 <tr><td> OvrPtLat,PtLon  <td>F<td> (deg) lattitude and longitude
 <tr><td> OvrPtAlt        <td>F<td> (km) altitude
