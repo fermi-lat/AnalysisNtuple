@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.94 2009/09/09 06:05:19 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.95 2009/12/16 05:53:19 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -859,13 +859,13 @@ StatusCode CalValsTool::calculate()
     CAL_zdir_uber     = calCluster->getDirection().z();
 
     // Get pos and dir determined using only the transverse position information
-    CAL_xEcntr2_uber  = calCluster->getCalParams().getxPosxPos();
-    CAL_yEcntr2_uber  = calCluster->getCalParams().getyPosyPos();
-    CAL_zEcntr2_uber  = calCluster->getCalParams().getzPoszPos();
-    CAL_nsaturated    = calCluster->getCalParams().getyPoszPos();
-    CAL_xdir2_uber    = calCluster->getCalParams().getxDirxDir();
-    CAL_ydir2_uber    = calCluster->getCalParams().getyDiryDir();
-    CAL_zdir2_uber    = calCluster->getCalParams().getzDirzDir();
+    CAL_xEcntr2_uber  = calCluster->getFitParams().getCentroid().x();
+    CAL_yEcntr2_uber  = calCluster->getFitParams().getCentroid().y();
+    CAL_zEcntr2_uber  = calCluster->getFitParams().getCentroid().z();
+    CAL_nsaturated    = calCluster->getNumSaturatedXtals();
+    CAL_xdir2_uber    = calCluster->getFitParams().getAxis().x();
+    CAL_ydir2_uber    = calCluster->getFitParams().getAxis().y();
+    CAL_zdir2_uber    = calCluster->getFitParams().getAxis().z();
 
     CAL_num_clusters  = pCals->size();
     CAL_rest_energy   = 0.;
@@ -959,15 +959,15 @@ StatusCode CalValsTool::calculate()
     CAL_zdir        = cal_dir.z();
 
     // Get pos and dir determined using only the transverse position information
-    CAL_xEcntr2 = calCluster->getCalParams().getxPosxPos();
-    CAL_yEcntr2 = calCluster->getCalParams().getyPosyPos();
-    CAL_zEcntr2 = calCluster->getCalParams().getzPoszPos();
-    CAL_posdir_chisq = calCluster->getCalParams().getxPosyPos();
-    CAL_posdir_nlayers = calCluster->getCalParams().getxPoszPos();
-    CAL_nsaturated = calCluster->getCalParams().getyPoszPos();
-    CAL_xdir2 = calCluster->getCalParams().getxDirxDir();
-    CAL_ydir2 = calCluster->getCalParams().getyDiryDir();
-    CAL_zdir2 = calCluster->getCalParams().getzDirzDir();
+    CAL_xEcntr2        = calCluster->getFitParams().getCentroid().x();
+    CAL_yEcntr2        = calCluster->getFitParams().getCentroid().y();
+    CAL_zEcntr2        = calCluster->getFitParams().getCentroid().z();
+    CAL_posdir_chisq   = calCluster->getFitParams().getChiSquare();
+    CAL_posdir_nlayers = calCluster->getFitParams().getFitLayers();
+    CAL_nsaturated     = calCluster->getNumSaturatedXtals();
+    CAL_xdir2          = calCluster->getFitParams().getAxis().x();
+    CAL_ydir2          = calCluster->getFitParams().getAxis().y();
+    CAL_zdir2          = calCluster->getFitParams().getAxis().z();
 
     // Get the lower and upper limits for the CAL in the installed towers
     double deltaX = 0.5*(m_xNum*m_towerPitch - m_calXWidth);
