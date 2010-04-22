@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.95 2009/12/16 05:53:19 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.96 2010/01/25 17:59:26 usher Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -160,6 +160,8 @@ private:
     float CAL_Long_Rms;
     float CAL_Trans_Rms;
     float CAL_LRms_Asym;
+    float CAL_Long_Skew;
+    float CAL_Long_Skew_Norm;
 
     float CAL_MIP_Diff; 
     float CAL_MIP_Ratio;
@@ -397,6 +399,13 @@ Indicates the length of the measured shower along the shower axis.
 This should be close to zero. Because of ordering of moments it is slightly ... (??)
 <tr><td> CalTransRms 
 <td>F<td>   rms of transverse position measurements.
+<tr><td>CalLongSkew
+<td>F<td> The longitudinal skewness (with sign!) of the shower profile:
+ E[(t - t_c)^3] / (E[(t - t_c)^2])^1.5
+<tr><td>CalLongSkewNorm
+<td>F<td> Ratio between the measured longitudinal skewness and the expected value 
+for a downward electromagnetic shower (i.e. it should peak at 1 for downward going
+photons/electrons irrespectively of the energy/angle).
 <tr><td> CalMIPDiff 
 <td>F<td>   Difference between measured energy and that expected 
 from a minimum-ionizing particle 
@@ -607,9 +616,12 @@ StatusCode CalValsTool::initialize()
     addItem("CalMaxNumXtalsInLayer", 
                              &CAL_Max_Num_Xtals_In_Layer);
 
-    addItem("CalTransRms",   &CAL_Trans_Rms);
-    addItem("CalLongRms",    &CAL_Long_Rms);
-    addItem("CalLRmsAsym",   &CAL_LRms_Asym);
+    addItem("CalTransRms",    &CAL_Trans_Rms);
+    addItem("CalLongRms",     &CAL_Long_Rms);
+    addItem("CalLRmsAsym",    &CAL_LRms_Asym);
+
+    addItem("CalLongSkew",    &CAL_Long_Skew);
+    addItem("CalLongSkewNorm",&CAL_Long_Skew_Norm);
 
     addItem("CalMIPDiff",   &CAL_MIP_Diff);
     addItem("CalMIPRatio",  &CAL_MIP_Ratio);
@@ -905,6 +917,56 @@ StatusCode CalValsTool::calculate()
         CAL_Long_Rms  = sqrt(calCluster->getRmsLong()/CAL_EnergyRaw) / logRLn;
     }
     CAL_LRms_Asym = calCluster->getRmsLongAsym();
+
+    // Start with the skewness stuff.
+    // At this poinu we need to normalize to the sum of weights and divide by sigma**3.
+    CAL_Long_Skew = calCluster->getSkewnessLong();
+    CAL_Long_Skew_Norm = -9999.;
+    if (CAL_EnergyRaw > 0.0) {
+      double sigma = sqrt(calCluster->getRmsLong()/CAL_EnergyRaw);
+      if (sigma > 0.0){
+	// First normalize for the sum of weights and to the third power of the longitudinal RMS.
+    	CAL_Long_Skew = CAL_Long_Skew/(CAL_EnergyRaw*sigma*sigma*sigma);
+	// Then calculate what we would expect for an EM shower (downward going).
+	// This involves a numerical integral, with the basic formulas from the PDG.
+	int numSteps = 6;                             // Number of steps for the trapezium integral.
+	double Ec = 11.17;                            // Critical energy for CsI (in MeV).
+	double tmin = CAL_LAT_RLn - CAL_CsI_RLn; 
+	double tmax = CAL_LAT_RLn;
+	double b  = 0.5;                              // b = 0.5 seems appropriate, here.
+	double c  = -0.5;                             // c = -0.5 for electrons, c = 0.5 for gammas.
+	double a  = b*(log(CAL_EnergyCorr/Ec) - 0.5); // Use CalEnergyCorr. Can we improve?
+	double t1 = tmin;
+	double t2 = 0.0;
+	double p1 = 0.0;
+	double p2 = 0.0;
+	double norm = 0.0;
+	double mom1 = 0.0;
+	double mom2 = 0.0;
+	double mom3 = 0.0;
+	double stepSize = (tmax - tmin)/numSteps;
+	for (int step = 0; step < numSteps; step++) {
+	  t2 = tmin + (step + 1)*stepSize;
+	  p1 = pow(t1, a) * exp(-b*t1);
+	  p2 = pow(t2, a) * exp(-b*t2);
+	  norm += 0.5 * (p1 + p2);
+	  mom1 += 0.5 * (p1*t1 + p2*t2);
+	  mom2 += 0.5 * (p1*t1*t1 + p2*t2*t2);
+	  mom3 += 0.5 * (p1*t1*t1*t1 + p2*t2*t2*t2);
+	  t1 = t2;
+	}
+	norm *= stepSize;
+	mom1 *= stepSize;
+	mom2 *= stepSize;
+	mom3 *= stepSize;
+	mom1 /= norm;
+	mom2 /= norm;
+	mom3 /= norm;
+	mom2 = mom2 - mom1*mom1;
+	double gamma = (mom3 - 3*mom1*mom2 - mom1*mom1*mom1)/pow(mom2, 1.5);
+	if (gamma != 0.0) CAL_Long_Skew_Norm = -CAL_Long_Skew/gamma;
+      }
+    }
 
     if(CAL_EnergyRaw>0.0) {
         CAL_Lyr0_Ratio  = CAL_eLayer[0]/CAL_EnergyRaw;
