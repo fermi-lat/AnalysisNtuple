@@ -1,5 +1,5 @@
 # -*-python-*-
-# $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/SConscript,v 1.42 2010/01/11 01:21:59 lsrea Exp $
+# $Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/SConscript,v 1.43 2010/01/25 18:26:10 usher Exp $
 # Authors: Leon Rochester <lsrea@slac.stanford.edu>
 # Version: AnalysisNtuple-02-56-07
 
@@ -12,7 +12,7 @@ progEnv = baseEnv.Clone()
 libEnv = baseEnv.Clone()
 tempEnv = baseEnv.Clone()
 
-libEnv.Tool('AnalysisNtupleLib', depsOnly=1)
+libEnv.Tool('addLinkDeps', package='AnalysisNtuple', toBuild='component')
 libEnv.AppendUnique(CPPDEFINES = ['GLEAM'])
 libEnv.AppendUnique(CPPDEFINES = ['__i386'])
 libEnv.AppendUnique(CPPDEFINES = ['EFC_FILTER'])
@@ -35,9 +35,11 @@ if baseEnv['PLATFORM'] != 'win32':
 	progEnv.Tool('addLibrary', library = ['pthread'])
 
 test_AnalysisNtuple = progEnv.GaudiProgram('test_AnalysisNtuple',
-                                           ['src/AnalysisNtupleAlg.cxx'],test=1)
+                                           ['src/AnalysisNtupleAlg.cxx'],
+					   test=1, package='AnalaysisNtuple')
 
 progEnv.Tool('registerTargets', package = 'AnalysisNtuple',
              libraryCxts = [[AnalysisNtuple,libEnv]],
 	     testAppCxts = [[test_AnalysisNtuple, progEnv]],
-             includes = listFiles(['AnalysisNtuple/*.h']))
+             includes = listFiles(['AnalysisNtuple/*.h']),
+	     jo = ['src/test/jobOptions.txt'])
