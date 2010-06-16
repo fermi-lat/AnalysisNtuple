@@ -1,5 +1,5 @@
 # -*-python-*-
-# $Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/SConscript,v 1.43 2010/01/25 18:26:10 usher Exp $
+# $Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/SConscript,v 1.44 2010/06/11 00:32:19 jrb Exp $
 # Authors: Leon Rochester <lsrea@slac.stanford.edu>
 # Version: AnalysisNtuple-02-56-07
 
@@ -42,4 +42,5 @@ progEnv.Tool('registerTargets', package = 'AnalysisNtuple',
              libraryCxts = [[AnalysisNtuple,libEnv]],
 	     testAppCxts = [[test_AnalysisNtuple, progEnv]],
              includes = listFiles(['AnalysisNtuple/*.h']),
+	     data = listFiles(['data/*.txt']),
 	     jo = ['src/test/jobOptions.txt'])
