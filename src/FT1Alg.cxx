@@ -1,7 +1,7 @@
 /** @file FT1Alg.cxx
 @brief Declaration and implementation of Gaudi algorithm FT1Alg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.26 2009/09/09 06:05:19 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.27 2009/10/06 17:27:10 lsrea Exp $
 */
 // Include files
 
@@ -24,6 +24,9 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.26 2009/
 #include "CalibSvc/ICalibPathSvc.h" // helpful service for forming calib TDS paths
 
 //#include "CalibSvc/ICalibDataSvc.h"
+
+#include "evtUtils/EventClass.h"
+
 
 #include <cassert>
 #include <map>
@@ -58,6 +61,11 @@ public:
 private:
     /// this guy does the work!
     FT1worker * m_worker;
+ 
+    /// this guy handles the event class stuff
+    evtUtils::EventClass* m_evtClass;
+
+
     //counter
     int m_count;
     IDataProviderSvc* m_pEventSvc;
@@ -65,8 +73,12 @@ private:
     IDataProviderSvc* m_pCalibDataSvc;
     ICalibPathSvc*    m_pCalibPathSvc;
 
+    INTupleWriterSvc* m_rootTupleSvc;
+   
+
     BooleanProperty m_aberrate;  ///< set true to enable aberration correction
     StringProperty m_flavor;     ///< set to a flavor to enable the corrrection
+    StringProperty m_classDefs;  ///< xml file with events class defs
 
     std::string m_path;    ///< calibration service
     
@@ -95,21 +107,12 @@ public:
     Item EvtLiveTime;
     Item EvtEnergyCorr;
     Item TkrNumTracks;
-    Item VtxXDir, VtxYDir, VtxZDir;
-    Item VtxX0, VtxY0, VtxZ0;
     Item Tkr1XDir, Tkr1YDir, Tkr1ZDir;
-    Item Tkr1X0, Tkr1Y0, Tkr1Z0;
     Item Tkr1FirstLayer;
     Item CTBBestEnergy;
     Item CTBBestXDir;
     Item CTBBestYDir;
     Item CTBBestZDir;
-    Item CTBBestEnergyProb;
-    Item CTBBestEnergyRatio;
-    Item CTBCORE;
-    Item CTBClassLevel;
-    Item CTBParticleType;
-    
 
     //FT1 entries to create
     unsigned int m_ft1eventid;
@@ -117,9 +120,7 @@ public:
     float m_ft1theta,m_ft1phi,m_ft1ra,m_ft1dec,m_ft1l,m_ft1b;
     float m_ft1zen,m_ft1azim;
     double m_ft1livetime;
-    //float m_ft1convpointx,m_ft1convpointy,m_ft1convpointz,
     float m_ft1convlayer;
-    int   m_ft1eventclass;
 };
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -131,6 +132,7 @@ FT1Alg::FT1Alg(const std::string& name, ISvcLocator* pSvcLocator)
     declareProperty("NbOfEvtsInFile", nbOfEvtsInFile=100000);
     declareProperty("CorrectForAberration", m_aberrate=false);
     declareProperty("AlignmentFlavor"     , m_flavor="");
+    declareProperty("EventClassDefinitions", m_classDefs="$(EVTUTILSROOT)/xml/EvtClassDefs_Test.xml");
 }
 
 StatusCode FT1Alg::initialize()
@@ -152,12 +154,25 @@ StatusCode FT1Alg::initialize()
 
 
     // get a pointer to RootTupleSvc 
-    if( (sc = service("RootTupleSvc", rootTupleSvc, true) ). isFailure() ) {
+    if( (sc = service("RootTupleSvc", m_rootTupleSvc, true) ). isFailure() ) {
         log << MSG::ERROR << " failed to get the RootTupleSvc" << endreq;
         return sc;
     }
+    rootTupleSvc = m_rootTupleSvc;
 
-    m_worker =  new FT1worker();
+    m_worker =  new FT1worker;
+    
+    m_evtClass = evtUtils::EventClass::loadFromXml(m_classDefs);
+    if ( m_evtClass == 0 ) {
+        log << MSG::ERROR << " failed load event class definitions from " << m_classDefs << endreq;
+        return StatusCode::FAILURE;      
+    }
+    std::list<std::string> ft1EvtClassNames;
+    m_evtClass->getEvtMapNames(ft1EvtClassNames);
+
+    for ( std::list<std::string>::const_iterator itr = ft1EvtClassNames.begin(); itr != ft1EvtClassNames.end(); itr++) {
+        addItem(itr->c_str(),*(m_evtClass->getShortMapPtr(*itr)));
+    }
 
     // get the GPS instance: 
     gps = astro::GPS::instance();
@@ -234,6 +249,28 @@ StatusCode FT1Alg::execute()
     gps->time(etime); 
 
     m_worker->evaluate();
+
+    // We need the tree and we need to jump through some hoops to get it
+    void* treePtrVoid(0);
+    m_rootTupleSvc->getItem("MeritTuple","",treePtrVoid);
+    TTree* treePtr = static_cast<TTree*>(treePtrVoid);
+    if ( treePtr == 0 ) {
+        log << MSG::ERROR << " Failed to get MeritTuple to build class defintions." << m_classDefs << endreq;
+        return StatusCode::FAILURE;            
+    }
+
+    // This next step doesn't do anything if the treePtr matches the cached value
+    if ( ! m_evtClass->initializeShortCuts(*treePtr) ) {
+        log << MSG::ERROR << " Failed to initialize Event Class definitions against merit tuple." << m_classDefs << endreq;
+        return StatusCode::FAILURE;                 
+    }
+
+    // now set the bits
+    if ( ! m_evtClass->fillShortCutMaps() ) {
+        log << MSG::ERROR << " Failed to fill cut maps." << endreq;
+        return StatusCode::FAILURE;                      
+    }
+
     return sc;
 }
 
@@ -253,29 +290,14 @@ FT1worker::FT1worker()
 , EvtLiveTime("EvtLiveTime")
 , EvtEnergyCorr("EvtEnergyCorr")
 , TkrNumTracks("TkrNumTracks")
-, VtxXDir("VtxXDir")
-, VtxYDir("VtxYDir")
-, VtxZDir("VtxZDir")
-, VtxX0("VtxX0")
-, VtxY0("VtxY0")
-, VtxZ0("VtxZ0")
 , Tkr1XDir("Tkr1XDir")
 , Tkr1YDir("Tkr1YDir")
 , Tkr1ZDir("Tkr1ZDir")
-, Tkr1X0("Tkr1X0")
-, Tkr1Y0("Tkr1Y0")
-, Tkr1Z0("Tkr1Z0")
 , Tkr1FirstLayer("Tkr1FirstLayer")
 , CTBBestEnergy("CTBBestEnergy")
 , CTBBestXDir("CTBBestXDir")  
 , CTBBestYDir("CTBBestYDir")  
 , CTBBestZDir("CTBBestZDir")
-, CTBBestEnergyProb("CTBBestEnergyProb")
-, CTBBestEnergyRatio("CTBBestEnergyRatio")
-, CTBCORE("CTBCORE")
-, CTBClassLevel("CTBClassLevel")
-, CTBParticleType("CTBParticleType")
-
 {
     //now create new items 
 
@@ -289,12 +311,8 @@ FT1worker::FT1worker()
     addItem( "FT1B",             m_ft1b);
     addItem( "FT1ZenithTheta",   m_ft1zen);
     addItem( "FT1EarthAzimuth",  m_ft1azim);
-    //addItem( "FT1ConvPointX",    m_ft1convpointx); //gone
-    //addItem( "FT1ConvPointY",    m_ft1convpointy);
-    //addItem( "FT1ConvPointZ",    m_ft1convpointz);
     addItem( "FT1ConvLayer",     m_ft1convlayer);
     addItem( "FT1Livetime",      m_ft1livetime);
-    addItem( "FT1EventClass",    m_ft1eventclass);
 }
 
 /** @page anatup_vars 
@@ -355,47 +373,7 @@ void FT1worker::evaluate()
     m_ft1convlayer = -1;
     m_ft1livetime = -1;
     m_ft1livetime = EvtLiveTime;
-    m_ft1eventclass = _invalidEventClass;
 
-    // first calculate the EventClass, pass-7 style
-
-    int particleType = (int)floor(CTBParticleType + 0.001);
-    int classLevel   = (int)floor(100*CTBClassLevel + 0.001);
-
-    if (particleType==0) { // some kind of gamma
-
-    // The code below replaces this:
-        // if     (classLevel == 5)   {m_ft1eventclass = 1;}   // 0.05
-        // else if(classLevel == 10)  {m_ft1eventclass = 2;}   // 0.1
-        // else if(classLevel == 20)  {m_ft1eventclass = 3;}   // 0.2
-        // else if(classLevel == 30)  {m_ft1eventclass = 4;}   // 0.3
-        // else if(classLevel == 50)  {m_ft1eventclass = 5;}   // 0.5
-        // else if(classLevel == 100) {m_ft1eventclass = 6;}   // 1.0
-        // else if(classLevel == 200) {m_ft1eventclass = 7;}   // 2.0
-        // else if(classLevel == 300) {m_ft1eventclass = 8;}   // 3.0
-        // else if(classLevel == 400) {m_ft1eventclass = 9;}   // 4.0
-        // else if(classLevel == 500) {m_ft1eventclass = 10;}  // 5.0        
- 
-        switch (classLevel) {
-            // these are the only allowed values
-            case   5: m_ft1eventclass =  1; break;  // 0.05
-            case  10: m_ft1eventclass =  2; break;  // 0.1
-            case  20: m_ft1eventclass =  3; break;  // 0.2
-            case  30: m_ft1eventclass =  4; break;  // 0.3
-            case  50: m_ft1eventclass =  5; break;  // 0.5
-            case 100: m_ft1eventclass =  6; break;  // 1.0
-            case 200: m_ft1eventclass =  7; break;  // 2.0
-            case 300: m_ft1eventclass =  8; break;  // 3.0
-            case 400: m_ft1eventclass =  9; break;  // 4.0
-            case 500: m_ft1eventclass = 10; break; // 5.0
-            default:  m_ft1eventclass = _invalidEventClass;  // should never happen   
-        }            
-    } else if (particleType>=-1 && particleType<=4){
-        if(classLevel==100||classLevel==200||classLevel==300 ||
-            (particleType==-1&&classLevel==400)) { // only levels for these types
-            m_ft1eventclass = particleType*100 + classLevel/100;
-        }
-    }
 
     // CTBBest[X/Y/Z]Dir can be set even if there's no track, 
     // by Cal-only events, for example!
