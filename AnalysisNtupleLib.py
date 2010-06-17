@@ -1,4 +1,4 @@
-# $Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/AnalysisNtupleLib.py,v 1.2 2008/09/16 19:34:30 ecephas Exp $
+# $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/AnalysisNtupleLib.py,v 1.3 2008/11/06 22:09:30 ecephas Exp $
 def generate(env, **kw):
      if not kw.get('depsOnly', 0):
           env.Tool('addLibrary', library = ['AnalysisNtuple'])
@@ -14,5 +14,6 @@ def generate(env, **kw):
      env.Tool('facilitiesLib')
      env.Tool('GlastSvcLib')
      env.Tool('AcdUtilLib')
+     env.Tool('evtUtilsLib')
 def exists(env):
     return 1;
