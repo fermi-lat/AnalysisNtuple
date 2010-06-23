@@ -1,5 +1,5 @@
 # -*-python-*-
-# $Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/SConscript,v 1.44 2010/06/11 00:32:19 jrb Exp $
+# $Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/SConscript,v 1.45 2010/06/16 18:43:40 jrb Exp $
 # Authors: Leon Rochester <lsrea@slac.stanford.edu>
 # Version: AnalysisNtuple-02-56-07
 
@@ -34,9 +34,9 @@ if baseEnv['PLATFORM'] != 'win32':
 	progEnv.Tool('addLibrary', library = ['dl'])
 	progEnv.Tool('addLibrary', library = ['pthread'])
 
-test_AnalysisNtuple = progEnv.GaudiProgram('test_AnalysisNtuple',
-                                           ['src/AnalysisNtupleAlg.cxx'],
+test_AnalysisNtuple = progEnv.GaudiProgram('test_AnalysisNtuple', [],
 					   test=1, package='AnalaysisNtuple')
+#                                           ['src/AnalysisNtupleAlg.cxx'],
 
 progEnv.Tool('registerTargets', package = 'AnalysisNtuple',
              libraryCxts = [[AnalysisNtuple,libEnv]],
