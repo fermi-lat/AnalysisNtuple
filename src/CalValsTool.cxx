@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/src/CalValsTool.cxx,v 1.97 2010/04/22 09:13:52 lbaldini Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.96 2010/01/25 17:59:26 usher Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -129,6 +129,8 @@ private:
     float CAL_zdir;
     float CAL_x0;
     float CAL_y0;
+	float CAL_X0_Lyr[8];
+	float CAL_Y0_Lyr[8];
     float CAL_Top_Gap_Dist;
 
     float CAL_xEcntr2;
@@ -154,6 +156,7 @@ private:
     float CAL_Xtal_Ratio;
     float CAL_Xtal_maxEne; 
     float CAL_eLayer[8];
+	float CAL_LightAsym[8];
     float CAL_Num_Xtals;
     float CAL_Num_Xtals_Trunc;
     float CAL_Max_Num_Xtals_In_Layer;
@@ -399,13 +402,6 @@ Indicates the length of the measured shower along the shower axis.
 This should be close to zero. Because of ordering of moments it is slightly ... (??)
 <tr><td> CalTransRms 
 <td>F<td>   rms of transverse position measurements.
-<tr><td>CalLongSkew
-<td>F<td> The longitudinal skewness (with sign!) of the shower profile:
- E[(t - t_c)^3] / (E[(t - t_c)^2])^1.5
-<tr><td>CalLongSkewNorm
-<td>F<td> Ratio between the measured longitudinal skewness and the expected value 
-for a downward electromagnetic shower (i.e. it should peak at 1 for downward going
-photons/electrons irrespectively of the energy/angle).
 <tr><td> CalMIPDiff 
 <td>F<td>   Difference between measured energy and that expected 
 from a minimum-ionizing particle 
@@ -605,6 +601,14 @@ StatusCode CalValsTool::initialize()
     addItem("CalELayer5",    &CAL_eLayer[5]);
     addItem("CalELayer6",    &CAL_eLayer[6]);
     addItem("CalELayer7",    &CAL_eLayer[7]);
+	addItem("CalLghtAsym0",  &CAL_LightAsym[0]);
+	addItem("CalLghtAsym1",  &CAL_LightAsym[1]);
+	addItem("CalLghtAsym2",  &CAL_LightAsym[2]);
+	addItem("CalLghtAsym3",  &CAL_LightAsym[3]);
+	addItem("CalLghtAsym4",  &CAL_LightAsym[4]);
+	addItem("CalLghtAsym5",  &CAL_LightAsym[5]);
+	addItem("CalLghtAsym6",  &CAL_LightAsym[6]);
+	addItem("CalLghtAsym7",  &CAL_LightAsym[7]);
     addItem("CalLyr0Ratio",  &CAL_Lyr0_Ratio);
     addItem("CalLyr7Ratio",  &CAL_Lyr7_Ratio);
     addItem("CalBkHalfRatio",&CAL_BkHalf_Ratio);
@@ -634,6 +638,8 @@ StatusCode CalValsTool::initialize()
     addItem("CalZDir",       &CAL_zdir);
     addItem("CalX0",         &CAL_x0);
     addItem("CalY0",         &CAL_y0);
+	addItem("CalLyr0X0",      &CAL_X0_Lyr[0]);
+	addItem("CalLyr0Y0",      &CAL_Y0_Lyr[0]);
     addItem("CalTopGapDist", &CAL_Top_Gap_Dist);
 
     addItem("CalXEcntr2",     &CAL_xEcntr2);
@@ -983,6 +989,10 @@ StatusCode CalValsTool::calculate()
 
     // Local array for #xtals in layer with the most xtals (cut on e>=5MeV);
     std::vector<int> xtalCount(m_nLayers,0);
+	std::vector<double> lightAsym(m_nLayers,0.);
+	std::vector<double> eneLogLayer(m_nLayers,0.);
+	std::vector<double> logX0(m_nLayers,0.);
+	std::vector<double> logY0(m_nLayers, 0.);
 
     Event::CalXtalRecCol::const_iterator jlog;
     if (pxtalrecs) {
@@ -991,11 +1001,29 @@ StatusCode CalValsTool::calculate()
         for( jlog=pxtalrecs->begin(); jlog != pxtalrecs->end(); ++jlog) {
             const Event::CalXtalRecData& recLog = **jlog;    
             double eneLog = recLog.getEnergy();
-            if(eneLog > CAL_Xtal_maxEne) CAL_Xtal_maxEne = eneLog;
+			double enePos = recLog.getEnergy(0, idents::CalXtalId::POS);
+			double eneNeg = recLog.getEnergy(0, idents::CalXtalId::NEG);
+			Point pos = recLog.getPosition();
+            if(enePos > CAL_Xtal_maxEne) CAL_Xtal_maxEne = enePos;
+			if(eneNeg > CAL_Xtal_maxEne) CAL_Xtal_maxEne = eneNeg;
             idents::CalXtalId xtalId = recLog.getPackedId();
             int layer = xtalId.getLayer();
             if(eneLog>5.0) xtalCount[layer]++;
+
+			// Light asymetry section for testing
+
+			if(eneLog > 5 && eneLog > eneLogLayer[layer]) {
+				eneLogLayer[layer] = eneLog;
+				lightAsym[layer] = (enePos - eneNeg)/(enePos + eneNeg);	
+				logX0[layer] = pos.x();
+				logY0[layer] = pos.y();
+			}
         }
+		for(int il=0; il<8; il++) {
+			CAL_LightAsym[il]=lightAsym[il];
+			CAL_X0_Lyr[il] = logX0[il];
+			CAL_Y0_Lyr[il] = logY0[il];
+		}
 
         std::vector<int>::const_iterator itC = 
             std::max_element(xtalCount.begin(),xtalCount.end());
@@ -1040,16 +1068,7 @@ StatusCode CalValsTool::calculate()
     double calYLo = m_tkrGeom->getLATLimit(1,LOW)  + deltaY;
     double calYHi = m_tkrGeom->getLATLimit(1,HIGH) - deltaY;
 
-    // Event axis locations relative to towers and LAT
-    Point pos0(CAL_x0, CAL_y0, m_calZTop);
-    int view;
-    CAL_TwrEdgeTop  = activeDist(pos0, view);
-    CAL_TwrEdgeCntr = activeDist(cal_pos, view);
-    // Find the distance closest to an edge
-    double dX = std::max(calXLo-CAL_x0, CAL_x0-calXHi);
-    double dY = std::max(calYLo-CAL_y0, CAL_y0-calYHi);
-    CAL_LATEdge = -std::max(dX, dY);
-
+    
     // collect the CAL edge energy
     // the edge is larger of the width and length of the layer
     // we can do better if this is at all useful.
@@ -1165,8 +1184,20 @@ StatusCode CalValsTool::calculate()
 		double deltaZ  = m_calZTop - LastHit.z();
 		double topArcLength = deltaZ/LastDir.z();
 		Point calTopLoc = LastHit + topArcLength*LastDir; 
-		CAL_x0 = calTopLoc.x();
-		CAL_y0 = calTopLoc.y(); 
+		Point calMidLayer0Loc = LastHit + (topArcLength - 9.5/LastDir.z())*LastDir; 
+		CAL_x0 = calMidLayer0Loc.x();
+		CAL_y0 = calMidLayer0Loc.y(); 
+
+		// Event axis locations relative to towers and LAT
+    Point pos0(CAL_x0, CAL_y0, m_calZTop);
+    int view;
+    CAL_TwrEdgeTop  = activeDist(pos0, view);
+    CAL_TwrEdgeCntr = activeDist(cal_pos, view);
+    // Find the distance closest to an edge
+    double dX = std::max(calXLo-CAL_x0, CAL_x0-calXHi);
+    double dY = std::max(calYLo-CAL_y0, CAL_y0-calYHi);
+    CAL_LATEdge = -std::max(dX, dY);
+
 
 		// Now create an active distance type variable using the tower pitch
 		double integer_part;
