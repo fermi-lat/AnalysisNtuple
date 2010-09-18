@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.98 2009/12/16 05:53:19 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.99 2010/01/01 02:06:13 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -291,8 +291,9 @@ namespace
 }
 
 // Static factory for instantiation of algtool objects
-static ToolFactory<TkrValsTool> s_factory;
-const IToolFactory& TkrValsToolFactory = s_factory;
+//static ToolFactory<TkrValsTool> s_factory;
+//const IToolFactory& TkrValsToolFactory = s_factory;
+DECLARE_TOOL_FACTORY(TkrValsTool);
 
 // Standard Constructor
 TkrValsTool::TkrValsTool(const std::string& type, 

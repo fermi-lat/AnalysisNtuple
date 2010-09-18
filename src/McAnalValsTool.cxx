@@ -1,7 +1,7 @@
 /** @file McAnalValsTool.cxx
     @brief declartion, implementaion of the class UserAlg
 
-    $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McAnalValsTool.cxx,v 1.12 2006/03/21 01:43:50 usher Exp $
+    $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McAnalValsTool.cxx,v 1.13 2007/06/07 17:00:13 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -149,8 +149,9 @@ private:
 };
 
 // Static factory for instantiation of algtool objects
-static ToolFactory<McAnalValsTool> s_factory;
-const IToolFactory& McAnalValsToolFactory = s_factory;
+//static ToolFactory<McAnalValsTool> s_factory;
+//const IToolFactory& McAnalValsToolFactory = s_factory;
+DECLARE_TOOL_FACTORY(McAnalValsTool);
 
 // Standard Constructor
 McAnalValsTool::McAnalValsTool(const std::string& type, 

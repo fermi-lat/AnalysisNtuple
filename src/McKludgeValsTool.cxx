@@ -2,7 +2,7 @@
 @brief Inserts sentinel values for several variables needed by ClassifyAlg
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McKludgeValsTool.cxx,v 1.2 2008/02/19 21:35:17 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McKludgeValsTool.cxx,v 1.3 2008/05/13 16:40:01 heather Exp $
 */
 // Include files
 
@@ -61,8 +61,9 @@ private:
 };
 
 // Static factory for instantiation of algtool objects
-static ToolFactory<McKludgeValsTool> s_factory;
-const IToolFactory& McKludgeValsToolFactory = s_factory;
+//static ToolFactory<McKludgeValsTool> s_factory;
+//const IToolFactory& McKludgeValsToolFactory = s_factory;
+DECLARE_TOOL_FACTORY(McKludgeValsTool);
 
 // Standard Constructor
 McKludgeValsTool::McKludgeValsTool(const std::string& type, 

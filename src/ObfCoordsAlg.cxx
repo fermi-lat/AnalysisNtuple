@@ -1,7 +1,7 @@
 /** @file ObfCoordsAlg.cxx
 @brief Declaration and implementation of Gaudi algorithm ObfCoordsAlg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfCoordsAlg.cxx,v 1.15 2008/06/17 02:52:29 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfCoordsAlg.cxx,v 1.16 2009/05/06 23:30:07 lsrea Exp $
 */
 // Include files
 
@@ -48,8 +48,9 @@ private:
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-static const AlgFactory<ObfCoordsAlg>  Factory;
-const IAlgFactory& ObfCoordsAlgFactory = Factory;
+//static const AlgFactory<ObfCoordsAlg>  Factory;
+//const IAlgFactory& ObfCoordsAlgFactory = Factory;
+DECLARE_ALGORITHM_FACTORY(ObfCoordsAlg);
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

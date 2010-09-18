@@ -1,7 +1,7 @@
 /** @file McCoordsAlg.cxx
 @brief Declaration and implementation of Gaudi algorithm McCoordsAlg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McCoordsAlg.cxx,v 1.8 2008/06/14 04:11:05 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McCoordsAlg.cxx,v 1.9 2009/02/15 05:47:25 lsrea Exp $
 */
 // Include files
 
@@ -48,8 +48,9 @@ private:
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-static const AlgFactory<McCoordsAlg>  Factory;
-const IAlgFactory& McCoordsAlgFactory = Factory;
+//static const AlgFactory<McCoordsAlg>  Factory;
+//const IAlgFactory& McCoordsAlgFactory = Factory;
+DECLARE_ALGORITHM_FACTORY(McCoordsAlg);
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

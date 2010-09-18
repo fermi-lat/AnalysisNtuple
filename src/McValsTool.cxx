@@ -2,7 +2,7 @@
 @brief Calculates the Mc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.52.28.1 2009/06/08 18:04:44 echarles Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.53 2009/12/15 15:12:21 heather Exp $
 */
 // Include files
 
@@ -120,8 +120,9 @@ private:
 };
 
 // Static factory for instantiation of algtool objects
-static ToolFactory<McValsTool> s_factory;
-const IToolFactory& McValsToolFactory = s_factory;
+//static ToolFactory<McValsTool> s_factory;
+//const IToolFactory& McValsToolFactory = s_factory;
+DECLARE_TOOL_FACTORY(McValsTool);
 
 // Standard Constructor
 McValsTool::McValsTool(const std::string& type, 

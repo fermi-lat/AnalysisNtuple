@@ -3,7 +3,7 @@
 @brief Calculates the Vtx analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.28.34.1 2008/02/18 22:35:05 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.30 2008/02/19 21:35:17 lsrea Exp $
 */
 
 // Include files
@@ -130,8 +130,9 @@ private:
 };
 
 // Static factory for instantiation of algtool objects
-static ToolFactory<VtxValsTool> s_factory;
-const IToolFactory& VtxValsToolFactory = s_factory;
+//static ToolFactory<VtxValsTool> s_factory;
+//const IToolFactory& VtxValsToolFactory = s_factory;
+DECLARE_TOOL_FACTORY(VtxValsTool);
 
 // Standard Constructor
 VtxValsTool::VtxValsTool(const std::string& type, 

@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.52 2009/12/15 15:12:21 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.53 2010/01/01 02:06:13 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -272,8 +272,9 @@ namespace {
 } 
 
 // Static factory for instantiation of algtool objects
-static ToolFactory<AcdValsTool> s_factory;
-const IToolFactory& AcdValsToolFactory = s_factory;
+//static ToolFactory<AcdValsTool> s_factory;
+//const IToolFactory& AcdValsToolFactory = s_factory;
+DECLARE_TOOL_FACTORY(AcdValsTool);
 
 // Standard Constructor
 AcdValsTool::AcdValsTool(const std::string& type, 
