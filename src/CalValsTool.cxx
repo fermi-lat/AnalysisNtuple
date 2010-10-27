@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.96 2010/01/25 17:59:26 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.99 2010/07/19 15:18:09 usher Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -236,55 +236,55 @@ private:
     float CAL_xPosRmsLastLayer;
     float CAL_yPosRmsLastLayer;
 
-  // Used to determine transverse size using only transverse position measurement (Philippe Bruel)
-  int TSnlog;
-  int TSiused[1536];
-  int TSiorder[1536];
-  double TSdistTL[1536];
-  double TSdistT[1536];
-  double TSdist[1536];
-  double TSTS[1536];
-  double TSenergy[1536];
-  double TSefrac[1536];
-  Point TSaxisP;
-  Vector TSaxisV;
+    // Used to determine transverse size using only transverse position measurement (Philippe Bruel)
+    int TSnlog;
+    int TSiused[1536];
+    int TSiorder[1536];
+    double TSdistTL[1536];
+    double TSdistT[1536];
+    double TSdist[1536];
+    double TSTS[1536];
+    double TSenergy[1536];
+    double TSefrac[1536];
+    Point TSaxisP;
+    Vector TSaxisV;
 
-  float CAL_TS_CAL_TL_68;
-  float CAL_TS_CAL_TL_90;
-  float CAL_TS_CAL_TL_95;
-  float CAL_TS_CAL_TL_99;
-  float CAL_TS_CAL_TL_100;
-  float CAL_TS_CAL_T_68;
-  float CAL_TS_CAL_T_90;
-  float CAL_TS_CAL_T_95;
-  float CAL_TS_CAL_T_99;
-  float CAL_TS_CAL_T_100;
+    float CAL_TS_CAL_TL_68;
+    float CAL_TS_CAL_TL_90;
+    float CAL_TS_CAL_TL_95;
+    float CAL_TS_CAL_TL_99;
+    float CAL_TS_CAL_TL_100;
+    float CAL_TS_CAL_T_68;
+    float CAL_TS_CAL_T_90;
+    float CAL_TS_CAL_T_95;
+    float CAL_TS_CAL_T_99;
+    float CAL_TS_CAL_T_100;
 
-  float CAL_TS_CAL2_TL_68;
-  float CAL_TS_CAL2_TL_90;
-  float CAL_TS_CAL2_TL_95;
-  float CAL_TS_CAL2_TL_99;
-  float CAL_TS_CAL2_TL_100;
-  float CAL_TS_CAL2_T_68;
-  float CAL_TS_CAL2_T_90;
-  float CAL_TS_CAL2_T_95;
-  float CAL_TS_CAL2_T_99;
-  float CAL_TS_CAL2_T_100;
+    float CAL_TS_CAL2_TL_68;
+    float CAL_TS_CAL2_TL_90;
+    float CAL_TS_CAL2_TL_95;
+    float CAL_TS_CAL2_TL_99;
+    float CAL_TS_CAL2_TL_100;
+    float CAL_TS_CAL2_T_68;
+    float CAL_TS_CAL2_T_90;
+    float CAL_TS_CAL2_T_95;
+    float CAL_TS_CAL2_T_99;
+    float CAL_TS_CAL2_T_100;
 
-  float CAL_TS_TKR_TL_68;
-  float CAL_TS_TKR_TL_90;
-  float CAL_TS_TKR_TL_95;
-  float CAL_TS_TKR_TL_99;
-  float CAL_TS_TKR_TL_100;
-  float CAL_TS_TKR_T_68;
-  float CAL_TS_TKR_T_90;
-  float CAL_TS_TKR_T_95;
-  float CAL_TS_TKR_T_99;
-  float CAL_TS_TKR_T_100;
+    float CAL_TS_TKR_TL_68;
+    float CAL_TS_TKR_TL_90;
+    float CAL_TS_TKR_TL_95;
+    float CAL_TS_TKR_TL_99;
+    float CAL_TS_TKR_TL_100;
+    float CAL_TS_TKR_T_68;
+    float CAL_TS_TKR_T_90;
+    float CAL_TS_TKR_T_95;
+    float CAL_TS_TKR_T_99;
+    float CAL_TS_TKR_T_100;
 
-  int TSfillTSdist(Event::CalXtalRecCol *pxtalrecs);
-  int TSfillTS(int optts);
-  double TSgetinterpolationTS(double efrac);
+    int TSfillTSdist(Event::CalXtalRecCol *pxtalrecs);
+    int TSfillTS(int optts);
+    double TSgetinterpolationTS(double efrac);
 
     UBinterpolate* m_ubInterpolate;
 };
@@ -309,7 +309,7 @@ CalValsTool::CalValsTool(const std::string& type,
 }
 
 /** @page anatup_vars 
-    @section calvalstool CalValsTool Variables
+@section calvalstool CalValsTool Variables
 <table>
 <tr><th> Variable <th> Type <th> Description
 <tr><td> CalEnergyRaw 
@@ -384,11 +384,11 @@ CalEnergyRaw
 <td>F<td>   Number of CAL Xtals above threshold
 <tr><td> CalMaxNumXtalsInLayer
 <td>F<td>   Number of xtals with energy above 5 MeV in the layer
-            with the highest number of xtals above 5 MeV. The cut
-            is chosen to match the one used in GCRSelect
+with the highest number of xtals above 5 MeV. The cut
+is chosen to match the one used in GCRSelect
 <tr><td> CalXtalsTrunc 
 <td>F<td>   Number of CAL Xtals with > %1 of CalEnergyRaw 
-            in first Cluster (so far, there's only one!) 
+in first Cluster (so far, there's only one!) 
 <tr><td> CalXtalRatio 
 <td>F<td>   Ratio of number of Xtals with energy > 1% of CalEnergyRaw to 
 total number of struck Xtals in the first Cluster  
@@ -618,7 +618,7 @@ StatusCode CalValsTool::initialize()
     addItem("CalXtalRatio",  &CAL_Xtal_Ratio);
     addItem("CalXtalMaxEne", &CAL_Xtal_maxEne);
     addItem("CalMaxNumXtalsInLayer", 
-                             &CAL_Max_Num_Xtals_In_Layer);
+        &CAL_Max_Num_Xtals_In_Layer);
 
     addItem("CalTransRms",    &CAL_Trans_Rms);
     addItem("CalLongRms",     &CAL_Long_Rms);
@@ -722,11 +722,11 @@ StatusCode CalValsTool::initialize()
     addItem("CalTrSizeCal2T95",&CAL_TS_CAL2_T_95);
     addItem("CalTrSizeCal2T99",&CAL_TS_CAL2_T_99);
     addItem("CalTrSizeCal2T100",&CAL_TS_CAL2_T_100);
-//     addItem("CalTrSizeCal2TL68",&CAL_TS_CAL2_TL_68);
-//     addItem("CalTrSizeCal2TL90",&CAL_TS_CAL2_TL_90);
-//     addItem("CalTrSizeCal2TL95",&CAL_TS_CAL2_TL_95);
-//     addItem("CalTrSizeCal2TL99",&CAL_TS_CAL2_TL_99);
-//     addItem("CalTrSizeCal2TL100",&CAL_TS_CAL2_TL_100);
+    //     addItem("CalTrSizeCal2TL68",&CAL_TS_CAL2_TL_68);
+    //     addItem("CalTrSizeCal2TL90",&CAL_TS_CAL2_TL_90);
+    //     addItem("CalTrSizeCal2TL95",&CAL_TS_CAL2_TL_95);
+    //     addItem("CalTrSizeCal2TL99",&CAL_TS_CAL2_TL_99);
+    //     addItem("CalTrSizeCal2TL100",&CAL_TS_CAL2_TL_100);
 
     addItem("CalTrSizeTkrT68",&CAL_TS_TKR_T_68);
     addItem("CalTrSizeTkrT90",&CAL_TS_TKR_T_90);
@@ -804,8 +804,8 @@ StatusCode CalValsTool::calculate()
                 CAL_deltaT  = corResult["DeltaCntr"];
                 CAL_Tot_RLn = corResult["CALRLn"];
 
-               // CAL_x0 = corResult["CalTopX0"]; See below under Imaging Calorimeter Top
-               // CAL_y0 = corResult["CalTopY0"];
+                // CAL_x0 = corResult["CalTopX0"]; See below under Imaging Calorimeter Top
+                // CAL_y0 = corResult["CalTopY0"];
 
                 //CAL_RmsE = corResult["RmsE"];
                 //CAL_numLayersRms = corResult["NumLayersRms"];
@@ -1086,7 +1086,7 @@ StatusCode CalValsTool::calculate()
         for( jlog=pxtalrecs->begin(); jlog != pxtalrecs->end(); ++jlog) {
             const Event::CalXtalRecData& recLog = **jlog;    
             Point pos = recLog.getPosition();
-                double eneLog = recLog.getEnergy();
+            double eneLog = recLog.getEnergy();
             double xPos = pos.x(); double yPos = pos.y();
             double minX, minY;
             minX = std::min(fabs(xPos-calXLo),fabs(xPos-calXHi));
@@ -1152,10 +1152,15 @@ StatusCode CalValsTool::calculate()
     Event::TkrTrackColConPtr pTrack1;
     Event::TkrTrack* track_1 = 0;
 
+    bool do1 = false;
+    bool do2 = false;
     if(num_tracks > 0) { 
         // Get the first track
         pTrack1 = pTracks->begin();
         track_1 = *pTrack1;
+        if ((track_1->getStatusBits() & Event::TkrTrack::COSMICRAY)==0) do1 = true; //RJ , LSR
+    }
+    if(do1) {
 
         // Get the start and direction 
         x1 = track_1->getInitialPosition();
@@ -1173,6 +1178,31 @@ StatusCode CalValsTool::calculate()
         Doca track1(x1, t1);
         CAL_Track_DOCA = (float)track1.docaOfPoint(cal_pos);
 
+/*
+<<<<<<< CalValsTool.cxx
+        // Image the top of the Calorimeter - use last hit FILTERED
+        const Event::TkrTrackParams& tkr1_params = track_1->back()->getTrackParams(Event::TkrTrackHit::FILTERED);
+        double xSlp = tkr1_params.getxSlope();
+        double ySlp = tkr1_params.getySlope();
+        Vector LastDir = Vector(-xSlp, -ySlp, -1).unit();
+        Point LastHit = track_1->back()->getPoint(Event::TkrTrackHit::FILTERED);
+
+        //double calZTop = -46.;
+        double deltaZ  = m_calZTop - LastHit.z();
+        double topArcLength = deltaZ/LastDir.z();
+        Point calTopLoc = LastHit + topArcLength*LastDir; 
+        CAL_x0 = calTopLoc.x();
+        CAL_y0 = calTopLoc.y(); 
+
+        // Now create an active distance type variable using the tower pitch
+        double integer_part;
+        double deltaX_crack = modf(fabs(CAL_x0)/m_towerPitch, &integer_part); 
+        if(deltaX_crack > .5) deltaX_crack = 1. - deltaX_crack;
+        double deltaY_crack = modf(fabs(CAL_y0)/m_towerPitch, &integer_part);
+        if(deltaY_crack > .5) deltaY_crack = 1. - deltaY_crack;
+        CAL_Top_Gap_Dist = m_towerPitch*std::min(deltaX_crack, deltaY_crack);
+=======
+*/
 		// Image the top of the Calorimeter - use last hit FILTERED
 		const Event::TkrTrackParams& tkr1_params = track_1->back()->getTrackParams(Event::TkrTrackHit::FILTERED);
 		double xSlp = tkr1_params.getxSlope();
@@ -1206,11 +1236,16 @@ StatusCode CalValsTool::calculate()
 		double deltaY_crack = modf(fabs(CAL_y0)/m_towerPitch, &integer_part);
 		if(deltaY_crack > .5) deltaY_crack = 1. - deltaY_crack;
 		CAL_Top_Gap_Dist = m_towerPitch*std::min(deltaX_crack, deltaY_crack);
+//>>>>>>> 1.99
 
         if(num_tracks > 1) { 
             // Get the second track
             pTrack1++;
             Event::TkrTrack* track_1 = *pTrack1;
+            if ((track_1->getStatusBits() & Event::TkrTrack::COSMICRAY)==0) do2 = true; //RJ , LSR
+        }
+        if(do2) {
+
 
             // Get the start and direction 
             x2 = track_1->getInitialPosition();
@@ -1222,13 +1257,17 @@ StatusCode CalValsTool::calculate()
 
 
         // If vertexed - use first vertex
-        if(pVerts && pVerts->size()>0) {
-            Event::TkrVertex* vertex = *(pVerts->begin()); 
-            x0 = vertex->getPosition();
-            t0 = vertex->getDirection();
+
+        std::cout << "pVerts " << pVerts << std::endl;
+        if(pVerts) {
+            if(pVerts->size()>0) {
+                Event::TkrVertex* vertex = *(pVerts->begin()); 
+                x0 = vertex->getPosition();
+                t0 = vertex->getDirection();
+            }
         }
 
-    // try Bill's new vars... 
+        // try Bill's new vars... 
         if (pxtalrecs) {
             //make a map of xtal energy by doca
             // we need this so that we can drop the largest entries for the truncated calc.
@@ -1307,92 +1346,92 @@ StatusCode CalValsTool::calculate()
     double arclen;
 
     try {
-    // get the last point on the best track
-    if(num_tracks>0) {
-        Event::TkrTrackHitVecConItr hitIter = (*track_1).end();
-        hitIter--;
-        const Event::TkrTrackHit* hit = *hitIter;
-        xEnd = hit->getPoint(Event::TkrTrackHit::SMOOTHED);
-        tEnd = hit->getDirection(Event::TkrTrackHit::SMOOTHED);
-        double eCosTheta = fabs(tEnd.z());
+        // get the last point on the best track
+        if(num_tracks>0) {
+            Event::TkrTrackHitVecConItr hitIter = (*track_1).end();
+            hitIter--;
+            const Event::TkrTrackHit* hit = *hitIter;
+            xEnd = hit->getPoint(Event::TkrTrackHit::SMOOTHED);
+            tEnd = hit->getDirection(Event::TkrTrackHit::SMOOTHED);
+            double eCosTheta = fabs(tEnd.z());
 
-        // find the parameters to start the swim
-        double deltaZ = xEnd.z() - m_calZBot;
-        arclen   = fabs(deltaZ/eCosTheta);
+            // find the parameters to start the swim
+            double deltaZ = xEnd.z() - m_calZBot;
+            arclen   = fabs(deltaZ/eCosTheta);
 
-        // do the swim
-        m_G4PropTool->setStepStart(xEnd, tEnd);
-        m_G4PropTool->step(arclen);
-    
-        // collect the radlens by layer
-        int numSteps = m_G4PropTool->getNumberSteps();
-        std::vector<double> rlCsI(m_nLayers, 0.0);
-        std::vector<bool>   useLayer(m_nLayers, true);
-        idents::VolumeIdentifier volId;
-        idents::VolumeIdentifier prefix = m_detSvc->getIDPrefix();
-        int istep  = 0;
-        for(; istep < numSteps; ++istep) {
-            volId = m_G4PropTool->getStepVolumeId(istep);
-            volId.prepend(prefix);
-            bool inXtal = ( volId.size()>7 && volId[0]==0 
-                && volId[3]==0 && volId[7]==0 ? true : false );
-            if(inXtal) {
-                int layer = volId[4];
-                double radLen_step = m_G4PropTool->getStepRadLength(istep);
-                rlCsI[layer] += radLen_step;
+            // do the swim
+            m_G4PropTool->setStepStart(xEnd, tEnd);
+            m_G4PropTool->step(arclen);
+
+            // collect the radlens by layer
+            int numSteps = m_G4PropTool->getNumberSteps();
+            std::vector<double> rlCsI(m_nLayers, 0.0);
+            std::vector<bool>   useLayer(m_nLayers, true);
+            idents::VolumeIdentifier volId;
+            idents::VolumeIdentifier prefix = m_detSvc->getIDPrefix();
+            int istep  = 0;
+            for(; istep < numSteps; ++istep) {
+                volId = m_G4PropTool->getStepVolumeId(istep);
+                volId.prepend(prefix);
+                bool inXtal = ( volId.size()>7 && volId[0]==0 
+                    && volId[3]==0 && volId[7]==0 ? true : false );
+                if(inXtal) {
+                    int layer = volId[4];
+                    double radLen_step = m_G4PropTool->getStepRadLength(istep);
+                    rlCsI[layer] += radLen_step;
+                }
+            }
+
+            double eTot = 0;
+            double eNorm0 = 0;
+            double e2   = 0;
+            int CAL_nLayersRms = 0;
+            int layer;
+
+            for (layer=0; layer<m_nLayers; ++layer) {
+                if (rlCsI[layer]<0.5) useLayer[layer] = false;
+                if (CAL_eLayer[layer]<0.05*CAL_EnergyRaw || CAL_EnergyRaw<=0) {
+                    useLayer[layer] = false;
+                }
+            }
+
+            for (layer=0; layer<m_nLayers; ++layer) {
+                if(!useLayer[layer]) continue;
+                CAL_nLayersRms++;
+                double eNorm = CAL_eLayer[layer]/rlCsI[layer];
+                if(layer==0) { 
+                    eNorm0 = eNorm;
+                } else {
+                    CAL_nLayersRmsBack++;
+                }
+                eTot += eNorm;
+                e2 +=   eNorm*eNorm;
+                //std::cout << "layer " << layer << ", r.l. " << rlCsI[layer] 
+                //    << ", eLayer " << CAL_eLayer[layer] 
+                //    << ", rlNorm " << rlCsI[layer]*eCosTheta) << ", eL_norm " 
+                //    << eNorm << std::endl;
+            }
+
+            double eAve = 0;
+            double eAveBack = 0;
+            if(CAL_nLayersRms>1) {
+                eAve = eTot/CAL_nLayersRms;
+                CAL_rmsLayerE = 
+                    (float)sqrt((e2 - CAL_nLayersRms*eAve*eAve)/(CAL_nLayersRms-1))/eAve;
+                //std::cout << "eRms " << CAL_rmsLayerE/eAve 
+                //    << ", " << CAL_nLayersRms << " layers" << std::endl;
+            }
+            if(CAL_nLayersRmsBack>1) {
+                eAveBack = (eTot-eNorm0)/(CAL_nLayersRmsBack);
+                CAL_rmsLayerEBack = 
+                    (float) sqrt((e2 - eNorm0*eNorm0 - (CAL_nLayersRmsBack)*eAveBack*eAveBack)
+                    /(CAL_nLayersRmsBack-1))/eAve;
+                //std::cout << "eRmsTrunc " << CAL_rmsLayerEBack/eAveBack 
+                //    << ", " << nLayersRmsBack << " layers"<<std::endl;
+                CAL_eAveBack = eAveBack;
+                CAL_layer0Ratio = eNorm0/eAveBack;
             }
         }
-
-        double eTot = 0;
-        double eNorm0 = 0;
-        double e2   = 0;
-        int CAL_nLayersRms = 0;
-        int layer;
-
-        for (layer=0; layer<m_nLayers; ++layer) {
-            if (rlCsI[layer]<0.5) useLayer[layer] = false;
-            if (CAL_eLayer[layer]<0.05*CAL_EnergyRaw || CAL_EnergyRaw<=0) {
-                useLayer[layer] = false;
-            }
-        }
-
-        for (layer=0; layer<m_nLayers; ++layer) {
-            if(!useLayer[layer]) continue;
-            CAL_nLayersRms++;
-            double eNorm = CAL_eLayer[layer]/rlCsI[layer];
-            if(layer==0) { 
-                eNorm0 = eNorm;
-            } else {
-                CAL_nLayersRmsBack++;
-            }
-            eTot += eNorm;
-            e2 +=   eNorm*eNorm;
-            //std::cout << "layer " << layer << ", r.l. " << rlCsI[layer] 
-            //    << ", eLayer " << CAL_eLayer[layer] 
-            //    << ", rlNorm " << rlCsI[layer]*eCosTheta) << ", eL_norm " 
-            //    << eNorm << std::endl;
-        }
-
-        double eAve = 0;
-        double eAveBack = 0;
-        if(CAL_nLayersRms>1) {
-            eAve = eTot/CAL_nLayersRms;
-            CAL_rmsLayerE = 
-                (float)sqrt((e2 - CAL_nLayersRms*eAve*eAve)/(CAL_nLayersRms-1))/eAve;
-            //std::cout << "eRms " << CAL_rmsLayerE/eAve 
-            //    << ", " << CAL_nLayersRms << " layers" << std::endl;
-        }
-        if(CAL_nLayersRmsBack>1) {
-            eAveBack = (eTot-eNorm0)/(CAL_nLayersRmsBack);
-            CAL_rmsLayerEBack = 
-                (float) sqrt((e2 - eNorm0*eNorm0 - (CAL_nLayersRmsBack)*eAveBack*eAveBack)
-                /(CAL_nLayersRmsBack-1))/eAve;
-            //std::cout << "eRmsTrunc " << CAL_rmsLayerEBack/eAveBack 
-            //    << ", " << nLayersRmsBack << " layers"<<std::endl;
-            CAL_eAveBack = eAveBack;
-            CAL_layer0Ratio = eNorm0/eAveBack;
-        }
-    }
     } catch( std::exception& /*e*/ ) {
         MsgStream log(msgSvc(), name());
         printHeader(log);
@@ -1422,7 +1461,7 @@ StatusCode CalValsTool::calculate()
     //
     // Estimations of the transverse size (Philippe Bruel)
     //
-    
+
     //
     // Perform the estimation with main axis = cal axis
     //
@@ -1437,62 +1476,62 @@ StatusCode CalValsTool::calculate()
     //int i;
 
     if(TSnlog>0)
-      {
-	//
-	// fill CAL_TS_CAL_T_
-	//
-	TSfillTS(0);
-	CAL_TS_CAL_T_68 = (float)TSgetinterpolationTS(0.68);
-	CAL_TS_CAL_T_90 = (float)TSgetinterpolationTS(0.90);
-	CAL_TS_CAL_T_95 = (float)TSgetinterpolationTS(0.95);
-	CAL_TS_CAL_T_99 = (float)TSgetinterpolationTS(0.99);
-	CAL_TS_CAL_T_100 = (float)TSTS[TSnlog-1];
-	//
-	// fill CAL_TS_CAL_TL_
-	//
-	TSfillTS(1);
-	CAL_TS_CAL_TL_68 = (float)TSgetinterpolationTS(0.68);
-	CAL_TS_CAL_TL_90 = (float)TSgetinterpolationTS(0.90);
-	CAL_TS_CAL_TL_95 = (float)TSgetinterpolationTS(0.95);
-	CAL_TS_CAL_TL_99 = (float)TSgetinterpolationTS(0.99);
-	CAL_TS_CAL_TL_100 = (float)TSTS[TSnlog-1];
-      }
+    {
+        //
+        // fill CAL_TS_CAL_T_
+        //
+        TSfillTS(0);
+        CAL_TS_CAL_T_68 = (float)TSgetinterpolationTS(0.68);
+        CAL_TS_CAL_T_90 = (float)TSgetinterpolationTS(0.90);
+        CAL_TS_CAL_T_95 = (float)TSgetinterpolationTS(0.95);
+        CAL_TS_CAL_T_99 = (float)TSgetinterpolationTS(0.99);
+        CAL_TS_CAL_T_100 = (float)TSTS[TSnlog-1];
+        //
+        // fill CAL_TS_CAL_TL_
+        //
+        TSfillTS(1);
+        CAL_TS_CAL_TL_68 = (float)TSgetinterpolationTS(0.68);
+        CAL_TS_CAL_TL_90 = (float)TSgetinterpolationTS(0.90);
+        CAL_TS_CAL_TL_95 = (float)TSgetinterpolationTS(0.95);
+        CAL_TS_CAL_TL_99 = (float)TSgetinterpolationTS(0.99);
+        CAL_TS_CAL_TL_100 = (float)TSTS[TSnlog-1];
+    }
 
     //
     // Perform the estimation with centroid and axis determined only with transverse information
     //
     if(CAL_posdir_nlayers>=4)
-      {
-	TSaxisP = Point(CAL_xEcntr2,CAL_yEcntr2,CAL_zEcntr2);
-	TSaxisVin = Vector(CAL_xdir2,CAL_ydir2,CAL_zdir2);
-	TSaxisV = TSaxisVin.unit();
-	//
-	// Filling TSdist...
-	//
-	TSfillTSdist(pxtalrecs);
-	
-	if(TSnlog>0)
-	  {
-	    //
-	    // fill CAL_TS_CAL2_T_
-	    //
-	    TSfillTS(0);
-	    CAL_TS_CAL2_T_68 = (float)TSgetinterpolationTS(0.68);
-	    CAL_TS_CAL2_T_90 = (float)TSgetinterpolationTS(0.90);
-	    CAL_TS_CAL2_T_95 = (float)TSgetinterpolationTS(0.95);
-	    CAL_TS_CAL2_T_99 = (float)TSgetinterpolationTS(0.99);
-	    CAL_TS_CAL2_T_100 = (float)TSTS[TSnlog-1];
-	    //
-	    // fill CAL_TS_CAL2_TL_
-	    //
-	    TSfillTS(1);
-	    CAL_TS_CAL2_TL_68 = (float)TSgetinterpolationTS(0.68);
-	    CAL_TS_CAL2_TL_90 = (float)TSgetinterpolationTS(0.90);
-	    CAL_TS_CAL2_TL_95 = (float)TSgetinterpolationTS(0.95);
-	    CAL_TS_CAL2_TL_99 = (float)TSgetinterpolationTS(0.99);
-	    CAL_TS_CAL2_TL_100 = (float)TSTS[TSnlog-1];
-	  }
-      }
+    {
+        TSaxisP = Point(CAL_xEcntr2,CAL_yEcntr2,CAL_zEcntr2);
+        TSaxisVin = Vector(CAL_xdir2,CAL_ydir2,CAL_zdir2);
+        TSaxisV = TSaxisVin.unit();
+        //
+        // Filling TSdist...
+        //
+        TSfillTSdist(pxtalrecs);
+
+        if(TSnlog>0)
+        {
+            //
+            // fill CAL_TS_CAL2_T_
+            //
+            TSfillTS(0);
+            CAL_TS_CAL2_T_68 = (float)TSgetinterpolationTS(0.68);
+            CAL_TS_CAL2_T_90 = (float)TSgetinterpolationTS(0.90);
+            CAL_TS_CAL2_T_95 = (float)TSgetinterpolationTS(0.95);
+            CAL_TS_CAL2_T_99 = (float)TSgetinterpolationTS(0.99);
+            CAL_TS_CAL2_T_100 = (float)TSTS[TSnlog-1];
+            //
+            // fill CAL_TS_CAL2_TL_
+            //
+            TSfillTS(1);
+            CAL_TS_CAL2_TL_68 = (float)TSgetinterpolationTS(0.68);
+            CAL_TS_CAL2_TL_90 = (float)TSgetinterpolationTS(0.90);
+            CAL_TS_CAL2_TL_95 = (float)TSgetinterpolationTS(0.95);
+            CAL_TS_CAL2_TL_99 = (float)TSgetinterpolationTS(0.99);
+            CAL_TS_CAL2_TL_100 = (float)TSTS[TSnlog-1];
+        }
+    }
 
     //
     // Perform the estimation with main axis = best track
@@ -1500,48 +1539,48 @@ StatusCode CalValsTool::calculate()
     int mynumtracks = 0;
     if(pTracks) mynumtracks = pTracks->size();
     if(mynumtracks>0)
-      { 
+    { 
         // Get the first track
         pTrack1 = pTracks->begin();
         track_1 = *pTrack1;
         // Get the start and direction 
         TSaxisP = track_1->getInitialPosition();
         TSaxisVin = track_1->getInitialDirection();
-	TSaxisV = TSaxisVin.unit();
-	//
-	// Filling TSdist...
-	//
-	TSfillTSdist(pxtalrecs);
+        TSaxisV = TSaxisVin.unit();
+        //
+        // Filling TSdist...
+        //
+        TSfillTSdist(pxtalrecs);
 
-	if(TSnlog>0)
-	  {
-	    //
-	    // fill CAL_TS_TKR_T_
-	    //
-	    TSfillTS(0);
-	    CAL_TS_TKR_T_68 = (float)TSgetinterpolationTS(0.68);
-	    CAL_TS_TKR_T_90 = (float)TSgetinterpolationTS(0.90);
-	    CAL_TS_TKR_T_95 = (float)TSgetinterpolationTS(0.95);
-	    CAL_TS_TKR_T_99 = (float)TSgetinterpolationTS(0.99);
-	    CAL_TS_TKR_T_100 = (float)TSTS[TSnlog-1];
-	    //
-	    // fill CAL_TS_TKR_TL_
-	    //
-	    TSfillTS(1);
-	    CAL_TS_TKR_TL_68 = (float)TSgetinterpolationTS(0.68);
-	    CAL_TS_TKR_TL_90 = (float)TSgetinterpolationTS(0.90);
-	    CAL_TS_TKR_TL_95 = (float)TSgetinterpolationTS(0.95);
-	    CAL_TS_TKR_TL_99 = (float)TSgetinterpolationTS(0.99);
-	    CAL_TS_TKR_TL_100 = (float)TSTS[TSnlog-1];
-	  }
-      }
+        if(TSnlog>0)
+        {
+            //
+            // fill CAL_TS_TKR_T_
+            //
+            TSfillTS(0);
+            CAL_TS_TKR_T_68 = (float)TSgetinterpolationTS(0.68);
+            CAL_TS_TKR_T_90 = (float)TSgetinterpolationTS(0.90);
+            CAL_TS_TKR_T_95 = (float)TSgetinterpolationTS(0.95);
+            CAL_TS_TKR_T_99 = (float)TSgetinterpolationTS(0.99);
+            CAL_TS_TKR_T_100 = (float)TSTS[TSnlog-1];
+            //
+            // fill CAL_TS_TKR_TL_
+            //
+            TSfillTS(1);
+            CAL_TS_TKR_TL_68 = (float)TSgetinterpolationTS(0.68);
+            CAL_TS_TKR_TL_90 = (float)TSgetinterpolationTS(0.90);
+            CAL_TS_TKR_TL_95 = (float)TSgetinterpolationTS(0.95);
+            CAL_TS_TKR_TL_99 = (float)TSgetinterpolationTS(0.99);
+            CAL_TS_TKR_TL_100 = (float)TSTS[TSnlog-1];
+        }
+    }
 
-      // throw an exception
-      //int ii = 1;
-      //int j = 0;
-      //int k = ii/j;
-      //k++;
-    
+    // throw an exception
+    //int ii = 1;
+    //int j = 0;
+    //int k = ii/j;
+    //k++;
+
     return sc;
 }
 
@@ -1582,165 +1621,165 @@ double CalValsTool::activeDist(Point pos, int &view) const
 
 int CalValsTool::TSfillTSdist(Event::CalXtalRecCol *pxtalrecs)
 {
-  int i;
-  TSnlog = 0;
-  for(i=0;i<1536;++i)
+    int i;
+    TSnlog = 0;
+    for(i=0;i<1536;++i)
     {
-      TSdistTL[i] = 0;
-      TSdistT[i] = 0;
-      TSenergy[i] = 0;
+        TSdistTL[i] = 0;
+        TSdistT[i] = 0;
+        TSenergy[i] = 0;
     }
 
-  if(pxtalrecs==NULL) return 1;
+    if(pxtalrecs==NULL) return 1;
 
-  int itow,ilay,icol,itowx,itowy;
-  double lambda;
-  Point TSxtalP;
-  Point TSxtalC;
-  Vector TSxtalV;
-  Vector TSTC;
-  double lambdamax = 326./2;
- 
-  Event::CalXtalRecCol::const_iterator jlog;
- 
-  for( jlog=pxtalrecs->begin(); jlog != pxtalrecs->end(); ++jlog)
+    int itow,ilay,icol,itowx,itowy;
+    double lambda;
+    Point TSxtalP;
+    Point TSxtalC;
+    Vector TSxtalV;
+    Vector TSTC;
+    double lambdamax = 326./2;
+
+    Event::CalXtalRecCol::const_iterator jlog;
+
+    for( jlog=pxtalrecs->begin(); jlog != pxtalrecs->end(); ++jlog)
     {
-      const Event::CalXtalRecData& recLog = **jlog;    
-      TSxtalP = recLog.getPosition();
-      TSenergy[TSnlog] = recLog.getEnergy();
-      //
-      // computing TSdistTL : using both the transverse and longitudinal position measurements
-      //
-      TSTC = TSxtalP-TSaxisP;
-      TSdistTL[TSnlog] = TSTC*TSTC - (TSTC*TSaxisV)*(TSTC*TSaxisV);
-      if(TSdistTL[TSnlog]<0) TSdistTL[TSnlog] = 0;
-      TSdistTL[TSnlog] = sqrt(TSdistTL[TSnlog]);
-      //
-      // computing TSdistT : using only the transverse position measurement
-      //
-      idents::CalXtalId id = recLog.getPackedId();
-      itow = id.getTower();
-      ilay = id.getLayer();
-      icol = id.getColumn();
-      itowy = itow/4;
-      itowx = itow-4*itowy;
-      if(ilay%2==0)
-	{
-	  TSxtalV = Vector(1,0,0);
-	  TSxtalC = Point(-1.5*374.5+374.5*(double)itowx,TSxtalP.y(),TSxtalP.z());
-	}
-      else
-	{
-	  TSxtalV = Vector(0,1,0);
-	  if(m_xNum==4 && m_yNum==1) // beamtest configuration
-	    TSxtalC = Point(TSxtalP.x(),0,TSxtalP.z());
-	  else
-	    TSxtalC = Point(TSxtalP.x(),-1.5*374.5+374.5*(double)itowy,TSxtalP.z());
-	}
-      TSTC = TSxtalC-TSaxisP;
-      lambda = 1-(TSxtalV*TSaxisV)*(TSxtalV*TSaxisV);
-      if(lambda==0) // xtal axis and main axis are parallel
-	{
-	  TSdistT[TSnlog] = TSTC*TSTC - (TSTC*TSaxisV)*(TSTC*TSaxisV);
-	  if(TSdistT[TSnlog]<0) TSdistT[TSnlog] = 0;
-	  TSdistT[TSnlog] = sqrt(TSdistT[TSnlog]);
-	}
-      else
-	{
-	  lambda = (-(TSTC*TSxtalV)+(TSTC*TSaxisV)*(TSxtalV*TSaxisV))/lambda;
-	  if(lambda>lambdamax)
-	    lambda = lambdamax;
-	  if(lambda<-lambdamax)
-	    lambda = -lambdamax;
-	  TSxtalP = TSxtalC + lambda*TSxtalV;
-	  TSTC = TSxtalP-TSaxisP;
-	  TSdistT[TSnlog] = TSTC*TSTC - (TSTC*TSaxisV)*(TSTC*TSaxisV);
-	  if(TSdistT[TSnlog]<0) TSdistT[TSnlog] = 0;
-	  TSdistT[TSnlog] = sqrt(TSdistT[TSnlog]);
-	}
-      ++TSnlog;
+        const Event::CalXtalRecData& recLog = **jlog;    
+        TSxtalP = recLog.getPosition();
+        TSenergy[TSnlog] = recLog.getEnergy();
+        //
+        // computing TSdistTL : using both the transverse and longitudinal position measurements
+        //
+        TSTC = TSxtalP-TSaxisP;
+        TSdistTL[TSnlog] = TSTC*TSTC - (TSTC*TSaxisV)*(TSTC*TSaxisV);
+        if(TSdistTL[TSnlog]<0) TSdistTL[TSnlog] = 0;
+        TSdistTL[TSnlog] = sqrt(TSdistTL[TSnlog]);
+        //
+        // computing TSdistT : using only the transverse position measurement
+        //
+        idents::CalXtalId id = recLog.getPackedId();
+        itow = id.getTower();
+        ilay = id.getLayer();
+        icol = id.getColumn();
+        itowy = itow/4;
+        itowx = itow-4*itowy;
+        if(ilay%2==0)
+        {
+            TSxtalV = Vector(1,0,0);
+            TSxtalC = Point(-1.5*374.5+374.5*(double)itowx,TSxtalP.y(),TSxtalP.z());
+        }
+        else
+        {
+            TSxtalV = Vector(0,1,0);
+            if(m_xNum==4 && m_yNum==1) // beamtest configuration
+                TSxtalC = Point(TSxtalP.x(),0,TSxtalP.z());
+            else
+                TSxtalC = Point(TSxtalP.x(),-1.5*374.5+374.5*(double)itowy,TSxtalP.z());
+        }
+        TSTC = TSxtalC-TSaxisP;
+        lambda = 1-(TSxtalV*TSaxisV)*(TSxtalV*TSaxisV);
+        if(lambda==0) // xtal axis and main axis are parallel
+        {
+            TSdistT[TSnlog] = TSTC*TSTC - (TSTC*TSaxisV)*(TSTC*TSaxisV);
+            if(TSdistT[TSnlog]<0) TSdistT[TSnlog] = 0;
+            TSdistT[TSnlog] = sqrt(TSdistT[TSnlog]);
+        }
+        else
+        {
+            lambda = (-(TSTC*TSxtalV)+(TSTC*TSaxisV)*(TSxtalV*TSaxisV))/lambda;
+            if(lambda>lambdamax)
+                lambda = lambdamax;
+            if(lambda<-lambdamax)
+                lambda = -lambdamax;
+            TSxtalP = TSxtalC + lambda*TSxtalV;
+            TSTC = TSxtalP-TSaxisP;
+            TSdistT[TSnlog] = TSTC*TSTC - (TSTC*TSaxisV)*(TSTC*TSaxisV);
+            if(TSdistT[TSnlog]<0) TSdistT[TSnlog] = 0;
+            TSdistT[TSnlog] = sqrt(TSdistT[TSnlog]);
+        }
+        ++TSnlog;
     }
-  
-  return 0;
+
+    return 0;
 }
 
 int CalValsTool::TSfillTS(int optts)
 {
-  // optts = 0 : use only transverse position measurement
-  // optts = 1 : use both transverse and longitudinal position measurements
+    // optts = 0 : use only transverse position measurement
+    // optts = 1 : use both transverse and longitudinal position measurements
 
-  if(TSnlog<=0) return 1;
-  int i,j;
-  double TStotalenergy = 0;
-  for(i=0;i<TSnlog;++i)
+    if(TSnlog<=0) return 1;
+    int i,j;
+    double TStotalenergy = 0;
+    for(i=0;i<TSnlog;++i)
     {
-      TSTS[i] = 0;
-      TSiused[i] = 0;
-      TSiorder[i] = -1;
-      TStotalenergy += TSenergy[i];
-      if(optts==0)
-	TSdist[i] = TSdistT[i]; 
-      else
-	TSdist[i] = TSdistTL[i]; 
+        TSTS[i] = 0;
+        TSiused[i] = 0;
+        TSiorder[i] = -1;
+        TStotalenergy += TSenergy[i];
+        if(optts==0)
+            TSdist[i] = TSdistT[i]; 
+        else
+            TSdist[i] = TSdistTL[i]; 
     }
-  if(TStotalenergy<=0) return 1;
-  double mindist = 9999999;
-  int imin = 0;
-  for(i=0;i<TSnlog;++i)
+    if(TStotalenergy<=0) return 1;
+    double mindist = 9999999;
+    int imin = 0;
+    for(i=0;i<TSnlog;++i)
     {
-      mindist = 9999999;
-      for(j=0;j<TSnlog;++j)
-	{
-	  if(TSiused[j]) continue;
-	  if(TSdist[j]<mindist)
-	    {
-	      mindist = TSdist[j];
-	      imin = j;
-	    }
-	}
-      TSiorder[i] = imin;
-      TSiused[imin] = 1;
+        mindist = 9999999;
+        for(j=0;j<TSnlog;++j)
+        {
+            if(TSiused[j]) continue;
+            if(TSdist[j]<mindist)
+            {
+                mindist = TSdist[j];
+                imin = j;
+            }
+        }
+        TSiorder[i] = imin;
+        TSiused[imin] = 1;
     }
-  double efrac = 0;
-  double weight = 0;
-  double transversesize = 0;
-  for(i=0;i<TSnlog;++i)
+    double efrac = 0;
+    double weight = 0;
+    double transversesize = 0;
+    for(i=0;i<TSnlog;++i)
     {
-      efrac += TSenergy[TSiorder[i]];
-      weight += TSenergy[TSiorder[i]];
-      transversesize += TSenergy[TSiorder[i]]*TSdist[TSiorder[i]]*TSdist[TSiorder[i]];
-      TSefrac[i] = efrac/TStotalenergy;
-      if(weight>0)
-	TSTS[i] = sqrt(transversesize/weight);
+        efrac += TSenergy[TSiorder[i]];
+        weight += TSenergy[TSiorder[i]];
+        transversesize += TSenergy[TSiorder[i]]*TSdist[TSiorder[i]]*TSdist[TSiorder[i]];
+        TSefrac[i] = efrac/TStotalenergy;
+        if(weight>0)
+            TSTS[i] = sqrt(transversesize/weight);
     }
 
-  return 0;
+    return 0;
 }
 
 double CalValsTool::TSgetinterpolationTS(double efrac)
 {
-  if(TSnlog<=0) return -999;
-  //
-  if(efrac<=TSefrac[0]) return TSTS[0];
-  if(efrac>=TSefrac[TSnlog-1]) return TSTS[TSnlog-1];
-  //
-  int i;
-  int j = -1;
-  for(i=0;i<TSnlog-1;++i)
+    if(TSnlog<=0) return -999;
+    //
+    if(efrac<=TSefrac[0]) return TSTS[0];
+    if(efrac>=TSefrac[TSnlog-1]) return TSTS[TSnlog-1];
+    //
+    int i;
+    int j = -1;
+    for(i=0;i<TSnlog-1;++i)
     {
-      if(TSefrac[i]<efrac && TSefrac[i+1]>=efrac)
-	{
-	  j = i;
-	  break;
-	}
+        if(TSefrac[i]<efrac && TSefrac[i+1]>=efrac)
+        {
+            j = i;
+            break;
+        }
     }
-  if(j==-1) return TSTS[TSnlog-1];
+    if(j==-1) return TSTS[TSnlog-1];
 
-  i = j;
-  if(TSefrac[i+1]-TSefrac[i]>0)
-    return ((TSefrac[i+1]-efrac)*TSTS[i]+(efrac-TSefrac[i])*TSTS[i+1])/(TSefrac[i+1]-TSefrac[i]);
+    i = j;
+    if(TSefrac[i+1]-TSefrac[i]>0)
+        return ((TSefrac[i+1]-efrac)*TSTS[i]+(efrac-TSefrac[i])*TSTS[i+1])/(TSefrac[i+1]-TSefrac[i]);
 
-  return (TSTS[i]+TSTS[i+1])/2;
+    return (TSTS[i]+TSTS[i+1])/2;
 }
 
 void CalValsTool::zeroVals()

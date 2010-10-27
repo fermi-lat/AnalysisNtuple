@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.52 2009/12/15 15:12:21 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.53 2010/01/01 02:06:13 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -18,6 +18,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.52 
 #include "Event/TopLevel/EventModel.h"
 #include "Event/TopLevel/Event.h"
 
+#include "Event/Recon/TkrRecon/TkrTrack.h"    // RJ added
 #include "Event/Recon/TkrRecon/TkrVertex.h"
 #include "Event/Recon/AcdRecon/AcdRecon.h"
 #include "Event/Recon/CalRecon/CalCluster.h"
@@ -87,6 +88,19 @@ private:
     float ACD_ActiveDist3D_Err;
     float ACD_ActiveDist_Energy;
 
+	// RJ: variables for CR active distance
+	float ACD_CR_ActiveDist3D;
+	float ACD_CR_ActiveDist_Energy;
+    int ACD_CR_ActiveDist_TrackNum;
+	float ACD_CR_ribbon_ActiveDist;
+	float ACD_CR_ribbon_EnergyPmtA;
+	float ACD_CR_ribbon_EnergyPmtB;
+	float ACD_CR1_ActiveDist;
+	float ACD_CR1_ribbon_ActiveDist;
+	float ACD_CR1_ribbon_EnergyPmtA;
+	float ACD_CR1_ribbon_EnergyPmtB;
+	float ACD_CR1_ActiveDist_Energy;
+	int ACD_CR1_ActiveDist_TrackNum;
 
     // Variables computed by looping over all tracks w.r.t. hit ribbons
     float ACD_ribbon_ActiveDist;
@@ -384,8 +398,25 @@ StatusCode AcdValsTool::initialize()
     addItem("AcdEnergyRow2", & ACD_energyRow2);
     addItem("AcdEnergyRow3", & ACD_energyRow3);
 
+	// RJ: add CR track active distance stuff
+    addItem("AcdCRActiveDist3D",   &ACD_CR_ActiveDist3D);
+    addItem("AcdCRActDistTileEnergy",   &ACD_CR_ActiveDist_Energy);
+    addItem("AcdCRActDistTrackNum", &ACD_CR_ActiveDist_TrackNum);
+	addItem("ACDCRRibbonActiveDist", &ACD_CR_ribbon_ActiveDist);
+    addItem("AcdCRRibbonActEnergyPmtA", &ACD_CR_ribbon_EnergyPmtA);
+    addItem("AcdCRRibbonActEnergyPmtB", &ACD_CR_ribbon_EnergyPmtB);
+    addItem("AcdCR1ActiveDist",   &ACD_CR1_ActiveDist);
+    addItem("AcdCR1ActDistTileEnergy",   &ACD_CR1_ActiveDist_Energy);
+    addItem("AcdCR1ActDistTrackNum", &ACD_CR1_ActiveDist_TrackNum);
+	addItem("ACDCR1RibbonActiveDist", &ACD_CR1_ribbon_ActiveDist);
+    addItem("AcdCR1RibbonActEnergyPmtA", &ACD_CR1_ribbon_EnergyPmtA);
+    addItem("AcdCR1RibbonActEnergyPmtB", &ACD_CR1_ribbon_EnergyPmtB);
+
+
     zeroVals();
     ACD_ActiveDist_TrackNum = -1;
+	ACD_CR_ActiveDist_TrackNum = -1; //RJ
+	ACD_CR1_ActiveDist_TrackNum = -1; //RJ
 
     return sc;
 }
@@ -400,6 +431,8 @@ StatusCode AcdValsTool::calculate()
     // Recover pointers to CalClusters and Xtals
     SmartDataPtr<Event::CalClusterCol>     
         pCals(m_pEventSvc,EventModel::CalRecon::CalClusterCol);
+	SmartDataPtr<Event::TkrTrackCol>   
+        pTracks(m_pEventSvc,EventModel::TkrRecon::TkrTrackCol);   //RJ: get pointer to TKR Recon results
 
     // Recover Track associated info. (not currently used 
     //SmartDataPtr<Event::TkrFitTrackCol>  pTracks(m_pEventSvc,EventModel::TkrRecon::TkrFitTrackCol);
@@ -489,7 +522,15 @@ StatusCode AcdValsTool::calculate()
 
         // Reset variables for loop over all tracks
         ACD_ActiveDist3D = ACD_ribbon_ActiveDist = -2000.;
+//<<<<<<< AcdValsTool.cxx
+		ACD_CR_ActiveDist3D = ACD_CR_ribbon_ActiveDist = -2000.;  //RJ
+		ACD_CR1_ActiveDist = ACD_CR1_ribbon_ActiveDist = -2000.;  //RJ
+		ACD_CR_ActiveDist_TrackNum = ACD_CR1_ActiveDist_TrackNum = -999; //RJ
+		ACD_CR_ActiveDist_Energy = ACD_CR_ribbon_EnergyPmtA = ACD_CR_ribbon_EnergyPmtB = 0.;  //RJ
+		ACD_CR1_ActiveDist_Energy = ACD_CR1_ribbon_EnergyPmtA = ACD_CR1_ribbon_EnergyPmtB = 0.;  //RJ
+//=======
 	ACD_ActiveDist3D_ID = ACD_ribbon_ActiveDist_ID = ACD_TkrRibbon_Dist_ID = 700;
+//>>>>>>> 1.53
         ACD_ActiveDist_Energy = ACD_ribbon_EnergyPmtA = ACD_ribbon_EnergyPmtB = 0.;
         ACD_ActiveDist3D_Err = ACD_ribbon_ActiveDist_Err = -1.;	
         ACD_Corner_DOCA = ACD_TkrRibbon_Dist = ACD_TkrHole_Dist = -2000.;
@@ -508,11 +549,35 @@ StatusCode AcdValsTool::calculate()
         ACD_VtxActiveDist = ACD_VtxActiveDist_Down = -2000.;
         ACD_VtxActiveDist_Energy = ACD_VtxActiveDist_EnergyDown = 0.;
 
+        // RJ: Find the best CR track
+        int iCnt = 0;
+        int bestCRtkr = -9999;
+        if(pTracks) {
+            if(pTracks->size()>0) {
+                Event::TkrTrackColConPtr pTrack = pTracks->begin();
+                Event::TkrTrack* myTrack = NULL;
+                int mxHts= 0, iCnt= 0, bestCRtkr= -9999;
+                for (; pTrack != pTracks->end(); pTrack++) {
+                    Event::TkrTrack* myTrack = *pTrack;
+                    if (myTrack->getStatusBits() & Event::TkrTrack::COSMICRAY) {
+                        if (myTrack->getNumHits() > mxHts) {
+                            mxHts= myTrack->getNumHits();
+                            bestCRtkr= iCnt;
+                        }
+                    }
+                    iCnt++;
+                }
+            }
+        }
+
+
         // LOOP over AcdTkrHitPoca & get least distance sutff
         // Note that the Poca are sorted.  
         // Once we have filled all the variables we can split
         const Event::AcdTkrHitPoca* tile_vetoPoca = 0;
+		const Event::AcdTkrHitPoca* tile_CR_vetoPoca = 0; //RJ
         double max_tile_energy = 0.; 
+		double max_CR_tile_energy = 0.;  //RJ 
 
         const Event::AcdTkrHitPocaCol& pocas = pACD->getAcdTkrHitPocaCol();
         Event::AcdTkrHitPocaCol::const_iterator itrPoca = pocas.begin();
@@ -525,6 +590,34 @@ StatusCode AcdValsTool::calculate()
             bool isBestTrack = aPoca->trackIndex() == 0;
             bool isUpGoing = aPoca->getArcLength() > 0.;
             bool isTrack = aPoca->trackIndex() >= 0;
+			int TkIdx= aPoca->trackIndex();
+			bool isBestCR= TkIdx == bestCRtkr;
+
+			bool isCosmic = false;
+			// RJ: Look for the track.
+            if(pTracks) {
+                if(pTracks->size()>0) {
+                    Event::TkrTrackColConPtr pTrack = pTracks->begin();
+                    Event::TkrTrack* myTrack = NULL;
+                    if (TkIdx >= 0) {
+                        int TkCnt=0;
+                        for (; pTrack != pTracks->end(); pTrack++) {
+                            if (TkCnt==TkIdx) {
+                                myTrack = *pTrack;
+                                break;
+                            }
+                            TkCnt++;
+                        }
+                        if (myTrack) isCosmic = myTrack->getStatusBits() & Event::TkrTrack::COSMICRAY;
+                    }
+                }
+            }
+
+			// Get SSD veto info for Cosmic-Ray candidates
+			float SSDVetos=0.;
+			if (isCosmic) {
+				SSDVetos=0.;
+			}
 
             bool doneHole = false;
             double holeDoca(0.);  
@@ -537,6 +630,54 @@ StatusCode AcdValsTool::calculate()
 
             if ( isUpGoing && isTrack) {
                 // Fill variables for all tracks
+//<<<<<<< AcdValsTool.cxx
+				if (isCosmic) {     //RJ: add section here for cosmic-ray tracks
+					if (theId.tile()) {
+						if (ACD_CR_ActiveDist3D < -1999.99 || aPoca->getDoca() > min_ActiveDistance) {
+							if (tileEnergyIdMap[theId] > max_CR_tile_energy) {
+								max_CR_tile_energy= tileEnergyIdMap[theId];
+								ACD_CR_ActiveDist3D= aPoca->getDoca();
+								tile_CR_vetoPoca= aPoca;
+							}
+						}
+					}
+					else if (theId.ribbon()) {
+						if (ACD_CR_ribbon_ActiveDist < -1999.99) {
+							ACD_CR_ribbon_ActiveDist = aPoca->getDoca();
+							ACD_CR_ribbon_EnergyPmtA = ribbonEnergyIdMap[theId].first;
+							ACD_CR_ribbon_EnergyPmtB = ribbonEnergyIdMap[theId].second;
+						}
+					}
+				}
+				else {
+					if ( theId.tile() ) {
+						if ( ACD_ActiveDist3D < -1999.99 
+							|| aPoca->getDoca() > min_ActiveDistance) 
+						{
+							if(tileEnergyIdMap[theId] > max_tile_energy ) {
+								max_tile_energy = tileEnergyIdMap[theId];
+								tile_vetoPoca = aPoca;
+								ACD_ActiveDist3D = aPoca->getDoca();
+							}
+						}	
+					} else if ( theId.ribbon() ) {
+						if ( ACD_ribbon_ActiveDist < -1999.99 ) {
+							if ( ! donePlaneError ) {
+								donePlaneError = true;
+								AcdTileUtil::planeErrorProjection(
+									aPoca->getActiveX(),aPoca->getActiveY(),
+									aPoca->getLocalXXCov(),aPoca->getLocalYYCov(),
+									planeError);  
+							}
+							ACD_ribbon_ActiveDist =  aPoca->getDoca();
+							ACD_ribbon_ActiveDist_Err = planeError;
+							ACD_ribbon_ActiveLength = aPoca->getActiveY();
+							ACD_ribbon_EnergyPmtA = ribbonEnergyIdMap[theId].first;
+							ACD_ribbon_EnergyPmtB = ribbonEnergyIdMap[theId].second;
+						}
+					}
+//=======
+/*
                 if ( theId.tile() ) {
                     if ( ACD_ActiveDist3D < -1999.99 
                         || aPoca->getDoca() > min_ActiveDistance) 
@@ -564,8 +705,26 @@ StatusCode AcdValsTool::calculate()
                         ACD_ribbon_EnergyPmtA = ribbonEnergyIdMap[theId].first;
                         ACD_ribbon_EnergyPmtB = ribbonEnergyIdMap[theId].second;
                     }
+>>>>>>> 1.53
+*/
                 }
                 // Fill variables for best track, if appropiate
+				if (isBestCR) {
+					if (theId.tile()) {
+						if (ACD_CR1_ActiveDist < -1999.99) {
+							ACD_CR1_ActiveDist= aPoca->getDoca();
+							ACD_CR1_ActiveDist_Energy = tileEnergyIdMap[theId];
+							ACD_CR1_ActiveDist_TrackNum = TkIdx;
+						}
+					} else if (theId.ribbon()) {
+						if (ACD_CR1_ribbon_ActiveDist < -1999.99) {
+							ACD_CR1_ribbon_ActiveDist = aPoca->getDoca();
+							ACD_CR1_ribbon_EnergyPmtA = ribbonEnergyIdMap[theId].first;
+							ACD_CR1_ribbon_EnergyPmtB = ribbonEnergyIdMap[theId].second;
+							ACD_CR1_ActiveDist_TrackNum = TkIdx;
+						}
+					}
+				}
                 if ( isBestTrack ) {
                     // check tile or ribbon
                     if ( theId.tile() ) {
@@ -633,6 +792,11 @@ StatusCode AcdValsTool::calculate()
             }
         }
         // Now fill in the values for the most likely Track-Tile Veto Poca
+		if (tile_CR_vetoPoca) {  //RJ: cosmic-ray track stuff here
+			idents::AcdId theId = tile_CR_vetoPoca->getId();
+			ACD_CR_ActiveDist_Energy = tileEnergyIdMap[theId];
+			ACD_CR_ActiveDist_TrackNum= tile_CR_vetoPoca->trackIndex();
+		}
         if(tile_vetoPoca) {
             double planeError = 0.;
             AcdTileUtil::planeErrorProjection(tile_vetoPoca->getActiveX(),
@@ -716,6 +880,7 @@ StatusCode AcdValsTool::calculate()
                 }
             }
         }    
+
 
         /*
         // -------------- deleted code! ------------

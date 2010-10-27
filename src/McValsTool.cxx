@@ -2,7 +2,7 @@
 @brief Calculates the Mc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.52.28.1 2009/06/08 18:04:44 echarles Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.53 2009/12/15 15:12:21 heather Exp $
 */
 // Include files
 
@@ -371,15 +371,19 @@ StatusCode McValsTool::calculate()
         if(num_tracks <= 0 ) return sc;
         
         // Get track energies and event energy
+        double e1 = 0;
+        double e2 = 0;
         Event::TkrTrackColConPtr pTrack1 = pTracks->begin();
         const Event::TkrTrack*   track_1 = *pTrack1;
+        if (track_1->getStatusBits() & Event::TkrTrack::COSMICRAY) return sc; //RJ , LSR
         
-        double e1 = track_1->getInitialEnergy();
+        e1 = track_1->getInitialEnergy();
         double gamEne = e1; 
-        double e2 = 0.; 
-        if(num_tracks > 2) {
+        e2 = 0.; 
+        if(num_tracks >= 2) {
             pTrack1++;
             const Event::TkrTrack* track_2 = *pTrack1;
+            if (track_2->getStatusBits() & Event::TkrTrack::COSMICRAY) return sc; //RJ , LSR
             e2 = track_2->getInitialEnergy();
             gamEne += e2;
         }
@@ -388,6 +392,7 @@ StatusCode McValsTool::calculate()
         if (pVerts) {
             
             // Get the first Vertex - First track of first vertex = Best Track
+            if(pVerts->size()<=0) return sc;
             Event::TkrVertexConPtr pVtxr = pVerts->begin(); 
             Event::TkrVertex*   gamma = *pVtxr++; 
             Point  x0 = gamma->getPosition();
