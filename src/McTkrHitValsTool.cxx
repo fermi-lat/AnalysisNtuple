@@ -1,7 +1,7 @@
 /** @file McTkrHitValsTool.cxx
     @brief declartion, implementaion of the class UserAlg
 
-    $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McTkrHitValsTool.cxx,v 1.9 2009/03/23 20:04:12 usher Exp $
+    $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McTkrHitValsTool.cxx,v 1.10 2009/09/09 06:05:19 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -430,7 +430,7 @@ void McTkrHitValsTool::CntTotalHits(const Event::McParticle* /* primary */)
     m_totalPrimTkrHits = 0;
 
     // If there is no cluster table then there are no hits (by definition)
-    if (m_clusToPosHitTab)
+    if (m_clusToPosHitTab && !m_clusToPosHitTab->getAllRelations()->empty())
     {
         // Retrieve pointer to McPositionHit Collection in the TDS
         SmartDataPtr<Event::McPositionHitCol> posHitCol(m_pEventSvc, EventModel::MC::McPositionHitCol);
