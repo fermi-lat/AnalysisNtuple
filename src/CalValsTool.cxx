@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.100 2010/10/27 19:12:09 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.101 2010/11/04 15:15:49 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -169,7 +169,9 @@ private:
     float CAL_MIP_Diff; 
     float CAL_MIP_Ratio;
 
+    
     // Stuff to study clustering
+    float CAL_Gam_Prob;
     float CAL_energy_uber;
     float CAL_xEcntr_uber;
     float CAL_yEcntr_uber;
@@ -408,6 +410,9 @@ from a minimum-ionizing particle
 <tr><td> CalMIPRatio 
 <td>F<td>   Ratio of measured energy to that expected from a 
 minimum-ionizing particle 
+<tr><td> CalGamProb
+<td>F<td>   Probability for the first cluster to be a gamma according to the cluster
+classification algorithm.
 <tr><td> Cal[X/Y/Z]Ecntr 
 <td>F<td>   Energy centroid in [x/y/z]
 <tr><td> Cal[X/Y/Z]Dir 
@@ -629,6 +634,8 @@ StatusCode CalValsTool::initialize()
 
     addItem("CalMIPDiff",   &CAL_MIP_Diff);
     addItem("CalMIPRatio",  &CAL_MIP_Ratio);
+
+    addItem("CalGamProb",  &CAL_Gam_Prob);
 
     addItem("CalXEcntr",     &CAL_xEcntr);
     addItem("CalYEcntr",     &CAL_yEcntr);
@@ -908,6 +915,9 @@ StatusCode CalValsTool::calculate()
         // Remove the uber cluster energy
         CAL_rest_energy -= CAL_energy_uber;
     }
+
+    // New variables from cluster classification
+    CAL_Gam_Prob = calCluster->getGamProb();
 
     CAL_EnergyRaw  = calCluster->getCalParams().getEnergy();
     if(CAL_EnergyRaw<1.0) return sc;
@@ -1229,6 +1239,7 @@ StatusCode CalValsTool::calculate()
         }
 
         // If vertexed - use first vertex
+        //std::cout << "pVerts " << pVerts << std::endl;
         if(pVerts) {
             if(pVerts->size()>0) {
                 Event::TkrVertex* vertex = *(pVerts->begin()); 
