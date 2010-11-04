@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsToolV2.cxx,v 1.4 2010/01/01 02:06:13 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/Acd2ValsTool.cxx,v 1.1 2010/10/27 19:12:08 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -51,8 +51,8 @@ class Acd2ValsTool : public ValBase
 public:
 
   Acd2ValsTool( const std::string& type, 
-		const std::string& name, 
-		const IInterface* parent);
+        const std::string& name, 
+        const IInterface* parent);
   
   virtual ~Acd2ValsTool() { }
   
@@ -67,10 +67,10 @@ protected:
   void reconId(const Event::AcdReconV2* pACD);
   
   void setId(const std::vector<Event::AcdTkrHitPoca*> trackUp,
-	     unsigned int &retId, bool findRibbon=false);
+         unsigned int &retId, bool findRibbon=false);
   
   void findId(const std::vector<Event::AcdTkrHitPoca*>& vec, 
-	      idents::AcdId &retId, bool findRibbon=false);  
+          idents::AcdId &retId, bool findRibbon=false);  
   
 private:
   
@@ -168,7 +168,7 @@ Notes
 positive if inside.
 
 <table>
-<tr><th> Variable <th> Type <th> Description					
+<tr><th> Variable <th> Type <th> Description                    
 <tr><td> Acd2TileCount 
 <td>U<td>   Number of tiles fired
 <tr><td> Acd2RibbonCount 
@@ -177,9 +177,9 @@ positive if inside.
 <td>U<td>   Number of vetos fired
 <tr><td> Acd2VetoFaces
 <td>U<td>   Number of Acd faces with vetos
-<tr><td> Acd2TotalEnergy 	
+<tr><td> Acd2TotalEnergy    
 <td>F<td>   Total energy deposited in ACD Tiles
-<tr><td> Acd2RibbonEnergy 	
+<tr><td> Acd2RibbonEnergy   
 <td>F<td>   Total energy deposited in ACD Ribbons
 
 <tr><td> Acd2TileIdRecon
@@ -192,7 +192,7 @@ A value of 899 (N/A) is the default and denotes that no ACD ribbon was
 intersected by a reconstructed track.
 
 
-<tr><td> Acd2ActiveDist3D  	
+<tr><td> Acd2ActiveDist3D   
 <td>F<td>   Active Distance most likely to give a veto.  
 Corresponds to Act. Dist. that is greater than a set 
 an energy dep. min. distance and has the largest pulse height
@@ -307,8 +307,8 @@ const IToolFactory& Acd2ValsToolFactory = s_factory;
 
 // Standard Constructor
 Acd2ValsTool::Acd2ValsTool(const std::string& type, 
-			   const std::string& name, 
-			   const IInterface* parent)
+               const std::string& name, 
+               const IInterface* parent)
   : ValBase( type, name, parent )
 {    
   // Declare additional interface
@@ -343,11 +343,11 @@ StatusCode Acd2ValsTool::initialize()
       m_vetoThresholdMeV = 0.4;
     } else {
       StatusCode sc = m_detSvc->getNumericConstByName("acd.vetoThreshold", 
-						      &m_vetoThresholdMeV);
+                              &m_vetoThresholdMeV);
       if (sc.isFailure()) {
-	log << MSG::INFO << 
-	  "Unable to retrieve threshold, setting the value to 0.4 MeV" << endreq;
-	m_vetoThresholdMeV = 0.4;
+    log << MSG::INFO << 
+      "Unable to retrieve threshold, setting the value to 0.4 MeV" << endreq;
+    m_vetoThresholdMeV = 0.4;
       }
     }
     
@@ -472,7 +472,7 @@ StatusCode Acd2ValsTool::calculate()
   // Reset variables for loop over all tracks
   ACD_ActiveDist3D = ACD_ribbon_ActiveDist = negMaxDist;
   ACD_ActiveDist_Energy = ACD_ribbon_EnergyPmtA = ACD_ribbon_EnergyPmtB = 0.;
-  ACD_ActiveDist3D_Err = ACD_ribbon_ActiveDist_Err = ACD_TkrRibbon_Dist_Err = -1.;	
+  ACD_ActiveDist3D_Err = ACD_ribbon_ActiveDist_Err = ACD_TkrRibbon_Dist_Err = -1.;  
   ACD_Corner_DOCA = ACD_TkrRibbon_Dist = ACD_TkrHole_Dist = negMaxDist;
   ACD_ribbon_ActiveLength = ACD_TkrRibbonLength = -10000.;
   
@@ -534,41 +534,41 @@ StatusCode Acd2ValsTool::calculate()
       // We could check this earlier, but it helps to have it here, because this makes it easier to 
       // add variables associated with the down going end
       if ( isUpGoing ) {
-	// Fill variables for all tracks
-	float testHitSigma2 = aPoca->vetoSigma2();
-	if ( theId.tile() ) {
-	  if ( testHitSigma2  <  track_tileBestVetoHitSq) {
-	    track_tileVetoPoca = aPoca;
-	    track_tileBestVetoHitSq = testHitSigma2;
-	  }	  
-	} else if ( theId.ribbon() ) {
-	  if ( testHitSigma2 <  track_ribbonBestVetoHitSq) {
-	    track_ribbonVetoPoca = aPoca;
-	    track_ribbonBestVetoHitSq = testHitSigma2;
-	  }
-	}      
+    // Fill variables for all tracks
+    float testHitSigma2 = aPoca->vetoSigma2();
+    if ( theId.tile() ) {
+      if ( testHitSigma2  <  track_tileBestVetoHitSq) {
+        track_tileVetoPoca = aPoca;
+        track_tileBestVetoHitSq = testHitSigma2;
+      }   
+    } else if ( theId.ribbon() ) {
+      if ( testHitSigma2 <  track_ribbonBestVetoHitSq) {
+        track_ribbonVetoPoca = aPoca;
+        track_ribbonBestVetoHitSq = testHitSigma2;
+      }
+    }      
 
-	// Fill special vars for best track
-	if ( isBestTrack ) {
-	  // check to see if it is in xx deg cone around track
-	  if ( theId.tile() ) {
-	    if ( aPoca->getArcLength() > 0.1 ) {
-	      static const float tan30 = 5.77350288616910401e-01;
-	      static const float tan15 = 2.67949200239410490e-01;
-	      float tanAngle = ( -1 * aPoca->getDoca() )/ aPoca->getArcLength();
-	      float tileEng = hitMap[theId]->tileEnergy();
-	      if ( tanAngle < 1. ) {
-		ACD_Tkr1Energy45 += tileEng;
-		if ( tanAngle < tan30 ) {
-		  ACD_Tkr1Energy30 += tileEng;
-		  if ( tanAngle < tan15 ) {
-		    ACD_Tkr1Energy15 += tileEng;
-		  }
-		}
-	      }
-	    }
-	  }
-	}	
+    // Fill special vars for best track
+    if ( isBestTrack ) {
+      // check to see if it is in xx deg cone around track
+      if ( theId.tile() ) {
+        if ( aPoca->getArcLength() > 0.1 ) {
+          static const float tan30 = 5.77350288616910401e-01;
+          static const float tan15 = 2.67949200239410490e-01;
+          float tanAngle = ( -1 * aPoca->getDoca() )/ aPoca->getArcLength();
+          float tileEng = hitMap[theId]->tileEnergy();
+          if ( tanAngle < 1. ) {
+        ACD_Tkr1Energy45 += tileEng;
+        if ( tanAngle < tan30 ) {
+          ACD_Tkr1Energy30 += tileEng;
+          if ( tanAngle < tan15 ) {
+            ACD_Tkr1Energy15 += tileEng;
+          }
+        }
+          }
+        }
+      }
+    }   
       }
     }
 
@@ -579,11 +579,11 @@ StatusCode Acd2ValsTool::calculate()
       case 2: //AcdRecon::Y_RibbonSide:
       case 3: //AcdRecon::Y_RibbonTop:
       case 4: //AcdRecon::SideCornerEdge:
-	track_gapBestVetoSq = aGap->vetoSigma2();
-	break;
+    track_gapBestVetoSq = aGap->vetoSigma2();
+    break;
       default:
-	aGap = 0;
-	break;
+    aGap = 0;
+    break;
       }
     }
       
@@ -591,8 +591,8 @@ StatusCode Acd2ValsTool::calculate()
     float cornerGapMeasure = cornerDoca > 0 ? fabs(cornerDoca) : fabs(0.2 * cornerDoca);
     if ( isUpGoing ) {
       if ( cornerGapMeasure < bestCornerGapMeasure ) {
-	ACD_Corner_DOCA = cornerDoca;
-	bestCornerGapMeasure = cornerGapMeasure;
+    ACD_Corner_DOCA = cornerDoca;
+    bestCornerGapMeasure = cornerGapMeasure;
       }
     }
 
@@ -600,55 +600,55 @@ StatusCode Acd2ValsTool::calculate()
     if ( isBestTrack ) {
       
       if ( isUpGoing ) {
-	ACD_Tkr1Corner_DOCA = cornerDoca;
-	ACD_Tkr1_VetoSigmaHit = track_tileBestVetoHitSq < track_ribbonBestVetoHitSq ? 
-	  sqrt(track_tileBestVetoHitSq) : sqrt(track_ribbonBestVetoHitSq);
+    ACD_Tkr1Corner_DOCA = cornerDoca;
+    ACD_Tkr1_VetoSigmaHit = track_tileBestVetoHitSq < track_ribbonBestVetoHitSq ? 
+      sqrt(track_tileBestVetoHitSq) : sqrt(track_ribbonBestVetoHitSq);
       }
  
       if ( track_tileVetoPoca != 0 && isUpGoing ) {
-	ACD_Tkr1ActiveDist = track_tileVetoPoca->getDoca();
-	ACD_Tkr1ActiveDist_Err = track_tileVetoPoca->getDocaErrProj();
-	ACD_Tkr1ActiveDist_Energy = hitMap[track_tileVetoPoca->getId()]->tileEnergy();
-	ACD_Tkr1ActiveDist_Arc = track_tileVetoPoca->getArcLength();
+    ACD_Tkr1ActiveDist = track_tileVetoPoca->getDoca();
+    ACD_Tkr1ActiveDist_Err = track_tileVetoPoca->getDocaErrProj();
+    ACD_Tkr1ActiveDist_Energy = hitMap[track_tileVetoPoca->getId()]->tileEnergy();
+    ACD_Tkr1ActiveDist_Arc = track_tileVetoPoca->getArcLength();
       }
       
       if ( track_ribbonVetoPoca != 0 && isUpGoing ) {
-	ACD_Tkr1_ribbon_ActiveDist =  track_ribbonVetoPoca->getDoca();
-	ACD_Tkr1_ribbon_ActiveDist_Err = track_ribbonVetoPoca->getDocaErrProj();
-	ACD_Tkr1_ribbon_ActiveLength = track_ribbonVetoPoca->getLocalY();
-	ACD_Tkr1_ribbon_EnergyPmtA = hitMap[track_ribbonVetoPoca->getId()]->ribbonEnergy(Event::AcdHit::A);
-	ACD_Tkr1_ribbon_EnergyPmtB = hitMap[track_ribbonVetoPoca->getId()]->ribbonEnergy(Event::AcdHit::B);
+    ACD_Tkr1_ribbon_ActiveDist =  track_ribbonVetoPoca->getDoca();
+    ACD_Tkr1_ribbon_ActiveDist_Err = track_ribbonVetoPoca->getDocaErrProj();
+    ACD_Tkr1_ribbon_ActiveLength = track_ribbonVetoPoca->getLocalY();
+    ACD_Tkr1_ribbon_EnergyPmtA = hitMap[track_ribbonVetoPoca->getId()]->ribbonEnergy(Event::AcdHit::A);
+    ACD_Tkr1_ribbon_EnergyPmtB = hitMap[track_ribbonVetoPoca->getId()]->ribbonEnergy(Event::AcdHit::B);
       }
 
       if ( aGap != 0 && isUpGoing ) {
-	ACD_Tkr1_VetoSigmaGap = sqrt(track_gapBestVetoSq);
-	ACD_Tkr1Ribbon_Dist = aGap->getDoca();
-	ACD_Tkr1Ribbon_Dist_Err = aGap->getDocaErrProj();
-	ACD_Tkr1RibbonLength = aGap->getLocalY();
+    ACD_Tkr1_VetoSigmaGap = sqrt(track_gapBestVetoSq);
+    ACD_Tkr1Ribbon_Dist = aGap->getDoca();
+    ACD_Tkr1Ribbon_Dist_Err = aGap->getDocaErrProj();
+    ACD_Tkr1RibbonLength = aGap->getLocalY();
       }
     }
 
     // Latch vars for all tracks
     if ( isUpGoing ) {
       if ( track_tileBestVetoHitSq < best_tileVetoHitSq  ) {
-	best_tileVetoHitSq = track_tileBestVetoHitSq;
-	tile_vetoPoca = track_tileVetoPoca;
+    best_tileVetoHitSq = track_tileBestVetoHitSq;
+    tile_vetoPoca = track_tileVetoPoca;
       }
       if (track_ribbonBestVetoHitSq < best_ribbonVetoHitSq  ) {
-	best_ribbonVetoHitSq = track_ribbonBestVetoHitSq;
-	ribbon_vetoPoca = track_ribbonVetoPoca;
+    best_ribbonVetoHitSq = track_ribbonBestVetoHitSq;
+    ribbon_vetoPoca = track_ribbonVetoPoca;
       }
       if ( track_gapBestVetoSq < best_gapVetoSq ) {
-	best_gapVetoSq = track_gapBestVetoSq;
-	gap_vetoPoca = aGap;
-      }	    
+    best_gapVetoSq = track_gapBestVetoSq;
+    gap_vetoPoca = aGap;
+      }     
     }
   }
 
   // Now fill in the values for the most likely Track-Tile Veto Poca
   if( tile_vetoPoca != 0 ) {
     ACD_ActiveDist3D = tile_vetoPoca->getDoca(); 
-    ACD_ActiveDist3D_Err = tile_vetoPoca->getDocaErrProj();	    
+    ACD_ActiveDist3D_Err = tile_vetoPoca->getDocaErrProj();     
     idents::AcdId theId = tile_vetoPoca->getId();
     ACD_ActiveDist_Energy = hitMap[tile_vetoPoca->getId()]->tileEnergy();
     ACD_ActiveDist_TrackNum = tile_vetoPoca->trackIndex(); // Index starts from 0
@@ -723,7 +723,7 @@ void Acd2ValsTool::reconId(const Event::AcdReconV2 *pACD)  {
     int trackIndex = (*itrAssoc)->getTrackIndex();
     if (trackIndex > 0 ) continue;
     Event::AcdTkrHitPoca* poca = const_cast<Event::AcdTkrHitPoca*>((*itrAssoc)->getHitPoca());
-    if ( poca == 0 ) continue;	
+    if ( poca == 0 ) continue;  
     bool upGoing = (*itrAssoc)->getUpward();
     
     if (trackIndex != 0) {
@@ -740,7 +740,7 @@ void Acd2ValsTool::reconId(const Event::AcdReconV2 *pACD)  {
 }
 
 void Acd2ValsTool::setId(const std::vector<Event::AcdTkrHitPoca*> bestTrackUp,
-			 unsigned int &retId, bool findRibbon) {
+             unsigned int &retId, bool findRibbon) {
 
     idents::AcdId tUpId;
     tUpId.na(1);
@@ -752,7 +752,7 @@ void Acd2ValsTool::setId(const std::vector<Event::AcdTkrHitPoca*> bestTrackUp,
 }
 
 void Acd2ValsTool::findId(const std::vector<Event::AcdTkrHitPoca*>& vec, 
-			  idents::AcdId &retId, bool findRibbon) {
+              idents::AcdId &retId, bool findRibbon) {
   
   //Point tilePos, ribbonPos;
   int tileIndex = -1, ribIndex = -1;
@@ -774,29 +774,29 @@ void Acd2ValsTool::findId(const std::vector<Event::AcdTkrHitPoca*>& vec,
     // otherwise, loop over the remaining TkrIntesection objects
   unsigned int ind=0;
   for ( std::vector<Event::AcdTkrHitPoca*>::const_iterator itr = vec.begin(); 
-	itr != vec.end(); itr++ ) {
+    itr != vec.end(); itr++ ) {
     idents::AcdId id = (*itr)->getId();
     if ( (!findRibbon) && (id.tile()) ) {
       if (tileIndex < 0) {  // haven't seen another tile yet
-	tileIndex = ind;
-	retId = id;
+    tileIndex = ind;
+    retId = id;
       } else { // there was another tile found already
-	// use Z coordinates to choose if one of the found tiles is a "top" tile
-	// chose the greater Z value
-	if ( (retId.top()) || (id.top()) ) {
-	  if (vec[tileIndex]->getGlobalPosition().z() < (*itr)->getGlobalPosition().z()) {
-	    retId = (*itr)->getId();
-	    tileIndex = ind;
-	  }
-	}   
-	// assume side tiles do not overlap in Gleam, so no worries 
-	// about handling that case now
-	// right now we just pick up the tile we find first
+    // use Z coordinates to choose if one of the found tiles is a "top" tile
+    // chose the greater Z value
+    if ( (retId.top()) || (id.top()) ) {
+      if (vec[tileIndex]->getGlobalPosition().z() < (*itr)->getGlobalPosition().z()) {
+        retId = (*itr)->getId();
+        tileIndex = ind;
+      }
+    }   
+    // assume side tiles do not overlap in Gleam, so no worries 
+    // about handling that case now
+    // right now we just pick up the tile we find first
       }
     } else if (findRibbon && id.ribbon() ) { // ribbon
       if (ribIndex < 0) { // first ribbon intersection found
-	ribIndex = ind;
-	retId = id;
+    ribIndex = ind;
+    retId = id;
       } 
       // don't worry about overlapping ribbons, 
       // just pick up the first ribbon we find

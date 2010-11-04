@@ -2,7 +2,7 @@
 @brief Calculates the Mc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.53 2009/12/15 15:12:21 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.54 2010/10/27 19:12:09 lsrea Exp $
 */
 // Include files
 
@@ -101,8 +101,8 @@ private:
     //float MC_zdir_err;
     
     float MC_dir_err;
-	float MC_dir_errN;
-	float MC_dir_errN1;
+    float MC_dir_errN;
+    float MC_dir_errN1;
     float MC_TKR1_dir_err;
     float MC_TKR2_dir_err;
 
@@ -243,8 +243,8 @@ StatusCode McValsTool::initialize()
     addItem("McDirErr",       &MC_dir_err);      
     addItem("McTkr1DirErr",   &MC_TKR1_dir_err); 
     addItem("McTkr2DirErr",   &MC_TKR2_dir_err); 
-	addItem("McDirErrN",      &MC_dir_errN); 
-	addItem("McDirErrN1",      &MC_dir_errN1); 
+    addItem("McDirErrN",      &MC_dir_errN); 
+    addItem("McDirErrN1",      &MC_dir_errN1); 
 
     addItem("McAcdXEnter",     &MC_AcdXEnter);
     addItem("McAcdYEnter",     &MC_AcdYEnter);    
@@ -293,8 +293,8 @@ StatusCode McValsTool::calculate()
         // if there are no incident particles
         if (MC_NumIncident==0) return sc;
 
-	// ok, go ahead and call the ACD stuff now
-	getAcdReconVars();
+    // ok, go ahead and call the ACD stuff now
+    getAcdReconVars();
 
         // if there is one incident particle, it's okay to use it as before
         // if there are more than one, I don't know what to do, for now
@@ -303,9 +303,9 @@ StatusCode McValsTool::calculate()
 
         if(MC_NumIncident == 1) {
 
-	    Event::McParticle::StdHepId hepid= (*pMCPrimary)->particleProperty();
-	    MC_Id = (double)hepid;
-	    ParticleProperty* ppty = m_ppsvc->findByStdHepID( hepid );
+        Event::McParticle::StdHepId hepid= (*pMCPrimary)->particleProperty();
+        MC_Id = (double)hepid;
+        ParticleProperty* ppty = m_ppsvc->findByStdHepID( hepid );
             if (ppty) {
                 std::string name = ppty->particle(); 
                 MC_Charge = ppty->charge();          
@@ -411,18 +411,18 @@ StatusCode McValsTool::calculate()
             //MC_ydir_err = t0.y()-Mc_t0.y();
             //MC_zdir_err = t0.z()-Mc_t0.z();
 
-			bool VTX_set = false;
-			for(;pVtxr != pVerts->end(); pVtxr++) {
+            bool VTX_set = false;
+            for(;pVtxr != pVerts->end(); pVtxr++) {
                 Event::TkrVertex* vtxN = *pVtxr; 
-				if(vtxN->getStatusBits()& Event::TkrVertex::NEUTRALVTX) {
-					Vector tN = vtxN->getDirection();
+                if(vtxN->getStatusBits()& Event::TkrVertex::NEUTRALVTX) {
+                    Vector tN = vtxN->getDirection();
                     double acostNtMC = acos(tN*Mc_t0);
-					if(!(VTX_set)) {
-						MC_dir_errN  = acostNtMC;
-						VTX_set = true;
-					}
-					MC_dir_errN1 = acostNtMC; // Assumes last VTX is 1Tkr Neutral Vtx
-			}   }	
+                    if(!(VTX_set)) {
+                        MC_dir_errN  = acostNtMC;
+                        VTX_set = true;
+                    }
+                    MC_dir_errN1 = acostNtMC; // Assumes last VTX is 1Tkr Neutral Vtx
+            }   }   
 
             
             double cost0tMC = t0*Mc_t0;
@@ -552,11 +552,11 @@ void McValsTool::getAcdReconVars() {
     MC_AcdActDistTileEnergy = -1.;
   } else {  
     for ( Event::AcdTkrHitPocaCol::const_iterator itr = acdTkrHits->begin();
-	  itr != acdTkrHits->end(); itr++ ) {
+      itr != acdTkrHits->end(); itr++ ) {
       const Event::AcdTkrHitPoca* aHitPoca = *itr;
       if ( aHitPoca->getDoca() > bestActDist ) {
-	bestId = aHitPoca->getId();
-	bestActDist = aHitPoca->getDoca();
+    bestId = aHitPoca->getId();
+    bestActDist = aHitPoca->getDoca();
       }
     }  
     // latch values

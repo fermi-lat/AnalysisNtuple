@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.99 2010/07/19 15:18:09 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.100 2010/10/27 19:12:09 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -129,8 +129,8 @@ private:
     float CAL_zdir;
     float CAL_x0;
     float CAL_y0;
-	float CAL_X0_Lyr[8];
-	float CAL_Y0_Lyr[8];
+    float CAL_X0_Lyr[8];
+    float CAL_Y0_Lyr[8];
     float CAL_Top_Gap_Dist;
 
     float CAL_xEcntr2;
@@ -156,7 +156,7 @@ private:
     float CAL_Xtal_Ratio;
     float CAL_Xtal_maxEne; 
     float CAL_eLayer[8];
-	float CAL_LightAsym[8];
+    float CAL_LightAsym[8];
     float CAL_Num_Xtals;
     float CAL_Num_Xtals_Trunc;
     float CAL_Max_Num_Xtals_In_Layer;
@@ -601,14 +601,14 @@ StatusCode CalValsTool::initialize()
     addItem("CalELayer5",    &CAL_eLayer[5]);
     addItem("CalELayer6",    &CAL_eLayer[6]);
     addItem("CalELayer7",    &CAL_eLayer[7]);
-	addItem("CalLghtAsym0",  &CAL_LightAsym[0]);
-	addItem("CalLghtAsym1",  &CAL_LightAsym[1]);
-	addItem("CalLghtAsym2",  &CAL_LightAsym[2]);
-	addItem("CalLghtAsym3",  &CAL_LightAsym[3]);
-	addItem("CalLghtAsym4",  &CAL_LightAsym[4]);
-	addItem("CalLghtAsym5",  &CAL_LightAsym[5]);
-	addItem("CalLghtAsym6",  &CAL_LightAsym[6]);
-	addItem("CalLghtAsym7",  &CAL_LightAsym[7]);
+    addItem("CalLghtAsym0",  &CAL_LightAsym[0]);
+    addItem("CalLghtAsym1",  &CAL_LightAsym[1]);
+    addItem("CalLghtAsym2",  &CAL_LightAsym[2]);
+    addItem("CalLghtAsym3",  &CAL_LightAsym[3]);
+    addItem("CalLghtAsym4",  &CAL_LightAsym[4]);
+    addItem("CalLghtAsym5",  &CAL_LightAsym[5]);
+    addItem("CalLghtAsym6",  &CAL_LightAsym[6]);
+    addItem("CalLghtAsym7",  &CAL_LightAsym[7]);
     addItem("CalLyr0Ratio",  &CAL_Lyr0_Ratio);
     addItem("CalLyr7Ratio",  &CAL_Lyr7_Ratio);
     addItem("CalBkHalfRatio",&CAL_BkHalf_Ratio);
@@ -638,8 +638,8 @@ StatusCode CalValsTool::initialize()
     addItem("CalZDir",       &CAL_zdir);
     addItem("CalX0",         &CAL_x0);
     addItem("CalY0",         &CAL_y0);
-	addItem("CalLyr0X0",      &CAL_X0_Lyr[0]);
-	addItem("CalLyr0Y0",      &CAL_Y0_Lyr[0]);
+    addItem("CalLyr0X0",      &CAL_X0_Lyr[0]);
+    addItem("CalLyr0Y0",      &CAL_Y0_Lyr[0]);
     addItem("CalTopGapDist", &CAL_Top_Gap_Dist);
 
     addItem("CalXEcntr2",     &CAL_xEcntr2);
@@ -827,7 +827,7 @@ StatusCode CalValsTool::calculate()
                 CAL_cfp_calfit_fiterrflg = corResult["calfit_fitflag"];
                 if ( CAL_cfp_energy == 0 ) {
                     CAL_cfp_energyUB = 0;
-                    //                    std::cout << "CalValsTool CAL_cfp_energy " << CAL_cfp_energy << ' ' << CAL_cfp_energyUB << std::endl;
+                    //  std::cout << "CalValsTool CAL_cfp_energy " << CAL_cfp_energy << ' ' << CAL_cfp_energyUB << std::endl;
                 }
                 else {
                     float tkr1ZDir = -1;
@@ -837,7 +837,7 @@ StatusCode CalValsTool::calculate()
                     }
                     const float bias = m_ubInterpolate->interpolate(log10(CAL_cfp_energy), tkr1ZDir);
                     CAL_cfp_energyUB = bias == 0 ? -1 : CAL_cfp_energy / bias;
-                    //                    std::cout << "EvtValsTool CAL_cfp_energy " << CAL_cfp_energy << " ( " << log10(CAL_cfp_energy) << " ) " << CAL_cfp_energyUB << " ( " << log10(CAL_cfp_energyUB) << " ) " << tkr1ZDir << std::endl;
+                    //   std::cout << "EvtValsTool CAL_cfp_energy " << CAL_cfp_energy << " ( " << log10(CAL_cfp_energy) << " ) " << CAL_cfp_energyUB << " ( " << log10(CAL_cfp_energyUB) << " ) " << tkr1ZDir << std::endl;
                 }
             }
             // Removed 5/5/09 LSR
@@ -856,7 +856,7 @@ StatusCode CalValsTool::calculate()
                 CAL_LkHd_energy    = corResult.getParams().getEnergy();
                 CAL_LkHd_energyErr = corResult.getParams().getEnergyErr();
                 CAL_LkHd_energyUB = CAL_LkHd_energy / ( 1.003 - 0.005345 * log10(CAL_LkHd_energy) );
-                //                std::cout << "CalValsTool CAL_LkHd_energy " << CAL_LkHd_energy << ' ' << CAL_LkHd_energyUB << std::endl;
+                // std::cout << "CalValsTool CAL_LkHd_energy " << CAL_LkHd_energy << ' ' << CAL_LkHd_energyUB << std::endl;
             }
         }
     }
@@ -932,46 +932,46 @@ StatusCode CalValsTool::calculate()
     if (CAL_EnergyRaw > 0.0) {
       double sigma = sqrt(calCluster->getRmsLong()/CAL_EnergyRaw);
       if (sigma > 0.0){
-	// First normalize for the sum of weights and to the third power of the longitudinal RMS.
-    	CAL_Long_Skew = CAL_Long_Skew/(CAL_EnergyRaw*sigma*sigma*sigma);
-	// Then calculate what we would expect for an EM shower (downward going).
-	// This involves a numerical integral, with the basic formulas from the PDG.
-	int numSteps = 6;                             // Number of steps for the trapezium integral.
-	double Ec = 11.17;                            // Critical energy for CsI (in MeV).
-	double tmin = CAL_LAT_RLn - CAL_CsI_RLn; 
-	double tmax = CAL_LAT_RLn;
-	double b  = 0.5;                              // b = 0.5 seems appropriate, here.
-	double c  = -0.5;                             // c = -0.5 for electrons, c = 0.5 for gammas.
-	double a  = b*(log(CAL_EnergyCorr/Ec) - 0.5); // Use CalEnergyCorr. Can we improve?
-	double t1 = tmin;
-	double t2 = 0.0;
-	double p1 = 0.0;
-	double p2 = 0.0;
-	double norm = 0.0;
-	double mom1 = 0.0;
-	double mom2 = 0.0;
-	double mom3 = 0.0;
-	double stepSize = (tmax - tmin)/numSteps;
-	for (int step = 0; step < numSteps; step++) {
-	  t2 = tmin + (step + 1)*stepSize;
-	  p1 = pow(t1, a) * exp(-b*t1);
-	  p2 = pow(t2, a) * exp(-b*t2);
-	  norm += 0.5 * (p1 + p2);
-	  mom1 += 0.5 * (p1*t1 + p2*t2);
-	  mom2 += 0.5 * (p1*t1*t1 + p2*t2*t2);
-	  mom3 += 0.5 * (p1*t1*t1*t1 + p2*t2*t2*t2);
-	  t1 = t2;
-	}
-	norm *= stepSize;
-	mom1 *= stepSize;
-	mom2 *= stepSize;
-	mom3 *= stepSize;
-	mom1 /= norm;
-	mom2 /= norm;
-	mom3 /= norm;
-	mom2 = mom2 - mom1*mom1;
-	double gamma = (mom3 - 3*mom1*mom2 - mom1*mom1*mom1)/pow(mom2, 1.5);
-	if (gamma != 0.0) CAL_Long_Skew_Norm = -CAL_Long_Skew/gamma;
+    // First normalize for the sum of weights and to the third power of the longitudinal RMS.
+        CAL_Long_Skew = CAL_Long_Skew/(CAL_EnergyRaw*sigma*sigma*sigma);
+    // Then calculate what we would expect for an EM shower (downward going).
+    // This involves a numerical integral, with the basic formulas from the PDG.
+    int numSteps = 6;                             // Number of steps for the trapezium integral.
+    double Ec = 11.17;                            // Critical energy for CsI (in MeV).
+    double tmin = CAL_LAT_RLn - CAL_CsI_RLn; 
+    double tmax = CAL_LAT_RLn;
+    double b  = 0.5;                              // b = 0.5 seems appropriate, here.
+    double c  = -0.5;                             // c = -0.5 for electrons, c = 0.5 for gammas.
+    double a  = b*(log(CAL_EnergyCorr/Ec) - 0.5); // Use CalEnergyCorr. Can we improve?
+    double t1 = tmin;
+    double t2 = 0.0;
+    double p1 = 0.0;
+    double p2 = 0.0;
+    double norm = 0.0;
+    double mom1 = 0.0;
+    double mom2 = 0.0;
+    double mom3 = 0.0;
+    double stepSize = (tmax - tmin)/numSteps;
+    for (int step = 0; step < numSteps; step++) {
+      t2 = tmin + (step + 1)*stepSize;
+      p1 = pow(t1, a) * exp(-b*t1);
+      p2 = pow(t2, a) * exp(-b*t2);
+      norm += 0.5 * (p1 + p2);
+      mom1 += 0.5 * (p1*t1 + p2*t2);
+      mom2 += 0.5 * (p1*t1*t1 + p2*t2*t2);
+      mom3 += 0.5 * (p1*t1*t1*t1 + p2*t2*t2*t2);
+      t1 = t2;
+    }
+    norm *= stepSize;
+    mom1 *= stepSize;
+    mom2 *= stepSize;
+    mom3 *= stepSize;
+    mom1 /= norm;
+    mom2 /= norm;
+    mom3 /= norm;
+    mom2 = mom2 - mom1*mom1;
+    double gamma = (mom3 - 3*mom1*mom2 - mom1*mom1*mom1)/pow(mom2, 1.5);
+    if (gamma != 0.0) CAL_Long_Skew_Norm = -CAL_Long_Skew/gamma;
       }
     }
 
@@ -989,10 +989,10 @@ StatusCode CalValsTool::calculate()
 
     // Local array for #xtals in layer with the most xtals (cut on e>=5MeV);
     std::vector<int> xtalCount(m_nLayers,0);
-	std::vector<double> lightAsym(m_nLayers,0.);
-	std::vector<double> eneLogLayer(m_nLayers,0.);
-	std::vector<double> logX0(m_nLayers,0.);
-	std::vector<double> logY0(m_nLayers, 0.);
+    std::vector<double> lightAsym(m_nLayers,0.);
+    std::vector<double> eneLogLayer(m_nLayers,0.);
+    std::vector<double> logX0(m_nLayers,0.);
+    std::vector<double> logY0(m_nLayers, 0.);
 
     Event::CalXtalRecCol::const_iterator jlog;
     if (pxtalrecs) {
@@ -1001,29 +1001,29 @@ StatusCode CalValsTool::calculate()
         for( jlog=pxtalrecs->begin(); jlog != pxtalrecs->end(); ++jlog) {
             const Event::CalXtalRecData& recLog = **jlog;    
             double eneLog = recLog.getEnergy();
-			double enePos = recLog.getEnergy(0, idents::CalXtalId::POS);
-			double eneNeg = recLog.getEnergy(0, idents::CalXtalId::NEG);
-			Point pos = recLog.getPosition();
+            double enePos = recLog.getEnergy(0, idents::CalXtalId::POS);
+            double eneNeg = recLog.getEnergy(0, idents::CalXtalId::NEG);
+            Point pos = recLog.getPosition();
             if(enePos > CAL_Xtal_maxEne) CAL_Xtal_maxEne = enePos;
-			if(eneNeg > CAL_Xtal_maxEne) CAL_Xtal_maxEne = eneNeg;
+            if(eneNeg > CAL_Xtal_maxEne) CAL_Xtal_maxEne = eneNeg;
             idents::CalXtalId xtalId = recLog.getPackedId();
             int layer = xtalId.getLayer();
             if(eneLog>5.0) xtalCount[layer]++;
 
-			// Light asymetry section for testing
+            // Light asymetry section for testing
 
-			if(eneLog > 5 && eneLog > eneLogLayer[layer]) {
-				eneLogLayer[layer] = eneLog;
-				lightAsym[layer] = (enePos - eneNeg)/(enePos + eneNeg);	
-				logX0[layer] = pos.x();
-				logY0[layer] = pos.y();
-			}
+            if(eneLog > 5 && eneLog > eneLogLayer[layer]) {
+                eneLogLayer[layer] = eneLog;
+                lightAsym[layer] = (enePos - eneNeg)/(enePos + eneNeg); 
+                logX0[layer] = pos.x();
+                logY0[layer] = pos.y();
+            }
         }
-		for(int il=0; il<8; il++) {
-			CAL_LightAsym[il]=lightAsym[il];
-			CAL_X0_Lyr[il] = logX0[il];
-			CAL_Y0_Lyr[il] = logY0[il];
-		}
+        for(int il=0; il<8; il++) {
+            CAL_LightAsym[il]=lightAsym[il];
+            CAL_X0_Lyr[il] = logX0[il];
+            CAL_Y0_Lyr[il] = logY0[il];
+        }
 
         std::vector<int>::const_iterator itC = 
             std::max_element(xtalCount.begin(),xtalCount.end());
@@ -1178,47 +1178,22 @@ StatusCode CalValsTool::calculate()
         Doca track1(x1, t1);
         CAL_Track_DOCA = (float)track1.docaOfPoint(cal_pos);
 
-/*
-<<<<<<< CalValsTool.cxx
         // Image the top of the Calorimeter - use last hit FILTERED
         const Event::TkrTrackParams& tkr1_params = track_1->back()->getTrackParams(Event::TkrTrackHit::FILTERED);
         double xSlp = tkr1_params.getxSlope();
         double ySlp = tkr1_params.getySlope();
         Vector LastDir = Vector(-xSlp, -ySlp, -1).unit();
         Point LastHit = track_1->back()->getPoint(Event::TkrTrackHit::FILTERED);
-
+        
         //double calZTop = -46.;
         double deltaZ  = m_calZTop - LastHit.z();
         double topArcLength = deltaZ/LastDir.z();
         Point calTopLoc = LastHit + topArcLength*LastDir; 
-        CAL_x0 = calTopLoc.x();
-        CAL_y0 = calTopLoc.y(); 
+        Point calMidLayer0Loc = LastHit + (topArcLength - 9.5/LastDir.z())*LastDir; 
+        CAL_x0 = calMidLayer0Loc.x();
+        CAL_y0 = calMidLayer0Loc.y(); 
 
-        // Now create an active distance type variable using the tower pitch
-        double integer_part;
-        double deltaX_crack = modf(fabs(CAL_x0)/m_towerPitch, &integer_part); 
-        if(deltaX_crack > .5) deltaX_crack = 1. - deltaX_crack;
-        double deltaY_crack = modf(fabs(CAL_y0)/m_towerPitch, &integer_part);
-        if(deltaY_crack > .5) deltaY_crack = 1. - deltaY_crack;
-        CAL_Top_Gap_Dist = m_towerPitch*std::min(deltaX_crack, deltaY_crack);
-=======
-*/
-		// Image the top of the Calorimeter - use last hit FILTERED
-		const Event::TkrTrackParams& tkr1_params = track_1->back()->getTrackParams(Event::TkrTrackHit::FILTERED);
-		double xSlp = tkr1_params.getxSlope();
-		double ySlp = tkr1_params.getySlope();
-		Vector LastDir = Vector(-xSlp, -ySlp, -1).unit();
-		Point LastHit = track_1->back()->getPoint(Event::TkrTrackHit::FILTERED);
-		
-		//double calZTop = -46.;
-		double deltaZ  = m_calZTop - LastHit.z();
-		double topArcLength = deltaZ/LastDir.z();
-		Point calTopLoc = LastHit + topArcLength*LastDir; 
-		Point calMidLayer0Loc = LastHit + (topArcLength - 9.5/LastDir.z())*LastDir; 
-		CAL_x0 = calMidLayer0Loc.x();
-		CAL_y0 = calMidLayer0Loc.y(); 
-
-		// Event axis locations relative to towers and LAT
+        // Event axis locations relative to towers and LAT
     Point pos0(CAL_x0, CAL_y0, m_calZTop);
     int view;
     CAL_TwrEdgeTop  = activeDist(pos0, view);
@@ -1229,14 +1204,13 @@ StatusCode CalValsTool::calculate()
     CAL_LATEdge = -std::max(dX, dY);
 
 
-		// Now create an active distance type variable using the tower pitch
-		double integer_part;
-		double deltaX_crack = modf(fabs(CAL_x0)/m_towerPitch, &integer_part); 
-		if(deltaX_crack > .5) deltaX_crack = 1. - deltaX_crack;
-		double deltaY_crack = modf(fabs(CAL_y0)/m_towerPitch, &integer_part);
-		if(deltaY_crack > .5) deltaY_crack = 1. - deltaY_crack;
-		CAL_Top_Gap_Dist = m_towerPitch*std::min(deltaX_crack, deltaY_crack);
-//>>>>>>> 1.99
+        // Now create an active distance type variable using the tower pitch
+        double integer_part;
+        double deltaX_crack = modf(fabs(CAL_x0)/m_towerPitch, &integer_part); 
+        if(deltaX_crack > .5) deltaX_crack = 1. - deltaX_crack;
+        double deltaY_crack = modf(fabs(CAL_y0)/m_towerPitch, &integer_part);
+        if(deltaY_crack > .5) deltaY_crack = 1. - deltaY_crack;
+        CAL_Top_Gap_Dist = m_towerPitch*std::min(deltaX_crack, deltaY_crack);
 
         if(num_tracks > 1) { 
             // Get the second track
@@ -1246,7 +1220,6 @@ StatusCode CalValsTool::calculate()
         }
         if(do2) {
 
-
             // Get the start and direction 
             x2 = track_1->getInitialPosition();
             t2 = track_1->getInitialDirection();
@@ -1255,10 +1228,7 @@ StatusCode CalValsTool::calculate()
             CAL_Track_Sep = (x2Top - pos0).mag();
         }
 
-
         // If vertexed - use first vertex
-
-        std::cout << "pVerts " << pVerts << std::endl;
         if(pVerts) {
             if(pVerts->size()>0) {
                 Event::TkrVertex* vertex = *(pVerts->begin()); 

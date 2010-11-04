@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.99 2010/01/01 02:06:13 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.100 2010/10/27 19:12:09 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -251,14 +251,14 @@ private:
     float Tkr_2TkrHDoca;
 
     float Tkr_Veto_SSDVeto;
-	float CR_SSDVeto, CR1_SSDVeto;  //  RJ
+    float CR_SSDVeto, CR1_SSDVeto;  //  RJ
     float Tkr_Veto_Chisq;
-	float CR_VetoChisq, CR1_VetoChisq;  // RJ
-	int CR_NumTks;   // RJ
-	float CR_Chisq;  // RJ
+    float CR_VetoChisq, CR1_VetoChisq;  // RJ
+    int CR_NumTks;   // RJ
+    float CR_Chisq;  // RJ
 
     float Tkr_Veto_Hits;
-	float CR_VetoHits, CR1_VetoHits;   // RJ
+    float CR_VetoHits, CR1_VetoHits;   // RJ
     float Tkr_Veto_FirstLayer;
 
     float Tkr_Veto_KalEne; 
@@ -350,23 +350,23 @@ DieEdge, KalThetaMs, [X/Y/Z]Dir, Phi, Theta, [X/Y/Z]0.
 
 @subsection general General variables
 <table>
-<tr><th> Variable <th> Type  <th> Description				                 
-<tr><td> TkrNumTracks 	
+<tr><th> Variable <th> Type  <th> Description                                
+<tr><td> TkrNumTracks   
 <td>F<td>   Number of tracks found (Maximum is set by TkrRecon, currently 10) 
 <tr><td> TkrSumKalEne 
 <td>F<td>   Sum of Kalman energies (see TkrNKalEne, below) 
 for the two best tracks 
-<tr><td> TkrSumConEne 	
+<tr><td> TkrSumConEne   
 <td>F<td>   Sum of the energies for the two best tracks, 
 as assigned by the patrec energy tool 
 <tr><td> TkrEnergy 
 <td>F<td>   Energy in tracker, as determined from linear regression analysis 
 of number of clusters 
-<tr><td> TkrEnergySum 	
+<tr><td> TkrEnergySum   
 <td>F<td>   Deprecated 
 <tr><td> TkrEnergyCorr 
 <td>F<td>   TkrEnergy corrected by TkrEdgeCorr 
-<tr><td> TkrEdgeCorr 	
+<tr><td> TkrEdgeCorr    
 <td>F<td>   Tracker edge correction. This may go away; 
 it's an intermediate quantity 
 <tr><td> TkrHDCount 
@@ -401,7 +401,7 @@ in which case the usual DOCA is poorly measured.
 @subsection both Variables that exist for both best and second tracks
 
 <table>
-<tr><th> Variable <th> Type  <th> Description				                 
+<tr><th> Variable <th> Type  <th> Description                                
 <tr><td> Tkr[1/2]Chisq 
 <td>F<td>   Track chisquared 
 <tr><td> Tkr[1/2]FirstChisq  
@@ -491,7 +491,7 @@ and energy errors
 @subsection best_only Variables that exist only for best track
 
 <table>
-<tr><th> Variable <th> Type  <th> Description				                 
+<tr><th> Variable <th> Type  <th> Description                                
 <tr><td> TkrRadLength 
 <td>F<td>   Radiation lengths traversed by the best track. 
 This is from half-way thru the initial converter to the lowest bi-plane 
@@ -501,7 +501,7 @@ in the tracker, whether or not the track actually gets to the end.
 weighted by radiation lengths traversed. 
 (The edge is a plane halfway between the towers. 
 <tr><td> TkrTrackLength 
-<td>F<td>   Distance between the start of the best track and the grid, along the track axis. 	
+<td>F<td>   Distance between the start of the best track and the grid, along the track axis.    
 <tr><td> Tkr1TwrGap  
 <td>F<td>   Length of track in nominal intertower gap, currently set to 18 mm. 
 Can be a small as zero if track exits through bottom of tracker, 
@@ -592,7 +592,7 @@ above the head of the first track.
 The contributions from all the layers in the track are adjusted 
 for the predicted energy in each layer, and weighted accordingly. 
 So the result is sensitive to the particle type and 
-the chosen energy-loss mechanism. 		
+the chosen energy-loss mechanism.       
 <tr><td> Tkr1[X/Y/Z]Dir  
 <td>F<td>   Track [x/y/z] direction cosine  
 <tr><td> Tkr1Phi  
@@ -610,7 +610,7 @@ range: (0, 2pi)
 (Turn on with jO parameter: ToolSvc.TkrValsTool.enableVetoDiagnostics = true;)
 @endverbatim
 <table>
-<tr><th> Variable <th> Type  <th> Description				                 
+<tr><th> Variable <th> Type  <th> Description                                
 <tr><td> TkrVetoTrials
 <td>I<td>   Difference between the plane number of the last plane crossed and the first, plus one
 Any gaps above the last plane are not counted. (This may change soon.)
@@ -859,17 +859,17 @@ StatusCode TkrValsTool::initialize()
     addItem("TkrVKalEne",     &Tkr_Veto_KalEne); 
     addItem("TkrVConEne",     &Tkr_Veto_ConEne); 
 
-	// RJ: add some Merit variables for the cosmic-ray veto tracks
-	addItem("TkrCRSSDVeto", &CR_SSDVeto);
-	addItem("TkrCR1SSDVeto", &CR1_SSDVeto);
-	addItem("TkrCRNumTks", &CR_NumTks);
-	addItem("TkrCRChisq", &CR_Chisq);
-	if(m_enableVetoDiagnostics) {
-		addItem("TkrCRVetoHits", &CR_VetoHits);
-		addItem("TkrCRVetoChisq", &CR_VetoChisq);
-		addItem("TkrCR1VetoHits", &CR1_VetoHits);
-		addItem("TkrCR1VetoChisq", &CR1_VetoChisq);
-	}
+    // RJ: add some Merit variables for the cosmic-ray veto tracks
+    addItem("TkrCRSSDVeto", &CR_SSDVeto);
+    addItem("TkrCR1SSDVeto", &CR1_SSDVeto);
+    addItem("TkrCRNumTks", &CR_NumTks);
+    addItem("TkrCRChisq", &CR_Chisq);
+    if(m_enableVetoDiagnostics) {
+        addItem("TkrCRVetoHits", &CR_VetoHits);
+        addItem("TkrCRVetoChisq", &CR_VetoChisq);
+        addItem("TkrCR1VetoHits", &CR1_VetoHits);
+        addItem("TkrCR1VetoChisq", &CR1_VetoChisq);
+    }
 
     // for test, uncomment these statements:
     /*
@@ -966,28 +966,28 @@ StatusCode TkrValsTool::calculate()
         // Count number of tracks
 //        int nTracks = pTracks->size();    RJ: doesn't work any more, with CR tracks in the mix
 
-		int nTracks= 0;
-		if (pTracks->empty()) {
-			Tkr_Num_Tracks = nTracks;
-			return sc;
-		}
+        int nTracks= 0;
+        if (pTracks->empty()) {
+            Tkr_Num_Tracks = nTracks;
+            return sc;
+        }
         // Get the first Track - it should be the "Best Track"
-		Event::TkrTrackColConPtr pTrack = pTracks->begin();
+        Event::TkrTrackColConPtr pTrack = pTracks->begin();
         const Event::TkrTrack* track_1 = *pTrack;
-		
-		CR_NumTks= 0;
-		// Count the number of non-CR tracks
-		bool firstCR=true;
-		for (; pTrack != pTracks->end(); pTrack++) {
-			if ((*pTrack)->getStatusBits() & Event::TkrTrack::COSMICRAY) {
-				CR_NumTks++;
-				if (firstCR) {
-					CR_Chisq= (*pTrack)->getChiSquareSmooth();
-					firstCR=false;
-				}
-			}
-			else nTracks++;
-		}
+        
+        CR_NumTks= 0;
+        // Count the number of non-CR tracks
+        bool firstCR=true;
+        for (; pTrack != pTracks->end(); pTrack++) {
+            if ((*pTrack)->getStatusBits() & Event::TkrTrack::COSMICRAY) {
+                CR_NumTks++;
+                if (firstCR) {
+                    CR_Chisq= (*pTrack)->getChiSquareSmooth();
+                    firstCR=false;
+                }
+            }
+            else nTracks++;
+        }
         Tkr_Num_Tracks   = nTracks;
         if(nTracks < 1) return sc;
 
@@ -1354,15 +1354,15 @@ StatusCode TkrValsTool::calculate()
         Tkr_1_VetoBadCluster   = (int)floor(m_VetoBadCluster + 0.5);
 
         int veto_track_num = -1;
-		int CR_veto_track_num = -1;
-		int CR1_veto_track_num = -1;
-		CR_SSDVeto=0.;
-		CR1_SSDVeto=0.;
-		CR_VetoHits=0.;
-		CR_Chisq=999.;
-		CR1_VetoHits=0.;
-		CR_VetoChisq=999.;
-		CR1_VetoChisq=999.;
+        int CR_veto_track_num = -1;
+        int CR1_veto_track_num = -1;
+        CR_SSDVeto=0.;
+        CR1_SSDVeto=0.;
+        CR_VetoHits=0.;
+        CR_Chisq=999.;
+        CR1_VetoHits=0.;
+        CR_VetoChisq=999.;
+        CR1_VetoChisq=999.;
         // Most likely track from AcdValsTool
         if(m_pAcdTool) {
             // check that Acd executes before Tkr
@@ -1396,24 +1396,24 @@ StatusCode TkrValsTool::calculate()
                             Tkr_Veto_KalEne     = veto_track->getKalEnergy(); 
                             Tkr_Veto_ConEne     = veto_track->getInitialEnergy(); 
                         }
-					}
-					// RJ: Handle CR tracks here
-					if (m_pAcdTool->getVal("AcdCRActDistTrackNum", CR_veto_track_num, firstCheck).isSuccess()) {
-						if (CR_veto_track_num > 0) {
-							const Event::TkrTrack* CR_veto_track = *(pTracks->begin()+CR_veto_track_num);
-							CR_SSDVeto = SSDEvaluation(CR_veto_track); 
-							CR_VetoHits= CR_veto_track->getNumFitHits();
-							CR_VetoChisq= CR_veto_track->getChiSquareSmooth();
-						}
-					}
-					if (m_pAcdTool->getVal("AcdCR1ActDistTrackNum", CR1_veto_track_num, firstCheck).isSuccess()) {
-						if (CR1_veto_track_num > 0) {
-							const Event::TkrTrack* CR1_veto_track = *(pTracks->begin()+CR1_veto_track_num);
-							CR1_SSDVeto = SSDEvaluation(CR1_veto_track);
-							CR1_VetoHits= CR1_veto_track->getNumFitHits();
-							CR1_VetoChisq= CR1_veto_track->getChiSquareSmooth();
-						}
-					}
+                    }
+                    // RJ: Handle CR tracks here
+                    if (m_pAcdTool->getVal("AcdCRActDistTrackNum", CR_veto_track_num, firstCheck).isSuccess()) {
+                        if (CR_veto_track_num > 0) {
+                            const Event::TkrTrack* CR_veto_track = *(pTracks->begin()+CR_veto_track_num);
+                            CR_SSDVeto = SSDEvaluation(CR_veto_track); 
+                            CR_VetoHits= CR_veto_track->getNumFitHits();
+                            CR_VetoChisq= CR_veto_track->getChiSquareSmooth();
+                        }
+                    }
+                    if (m_pAcdTool->getVal("AcdCR1ActDistTrackNum", CR1_veto_track_num, firstCheck).isSuccess()) {
+                        if (CR1_veto_track_num > 0) {
+                            const Event::TkrTrack* CR1_veto_track = *(pTracks->begin()+CR1_veto_track_num);
+                            CR1_SSDVeto = SSDEvaluation(CR1_veto_track);
+                            CR1_VetoHits= CR1_veto_track->getNumFitHits();
+                            CR1_VetoChisq= CR1_veto_track->getChiSquareSmooth();
+                        }
+                    }
             }
         }
 
@@ -1430,7 +1430,7 @@ StatusCode TkrValsTool::calculate()
 
         Tkr_1_LATEdge = (float) std::min(xEdge, yEdge);
 
-		pTrack = pTracks->begin();
+        pTrack = pTracks->begin();
         if(nTracks > 1) {
             pTrack++;
 
@@ -1442,7 +1442,7 @@ StatusCode TkrValsTool::calculate()
 
             for(trkIter=pTrack; trkIter!=pTracks->end(); ++trkIter) {
                 Event::TkrTrack* trk = *trkIter;
-				if (trk->getStatusBits() & Event::TkrTrack::COSMICRAY) continue;   // RJ: skip over CR tracks
+                if (trk->getStatusBits() & Event::TkrTrack::COSMICRAY) continue;   // RJ: skip over CR tracks
                 double docaTrk = trk1Doca.docaOfPoint(trk->getInitialPosition());
                 TkrDispersion += (float) docaTrk*docaTrk;
                 double s = trk1Doca.arcLenRay1();
