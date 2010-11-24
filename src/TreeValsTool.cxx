@@ -2,7 +2,7 @@
 @brief Calculates the Tracker Tree variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TreeValsTool.cxx,v 1.99 2010/01/01 02:06:13 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TreeValsTool.cxx,v 1.1 2010/11/01 16:40:07 usher Exp $
 */
 
 // Include files
@@ -304,7 +304,7 @@ StatusCode TreeValsTool::calculate()
     
             for(; sibItr != tree->getSiblingMap()->rend(); sibItr++)
             {
-                const std::vector<Event::TkrVecNode*>& nodeVec = sibItr->second;
+                const std::vector<const Event::TkrVecNode*>& nodeVec = sibItr->second;
 
                 int nodeVecSize = nodeVec.size();
 
@@ -339,7 +339,7 @@ StatusCode TreeValsTool::calculate()
     
                 for(; sibItr != tree->getSiblingMap()->rend(); sibItr++)
                 {
-                    const std::vector<Event::TkrVecNode*>& nodeVec = sibItr->second;
+                    const std::vector<const Event::TkrVecNode*>& nodeVec = sibItr->second;
 
                     int nodeVecSize = nodeVec.size();
 
