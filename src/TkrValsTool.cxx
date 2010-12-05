@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.100 2010/10/27 19:12:09 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.101 2010/11/04 15:15:49 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -151,7 +151,12 @@ private:
     float Tkr_1_Hits;
     float Tkr_1_FirstHits;
     float Tkr_1_FirstLayer; 
-    float Tkr_1_LastLayer; 
+    float Tkr_1_LastLayer;
+
+    float Tkr_1_1stHitRes;
+    float Tkr_1_1stHitSChi;
+    float Tkr_1_2ndHitRes;
+    float Tkr_1_2ndHitSChi;
 
     float Tkr_1_SaturatedFrac;
     float Tkr_1_ToT255Frac;
@@ -741,6 +746,11 @@ StatusCode TkrValsTool::initialize()
     addItem("Tkr1LastLayer",  &Tkr_1_LastLayer);
     addItem("Tkr1DifHits",    &Tkr_1_DifHits);
 
+    addItem("Tkr11stHitRes",  &Tkr_1_1stHitRes);
+    addItem("Tkr11stHitSChi", &Tkr_1_1stHitSChi);
+    addItem("Tkr12ndHitRes",  &Tkr_1_2ndHitRes);
+    addItem("Tkr12ndHitSChi", &Tkr_1_2ndHitSChi);
+
     addItem("Tkr1ToT255Frac", &Tkr_1_ToT255Frac);
     addItem("Tkr1BothFrac",   &Tkr_1_BothFrac);
     addItem("Tkr1GhostFrac",  &Tkr_1_GhostFrac);
@@ -839,14 +849,14 @@ StatusCode TkrValsTool::initialize()
     addItem("Tkr2ConEne",     &Tkr_2_ConEne);
     //  addItem("Tkr2KalThetaMS", &Tkr_2_KalThetaMS);
 
-    //  addItem("Tkr2XDir",       &Tkr_2_xdir);
-    //  addItem("Tkr2YDir",       &Tkr_2_ydir);
-    //  addItem("Tkr2ZDir",       &Tkr_2_zdir);
-    //  addItem("Tkr2Phi",        &Tkr_2_Phi);
-    //  addItem("Tkr2Theta",      &Tkr_2_Theta);
-    //  addItem("Tkr2X0",         &Tkr_2_x0);
-    //  addItem("Tkr2Y0",         &Tkr_2_y0);
-    //  addItem("Tkr2Z0",         &Tkr_2_z0);    
+      addItem("Tkr2XDir",       &Tkr_2_xdir);
+      addItem("Tkr2YDir",       &Tkr_2_ydir);
+      addItem("Tkr2ZDir",       &Tkr_2_zdir);
+      addItem("Tkr2Phi",        &Tkr_2_Phi);
+      addItem("Tkr2Theta",      &Tkr_2_Theta);
+      addItem("Tkr2X0",         &Tkr_2_x0);
+      addItem("Tkr2Y0",         &Tkr_2_y0);
+      addItem("Tkr2Z0",         &Tkr_2_z0);    
 
     addItem("Tkr2TkrAngle",   &Tkr_2TkrAngle); 
     addItem("Tkr2TkrHDoca",   &Tkr_2TkrHDoca); 
@@ -1111,6 +1121,22 @@ StatusCode TkrValsTool::calculate()
         int wideCount      = 0;
         int widerCount     = 0;
         int nToTs = 0; // count the good ToTs at the same time
+
+        if (track_1->front()->validCluster())
+        {
+            Tkr_1_1stHitRes  = (*track_1)[0]->getMeasuredPosition(Event::TkrTrackHit::MEASURED)
+                             - (*track_1)[0]->getMeasuredPosition(Event::TkrTrackHit::SMOOTHED);
+            Tkr_1_1stHitSChi = (*track_1)[0]->getChiSquareSmooth();
+        }
+        else Tkr_1_1stHitRes  = -999.;
+
+        if ((*track_1)[1]->validCluster())
+        {
+            Tkr_1_2ndHitRes  = (*track_1)[1]->getMeasuredPosition(Event::TkrTrackHit::MEASURED)
+                             - (*track_1)[1]->getMeasuredPosition(Event::TkrTrackHit::SMOOTHED);
+            Tkr_1_2ndHitSChi = (*track_1)[1]->getChiSquareSmooth();
+        }
+        else Tkr_1_2ndHitRes = -999.;
 
         double mips;
         while(pHit != track_1->end()) {
