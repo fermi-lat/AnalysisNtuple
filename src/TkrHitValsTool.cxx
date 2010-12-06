@@ -2,7 +2,7 @@
 @brief Calculates the Tkr hit analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrHitValsTool.cxx,v 1.20 2009/12/16 05:53:19 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrHitValsTool.cxx,v 1.21 2010/01/01 02:06:13 lsrea Exp $
 */
 
 // Include files
@@ -21,6 +21,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrHitValsTool.cxx,v 1.
 #include "Event/TopLevel/Event.h"
 
 #include "TkrUtil/ITkrQueryClustersTool.h"
+#include "Event/Recon/TkrRecon/TkrTruncationInfo.h"
 
 namespace {
     const int _nLayers = 18;
@@ -77,6 +78,8 @@ private:
     int Tkr_NCnv_Lyrs_Hit;
 
     int Tkr_HitsPerLyr[_nLayers];
+    int Tkr_numRCTruncs;
+    int Tkr_numCCTruncs;
 
     ITkrQueryClustersTool* m_clusTool;
 
@@ -161,6 +164,11 @@ the track had some 255 or ghost hits
 <tr><td> TkrHitsInLyrNN, NN=(00,17)   
 <td>I<td>   Number of clusters in (bi)layer NN 
 (numbered from the bottom of the tracker) 
+<tr><td> TkrNumRCTruncated
+<td>I<td> Number of planes truncated due to RC buffers
+<tr><td> TkrNumCCTruncated
+<td>I<td> Number of planes truncated due to CC buffers
+
 </table>
 */
 
@@ -220,6 +228,10 @@ StatusCode TkrHitValsTool::initialize()
         sprintf(buffer, "TkrHitsInLyr%02i",i);
         addItem(buffer, &Tkr_HitsPerLyr[i]);
     }
+
+    // count truncation records
+    addItem("TkrNumRCTruncs", &Tkr_numRCTruncs);
+    addItem("TkrNumCCTruncs", &Tkr_numCCTruncs);
 
     zeroVals();
 
@@ -304,5 +316,16 @@ StatusCode TkrHitValsTool::calculate()
             }
         }
     }
+
+    // truncation info
+    SmartDataPtr<Event::TkrTruncationInfo>   
+        pTruncInfo(m_pEventSvc,EventModel::TkrRecon::TkrTruncationInfo);
+    //Make sure we have valid cluster data
+
+    if (pTruncInfo) {
+        Tkr_numRCTruncs = pTruncInfo->getNumRCTruncated();
+        Tkr_numCCTruncs = pTruncInfo->getNumCCTruncated();
+    }
+
     return sc;
 }

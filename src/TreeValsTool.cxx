@@ -2,7 +2,7 @@
 @brief Calculates the Tracker Tree variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TreeValsTool.cxx,v 1.1 2010/11/01 16:40:07 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TreeValsTool.cxx,v 1.2 2010/11/24 20:01:56 usher Exp $
 */
 
 // Include files
@@ -300,6 +300,7 @@ StatusCode TreeValsTool::calculate()
             Tkr_tree1_maxWidth     = sibItr->second.size();
             Tkr_tree1_lastWidth    = tree->getSiblingMap()->begin()->second.size();
 
+            
             float firstLayer = sibItr->first;
     
             for(; sibItr != tree->getSiblingMap()->rend(); sibItr++)
