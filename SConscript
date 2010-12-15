@@ -1,5 +1,5 @@
 # -*-python-*-
-# $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/SConscript,v 1.56 2010/12/13 02:58:48 lsrea Exp $
+# $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/SConscript,v 1.57 2010/12/13 03:00:01 lsrea Exp $
 # Authors: Leon Rochester <lsrea@slac.stanford.edu>
 # Version: AnalysisNtuple-02-57-08
 
@@ -43,4 +43,4 @@ progEnv.Tool('registerTargets', package = 'AnalysisNtuple',
 	     testAppCxts = [[test_AnalysisNtuple, progEnv]],
              includes = listFiles(['AnalysisNtuple/*.h']),
 	     data = listFiles(['data/*.txt']),
-	     jo = ['src/test/jobOptions.txt'])
+	     jo = listFiles(['src/test/*.txt']))
