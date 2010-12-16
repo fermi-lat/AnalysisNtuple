@@ -2,7 +2,7 @@
 @brief Calculates the Tracker Tree variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TreeValsTool.cxx,v 1.2 2010/11/24 20:01:56 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TreeValsTool.cxx,v 1.3 2010/12/06 20:59:14 lsrea Exp $
 */
 
 // Include files
@@ -19,6 +19,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TreeValsTool.cxx,v 1.2 
 #include "Event/TopLevel/Event.h"
 
 #include "Event/Recon/TkrRecon/TkrTree.h"
+#include "Event/Recon/TkrRecon/TkrFilterParams.h"
 #include "geometry/Ray.h" 
 
 #include "GlastSvc/GlastDetSvc/IGlastDetSvc.h"
@@ -106,6 +107,19 @@ private:
     float Tkr_tree2_maxWidthLyr;
     float Tkr_tree2_maxWidth;
     float Tkr_tree2_lastWidth;
+
+    // For now, hide the TkrFilterParams output down here... 
+    float TFP_numParams;
+    float TFP_bestPosX;
+    float TFP_bestPosY;
+    float TFP_bestPosZ;
+    float TFP_bestDirX;
+    float TFP_bestDirY;
+    float TFP_bestDirZ;
+    float TFP_bestNumHits;
+    float TFP_bestChiSquare;
+    float TFP_bestRmsTrans;
+    float TFP_bestRmsLong;
 };
 
 // Static factory for instantiation of algtool objects
@@ -253,6 +267,18 @@ StatusCode TreeValsTool::initialize()
     addItem("TkrTree2MaxWidth",     &Tkr_tree2_maxWidth);
     addItem("TkrTree2LastWidth",    &Tkr_tree2_lastWidth);
 
+    addItem("TFPNumParams",         &TFP_numParams);
+    addItem("TFPBestPosX",          &TFP_bestPosX);
+    addItem("TFPBestPosY",          &TFP_bestPosY);
+    addItem("TFPBestPosZ",          &TFP_bestPosZ);
+    addItem("TFPBestDirX",          &TFP_bestDirX);
+    addItem("TFPBestDirY",          &TFP_bestDirY);
+    addItem("TFPBestDirZ",          &TFP_bestDirZ);
+    addItem("TFPBestNumHits",       &TFP_bestNumHits);
+    addItem("TFPBestChiSquare",     &TFP_bestChiSquare);
+    addItem("TFPBestRmsTrans",      &TFP_bestRmsTrans);
+    addItem("TFPBestRmsLong",       &TFP_bestRmsLong);
+
     zeroVals();
 
     return sc;
@@ -353,6 +379,35 @@ StatusCode TreeValsTool::calculate()
 
                 Tkr_tree2_maxWidthLyr = firstLayer - Tkr_tree2_maxWidthLyr;
             }
+        }
+    }
+
+    // Do tree stuff here
+    SmartDataPtr<Event::TkrFilterParamsCol> filterParamsCol(m_pEventSvc,"/Event/TkrRecon/TkrFilterParamsCol");
+
+    if (filterParamsCol)
+    {
+        TFP_numParams = filterParamsCol->size();
+
+        if (TFP_numParams > 0)
+        {
+            Event::TkrFilterParams* filterParams = filterParamsCol->front();
+
+            Point filterPos   = filterParams->getEventPosition();
+            Vector filterDir  = filterParams->getEventAxis();
+
+            TFP_bestPosX      = filterPos.x();
+            TFP_bestPosY      = filterPos.y();
+            TFP_bestPosZ      = filterPos.z();
+
+            TFP_bestDirX      = filterDir.x();
+            TFP_bestDirY      = filterDir.y();
+            TFP_bestDirZ      = filterDir.z();
+
+            TFP_bestNumHits   = filterParams->getNumHitsTotal();
+            TFP_bestChiSquare = filterParams->getChiSquare();
+            TFP_bestRmsTrans  = filterParams->getTransRms();
+            TFP_bestRmsLong   = filterParams->getLongRmsAve();
         }
     }
 
