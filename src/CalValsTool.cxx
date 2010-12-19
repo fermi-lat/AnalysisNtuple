@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.101 2010/11/04 15:15:49 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.102 2010/11/04 17:21:08 bregeon Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -875,7 +875,7 @@ StatusCode CalValsTool::calculate()
     // Extract the uber information which is located at the end of the list
     Event::CalCluster* calCluster = pCals->back();
 
-    CAL_energy_uber = calCluster->getCalParams().getEnergy();
+    CAL_energy_uber = calCluster->getMomParams().getEnergy();
 
     CAL_xEcntr_uber   = calCluster->getPosition().x();
     CAL_yEcntr_uber   = calCluster->getPosition().y();
@@ -909,7 +909,7 @@ StatusCode CalValsTool::calculate()
         {
             Event::CalCluster* cluster = *calClusIter++;
 
-            CAL_rest_energy += cluster->getCalParams().getEnergy();
+            CAL_rest_energy += cluster->getMomParams().getEnergy();
         }
 
         // Remove the uber cluster energy
@@ -919,7 +919,7 @@ StatusCode CalValsTool::calculate()
     // New variables from cluster classification
     CAL_Gam_Prob = calCluster->getGamProb();
 
-    CAL_EnergyRaw  = calCluster->getCalParams().getEnergy();
+    CAL_EnergyRaw  = calCluster->getMomParams().getEnergy();
     if(CAL_EnergyRaw<1.0) return sc;
 
     for(int i = 0; i<m_nLayers; i++) CAL_eLayer[i] = (*calCluster)[i].getEnergy();
@@ -1773,6 +1773,6 @@ void CalValsTool::zeroVals()
     if(pCals) {
         if (pCals->empty()) return;
         Event::CalCluster* calCluster = pCals->front();
-        CAL_EnergyRaw  = calCluster->getCalParams().getEnergy();
+        CAL_EnergyRaw  = calCluster->getMomParams().getEnergy();
     }
 }

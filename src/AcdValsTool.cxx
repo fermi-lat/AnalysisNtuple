@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.53 2010/01/01 02:06:13 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.54 2010/10/27 19:12:08 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -514,7 +514,7 @@ StatusCode AcdValsTool::calculate()
         if (pCals) {
             if (!pCals->empty()) {
                 Event::CalCluster* calCluster = pCals->front();
-                CAL_EnergyRaw  = calCluster->getCalParams().getEnergy();
+                CAL_EnergyRaw  = calCluster->getMomParams().getEnergy();
             }
         }
         // Find *Safe* Active Distance for this event given the energy
