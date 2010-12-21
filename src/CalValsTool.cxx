@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.102 2010/11/04 17:21:08 bregeon Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.103 2010/12/19 17:30:30 lbaldini Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -942,46 +942,8 @@ StatusCode CalValsTool::calculate()
     if (CAL_EnergyRaw > 0.0) {
       double sigma = sqrt(calCluster->getRmsLong()/CAL_EnergyRaw);
       if (sigma > 0.0){
-    // First normalize for the sum of weights and to the third power of the longitudinal RMS.
+	// Normalize for the sum of weights and to the third power of the longitudinal RMS.
         CAL_Long_Skew = CAL_Long_Skew/(CAL_EnergyRaw*sigma*sigma*sigma);
-    // Then calculate what we would expect for an EM shower (downward going).
-    // This involves a numerical integral, with the basic formulas from the PDG.
-    int numSteps = 6;                             // Number of steps for the trapezium integral.
-    double Ec = 11.17;                            // Critical energy for CsI (in MeV).
-    double tmin = CAL_LAT_RLn - CAL_CsI_RLn; 
-    double tmax = CAL_LAT_RLn;
-    double b  = 0.5;                              // b = 0.5 seems appropriate, here.
-    double c  = -0.5;                             // c = -0.5 for electrons, c = 0.5 for gammas.
-    double a  = b*(log(CAL_EnergyCorr/Ec) - 0.5); // Use CalEnergyCorr. Can we improve?
-    double t1 = tmin;
-    double t2 = 0.0;
-    double p1 = 0.0;
-    double p2 = 0.0;
-    double norm = 0.0;
-    double mom1 = 0.0;
-    double mom2 = 0.0;
-    double mom3 = 0.0;
-    double stepSize = (tmax - tmin)/numSteps;
-    for (int step = 0; step < numSteps; step++) {
-      t2 = tmin + (step + 1)*stepSize;
-      p1 = pow(t1, a) * exp(-b*t1);
-      p2 = pow(t2, a) * exp(-b*t2);
-      norm += 0.5 * (p1 + p2);
-      mom1 += 0.5 * (p1*t1 + p2*t2);
-      mom2 += 0.5 * (p1*t1*t1 + p2*t2*t2);
-      mom3 += 0.5 * (p1*t1*t1*t1 + p2*t2*t2*t2);
-      t1 = t2;
-    }
-    norm *= stepSize;
-    mom1 *= stepSize;
-    mom2 *= stepSize;
-    mom3 *= stepSize;
-    mom1 /= norm;
-    mom2 /= norm;
-    mom3 /= norm;
-    mom2 = mom2 - mom1*mom1;
-    double gamma = (mom3 - 3*mom1*mom2 - mom1*mom1*mom1)/pow(mom2, 1.5);
-    if (gamma != 0.0) CAL_Long_Skew_Norm = -CAL_Long_Skew/gamma;
       }
     }
 
