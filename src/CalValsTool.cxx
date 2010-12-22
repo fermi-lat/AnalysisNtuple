@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.103 2010/12/19 17:30:30 lbaldini Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.104 2010/12/21 08:22:15 lbaldini Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -917,7 +917,7 @@ StatusCode CalValsTool::calculate()
     }
 
     // New variables from cluster classification
-    CAL_Gam_Prob = calCluster->getGamProb();
+    CAL_Gam_Prob = calCluster->getClassParams().getGamProb();
 
     CAL_EnergyRaw  = calCluster->getMomParams().getEnergy();
     if(CAL_EnergyRaw<1.0) return sc;
