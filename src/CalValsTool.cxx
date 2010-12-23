@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.104 2010/12/21 08:22:15 lbaldini Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.105 2010/12/22 13:46:14 lbaldini Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -916,7 +916,6 @@ StatusCode CalValsTool::calculate()
         CAL_rest_energy -= CAL_energy_uber;
     }
 
-    // New variables from cluster classification
     CAL_Gam_Prob = calCluster->getClassParams().getGamProb();
 
     CAL_EnergyRaw  = calCluster->getMomParams().getEnergy();
@@ -924,28 +923,18 @@ StatusCode CalValsTool::calculate()
 
     for(int i = 0; i<m_nLayers; i++) CAL_eLayer[i] = (*calCluster)[i].getEnergy();
 
-    CAL_Trans_Rms = sqrt(calCluster->getRmsTrans()/CAL_EnergyRaw);
+    CAL_Trans_Rms = calCluster->getMomParams().getTransRms();
 
     float logRLn = 0; 
     if ((CAL_LAT_RLn - CAL_Cntr_RLn) > 0.0) {
         logRLn = log(CAL_LAT_RLn - CAL_Cntr_RLn);
     }
     if (logRLn > 0.0) {
-        CAL_Long_Rms  = sqrt(calCluster->getRmsLong()/CAL_EnergyRaw) / logRLn;
+      CAL_Long_Rms  = calCluster->getMomParams().getLongRms() / logRLn;
     }
-    CAL_LRms_Asym = calCluster->getRmsLongAsym();
-
-    // Start with the skewness stuff.
-    // At this poinu we need to normalize to the sum of weights and divide by sigma**3.
-    CAL_Long_Skew = calCluster->getSkewnessLong();
+    CAL_LRms_Asym = calCluster->getMomParams().getLongRmsAsym();
+    CAL_Long_Skew = calCluster->getMomParams().getLongSkewness();
     CAL_Long_Skew_Norm = -9999.;
-    if (CAL_EnergyRaw > 0.0) {
-      double sigma = sqrt(calCluster->getRmsLong()/CAL_EnergyRaw);
-      if (sigma > 0.0){
-	// Normalize for the sum of weights and to the third power of the longitudinal RMS.
-        CAL_Long_Skew = CAL_Long_Skew/(CAL_EnergyRaw*sigma*sigma*sigma);
-      }
-    }
 
     if(CAL_EnergyRaw>0.0) {
         CAL_Lyr0_Ratio  = CAL_eLayer[0]/CAL_EnergyRaw;
