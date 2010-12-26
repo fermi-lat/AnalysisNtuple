@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.105 2010/12/22 13:46:14 lbaldini Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.106 2010/12/23 16:59:52 lbaldini Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -190,6 +190,53 @@ private:
     float CAL_num_clusters;
     float CAL_rest_energy;
     float CAL_rest_numXtals;
+
+    // Variables referring to the first cluster---added after the restructuring
+    // of the CAL moments analysis (Luca Baldini, Dec. 26, 2010).
+    // Basic variables.
+    float CAL_Clu1_NumXtals;
+    float CAL_Clu1_NumTruncXtals;
+    float CAL_Clu1_NumSaturatedXtals;
+    float CAL_Clu1_RawEnergySum;
+    float CAL_Clu1_CorrEnergySum;
+    float CAL_Clu1_XtalEneRms;
+    float CAL_Clu1_XtalEneSkewness;
+    // Variables from the moments analysis.
+    float CAL_Clu1_MomXCntr;
+    float CAL_Clu1_MomYCntr;
+    float CAL_Clu1_MomZCntr;
+    float CAL_Clu1_MomXDir;
+    float CAL_Clu1_MomYDir;
+    float CAL_Clu1_MomZDir;
+    float CAL_Clu1_MomNumIterations;
+    float CAL_Clu1_MomNumCoreXtals;
+    float CAL_Clu1_MomTransRms;
+    float CAL_Clu1_MomLongRms;
+    float CAL_Clu1_MomLongRmsAysm;
+    float CAL_Clu1_MomLongSkewness;
+    float CAL_Clu1_MomCoreEneFrac;
+    float CAL_Clu1_MomFullLenght;
+    float CAL_Clu1_MomdEdxAve;
+    // Variables from Philippe's fit.
+    float CAL_Clu1_FitXCntr;
+    float CAL_Clu1_FitYCntr;
+    float CAL_Clu1_FitZCntr;
+    float CAL_Clu1_FitXDir;
+    float CAL_Clu1_FitYDir;
+    float CAL_Clu1_FitZDir;
+    float CAL_Clu1_FitNumLayers;
+    float CAL_Clu1_FitChiSquare;
+    // Variables from the Minimum Spanning Tree clustering.
+    float CAL_Clu1_MstMinEdgeLen;
+    float CAL_Clu1_MstMaxEdgeLen;
+    float CAL_Clu1_MstAveEdgeLen;
+    float CAL_Clu1_MstRmsEdgeLen;
+    float CAL_Clu1_MstAveTruncEdgeLen;
+    float CAL_Clu1_MstRmsTruncEdgeLen;
+    // Variables from the cluster classification.
+    float CAL_Clu1_ClassGamProb;
+    float CAL_Clu1_ClassHadProb;
+    float CAL_Clu1_ClassMipProb;
 
     // New variables for new energy correction tools
     // Full profile fit
@@ -683,6 +730,53 @@ StatusCode CalValsTool::initialize()
     addItem("CalTrkXtalRmsTrunc",  &CAL_track_rms_trunc);
     addItem("CalTrkXtalRmsETrunc", &CAL_track_E_rms_trunc);
 
+    // Variables referring to the first cluster---added after the restructuring
+    // of the CAL moments analysis (Luca Baldini, Dec. 26, 2010).
+    // Basic variables.
+    addItem("Cal1NumXtals",  &CAL_Clu1_NumXtals);
+    addItem("Cal1NumTruncXtals",  &CAL_Clu1_NumTruncXtals);
+    addItem("Cal1NumSaturatedXtals",  &CAL_Clu1_NumSaturatedXtals);
+    addItem("Cal1RawEnergySum",  &CAL_Clu1_RawEnergySum);
+    addItem("Cal1CorrEnergySum",  &CAL_Clu1_CorrEnergySum);
+    addItem("Cal1XtalEneRms",  &CAL_Clu1_XtalEneRms);
+    addItem("Cal1XtalEneSkewness",  &CAL_Clu1_XtalEneSkewness);
+    // Variables from the moments analysis.
+    addItem("Cal1MomXCntr",  &CAL_Clu1_MomXCntr);
+    addItem("Cal1MomYCntr",  &CAL_Clu1_MomYCntr);
+    addItem("Cal1MomZCntr",  &CAL_Clu1_MomZCntr);
+    addItem("Cal1MomXDir",  &CAL_Clu1_MomXDir);
+    addItem("Cal1MomYDir",  &CAL_Clu1_MomYDir);
+    addItem("Cal1MomXDir",  &CAL_Clu1_MomZDir);
+    addItem("Cal1MomNumIterations",  &CAL_Clu1_MomNumIterations);
+    addItem("Cal1MomNumCoreXtals",  &CAL_Clu1_MomNumCoreXtals);
+    addItem("Cal1TransRms",  &CAL_Clu1_MomTransRms);
+    addItem("Cal1LongRms",  &CAL_Clu1_MomLongRms);
+    addItem("Cal1LongRmsAsym",  &CAL_Clu1_MomLongRmsAysm);
+    addItem("Cal1LongSkewness",  &CAL_Clu1_MomLongSkewness);
+    addItem("Cal1CoreEneFrac",  &CAL_Clu1_MomCoreEneFrac);
+    addItem("Cal1FullLength",  &CAL_Clu1_MomFullLenght);
+    addItem("Cal1dEdxAve",  &CAL_Clu1_MomdEdxAve);
+    // Variables from Philippe's fit.
+    addItem("Cal1FitXCntr",  &CAL_Clu1_FitXCntr);
+    addItem("Cal1FitYCntr",  &CAL_Clu1_FitYCntr);
+    addItem("Cal1FitZCntr",  &CAL_Clu1_FitZCntr);
+    addItem("Cal1FitXDir",  &CAL_Clu1_FitXDir);
+    addItem("Cal1FitYDir",  &CAL_Clu1_FitYDir);
+    addItem("Cal1FitZDir",  &CAL_Clu1_FitZDir);
+    addItem("Cal1FitNumLayers",  &CAL_Clu1_FitNumLayers);
+    addItem("Cal1FitChiSquare",  &CAL_Clu1_FitChiSquare);
+    // Variables from the Minimum Spanning Tree clustering.
+    addItem("Cal1MstMinEdgeLen",  &CAL_Clu1_MstMinEdgeLen);
+    addItem("Cal1MstMaxEdgeLen",  &CAL_Clu1_MstMaxEdgeLen);
+    addItem("Cal1MstAveEdgeLen",  &CAL_Clu1_MstAveEdgeLen);
+    addItem("Cal1MstRmsEdgeLen",  &CAL_Clu1_MstRmsEdgeLen);
+    addItem("Cal1MstAveTruncEdgeLen",  &CAL_Clu1_MstAveTruncEdgeLen);
+    addItem("Cal1MstRmsTruncEdgeLen",  &CAL_Clu1_MstRmsTruncEdgeLen);
+    // Variables from the cluster classification.
+    addItem("Cal1GamProb",  &CAL_Clu1_ClassGamProb);
+    addItem("Cal1HadProb",  &CAL_Clu1_ClassHadProb);
+    addItem("Cal1MipProb",  &CAL_Clu1_ClassMipProb);
+
     addItem("CalCfpEnergy",  &CAL_cfp_energy);
     addItem("CalCfpChiSq",   &CAL_cfp_totChiSq);
     addItem("CalCfpEnergyUB",&CAL_cfp_energyUB);
@@ -935,6 +1029,53 @@ StatusCode CalValsTool::calculate()
     CAL_LRms_Asym = calCluster->getMomParams().getLongRmsAsym();
     CAL_Long_Skew = calCluster->getMomParams().getLongSkewness();
     CAL_Long_Skew_Norm = -9999.;
+
+    // Variables referring to the first cluster---added after the restructuring
+    // of the CAL moments analysis (Luca Baldini, Dec. 26, 2010).
+    // Basic variables.
+    CAL_Clu1_NumXtals = calCluster->getXtalsParams().getNumXtals();
+    CAL_Clu1_NumTruncXtals = calCluster->getXtalsParams().getNumTruncXtals();
+    CAL_Clu1_NumSaturatedXtals = calCluster->getXtalsParams().getNumSaturatedXtals();
+    CAL_Clu1_RawEnergySum = calCluster->getXtalsParams().getXtalRawEneSum();
+    CAL_Clu1_CorrEnergySum = calCluster->getXtalsParams().getXtalCorrEneSum();
+    CAL_Clu1_XtalEneRms = calCluster->getXtalsParams().getXtalEneRms();
+    CAL_Clu1_XtalEneSkewness = calCluster->getXtalsParams().getXtalEneSkewness();
+    // Variables from the moments analysis.
+    CAL_Clu1_MomXCntr = calCluster->getMomParams().getCentroid().x();
+    CAL_Clu1_MomYCntr = calCluster->getMomParams().getCentroid().y();
+    CAL_Clu1_MomZCntr = calCluster->getMomParams().getCentroid().z();
+    CAL_Clu1_MomXDir = calCluster->getMomParams().getAxis().x();
+    CAL_Clu1_MomYDir = calCluster->getMomParams().getAxis().y();
+    CAL_Clu1_MomZDir = calCluster->getMomParams().getAxis().z();
+    CAL_Clu1_MomNumIterations = calCluster->getMomParams().getNumIterations();
+    CAL_Clu1_MomNumCoreXtals = calCluster->getMomParams().getNumCoreXtals();
+    CAL_Clu1_MomTransRms = calCluster->getMomParams().getTransRms();
+    CAL_Clu1_MomLongRms = calCluster->getMomParams().getLongRms();
+    CAL_Clu1_MomLongRmsAysm = calCluster->getMomParams().getLongRmsAsym();
+    CAL_Clu1_MomLongSkewness = calCluster->getMomParams().getLongSkewness();
+    CAL_Clu1_MomCoreEneFrac = calCluster->getMomParams().getCoreEnergyFrac();
+    CAL_Clu1_MomFullLenght = calCluster->getMomParams().getFullLength();
+    CAL_Clu1_MomdEdxAve = calCluster->getMomParams().getdEdxAverage();
+    // Variables from Philippe's fit.
+    CAL_Clu1_FitXCntr = calCluster->getFitParams().getCentroid().x();
+    CAL_Clu1_FitYCntr = calCluster->getFitParams().getCentroid().y();
+    CAL_Clu1_FitZCntr = calCluster->getFitParams().getCentroid().z();
+    CAL_Clu1_FitXDir = calCluster->getFitParams().getAxis().x();
+    CAL_Clu1_FitYDir = calCluster->getFitParams().getAxis().y();
+    CAL_Clu1_FitZDir = calCluster->getFitParams().getAxis().z();
+    CAL_Clu1_FitNumLayers = calCluster->getFitParams().getFitLayers();
+    CAL_Clu1_FitChiSquare = calCluster->getFitParams().getChiSquare();
+    // Variables from the Minimum Spanning Tree clustering.
+    CAL_Clu1_MstMinEdgeLen = calCluster->getMSTreeParams().getMinEdgeLength();
+    CAL_Clu1_MstMaxEdgeLen = calCluster->getMSTreeParams().getMaxEdgeLength();
+    CAL_Clu1_MstAveEdgeLen = calCluster->getMSTreeParams().getMeanEdgeLength();
+    CAL_Clu1_MstRmsEdgeLen = calCluster->getMSTreeParams().getRmsEdgeLength();
+    CAL_Clu1_MstAveTruncEdgeLen = calCluster->getMSTreeParams().getMeanEdgeLengthTrunc();
+    CAL_Clu1_MstRmsTruncEdgeLen = calCluster->getMSTreeParams().getRmsEdgeLengthTrunc();
+    // Variables from the cluster classification.
+    CAL_Clu1_ClassGamProb = calCluster->getClassParams().getProb("gam");
+    CAL_Clu1_ClassHadProb = calCluster->getClassParams().getProb("had");
+    CAL_Clu1_ClassMipProb = calCluster->getClassParams().getProb("mip");
 
     if(CAL_EnergyRaw>0.0) {
         CAL_Lyr0_Ratio  = CAL_eLayer[0]/CAL_EnergyRaw;
