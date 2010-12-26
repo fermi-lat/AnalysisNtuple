@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.106 2010/12/23 16:59:52 lbaldini Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.107 2010/12/26 20:05:24 lbaldini Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -163,15 +163,12 @@ private:
     float CAL_Long_Rms;
     float CAL_Trans_Rms;
     float CAL_LRms_Asym;
-    float CAL_Long_Skew;
-    float CAL_Long_Skew_Norm;
 
     float CAL_MIP_Diff; 
     float CAL_MIP_Ratio;
 
     
     // Stuff to study clustering
-    float CAL_Gam_Prob;
     float CAL_energy_uber;
     float CAL_xEcntr_uber;
     float CAL_yEcntr_uber;
@@ -457,9 +454,6 @@ from a minimum-ionizing particle
 <tr><td> CalMIPRatio 
 <td>F<td>   Ratio of measured energy to that expected from a 
 minimum-ionizing particle 
-<tr><td> CalGamProb
-<td>F<td>   Probability for the first cluster to be a gamma according to the cluster
-classification algorithm.
 <tr><td> Cal[X/Y/Z]Ecntr 
 <td>F<td>   Energy centroid in [x/y/z]
 <tr><td> Cal[X/Y/Z]Dir 
@@ -676,13 +670,8 @@ StatusCode CalValsTool::initialize()
     addItem("CalLongRms",     &CAL_Long_Rms);
     addItem("CalLRmsAsym",    &CAL_LRms_Asym);
 
-    addItem("CalLongSkew",    &CAL_Long_Skew);
-    addItem("CalLongSkewNorm",&CAL_Long_Skew_Norm);
-
     addItem("CalMIPDiff",   &CAL_MIP_Diff);
     addItem("CalMIPRatio",  &CAL_MIP_Ratio);
-
-    addItem("CalGamProb",  &CAL_Gam_Prob);
 
     addItem("CalXEcntr",     &CAL_xEcntr);
     addItem("CalYEcntr",     &CAL_yEcntr);
@@ -1010,14 +999,18 @@ StatusCode CalValsTool::calculate()
         CAL_rest_energy -= CAL_energy_uber;
     }
 
-    CAL_Gam_Prob = calCluster->getClassParams().getGamProb();
-
     CAL_EnergyRaw  = calCluster->getMomParams().getEnergy();
     if(CAL_EnergyRaw<1.0) return sc;
 
     for(int i = 0; i<m_nLayers; i++) CAL_eLayer[i] = (*calCluster)[i].getEnergy();
 
     CAL_Trans_Rms = calCluster->getMomParams().getTransRms();
+    // For backward compatibility, change the normalization to the old
+    // (corrected) sum of weight).
+    // CalTransRms will be obsolete, at some point, in favour of Cal1TransRms?
+    CAL_Trans_Rms *= sqrt(calCluster->getXtalsParams().getXtalRawEneSum());
+    CAL_Trans_Rms /= sqrt(CAL_EnergyRaw);
+    // End of hack.
 
     float logRLn = 0; 
     if ((CAL_LAT_RLn - CAL_Cntr_RLn) > 0.0) {
@@ -1025,10 +1018,14 @@ StatusCode CalValsTool::calculate()
     }
     if (logRLn > 0.0) {
       CAL_Long_Rms  = calCluster->getMomParams().getLongRms() / logRLn;
+      // For backward compatibility, change the normalization to the old
+      // (corrected) sum of weight.
+      // CalLongRms will be obsolete, at some point, in favour of Cal1LongRms?
+      CAL_Long_Rms *= sqrt(calCluster->getXtalsParams().getXtalRawEneSum());
+      CAL_Long_Rms /= sqrt(CAL_EnergyRaw);
+      // End of hack.
     }
     CAL_LRms_Asym = calCluster->getMomParams().getLongRmsAsym();
-    CAL_Long_Skew = calCluster->getMomParams().getLongSkewness();
-    CAL_Long_Skew_Norm = -9999.;
 
     // Variables referring to the first cluster---added after the restructuring
     // of the CAL moments analysis (Luca Baldini, Dec. 26, 2010).
