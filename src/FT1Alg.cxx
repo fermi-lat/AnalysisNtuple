@@ -1,7 +1,7 @@
 /** @file FT1Alg.cxx
 @brief Declaration and implementation of Gaudi algorithm FT1Alg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.26 2009/09/09 06:05:19 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.27 2009/10/06 17:27:10 lsrea Exp $
 */
 // Include files
 
@@ -109,7 +109,7 @@ public:
     Item CTBCORE;
     Item CTBClassLevel;
     Item CTBParticleType;
-    
+    Item Cal1MomXDir, Cal1MomYDir, Cal1MomZDir;
 
     //FT1 entries to create
     unsigned int m_ft1eventid;
@@ -120,6 +120,7 @@ public:
     //float m_ft1convpointx,m_ft1convpointy,m_ft1convpointz,
     float m_ft1convlayer;
     int   m_ft1eventclass;
+    float m_ft1calzen,m_ft1calazim,m_ft1calra,m_ft1caldec,m_ft1call,m_ft1calb;
 };
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -275,6 +276,9 @@ FT1worker::FT1worker()
 , CTBCORE("CTBCORE")
 , CTBClassLevel("CTBClassLevel")
 , CTBParticleType("CTBParticleType")
+, Cal1MomXDir("Cal1MomXDir")
+, Cal1MomYDir("Cal1MomYDir")
+, Cal1MomZDir("Cal1MomZDir")
 
 {
     //now create new items 
@@ -295,6 +299,12 @@ FT1worker::FT1worker()
     addItem( "FT1ConvLayer",     m_ft1convlayer);
     addItem( "FT1Livetime",      m_ft1livetime);
     addItem( "FT1EventClass",    m_ft1eventclass);
+    addItem( "FT1CalZenithTheta",  m_ft1calzen);
+    addItem( "FT1CalEarthAzimuth", m_ft1calazim);
+    addItem( "FT1CalRa",           m_ft1calra);
+    addItem( "FT1CalDec",          m_ft1caldec);
+    addItem( "FT1CalL",            m_ft1call);
+    addItem( "FT1CalB",            m_ft1calb);
 }
 
 /** @page anatup_vars 
@@ -356,6 +366,9 @@ void FT1worker::evaluate()
     m_ft1livetime = -1;
     m_ft1livetime = EvtLiveTime;
     m_ft1eventclass = _invalidEventClass;
+    m_ft1calra  = 666; m_ft1caldec  = 666;
+    m_ft1calzen = 666; m_ft1calazim = 666;
+    m_ft1call   = 666; m_ft1calb    = 666;
 
     // first calculate the EventClass, pass-7 style
 
@@ -413,6 +426,11 @@ void FT1worker::evaluate()
         }
     }
 
+    Hep3Vector glastCalDir;
+    if ( Cal1MomZDir != 0 ) {
+      glastCalDir = Hep3Vector(Cal1MomXDir, Cal1MomYDir, Cal1MomZDir);
+    }
+
     // instrument coords
 
     m_ft1convlayer   = Tkr1FirstLayer;
@@ -434,11 +452,21 @@ void FT1worker::evaluate()
     m_ft1l   = sdir.l();
     m_ft1b   = sdir.b();
 
+    // The Cal axis points up, so we *do* need the minus sign, here.
+    SkyDir scaldir( gps->toSky(-glastCalDir) ); 
+    m_ft1calra  = scaldir.ra();
+    m_ft1caldec = scaldir.dec();
+    m_ft1call   = scaldir.l();
+    m_ft1calb   = scaldir.b();
+
     // local Zenith coordinates
 
     SkyDir zenith(gps->zenithDir());  // pointing direction
     double zenith_theta = sdir.difference(zenith); 
     if( fabs(zenith_theta)<1e-8) zenith_theta=0;
+
+    double calzenith_theta = scaldir.difference(zenith); 
+    if( fabs(calzenith_theta)<1e-8) calzenith_theta=0;
 
     // all this to do the azimuth angle :-(
     Hep3Vector north_pole(0,0,1);
@@ -449,7 +477,14 @@ void FT1worker::evaluate()
     if( earth_azimuth <0) earth_azimuth += 2*M_PI; // to 0-360 deg.
     if( fabs(earth_azimuth)<1e-8) earth_azimuth=0;
 
+    double calearth_azimuth=atan2( scaldir().dot(east_dir), scaldir().dot(north_dir) );
+    if( calearth_azimuth <0) calearth_azimuth += 2*M_PI; // to 0-360 deg.
+    if( fabs(calearth_azimuth)<1e-8) calearth_azimuth=0;
+
     m_ft1zen  = zenith_theta*R2D;;
     m_ft1azim = earth_azimuth*R2D;
+
+    m_ft1calzen  = calzenith_theta*R2D;
+    m_ft1calazim = calearth_azimuth*R2D;
 
  }
