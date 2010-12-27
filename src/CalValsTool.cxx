@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.107 2010/12/26 20:05:24 lbaldini Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.108 2010/12/26 22:49:33 lbaldini Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -735,7 +735,7 @@ StatusCode CalValsTool::initialize()
     addItem("Cal1MomZCntr",  &CAL_Clu1_MomZCntr);
     addItem("Cal1MomXDir",  &CAL_Clu1_MomXDir);
     addItem("Cal1MomYDir",  &CAL_Clu1_MomYDir);
-    addItem("Cal1MomXDir",  &CAL_Clu1_MomZDir);
+    addItem("Cal1MomZDir",  &CAL_Clu1_MomZDir);
     addItem("Cal1MomNumIterations",  &CAL_Clu1_MomNumIterations);
     addItem("Cal1MomNumCoreXtals",  &CAL_Clu1_MomNumCoreXtals);
     addItem("Cal1TransRms",  &CAL_Clu1_MomTransRms);
