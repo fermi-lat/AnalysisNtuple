@@ -30,8 +30,9 @@ ApplicationMgr.DLLs   += { "CalibSvc" };
 DetectorPersistencySvc.CnvServices += {"CalibMySQLCnvSvc"};
 
 // ----------------------------
-// Point to the particle properties file
-ParticlePropertySvc.ParticlePropertiesFile = "$(ANALYSISNTUPLEJOBOPTIONSPATH)/test/ParticleTable.txt";
+// Point to the particle properties file .. none of the following works
+// ParticlePropertySvc.ParticlePropertiesFile = "../src/test/ParticleTable.txt";
+// ParticlePropertySvc.ParticlePropertiesFile = "$(ANALYSISNTUPLEJOBOPTIONSPATH)/test/ParticleTable.txt";
 
 // ----------------------------
 //  topalg
