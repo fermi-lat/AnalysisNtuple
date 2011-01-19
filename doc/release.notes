@@ -3,6 +3,7 @@
   @verbatim
    * EOH *
  
+ AnalysisNtuple-02-58-00 19-Jan-2011 lbaldini Two more data members added to the CalXtalsParams container.
  AnalysisNtuple-02-57-14 13-Jan-2011  lsrea fix test job, cmt and SCons
  AnalysisNtuple-02-57-13 08-Jan-2011 lbaldini Cal1GhostProb added.
  AnalysisNtuple-02-57-12 06-Jan-2011  lsrea fixes for SCons
