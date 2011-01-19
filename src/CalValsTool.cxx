@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.109 2010/12/27 18:56:06 lbaldini Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.110 2011/01/09 07:47:30 lbaldini Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -196,6 +196,7 @@ private:
     float CAL_Clu1_NumSaturatedXtals;
     float CAL_Clu1_RawEnergySum;
     float CAL_Clu1_CorrEnergySum;
+    float CAL_Clu1_XtalEneMax;
     float CAL_Clu1_XtalEneRms;
     float CAL_Clu1_XtalEneSkewness;
     // Variables from the moments analysis.
@@ -728,6 +729,7 @@ StatusCode CalValsTool::initialize()
     addItem("Cal1NumSaturatedXtals",  &CAL_Clu1_NumSaturatedXtals);
     addItem("Cal1RawEnergySum",  &CAL_Clu1_RawEnergySum);
     addItem("Cal1CorrEnergySum",  &CAL_Clu1_CorrEnergySum);
+    addItem("Cal1XtalEneMax",  &CAL_Clu1_XtalEneMax);
     addItem("Cal1XtalEneRms",  &CAL_Clu1_XtalEneRms);
     addItem("Cal1XtalEneSkewness",  &CAL_Clu1_XtalEneSkewness);
     // Variables from the moments analysis.
@@ -1037,6 +1039,7 @@ StatusCode CalValsTool::calculate()
     CAL_Clu1_NumSaturatedXtals = calCluster->getXtalsParams().getNumSaturatedXtals();
     CAL_Clu1_RawEnergySum = calCluster->getXtalsParams().getXtalRawEneSum();
     CAL_Clu1_CorrEnergySum = calCluster->getXtalsParams().getXtalCorrEneSum();
+    CAL_Clu1_XtalEneMax = calCluster->getXtalsParams().getXtalEneMax();
     CAL_Clu1_XtalEneRms = calCluster->getXtalsParams().getXtalEneRms();
     CAL_Clu1_XtalEneSkewness = calCluster->getXtalsParams().getXtalEneSkewness();
     // Variables from the moments analysis.
