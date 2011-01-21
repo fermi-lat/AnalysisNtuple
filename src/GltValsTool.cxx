@@ -2,7 +2,7 @@
 @brief Calculates the Trigger analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.42 2009/02/07 21:36:27 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.43 2009/05/06 23:30:07 lsrea Exp $
 */
 
 // Include files
@@ -138,7 +138,7 @@ produces 13 potential triggers
 <tr><td> GltType 
 <td>F<td>   Number of exposed sides for the triggered tower: <br>
             0 = central tower, 1 = side tower, <br> 
-            2 = edge edge tower, 4 = any single-tower setup 	
+            2 = edge edge tower, 4 = any single-tower setup         
 <tr><td> GltMoment 
 <td>F<td>   REMOVED!
 <tr><td> GltZDir 

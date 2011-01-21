@@ -2,7 +2,7 @@
 @brief Uses the XxxValsTools to produce a comprehensive ntuple
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.45 2009/12/15 15:12:21 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.46 2010/11/01 16:40:07 usher Exp $
 */
 
 // Gaudi system includes
@@ -401,8 +401,8 @@ StatusCode AnalysisNtupleAlg::execute()
             else if (toolname=="VtxValsTool"    ) {varname = "VtxZDir";}
             else if (toolname=="CalValsTool"    ) {varname = "CalEnergyRaw";}
             else if (toolname=="CalMipValsTool" ) {varname = "CalMipNum";}
-	    //else if (toolname=="GcrSelectValsTool" ) {varname = "GcrSelect[1536]","InferedZ";}
-	    //else if (toolname=="GcrReconValsTool" )  {varname = "GcrRecon[1536]";}
+            //else if (toolname=="GcrSelectValsTool" ) {varname = "GcrSelect[1536]","InferedZ";}
+            //else if (toolname=="GcrReconValsTool" )  {varname = "GcrRecon[1536]";}
             else if (toolname=="AcdValsTool"    ) {varname = "AcdTileCount";}
             else if (toolname=="Acd2ValsTool"   ) {varname = "Acd2TileCount";}
             else if (toolname=="EvtValsTool"    ) {varname = "EvtEnergyRaw";}

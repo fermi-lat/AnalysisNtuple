@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.55 2010/12/19 17:30:30 lbaldini Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.56 2010/12/22 04:01:34 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -88,19 +88,19 @@ private:
     float ACD_ActiveDist3D_Err;
     float ACD_ActiveDist_Energy;
 
-	// RJ: variables for CR active distance
-	float ACD_CR_ActiveDist3D;
-	float ACD_CR_ActiveDist_Energy;
+        // RJ: variables for CR active distance
+        float ACD_CR_ActiveDist3D;
+        float ACD_CR_ActiveDist_Energy;
     int ACD_CR_ActiveDist_TrackNum;
-	float ACD_CR_ribbon_ActiveDist;
-	float ACD_CR_ribbon_EnergyPmtA;
-	float ACD_CR_ribbon_EnergyPmtB;
-	float ACD_CR1_ActiveDist;
-	float ACD_CR1_ribbon_ActiveDist;
-	float ACD_CR1_ribbon_EnergyPmtA;
-	float ACD_CR1_ribbon_EnergyPmtB;
-	float ACD_CR1_ActiveDist_Energy;
-	int ACD_CR1_ActiveDist_TrackNum;
+        float ACD_CR_ribbon_ActiveDist;
+        float ACD_CR_ribbon_EnergyPmtA;
+        float ACD_CR_ribbon_EnergyPmtB;
+        float ACD_CR1_ActiveDist;
+        float ACD_CR1_ribbon_ActiveDist;
+        float ACD_CR1_ribbon_EnergyPmtA;
+        float ACD_CR1_ribbon_EnergyPmtB;
+        float ACD_CR1_ActiveDist_Energy;
+        int ACD_CR1_ActiveDist_TrackNum;
 
     // Variables computed by looping over all tracks w.r.t. hit ribbons
     float ACD_ribbon_ActiveDist;
@@ -175,14 +175,14 @@ Notes
 positive if inside.
 
 <table>
-<tr><th> Variable <th> Type <th> Description					
+<tr><th> Variable <th> Type <th> Description                                        
 <tr><td> AcdTileCount 
 <td>U<td>   Number of tiles fired
 <tr><td> AcdRibbonCount 
 <td>U<td>   Number of ribbons fired
-<tr><td> AcdTotalEnergy 	
+<tr><td> AcdTotalEnergy         
 <td>F<td>   Total energy deposited in ACD Tiles
-<tr><td> AcdRibbonEnergy 	
+<tr><td> AcdRibbonEnergy         
 <td>F<td>   Total energy deposited in ACD Ribbons
 <tr><td> AcdTileIdRecon
 <td>U<td> Tile identifier that was pierced by the reconstructed track.  
@@ -192,7 +192,7 @@ intersected by a reconstructed track.
 <td>U<td> Ribbon identifier that was pierced by the reconstructed track.  
 A value of 899 (N/A) is the default and denotes that no ACD ribbon was 
 intersected by a reconstructed track.
-<tr><td> AcdActiveDist3D  	
+<tr><td> AcdActiveDist3D          
 <td>F<td>   Active Distance most likely to give a veto.  
 Corresponds to Act. Dist. that is greater than a set 
 an energy dep. min. distance and has the largest pulse height
@@ -398,25 +398,25 @@ StatusCode AcdValsTool::initialize()
     addItem("AcdEnergyRow2", & ACD_energyRow2);
     addItem("AcdEnergyRow3", & ACD_energyRow3);
 
-	// RJ: add CR track active distance stuff
+        // RJ: add CR track active distance stuff
     addItem("AcdCRActiveDist3D",   &ACD_CR_ActiveDist3D);
     addItem("AcdCRActDistTileEnergy",   &ACD_CR_ActiveDist_Energy);
     addItem("AcdCRActDistTrackNum", &ACD_CR_ActiveDist_TrackNum);
-	addItem("AcdCRRibbonActiveDist", &ACD_CR_ribbon_ActiveDist);
+        addItem("AcdCRRibbonActiveDist", &ACD_CR_ribbon_ActiveDist);
     addItem("AcdCRRibbonActEnergyPmtA", &ACD_CR_ribbon_EnergyPmtA);
     addItem("AcdCRRibbonActEnergyPmtB", &ACD_CR_ribbon_EnergyPmtB);
     addItem("AcdCR1ActiveDist",   &ACD_CR1_ActiveDist);
     addItem("AcdCR1ActDistTileEnergy",   &ACD_CR1_ActiveDist_Energy);
     addItem("AcdCR1ActDistTrackNum", &ACD_CR1_ActiveDist_TrackNum);
-	addItem("AcdCR1RibbonActiveDist", &ACD_CR1_ribbon_ActiveDist);
+        addItem("AcdCR1RibbonActiveDist", &ACD_CR1_ribbon_ActiveDist);
     addItem("AcdCR1RibbonActEnergyPmtA", &ACD_CR1_ribbon_EnergyPmtA);
     addItem("AcdCR1RibbonActEnergyPmtB", &ACD_CR1_ribbon_EnergyPmtB);
 
 
     zeroVals();
     ACD_ActiveDist_TrackNum = -1;
-	ACD_CR_ActiveDist_TrackNum = -1; //RJ
-	ACD_CR1_ActiveDist_TrackNum = -1; //RJ
+        ACD_CR_ActiveDist_TrackNum = -1; //RJ
+        ACD_CR1_ActiveDist_TrackNum = -1; //RJ
 
     return sc;
 }
@@ -431,7 +431,7 @@ StatusCode AcdValsTool::calculate()
     // Recover pointers to CalClusters and Xtals
     SmartDataPtr<Event::CalClusterCol>     
         pCals(m_pEventSvc,EventModel::CalRecon::CalClusterCol);
-	SmartDataPtr<Event::TkrTrackCol>   
+        SmartDataPtr<Event::TkrTrackCol>   
         pTracks(m_pEventSvc,EventModel::TkrRecon::TkrTrackCol);   //RJ: get pointer to TKR Recon results
 
     // Recover Track associated info. (not currently used 
@@ -468,7 +468,7 @@ StatusCode AcdValsTool::calculate()
                 continue;
             // this is not known to be correct!
             //} else if ( !aHit->getAcceptMapBit(Event::AcdHit::A) && !aHit->getAcceptMapBit(Event::AcdHit::B) ) {
-			//    continue;
+                        //    continue;
             } else if ( id.ribbon() ) {
                 float MeV_A = aHit->mips(Event::AcdHit::A) * MeVMipRibbon;
                 float MeV_B = aHit->mips(Event::AcdHit::B) * MeVMipRibbon;
@@ -506,7 +506,7 @@ StatusCode AcdValsTool::calculate()
                         ACD_countRow3Readout++;
                     }
                 }
-            }	  
+            }          
         }
 
         //Make sure we have valid cluster data and some energy
@@ -523,16 +523,16 @@ StatusCode AcdValsTool::calculate()
         // Reset variables for loop over all tracks
         ACD_ActiveDist3D = ACD_ribbon_ActiveDist = -2000.;
 //<<<<<<< AcdValsTool.cxx
-		ACD_CR_ActiveDist3D = ACD_CR_ribbon_ActiveDist = -2000.;  //RJ
-		ACD_CR1_ActiveDist = ACD_CR1_ribbon_ActiveDist = -2000.;  //RJ
-		ACD_CR_ActiveDist_TrackNum = ACD_CR1_ActiveDist_TrackNum = -999; //RJ
-		ACD_CR_ActiveDist_Energy = ACD_CR_ribbon_EnergyPmtA = ACD_CR_ribbon_EnergyPmtB = 0.;  //RJ
-		ACD_CR1_ActiveDist_Energy = ACD_CR1_ribbon_EnergyPmtA = ACD_CR1_ribbon_EnergyPmtB = 0.;  //RJ
+                ACD_CR_ActiveDist3D = ACD_CR_ribbon_ActiveDist = -2000.;  //RJ
+                ACD_CR1_ActiveDist = ACD_CR1_ribbon_ActiveDist = -2000.;  //RJ
+                ACD_CR_ActiveDist_TrackNum = ACD_CR1_ActiveDist_TrackNum = -999; //RJ
+                ACD_CR_ActiveDist_Energy = ACD_CR_ribbon_EnergyPmtA = ACD_CR_ribbon_EnergyPmtB = 0.;  //RJ
+                ACD_CR1_ActiveDist_Energy = ACD_CR1_ribbon_EnergyPmtA = ACD_CR1_ribbon_EnergyPmtB = 0.;  //RJ
 //=======
-	ACD_ActiveDist3D_ID = ACD_ribbon_ActiveDist_ID = ACD_TkrRibbon_Dist_ID = 700;
+        ACD_ActiveDist3D_ID = ACD_ribbon_ActiveDist_ID = ACD_TkrRibbon_Dist_ID = 700;
 //>>>>>>> 1.53
         ACD_ActiveDist_Energy = ACD_ribbon_EnergyPmtA = ACD_ribbon_EnergyPmtB = 0.;
-        ACD_ActiveDist3D_Err = ACD_ribbon_ActiveDist_Err = -1.;	
+        ACD_ActiveDist3D_Err = ACD_ribbon_ActiveDist_Err = -1.;        
         ACD_Corner_DOCA = ACD_TkrRibbon_Dist = ACD_TkrHole_Dist = -2000.;
         ACD_ribbon_ActiveLength = ACD_TkrRibbonLength = -10000.;
 
@@ -575,9 +575,9 @@ StatusCode AcdValsTool::calculate()
         // Note that the Poca are sorted.  
         // Once we have filled all the variables we can split
         const Event::AcdTkrHitPoca* tile_vetoPoca = 0;
-		const Event::AcdTkrHitPoca* tile_CR_vetoPoca = 0; //RJ
+                const Event::AcdTkrHitPoca* tile_CR_vetoPoca = 0; //RJ
         double max_tile_energy = 0.; 
-		double max_CR_tile_energy = 0.;  //RJ 
+                double max_CR_tile_energy = 0.;  //RJ 
 
         const Event::AcdTkrHitPocaCol& pocas = pACD->getAcdTkrHitPocaCol();
         Event::AcdTkrHitPocaCol::const_iterator itrPoca = pocas.begin();
@@ -590,11 +590,11 @@ StatusCode AcdValsTool::calculate()
             bool isBestTrack = aPoca->trackIndex() == 0;
             bool isUpGoing = aPoca->getArcLength() > 0.;
             bool isTrack = aPoca->trackIndex() >= 0;
-			int TkIdx= aPoca->trackIndex();
-			bool isBestCR= TkIdx == bestCRtkr;
+                        int TkIdx= aPoca->trackIndex();
+                        bool isBestCR= TkIdx == bestCRtkr;
 
-			bool isCosmic = false;
-			// RJ: Look for the track.
+                        bool isCosmic = false;
+                        // RJ: Look for the track.
             if(pTracks) {
                 if(pTracks->size()>0) {
                     Event::TkrTrackColConPtr pTrack = pTracks->begin();
@@ -613,11 +613,11 @@ StatusCode AcdValsTool::calculate()
                 }
             }
 
-			// Get SSD veto info for Cosmic-Ray candidates
-			float SSDVetos=0.;
-			if (isCosmic) {
-				SSDVetos=0.;
-			}
+                        // Get SSD veto info for Cosmic-Ray candidates
+                        float SSDVetos=0.;
+                        if (isCosmic) {
+                                SSDVetos=0.;
+                        }
 
             bool doneHole = false;
             double holeDoca(0.);  
@@ -631,51 +631,51 @@ StatusCode AcdValsTool::calculate()
             if ( isUpGoing && isTrack) {
                 // Fill variables for all tracks
 //<<<<<<< AcdValsTool.cxx
-				if (isCosmic) {     //RJ: add section here for cosmic-ray tracks
-					if (theId.tile()) {
-						if (ACD_CR_ActiveDist3D < -1999.99 || aPoca->getDoca() > min_ActiveDistance) {
-							if (tileEnergyIdMap[theId] > max_CR_tile_energy) {
-								max_CR_tile_energy= tileEnergyIdMap[theId];
-								ACD_CR_ActiveDist3D= aPoca->getDoca();
-								tile_CR_vetoPoca= aPoca;
-							}
-						}
-					}
-					else if (theId.ribbon()) {
-						if (ACD_CR_ribbon_ActiveDist < -1999.99) {
-							ACD_CR_ribbon_ActiveDist = aPoca->getDoca();
-							ACD_CR_ribbon_EnergyPmtA = ribbonEnergyIdMap[theId].first;
-							ACD_CR_ribbon_EnergyPmtB = ribbonEnergyIdMap[theId].second;
-						}
-					}
-				}
-				else {
-					if ( theId.tile() ) {
-						if ( ACD_ActiveDist3D < -1999.99 
-							|| aPoca->getDoca() > min_ActiveDistance) 
-						{
-							if(tileEnergyIdMap[theId] > max_tile_energy ) {
-								max_tile_energy = tileEnergyIdMap[theId];
-								tile_vetoPoca = aPoca;
-								ACD_ActiveDist3D = aPoca->getDoca();
-							}
-						}	
-					} else if ( theId.ribbon() ) {
-						if ( ACD_ribbon_ActiveDist < -1999.99 ) {
-							if ( ! donePlaneError ) {
-								donePlaneError = true;
-								AcdTileUtil::planeErrorProjection(
-									aPoca->getActiveX(),aPoca->getActiveY(),
-									aPoca->getLocalXXCov(),aPoca->getLocalYYCov(),
-									planeError);  
-							}
-							ACD_ribbon_ActiveDist =  aPoca->getDoca();
-							ACD_ribbon_ActiveDist_Err = planeError;
-							ACD_ribbon_ActiveLength = aPoca->getActiveY();
-							ACD_ribbon_EnergyPmtA = ribbonEnergyIdMap[theId].first;
-							ACD_ribbon_EnergyPmtB = ribbonEnergyIdMap[theId].second;
-						}
-					}
+                                if (isCosmic) {     //RJ: add section here for cosmic-ray tracks
+                                        if (theId.tile()) {
+                                                if (ACD_CR_ActiveDist3D < -1999.99 || aPoca->getDoca() > min_ActiveDistance) {
+                                                        if (tileEnergyIdMap[theId] > max_CR_tile_energy) {
+                                                                max_CR_tile_energy= tileEnergyIdMap[theId];
+                                                                ACD_CR_ActiveDist3D= aPoca->getDoca();
+                                                                tile_CR_vetoPoca= aPoca;
+                                                        }
+                                                }
+                                        }
+                                        else if (theId.ribbon()) {
+                                                if (ACD_CR_ribbon_ActiveDist < -1999.99) {
+                                                        ACD_CR_ribbon_ActiveDist = aPoca->getDoca();
+                                                        ACD_CR_ribbon_EnergyPmtA = ribbonEnergyIdMap[theId].first;
+                                                        ACD_CR_ribbon_EnergyPmtB = ribbonEnergyIdMap[theId].second;
+                                                }
+                                        }
+                                }
+                                else {
+                                        if ( theId.tile() ) {
+                                                if ( ACD_ActiveDist3D < -1999.99 
+                                                        || aPoca->getDoca() > min_ActiveDistance) 
+                                                {
+                                                        if(tileEnergyIdMap[theId] > max_tile_energy ) {
+                                                                max_tile_energy = tileEnergyIdMap[theId];
+                                                                tile_vetoPoca = aPoca;
+                                                                ACD_ActiveDist3D = aPoca->getDoca();
+                                                        }
+                                                }        
+                                        } else if ( theId.ribbon() ) {
+                                                if ( ACD_ribbon_ActiveDist < -1999.99 ) {
+                                                        if ( ! donePlaneError ) {
+                                                                donePlaneError = true;
+                                                                AcdTileUtil::planeErrorProjection(
+                                                                        aPoca->getActiveX(),aPoca->getActiveY(),
+                                                                        aPoca->getLocalXXCov(),aPoca->getLocalYYCov(),
+                                                                        planeError);  
+                                                        }
+                                                        ACD_ribbon_ActiveDist =  aPoca->getDoca();
+                                                        ACD_ribbon_ActiveDist_Err = planeError;
+                                                        ACD_ribbon_ActiveLength = aPoca->getActiveY();
+                                                        ACD_ribbon_EnergyPmtA = ribbonEnergyIdMap[theId].first;
+                                                        ACD_ribbon_EnergyPmtB = ribbonEnergyIdMap[theId].second;
+                                                }
+                                        }
 //=======
 /*
                 if ( theId.tile() ) {
@@ -686,9 +686,9 @@ StatusCode AcdValsTool::calculate()
                             max_tile_energy = tileEnergyIdMap[theId];
                             tile_vetoPoca = aPoca;
                             ACD_ActiveDist3D = aPoca->getDoca();
-			    ACD_ActiveDist3D_ID = aPoca->getId().id();
+                            ACD_ActiveDist3D_ID = aPoca->getId().id();
                         }
-                    }	
+                    }        
                 } else if ( theId.ribbon() ) {
                     if ( ACD_ribbon_ActiveDist < -1999.99 ) {
                         if ( ! donePlaneError ) {
@@ -699,7 +699,7 @@ StatusCode AcdValsTool::calculate()
                                 planeError);  
                         }
                         ACD_ribbon_ActiveDist =  aPoca->getDoca();
-			ACD_ribbon_ActiveDist_ID = aPoca->getId().id();
+                        ACD_ribbon_ActiveDist_ID = aPoca->getId().id();
                         ACD_ribbon_ActiveDist_Err = planeError;
                         ACD_ribbon_ActiveLength = aPoca->getActiveY();
                         ACD_ribbon_EnergyPmtA = ribbonEnergyIdMap[theId].first;
@@ -709,22 +709,22 @@ StatusCode AcdValsTool::calculate()
 */
                 }
                 // Fill variables for best track, if appropiate
-				if (isBestCR) {
-					if (theId.tile()) {
-						if (ACD_CR1_ActiveDist < -1999.99) {
-							ACD_CR1_ActiveDist= aPoca->getDoca();
-							ACD_CR1_ActiveDist_Energy = tileEnergyIdMap[theId];
-							ACD_CR1_ActiveDist_TrackNum = TkIdx;
-						}
-					} else if (theId.ribbon()) {
-						if (ACD_CR1_ribbon_ActiveDist < -1999.99) {
-							ACD_CR1_ribbon_ActiveDist = aPoca->getDoca();
-							ACD_CR1_ribbon_EnergyPmtA = ribbonEnergyIdMap[theId].first;
-							ACD_CR1_ribbon_EnergyPmtB = ribbonEnergyIdMap[theId].second;
-							ACD_CR1_ActiveDist_TrackNum = TkIdx;
-						}
-					}
-				}
+                                if (isBestCR) {
+                                        if (theId.tile()) {
+                                                if (ACD_CR1_ActiveDist < -1999.99) {
+                                                        ACD_CR1_ActiveDist= aPoca->getDoca();
+                                                        ACD_CR1_ActiveDist_Energy = tileEnergyIdMap[theId];
+                                                        ACD_CR1_ActiveDist_TrackNum = TkIdx;
+                                                }
+                                        } else if (theId.ribbon()) {
+                                                if (ACD_CR1_ribbon_ActiveDist < -1999.99) {
+                                                        ACD_CR1_ribbon_ActiveDist = aPoca->getDoca();
+                                                        ACD_CR1_ribbon_EnergyPmtA = ribbonEnergyIdMap[theId].first;
+                                                        ACD_CR1_ribbon_EnergyPmtB = ribbonEnergyIdMap[theId].second;
+                                                        ACD_CR1_ActiveDist_TrackNum = TkIdx;
+                                                }
+                                        }
+                                }
                 if ( isBestTrack ) {
                     // check tile or ribbon
                     if ( theId.tile() ) {
@@ -733,8 +733,8 @@ StatusCode AcdValsTool::calculate()
                             if ( ! doneHole ) {
                                 doneHole = true;
                                 //AcdTileUtil::tileScrewHoleDoca(aPoca->getId(),aPoca->getActiveX(),aPoca->getActiveY(),
-                                //				   aPoca->getLocalXXCov(),aPoca->getLocalYYCov(),aPoca->getLocalXYCov(),
-                                //				   holeDoca,holeDocaError,iHole);
+                                //                                   aPoca->getLocalXXCov(),aPoca->getLocalYYCov(),aPoca->getLocalXYCov(),
+                                //                                   holeDoca,holeDocaError,iHole);
                             }
                             if ( ! donePlaneError ) {
                                 donePlaneError = true;
@@ -744,7 +744,7 @@ StatusCode AcdValsTool::calculate()
                                     planeError);  
                             }
                             ACD_Tkr1ActiveDist = aPoca->getDoca();
-			    ACD_Tkr1ActiveDist_ID = aPoca->getId().id();
+                            ACD_Tkr1ActiveDist_ID = aPoca->getId().id();
                             ACD_Tkr1ActiveDist_Err = planeError;
                             ACD_Tkr1ActiveDist_Energy = tileEnergyIdMap[theId];
                             ACD_Tkr1Hole_Dist = holeDoca;
@@ -755,11 +755,11 @@ StatusCode AcdValsTool::calculate()
                             if ( ! donePlaneError ) {
                                 donePlaneError = true;
                                 AcdTileUtil::planeErrorProjection(aPoca->getActiveX(),aPoca->getActiveY(),
-								  aPoca->getLocalCovProj()(1,1),aPoca->getLocalCovProj()(2,2),
-								  planeError);  
+                                                                  aPoca->getLocalCovProj()(1,1),aPoca->getLocalCovProj()(2,2),
+                                                                  planeError);  
                             }
                             ACD_Tkr1_ribbon_ActiveDist =  aPoca->getDoca();
-			    ACD_Tkr1_ribbon_ActiveDist_ID = aPoca->getId().id();
+                            ACD_Tkr1_ribbon_ActiveDist_ID = aPoca->getId().id();
                             ACD_Tkr1_ribbon_ActiveDist_Err = planeError;
                             ACD_Tkr1_ribbon_ActiveLength = aPoca->getActiveY();
                             ACD_Tkr1_ribbon_EnergyPmtA = ribbonEnergyIdMap[theId].first;
@@ -792,17 +792,17 @@ StatusCode AcdValsTool::calculate()
             }
         }
         // Now fill in the values for the most likely Track-Tile Veto Poca
-		if (tile_CR_vetoPoca) {  //RJ: cosmic-ray track stuff here
-			idents::AcdId theId = tile_CR_vetoPoca->getId();
-			ACD_CR_ActiveDist_Energy = tileEnergyIdMap[theId];
-			ACD_CR_ActiveDist_TrackNum= tile_CR_vetoPoca->trackIndex();
-		}
+                if (tile_CR_vetoPoca) {  //RJ: cosmic-ray track stuff here
+                        idents::AcdId theId = tile_CR_vetoPoca->getId();
+                        ACD_CR_ActiveDist_Energy = tileEnergyIdMap[theId];
+                        ACD_CR_ActiveDist_TrackNum= tile_CR_vetoPoca->trackIndex();
+                }
         if(tile_vetoPoca) {
             double planeError = 0.;
             AcdTileUtil::planeErrorProjection(tile_vetoPoca->getActiveX(),
                 tile_vetoPoca->getActiveY(),
                 tile_vetoPoca->getLocalCovProj()(1,1),
-		tile_vetoPoca->getLocalCovProj()(2,2),planeError);  
+                tile_vetoPoca->getLocalCovProj()(2,2),planeError);  
             //ACD_ActiveDist3D = tile_vetoPoca->getDoca(); Already done in selection process
             ACD_ActiveDist3D_Err = planeError;
             idents::AcdId theId = tile_vetoPoca->getId();
@@ -810,8 +810,8 @@ StatusCode AcdValsTool::calculate()
             ACD_ActiveDist_TrackNum = tile_vetoPoca->trackIndex(); // Index starts from 0
             double holeDoca(0.);
             //AcdTileUtil::tileScrewHoleDoca(aPoca->getId(),aPoca->getActiveX(),aPoca->getActiveY(),
-            //				   aPoca->getLocalXXCov(),aPoca->getLocalYYCov(),aPoca->getLocalXYCov(),
-            //				   holeDoca,holeDocaError,iHole);
+            //                                   aPoca->getLocalXXCov(),aPoca->getLocalYYCov(),aPoca->getLocalXYCov(),
+            //                                   holeDoca,holeDocaError,iHole);
             ACD_TkrHole_Dist = holeDoca;
         }
 
@@ -842,7 +842,7 @@ StatusCode AcdValsTool::calculate()
             case 3: //AcdRecon::Y_RibbonTop:
                 isRibbonGap = true;
                 break;
-	    case 4: //AcdRecon::SideCornerEdge
+            case 4: //AcdRecon::SideCornerEdge
             case 7: //AcdRecon::CornerRay:
                 isCornerGap = true;
                 break;
@@ -855,15 +855,15 @@ StatusCode AcdValsTool::calculate()
                 // Fill variables for best track
                 if ( isBestTrack ) {
                     if ( gapDoca > ACD_Tkr1Ribbon_Dist ) {
-   		        ACD_Tkr1Ribbon_Dist = gapDoca;
-			ACD_Tkr1Ribbon_Dist_ID = (*itrGap)->getId().asDecimal();
+                           ACD_Tkr1Ribbon_Dist = gapDoca;
+                        ACD_Tkr1Ribbon_Dist_ID = (*itrGap)->getId().asDecimal();
                         ACD_Tkr1RibbonLength = (*itrGap)->getLocalY();
                     }
                 }
                 // Fill variables for all tracks
                 if ( gapDoca > ACD_TkrRibbon_Dist ) {
                     ACD_TkrRibbon_Dist = gapDoca;
-		    ACD_TkrRibbon_Dist_ID = (*itrGap)->getId().asDecimal();
+                    ACD_TkrRibbon_Dist_ID = (*itrGap)->getId().asDecimal();
                     ACD_TkrRibbonLength = (*itrGap)->getLocalY();
                 }
             } else if ( isCornerGap ) {

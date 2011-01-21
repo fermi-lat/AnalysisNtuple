@@ -15,7 +15,7 @@
 *
 * Experiment the monitoring of algorithms.
 *
-* $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EventAuditor.cxx,v 1.4 2008/07/27 22:45:48 lsrea Exp $
+* $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EventAuditor.cxx,v 1.5 2010/01/01 02:06:13 lsrea Exp $
 */
 
 class EventAuditor : virtual public Auditor
@@ -73,7 +73,7 @@ Note: the time for the first event in a run includes initialization overhead.
 The variables are named "Aud"+Entity Name. The current default set is:
 
 <table>
-<tr><th> Variable <th> Type <th> Description					
+<tr><th> Variable <th> Type <th> Description                                        
 <tr><td> AudEvent 
 <td>F<td>   Time for the entire event
 <tr><td> AudGeneration 

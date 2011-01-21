@@ -1,7 +1,7 @@
 /** @file McAnalValsTool.cxx
     @brief declartion, implementaion of the class UserAlg
 
-    $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McAnalValsTool.cxx,v 1.12 2006/03/21 01:43:50 usher Exp $
+    $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McAnalValsTool.cxx,v 1.13 2007/06/07 17:00:13 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -266,23 +266,23 @@ StatusCode McAnalValsTool::initialize()
     
     // load up the map
 
-	addItem("McaNumCalls",       &m_numCalls);
-	addItem("McaPrmEnergy",      &m_prmEnergy);
-	addItem("McaPrmDecEne",      &m_prmDecEne);
-	addItem("McaDecPosX",        &m_prmPosX);
-	addItem("McaDecPosY",        &m_prmPosY);
-	addItem("McaDecPosZ",        &m_prmPosZ);
-	addItem("McaPrmDecPosX",     &m_prmDecPosX);
-	addItem("McaPrmDecPosY",     &m_prmDecPosY);
-	addItem("McaPrmDecPosZ",     &m_prmDecPosZ);
-	addItem("McaPrmCosDirX",     &m_prmCosDirX);
-	addItem("McaPrmCosDirY",     &m_prmCosDirY);
-	addItem("McaPrmCosDirZ",     &m_prmCosDirZ);
-	addItem("McaPrmDecCosX",     &m_prmDecCosX);
-	addItem("McaPrmDecCosY",     &m_prmDecCosY);
-	addItem("McaPrmDecCosZ",     &m_prmDecCosZ);
-	addItem("McaPrmNDghtrs",     &m_prmNDghtrs);
-	addItem("McaPrmDecCode",     &m_prmDecCode);
+        addItem("McaNumCalls",       &m_numCalls);
+        addItem("McaPrmEnergy",      &m_prmEnergy);
+        addItem("McaPrmDecEne",      &m_prmDecEne);
+        addItem("McaDecPosX",        &m_prmPosX);
+        addItem("McaDecPosY",        &m_prmPosY);
+        addItem("McaDecPosZ",        &m_prmPosZ);
+        addItem("McaPrmDecPosX",     &m_prmDecPosX);
+        addItem("McaPrmDecPosY",     &m_prmDecPosY);
+        addItem("McaPrmDecPosZ",     &m_prmDecPosZ);
+        addItem("McaPrmCosDirX",     &m_prmCosDirX);
+        addItem("McaPrmCosDirY",     &m_prmCosDirY);
+        addItem("McaPrmCosDirZ",     &m_prmCosDirZ);
+        addItem("McaPrmDecCosX",     &m_prmDecCosX);
+        addItem("McaPrmDecCosY",     &m_prmDecCosY);
+        addItem("McaPrmDecCosZ",     &m_prmDecCosZ);
+        addItem("McaPrmNDghtrs",     &m_prmNDghtrs);
+        addItem("McaPrmDecCode",     &m_prmDecCode);
 
 
     addItem("McaPrmNumSecndry",  &m_prmNumSecndry);
