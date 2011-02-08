@@ -15,7 +15,7 @@
 *
 * Experiment the monitoring of algorithms.
 *
-* $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EventAuditor.cxx,v 1.5 2010/01/01 02:06:13 lsrea Exp $
+* $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EventAuditor.cxx,v 1.6 2011/01/21 14:02:48 lbaldini Exp $
 */
 
 class EventAuditor : virtual public Auditor
@@ -82,6 +82,10 @@ The variables are named "Aud"+Entity Name. The current default set is:
 <td>F<td>   Time for the reconstruction
 <tr><td> AudTkr 
 <td>F<td>   Time for the tracker part of the reconstruction (pass 1)
+<tr><td> AudCalCluster
+<td>F<td>   Time for the calorimeter clustering, part of AudCal1
+<tr><td> AudCal1
+<td>F<td>   Time for the calorimeter part of the reconstruction (pass 1)
 <tr><td> AudCal2
 <td>F<td>   Time for the calorimeter part of the reconstruction (pass 2)
 </table>
@@ -96,11 +100,14 @@ EventAuditor::EventAuditor( const std::string & name, ISvcLocator * svcLocator )
     algoNamesVec.push_back("Event");
     algoNamesVec.push_back("Generation");
     algoNamesVec.push_back("Reconstruction");
+    algoNamesVec.push_back("Cal1"); 
     algoNamesVec.push_back("Tkr");
     algoNamesVec.push_back("Cal2");
-
+    algoNamesVec.push_back("CalCluster"); 
+    
     declareProperty("algoNames",m_algoNames=algoNamesVec);
     declareProperty("tree_name",  m_root_tree="MeritTuple");
+
 }
 
 StatusCode EventAuditor::initialize()
