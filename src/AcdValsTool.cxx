@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.56 2010/12/22 04:01:34 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.57 2011/01/21 14:02:48 lbaldini Exp $
 */
 
 #include "ValBase.h"
@@ -429,15 +429,14 @@ StatusCode AcdValsTool::calculate()
     // Recover pointers to ACD Recon results
     SmartDataPtr<Event::AcdRecon> pACD(m_pEventSvc,EventModel::AcdRecon::Event);
     // Recover pointers to CalClusters and Xtals
+
     SmartDataPtr<Event::CalClusterCol>     
         pCals(m_pEventSvc,EventModel::CalRecon::CalClusterCol);
-        SmartDataPtr<Event::TkrTrackCol>   
-        pTracks(m_pEventSvc,EventModel::TkrRecon::TkrTrackCol);   //RJ: get pointer to TKR Recon results
 
-    // Recover Track associated info. (not currently used 
-    //SmartDataPtr<Event::TkrFitTrackCol>  pTracks(m_pEventSvc,EventModel::TkrRecon::TkrFitTrackCol);
-    //SmartDataPtr<Event::TkrVertexCol>    pVerts(m_pEventSvc,EventModel::TkrRecon::TkrVertexCol);
-    // Recover pointer to ACD info  
+    // assemble the list of all tracks for now 
+    // later, deal separately with Standard and CR   LSR
+    std::vector<Event::TkrTrack*> trackVec = m_pTrackVec->getTrackVec();
+    std::vector<Event::TkrTrack*>* pTracks = &trackVec;
 
     //Make sure we have valid ACD data
     if (pACD)

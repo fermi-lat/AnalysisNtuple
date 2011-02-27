@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.101 2010/11/04 15:15:49 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.102 2010/12/05 04:20:35 usher Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -954,10 +954,17 @@ StatusCode TkrValsTool::calculate()
     //Recover EventHeader Pointer
     //SmartDataPtr<Event::EventHeader> pEvent(m_pEventSvc, EventModel::EventHeader);
 
+    // replace code below with the vector of pointers to all tracks  LSR
     // Recover Track associated info. 
     // NOTE: If no tracks are found ALL TKR variables are zero!  
-    SmartDataPtr<Event::TkrTrackCol>   
-        pTracks(m_pEventSvc,EventModel::TkrRecon::TkrTrackCol);
+    //SmartDataPtr<Event::TkrTrackCol>   
+    //    pTracks(m_pEventSvc,EventModel::TkrRecon::TkrTrackCol);
+
+    // assemble the list of all tracks for now 
+    // later, deal separately with Standard and CR
+    std::vector<Event::TkrTrack*> trackVec = m_pTrackVec->getTrackVec();
+    std::vector<Event::TkrTrack*>* pTracks = &trackVec;
+
     if(!pTracks) return sc;
 
     SmartDataPtr<Event::TkrVertexCol>  
@@ -1464,7 +1471,8 @@ StatusCode TkrValsTool::calculate()
 
             Doca trk1Doca(x1, t1);
 
-            Event::TkrTrackColConPtr trkIter;
+            //Event::TkrTrackColConPtr trkIter;
+            std::vector<Event::TkrTrack*>::const_iterator trkIter;
 
             for(trkIter=pTrack; trkIter!=pTracks->end(); ++trkIter) {
                 Event::TkrTrack* trk = *trkIter;

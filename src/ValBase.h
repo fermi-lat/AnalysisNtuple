@@ -2,7 +2,7 @@
 @brief header file for ValBase.cxx
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.h,v 1.38 2008/08/16 05:17:47 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.h,v 1.39 2009/09/10 20:13:03 lsrea Exp $
 */
 
 #ifndef ValBase_h
@@ -19,6 +19,8 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.h,v 1.38 2008/0
 
 class IIncidentSvc;
 class IDataProviderSvc;
+
+#include "TkrUtil/ITkrTrackVecTool.h"
 
 /** @class ValBase
 @brief base class for the XxxValsTools
@@ -169,6 +171,8 @@ protected:
     IIncidentSvc* m_incSvc;
     /// let ValBase handle the pointer to the data service, everyone uses it
     IDataProviderSvc* m_pEventSvc;
+    /// trackVecTool
+    ITkrTrackVecTool* m_pTrackVec;
     /// flag to signal new event
     bool m_newEvent;
     /// flag to allow an always-calculate call if 0; if 1 checks and sets m_newEvent

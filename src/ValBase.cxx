@@ -2,7 +2,7 @@
 @brief implements all the methods of the XxxValsTools
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.cxx,v 1.38 2009/09/10 20:13:03 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.cxx,v 1.39 2009/09/11 05:30:11 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -59,6 +59,13 @@ ValBase::ValBase(const std::string& type,
           }
           m_pEventSvc = eventsvc;
       } 
+
+      sc = toolSvc()->retrieveTool("TkrTrackVecTool", m_pTrackVec);
+      if(sc.isFailure()) {
+        log << MSG::ERROR << "TkrGhostTool not found!" << endreq;
+        return StatusCode::FAILURE;
+    }
+
 
       //set up listener for IncidentSvc
       incsvc->addListener(this, "BeginEvent", 100);
