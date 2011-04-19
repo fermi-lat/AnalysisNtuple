@@ -3,7 +3,7 @@
 @brief Calculates the GcrSelect analysis variables
 @author C. Lavalley
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GcrSelectValsTool.cxx,v 1.7 2005/12/13 19:00:37 lsrea Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GcrSelectValsTool.cxx,v 1.1.618.1 2010/09/18 02:35:14 heather Exp $
 */
 
 // Include files
@@ -84,8 +84,9 @@ private:
 };
   
 // Static factory for instantiation of algtool objects
-static ToolFactory<GcrSelectValsTool> s_factory;
-const IToolFactory& GcrSelectValsToolFactory = s_factory;
+//static ToolFactory<GcrSelectValsTool> s_factory;
+//const IToolFactory& GcrSelectValsToolFactory = s_factory;
+DECLARE_TOOL_FACTORY(GcrSelectValsTool);
   
 // Standard Constructor
 GcrSelectValsTool::GcrSelectValsTool(const std::string& type, 

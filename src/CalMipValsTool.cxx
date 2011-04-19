@@ -3,7 +3,7 @@
 @brief Calculates the Cal Mip analysis variables
 @author F. Piron
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalMipValsTool.cxx,v 1.9 2007/06/07 17:00:13 lsrea Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalMipValsTool.cxx,v 1.10.40.1 2010/09/18 02:35:14 heather Exp $
 */
 
 // Include files
@@ -119,8 +119,9 @@ around the best track
 */
 
 // Static factory for instantiation of algtool objects
-static ToolFactory<CalMipValsTool> s_factory;
-const IToolFactory& CalMipValsToolFactory = s_factory;
+//static ToolFactory<CalMipValsTool> s_factory;
+//const IToolFactory& CalMipValsToolFactory = s_factory;
+DECLARE_TOOL_FACTORY(CalMipValsTool);
   
 // Standard Constructor
 CalMipValsTool::CalMipValsTool(const std::string& type, 

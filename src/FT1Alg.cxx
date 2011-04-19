@@ -1,7 +1,7 @@
 /** @file FT1Alg.cxx
 @brief Declaration and implementation of Gaudi algorithm FT1Alg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.26 2009/09/09 06:05:19 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.27.30.1 2010/09/18 02:35:14 heather Exp $
 */
 // Include files
 
@@ -75,8 +75,9 @@ private:
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-static const AlgFactory<FT1Alg>  Factory;
-const IAlgFactory& FT1AlgFactory = Factory;
+//static const AlgFactory<FT1Alg>  Factory;
+//const IAlgFactory& FT1AlgFactory = Factory;
+DECLARE_ALGORITHM_FACTORY(FT1Alg);
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

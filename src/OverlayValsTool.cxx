@@ -1,7 +1,7 @@
 /** @file OverlayValsTool.cxx
 @brief declaration and definition of the class OverlayValsTool
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/OverlayValsTool.cxx,v 1.3 2010/01/01 02:06:13 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/OverlayValsTool.cxx,v 1.4.14.1 2010/09/18 02:35:14 heather Exp $
 
 */
 
@@ -121,8 +121,9 @@ private:
 //------------------------------------------------------------------------
 
 
-static const ToolFactory<OverlayValsTool>  Factory;
-const IToolFactory& OverlayValsToolFactory = Factory;
+//static const ToolFactory<OverlayValsTool>  Factory;
+//const IToolFactory& OverlayValsToolFactory = Factory;
+DECLARE_TOOL_FACTORY(OverlayValsTool);
 
 //------------------------------------------------------------------------
 //! ctor

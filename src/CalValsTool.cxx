@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/src/CalValsTool.cxx,v 1.97 2010/04/22 09:13:52 lbaldini Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.96.14.1 2010/09/18 02:35:14 heather Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -292,8 +292,9 @@ namespace {
 }
 
 // Static factory for instantiation of algtool objects
-static ToolFactory<CalValsTool> s_factory;
-const IToolFactory& CalValsToolFactory = s_factory;
+//static ToolFactory<CalValsTool> s_factory;
+//const IToolFactory& CalValsToolFactory = s_factory;
+DECLARE_TOOL_FACTORY(CalValsTool);
 
 // Standard Constructor
 CalValsTool::CalValsTool(const std::string& type, 

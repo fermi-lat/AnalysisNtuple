@@ -2,7 +2,7 @@
 @brief Calculates the Onboard Filter variables
 @authors
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfValsTool.cxx,v 1.24 2009/05/06 23:30:07 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ObfValsTool.cxx,v 1.25.40.1 2010/09/18 02:35:14 heather Exp $
 */
 
 // Include files
@@ -109,8 +109,9 @@ private:
 };
 
 // Static factory for instantiation of algtool objects
-static ToolFactory<ObfValsTool> s_factory;
-const IToolFactory& ObfValsToolFactory = s_factory;
+//static ToolFactory<ObfValsTool> s_factory;
+//const IToolFactory& ObfValsToolFactory = s_factory;
+DECLARE_TOOL_FACTORY(ObfValsTool);
 
 // Standard Constructor
 ObfValsTool::ObfValsTool(const std::string& type, 
