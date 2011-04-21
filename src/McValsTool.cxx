@@ -2,7 +2,7 @@
 @brief Calculates the Mc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.54 2010/10/27 19:12:09 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.55 2010/11/04 15:15:49 lsrea Exp $
 */
 // Include files
 
@@ -380,9 +380,10 @@ StatusCode McValsTool::calculate()
         e1 = track_1->getInitialEnergy();
         double gamEne = e1; 
         e2 = 0.; 
-        if(num_tracks >= 2) {
+        Event::TkrTrack* track_2 = 0;
+        if(num_tracks > 1) {
             pTrack1++;
-            const Event::TkrTrack* track_2 = *pTrack1;
+            track_2 = *pTrack1;
             if (track_2->getStatusBits() & Event::TkrTrack::COSMICRAY) return sc; //RJ , LSR
             e2 = track_2->getInitialEnergy();
             gamEne += e2;
@@ -440,9 +441,11 @@ StatusCode McValsTool::calculate()
             
             MC_TKR1_dir_err  = acos(cost1tMC);
             
-            if(nParticles > 1) {
-                pTrack1++;
-                const Event::TkrTrack* track_2 = *pTrack1;
+            // some confusion here... 
+            // we need a better way to find the 2nd track given trees
+            // was the 2nd track in the 1st vertex before (not so good!)
+            // track_2 already points the 2nd best track
+            if(num_tracks > 1 && track_2!=0) {
                 Point  x2 = track_2->front()->getPoint(Event::TkrTrackHit::SMOOTHED);
                 Vector t2 = track_2->front()->getDirection(Event::TkrTrackHit::SMOOTHED);
                 double cost2tMC = t2*Mc_t0;
