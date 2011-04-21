@@ -89,6 +89,7 @@ private:
     float Tkr_num_vecPoints;
     float Tkr_num_vecLinks;
     float Tkr_num_trees;
+    float Tkr_tree1_nTrks;
     float Tkr_tree1_depth;
     float Tkr_tree1_nLeaves;
     float Tkr_tree1_nNodes;
@@ -98,6 +99,18 @@ private:
     float Tkr_tree1_maxWidthLyr;
     float Tkr_tree1_maxWidth;
     float Tkr_tree1_lastWidth;
+    float Tkr_tree1_PosX;
+    float Tkr_tree1_PosY;
+    float Tkr_tree1_PosZ;
+    float Tkr_tree1_DirX;
+    float Tkr_tree1_DirY;
+    float Tkr_tree1_DirZ;
+    float Tkr_tree1_NumBoxes;
+    float Tkr_tree1_ChiSquare;
+    float Tkr_tree1_RmsTrans;
+    float Tkr_tree1_RmsLong;
+
+    float Tkr_tree2_nTrks;
     float Tkr_tree2_depth;
     float Tkr_tree2_nLeaves;
     float Tkr_tree2_nNodes;
@@ -118,8 +131,10 @@ private:
     float TFP_bestDirZ;
     float TFP_bestNumHits;
     float TFP_bestChiSquare;
+    float TFP_bestAveDist;
     float TFP_bestRmsTrans;
     float TFP_bestRmsLong;
+    float TFP_bestRmsLongAsym;
 };
 
 // Static factory for instantiation of algtool objects
@@ -175,15 +190,15 @@ DieEdge, KalThetaMs, [X/Y/Z]Dir, Phi, Theta, [X/Y/Z]0.
 
 @subsection general General variables
 <table>
-<tr><th> Variable <th> Type  <th> Description                                                 
-<tr><td> TkrNumTracks         
+<tr><th> Variable <th> Type  <th> Description				                 
+<tr><td> TkrNumTracks 	
 <td>F<td>   Number of tracks found (Maximum is set by TkrRecon, currently 10) 
 </table>
 
 @subsection both Variables that exist for both best and second tracks
 
 <table>
-<tr><th> Variable <th> Type  <th> Description                                                 
+<tr><th> Variable <th> Type  <th> Description				                 
 <tr><td> Tkr[1/2]Chisq 
 <td>F<td>   Track chisquared 
 <tr><td> Tkr[1/2]FirstChisq  
@@ -248,6 +263,7 @@ StatusCode TreeValsTool::initialize()
     addItem("TkrNumVecPoints",      &Tkr_num_vecPoints);
     addItem("TkrNumVecLinks",       &Tkr_num_vecLinks);
     addItem("TkrNumTrees",          &Tkr_num_trees);
+    addItem("TkrTree1NTrks",        &Tkr_tree1_nTrks);
     addItem("TkrTree1Depth",        &Tkr_tree1_depth);
     addItem("TkrTree1Leaves",       &Tkr_tree1_nLeaves);
     addItem("TkrTree1Nodes",        &Tkr_tree1_nNodes);
@@ -257,6 +273,18 @@ StatusCode TreeValsTool::initialize()
     addItem("TkrTree1MaxWidthLyr",  &Tkr_tree1_maxWidthLyr);
     addItem("TkrTree1MaxWidth",     &Tkr_tree1_maxWidth);
     addItem("TkrTree1LastWidth",    &Tkr_tree1_lastWidth);
+    addItem("TkrTree1PosX",         &Tkr_tree1_PosX);
+    addItem("TkrTree1PosY",         &Tkr_tree1_PosY);
+    addItem("TkrTree1PosZ",         &Tkr_tree1_PosZ);
+    addItem("TkrTree1DirX",         &Tkr_tree1_DirX);
+    addItem("TkrTree1DirY",         &Tkr_tree1_DirY);
+    addItem("TkrTree1DirZ",         &Tkr_tree1_DirZ);
+    addItem("TkrTree1NumBoxes",     &Tkr_tree1_NumBoxes);
+    addItem("TkrTree1ChiSquare",    &Tkr_tree1_ChiSquare);
+    addItem("TkrTree1RmsTrans",     &Tkr_tree1_RmsTrans);
+    addItem("TkrTree1RmsLong",      &Tkr_tree1_RmsLong);
+
+    addItem("TkrTree2NTrks",        &Tkr_tree2_nTrks);
     addItem("TkrTree2Depth",        &Tkr_tree2_depth);
     addItem("TkrTree2Leaves",       &Tkr_tree2_nLeaves);
     addItem("TkrTree2Nodes",        &Tkr_tree2_nNodes);
@@ -276,8 +304,10 @@ StatusCode TreeValsTool::initialize()
     addItem("TFPBestDirZ",          &TFP_bestDirZ);
     addItem("TFPBestNumHits",       &TFP_bestNumHits);
     addItem("TFPBestChiSquare",     &TFP_bestChiSquare);
+    addItem("TFPBestAverageDist",   &TFP_bestAveDist);
     addItem("TFPBestRmsTrans",      &TFP_bestRmsTrans);
     addItem("TFPBestRmsLong",       &TFP_bestRmsLong);
+    addItem("TFPBestRmsLongAsym",   &TFP_bestRmsLongAsym);
 
     zeroVals();
 
@@ -313,6 +343,7 @@ StatusCode TreeValsTool::calculate()
             const Event::TkrTree*    tree     = *treeItr++;
             const Event::TkrVecNode* headNode = tree->getHeadNode();
 
+            Tkr_tree1_nTrks        = tree->size();
             Tkr_tree1_depth        = headNode->getDepth();
             Tkr_tree1_nLeaves      = headNode->getNumLeaves();
             Tkr_tree1_nNodes       = headNode->getNumNodesInTree();
@@ -344,11 +375,34 @@ StatusCode TreeValsTool::calculate()
 
             Tkr_tree1_maxWidthLyr = firstLayer - Tkr_tree1_maxWidthLyr;
 
+            // Get the axis parameters
+            const Event::TkrFilterParams* treeAxis = tree->getAxisParams();
+
+            if (treeAxis)
+            {
+                const Point filterPos  = treeAxis->getEventPosition();
+                const Vector filterDir = treeAxis->getEventAxis();
+
+                Tkr_tree1_PosX         = filterPos.x();
+                Tkr_tree1_PosY         = filterPos.y();
+                Tkr_tree1_PosZ         = filterPos.z();
+                                   
+                Tkr_tree1_DirX         = filterDir.x();
+                Tkr_tree1_DirY         = filterDir.y();
+                Tkr_tree1_DirZ         = filterDir.z();
+                                   
+                Tkr_tree1_NumBoxes     = treeAxis->getNumHitsTotal();
+                Tkr_tree1_ChiSquare    = treeAxis->getChiSquare();
+                Tkr_tree1_RmsTrans     = treeAxis->getTransRms();
+                Tkr_tree1_RmsLong      = treeAxis->getLongRms();
+            }
+
             if (treeItr != treeCol->end())
             {
                 tree     = *treeItr++;
                 headNode = tree->getHeadNode();
 
+                Tkr_tree2_nTrks        = tree->size();
                 Tkr_tree2_depth        = headNode->getDepth();
                 Tkr_tree2_nLeaves      = headNode->getNumLeaves();
                 Tkr_tree2_nNodes       = headNode->getNumNodesInTree();
@@ -393,21 +447,23 @@ StatusCode TreeValsTool::calculate()
         {
             Event::TkrFilterParams* filterParams = filterParamsCol->front();
 
-            Point filterPos   = filterParams->getEventPosition();
-            Vector filterDir  = filterParams->getEventAxis();
+            Point filterPos     = filterParams->getEventPosition();
+            Vector filterDir    = filterParams->getEventAxis();
 
-            TFP_bestPosX      = filterPos.x();
-            TFP_bestPosY      = filterPos.y();
-            TFP_bestPosZ      = filterPos.z();
+            TFP_bestPosX        = filterPos.x();
+            TFP_bestPosY        = filterPos.y();
+            TFP_bestPosZ        = filterPos.z();
 
-            TFP_bestDirX      = filterDir.x();
-            TFP_bestDirY      = filterDir.y();
-            TFP_bestDirZ      = filterDir.z();
+            TFP_bestDirX        = filterDir.x();
+            TFP_bestDirY        = filterDir.y();
+            TFP_bestDirZ        = filterDir.z();
 
-            TFP_bestNumHits   = filterParams->getNumHitsTotal();
-            TFP_bestChiSquare = filterParams->getChiSquare();
-            TFP_bestRmsTrans  = filterParams->getTransRms();
-            TFP_bestRmsLong   = filterParams->getLongRmsAve();
+            TFP_bestNumHits     = filterParams->getNumHitsTotal();
+            TFP_bestChiSquare   = filterParams->getChiSquare();
+            TFP_bestAveDist     = filterParams->getAverageDistance();
+            TFP_bestRmsTrans    = filterParams->getTransRms();
+            TFP_bestRmsLong     = filterParams->getLongRms();
+            TFP_bestRmsLongAsym = filterParams->getLongRmsAysm();
         }
     }
 
