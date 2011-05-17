@@ -62,6 +62,7 @@ private:
     double containedFraction(Point pos, double gap, double r, 
         double costh, double phi) const;
     float SSDEvaluation(const Event::TkrTrack* track); 
+    int getNumLeavesThisBranch(const Event::TkrVecNode* node, int curNumLeaves);
 
     // some local constants
     double m_towerPitch;
@@ -99,6 +100,10 @@ private:
     float Tkr_tree1_maxWidthLyr;
     float Tkr_tree1_maxWidth;
     float Tkr_tree1_lastWidth;
+    float Tkr_tree1_bestLeaves;
+    float Tkr_tree1_scndLeaves;
+    float Tkr_tree1_scndRms;
+    float Tkr_tree1_scndDepth;
     float Tkr_tree1_PosX;
     float Tkr_tree1_PosY;
     float Tkr_tree1_PosZ;
@@ -273,6 +278,10 @@ StatusCode TreeValsTool::initialize()
     addItem("TkrTree1MaxWidthLyr",  &Tkr_tree1_maxWidthLyr);
     addItem("TkrTree1MaxWidth",     &Tkr_tree1_maxWidth);
     addItem("TkrTree1LastWidth",    &Tkr_tree1_lastWidth);
+    addItem("TkrTree1BestLeaves",   &Tkr_tree1_bestLeaves);
+    addItem("TkrTree1ScndLeaves",   &Tkr_tree1_scndLeaves);
+    addItem("TkrTree1ScndRms",      &Tkr_tree1_scndRms);
+    addItem("TkrTree1ScndDepth",    &Tkr_tree1_scndDepth);
     addItem("TkrTree1PosX",         &Tkr_tree1_PosX);
     addItem("TkrTree1PosY",         &Tkr_tree1_PosY);
     addItem("TkrTree1PosZ",         &Tkr_tree1_PosZ);
@@ -342,6 +351,8 @@ StatusCode TreeValsTool::calculate()
             Event::TkrTreeColConPtr  treeItr  = treeCol->begin(); 
             const Event::TkrTree*    tree     = *treeItr++;
             const Event::TkrVecNode* headNode = tree->getHeadNode();
+            const Event::TkrVecNode* bestLeaf = tree->getBestLeaf();
+            const Event::TkrVecNode* scndLeaf = tree->getSecondLeaf();
 
             Tkr_tree1_nTrks        = tree->size();
             Tkr_tree1_depth        = headNode->getDepth();
@@ -350,6 +361,15 @@ StatusCode TreeValsTool::calculate()
             Tkr_tree1_nBranches    = headNode->getNumBranches();
             Tkr_tree1_bestRms      = headNode->getBestRmsAngle();
             Tkr_tree1_bestBiLayers = headNode->getBestNumBiLayers();
+
+            if (bestLeaf) Tkr_tree1_bestLeaves   = getNumLeavesThisBranch(bestLeaf, 0);
+
+            if (scndLeaf)
+            {
+                Tkr_tree1_scndLeaves   = getNumLeavesThisBranch(scndLeaf, 0);
+                Tkr_tree1_scndDepth    = scndLeaf->getTreeStartLayer() - scndLeaf->getCurrentBiLayer() + 1;
+                Tkr_tree1_scndRms      = scndLeaf->getBestRmsAngle();
+            }
 
             Event::TkrNodeSiblingMap::const_reverse_iterator sibItr = tree->getSiblingMap()->rbegin();
 
@@ -468,4 +488,38 @@ StatusCode TreeValsTool::calculate()
     }
 
     return sc;
+}
+
+int TreeValsTool::getNumLeavesThisBranch(const Event::TkrVecNode* node, int curNumLeaves)
+{
+    // We are tracing up from the leaf to the tree parent
+    // If we are on either the "best" branch, or the "next" best branch, but not both,
+    // then we can simply count the number of leaves to and below this node
+    if (!(node->isOnBestBranch() && node->isOnNextBestBranch()))
+    {
+        curNumLeaves = node->getNumLeaves();
+    }
+    // Otherwise, we are on the branch that eventually splits into both branches... at this point we 
+    // need to count the leaves emanating from this branch to add to the current count of curNumLeaves
+    else
+    {
+        if (!node->empty())
+        {
+            Event::TkrVecNodeSet::const_iterator nodeItr = node->begin();
+
+            // Loop over nodes but skip the first which is always going to be the "best"
+            for(++nodeItr; nodeItr != node->end(); nodeItr++)
+            {
+                // Be sure to not count the number of leaves on the best or second branches
+                if (!((*nodeItr)->isOnBestBranch() || (*nodeItr)->isOnNextBestBranch())) 
+                    curNumLeaves += (*nodeItr)->getNumLeaves();
+            }
+        }
+    }
+
+    // If we have a valid parent then counting is not done yet! 
+
+    if (node->getParentNode()) curNumLeaves = getNumLeavesThisBranch(node->getParentNode(), curNumLeaves);
+
+    return curNumLeaves;
 }
