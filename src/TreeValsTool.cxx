@@ -2,7 +2,7 @@
 @brief Calculates the Tracker Tree variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TreeValsTool.cxx,v 1.4 2010/12/16 23:14:54 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TreeValsTool.cxx,v 1.7 2011/05/17 22:59:19 usher Exp $
 */
 
 // Include files
@@ -483,7 +483,7 @@ StatusCode TreeValsTool::calculate()
             TFP_bestAveDist     = filterParams->getAverageDistance();
             TFP_bestRmsTrans    = filterParams->getTransRms();
             TFP_bestRmsLong     = filterParams->getLongRms();
-            TFP_bestRmsLongAsym = filterParams->getLongRmsAysm();
+            TFP_bestRmsLongAsym = filterParams->getLongRmsAsym();
         }
     }
 
