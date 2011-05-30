@@ -2,7 +2,7 @@
 @brief Calculates the Mc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.55 2010/11/04 15:15:49 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.56 2011/04/21 17:09:41 lsrea Exp $
 */
 // Include files
 
@@ -209,27 +209,27 @@ StatusCode McValsTool::initialize()
     
     // load up the map
 
-    addItem("McSourceId",     &MC_SourceId);
-    addItem("McSourceName",    MC_SourceName);
-    addItem("McNumIncident",  &MC_NumIncident);
-    addItem("McId",           &MC_Id);  
-    addItem("McCharge",       &MC_Charge);
-    addItem("McEnergy",       &MC_Energy);  
-    addItem("McLogEnergy",    &MC_LogEnergy);
-    addItem("McEFrac",        &MC_EFrac);
-    addItem("McOpenAngle",    &MC_OpenAngle);
-    addItem("McTkrExitEne",   &MC_TkrExitEne);
+    addItem("McSourceId",     &MC_SourceId,    true);
+    addItem("McSourceName",   MC_SourceName,   true);
+    addItem("McNumIncident",  &MC_NumIncident, true);
+    addItem("McId",           &MC_Id,          true);  
+    addItem("McCharge",       &MC_Charge,      true);
+    addItem("McEnergy",       &MC_Energy,      true);  
+    addItem("McLogEnergy",    &MC_LogEnergy,   true);
+    addItem("McEFrac",        &MC_EFrac,       true);
+    addItem("McOpenAngle",    &MC_OpenAngle,   true);
+    addItem("McTkrExitEne",   &MC_TkrExitEne,  true);
 
     // added 5/5/09 LSR
-    addItem("McStatusWord",   &MC_StatusWord);
+    addItem("McStatusWord",   &MC_StatusWord,  true);
     
-    addItem("McX0",           &MC_x0);           
-    addItem("McY0",           &MC_y0);           
-    addItem("McZ0",           &MC_z0);  
+    addItem("McX0",           &MC_x0,          true);           
+    addItem("McY0",           &MC_y0,          true);           
+    addItem("McZ0",           &MC_z0,          true);  
     
-    addItem("McXDir",         &MC_xdir);         
-    addItem("McYDir",         &MC_ydir);         
-    addItem("McZDir",         &MC_zdir);         
+    addItem("McXDir",         &MC_xdir,        true );         
+    addItem("McYDir",         &MC_ydir,        true );         
+    addItem("McZDir",         &MC_zdir,        true );         
     
     // removed 5/5/09 LSR
     //addItem("McXErr",         &MC_x_err);        
@@ -240,19 +240,19 @@ StatusCode McValsTool::initialize()
     //addItem("McYDirErr",      &MC_ydir_err);     
     //addItem("McZDirErr",      &MC_zdir_err);     
     
-    addItem("McDirErr",       &MC_dir_err);      
-    addItem("McTkr1DirErr",   &MC_TKR1_dir_err); 
-    addItem("McTkr2DirErr",   &MC_TKR2_dir_err); 
-    addItem("McDirErrN",      &MC_dir_errN); 
-    addItem("McDirErrN1",      &MC_dir_errN1); 
+    addItem("McDirErr",       &MC_dir_err,     true);      
+    addItem("McTkr1DirErr",   &MC_TKR1_dir_err,true); 
+    addItem("McTkr2DirErr",   &MC_TKR2_dir_err,true); 
+    addItem("McDirErrN",      &MC_dir_errN,    true); 
+    addItem("McDirErrN1",      &MC_dir_errN1,  true); 
 
-    addItem("McAcdXEnter",     &MC_AcdXEnter);
-    addItem("McAcdYEnter",     &MC_AcdYEnter);    
-    addItem("McAcdZEnter",     &MC_AcdZEnter);
+    addItem("McAcdXEnter",     &MC_AcdXEnter,  true);
+    addItem("McAcdYEnter",     &MC_AcdYEnter,  true);    
+    addItem("McAcdZEnter",     &MC_AcdZEnter,  true);
 
-    addItem("McAcdActiveDist3D", &MC_AcdActiveDist3D);
-    addItem("McAcdActDistTileId", &MC_AcdActDistTileId);
-    addItem("McAcdActDistTileEnergy", &MC_AcdActDistTileEnergy);
+    addItem("McAcdActiveDist3D", &MC_AcdActiveDist3D,          true);
+    addItem("McAcdActDistTileId", &MC_AcdActDistTileId,        true);
+    addItem("McAcdActDistTileEnergy", &MC_AcdActDistTileEnergy,true);
     
     zeroVals();
     
