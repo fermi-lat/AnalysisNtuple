@@ -2,7 +2,7 @@
 @brief Uses the XxxValsTools to produce a comprehensive ntuple
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.46 2010/11/01 16:40:07 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.47 2011/01/21 14:02:48 lbaldini Exp $
 */
 
 // Gaudi system includes
@@ -170,6 +170,9 @@ private:
     bool m_countCalcs;
     bool m_realData;
 
+    // ADW 26-May-2011: Specify production tuple flag
+    bool m_proTuple;
+
     IDataProviderSvc* m_pEventSvc;
     
     IValsTool::Visitor* m_visitor; 
@@ -192,6 +195,9 @@ AnalysisNtupleAlg::AnalysisNtupleAlg(const std::string& name, ISvcLocator* pSvcL
     declareProperty("enableDebugCalc", m_doDebug=false);
     declareProperty("countCalcs", m_countCalcs=false);  
     declareProperty("realData", m_realData=false);  
+
+    // ADW 26-May-2011: Specify production tuple flag
+    declareProperty("proTuple",m_proTuple = false);
 }
 
 StatusCode AnalysisNtupleAlg::initialize(){
@@ -299,7 +305,7 @@ StatusCode AnalysisNtupleAlg::initialize(){
                 
         int size = m_toolvec.size();
         for( int i =0; i<size; ++i){
-            if(m_toolvec[i]->traverse(m_visitor, false)==IValsTool::Visitor::ERROR) {
+            if(m_toolvec[i]->traverse(m_visitor, false, m_proTuple)==IValsTool::Visitor::ERROR) {
                 log << MSG::ERROR << m_toolvec[i] << " traversal failed" << endreq;
                 return fail;
             }
@@ -329,7 +335,6 @@ StatusCode AnalysisNtupleAlg::execute()
 
     ++m_count;
     m_ntupleSvc->storeRowFlag(m_tupleName, true);  // needed to save the event with RootTupleSvc
-
 
     int toolCounter = 0;
     bool isException = false;
