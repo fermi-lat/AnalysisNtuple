@@ -2,7 +2,7 @@
 @brief common abstract inteface for all the XxxValsTools
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/AnalysisNtuple/IValsTool.h,v 1.22 2008/08/16 05:17:45 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/AnalysisNtuple/IValsTool.h,v 1.23 2009/09/10 20:13:02 lsrea Exp $
 */
 
 #ifndef _H_IValsTool
@@ -102,8 +102,9 @@ public:
     
     
     /// sets up callback method for user to access the data
+    // ADW 26-May-2011: Specify production tuple flag
     virtual Visitor::eVisitorRet traverse(IValsTool::Visitor* v, 
-        const bool checkCalc=true) = 0;   
+        const bool checkCalc=true, const bool proTuple = false) = 0;   
 };
 
 #endif  // _H_IValsTool

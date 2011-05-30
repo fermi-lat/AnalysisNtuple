@@ -2,7 +2,7 @@
 @brief header file for ValBase.cxx
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.h,v 1.39 2009/09/10 20:13:03 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.h,v 1.40 2011/02/27 20:06:53 lsrea Exp $
 */
 
 #ifndef ValBase_h
@@ -81,13 +81,14 @@ public:
     virtual void zeroVals();
 
 // LSR 14-Jul-08 code for ntuple types
-    /// add an item to the map
-    virtual void addItem(std::string varName, double* pValue);
-    virtual void addItem(std::string varName, float* pValue);
-    virtual void addItem(std::string varName, int* pValue);
-    virtual void addItem(std::string varName, unsigned int* pValue);
-    virtual void addItem(std::string varName, unsigned long long* pValue);
-    virtual void addItem(std::string varName, char* pValue);
+    /// add an item to the map, 
+    // ADW 26-May-2011: Specify production tuple flag
+    virtual void addItem(std::string varName, double* pValue, bool proTuple = false);
+    virtual void addItem(std::string varName, float* pValue, bool proTuple = false);
+    virtual void addItem(std::string varName, int* pValue, bool proTuple = false);
+    virtual void addItem(std::string varName, unsigned int* pValue, bool proTuple = false);
+    virtual void addItem(std::string varName, unsigned long long* pValue, bool proTuple = false);
+    virtual void addItem(std::string varName, char* pValue, bool proTuple = false);
     virtual StatusCode doCalcIfNotDone();
  
 // LSR 14-Jul-08 code for ntuple types
@@ -119,8 +120,9 @@ public:
     /// this is called by the incident service at the beginning of an event
     virtual void handle(const Incident& inc);
     /// callback for visitor
+    // ADW 26-May-2011: Specify production tuple flag
     virtual IValsTool::Visitor::eVisitorRet traverse(IValsTool::Visitor * v,
-        const bool checkCalc);
+        const bool checkCalc, const bool proTuple);
     virtual int getCalcCount() { return m_calcCount;}
     
     /// calculate all values; implemented by each XxxValsTool
@@ -167,6 +169,8 @@ protected:
     
     /// map containing ntuple names, and pointers to the ntuple variables
     valMap m_ntupleMap;
+    // ADW 26-May-2011: Specify map for production ntuple variables
+    valMap m_proNtupleMap;
     /// pointer to incident service
     IIncidentSvc* m_incSvc;
     /// let ValBase handle the pointer to the data service, everyone uses it

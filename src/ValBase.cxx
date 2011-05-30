@@ -2,7 +2,7 @@
 @brief implements all the methods of the XxxValsTools
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.cxx,v 1.39 2009/09/11 05:30:11 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.cxx,v 1.40 2011/02/27 20:06:53 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -170,7 +170,7 @@ bool ValBase::getArrayArg(std::string varName, std::string& baseName, int& arg)
 
 // LSR 14-Jul-08 code for ntuple types
 
-void ValBase::addItem(std::string varName, double* pValue)
+void ValBase::addItem(std::string varName, double* pValue, bool proTuple)
 {
     std::string baseName;
     int dim;
@@ -179,9 +179,10 @@ void ValBase::addItem(std::string varName, double* pValue)
     valPair* pair = new valPair(baseName, ptr);
 
     m_ntupleMap.push_back(pair);
+    if (proTuple) { m_proNtupleMap.push_back(pair); }
 }
 
-void ValBase::addItem(std::string varName, float* pValue)
+void ValBase::addItem(std::string varName, float* pValue, bool proTuple)
 {
     std::string baseName;
     int dim;
@@ -190,8 +191,9 @@ void ValBase::addItem(std::string varName, float* pValue)
     valPair* pair = new valPair(baseName, ptr);
 
     m_ntupleMap.push_back(pair);
+    if (proTuple) { m_proNtupleMap.push_back(pair); }
 }
-void ValBase::addItem(std::string varName, int* pValue)
+void ValBase::addItem(std::string varName, int* pValue, bool proTuple)
 {
     std::string baseName;
     int dim;
@@ -200,9 +202,10 @@ void ValBase::addItem(std::string varName, int* pValue)
     valPair* pair = new valPair(baseName, ptr);
 
     m_ntupleMap.push_back(pair);
+    if (proTuple) { m_proNtupleMap.push_back(pair); }
 }
 
-void ValBase::addItem(std::string varName, unsigned int* pValue)
+void ValBase::addItem(std::string varName, unsigned int* pValue, bool proTuple)
 {
     std::string baseName;
     int dim;
@@ -211,9 +214,10 @@ void ValBase::addItem(std::string varName, unsigned int* pValue)
     valPair* pair = new valPair(baseName, ptr);
 
     m_ntupleMap.push_back(pair);
+    if (proTuple) { m_proNtupleMap.push_back(pair); }
 }
 
-void ValBase::addItem(std::string varName, unsigned long long* pValue)
+void ValBase::addItem(std::string varName, unsigned long long* pValue, bool proTuple)
 {
     std::string baseName;
     int dim;
@@ -222,9 +226,10 @@ void ValBase::addItem(std::string varName, unsigned long long* pValue)
     valPair* pair = new valPair(baseName, ptr);
 
     m_ntupleMap.push_back(pair);
+    if (proTuple) { m_proNtupleMap.push_back(pair); }
 }
 
-void ValBase::addItem(std::string varName, char* pValue)
+void ValBase::addItem(std::string varName, char* pValue, bool proTuple)
 {
     std::string baseName;
     int dim;
@@ -240,6 +245,7 @@ void ValBase::addItem(std::string varName, char* pValue)
     valPair* pair = new valPair(baseName, ptr);
 
     m_ntupleMap.push_back(pair);
+    if (proTuple) { m_proNtupleMap.push_back(pair); }
 }
 
 StatusCode ValBase::browse(MsgStream log, std::string varName0) 
@@ -654,16 +660,21 @@ void ValBase::handle(const Incident & inc)
 }
 
 IValsTool::Visitor::eVisitorRet ValBase::traverse(IValsTool::Visitor* v,
-                                                  const bool checkCalc)
+                                                  const bool checkCalc,
+                                                  const bool proTuple)
 {
     IValsTool::Visitor::eVisitorRet ret = IValsTool::Visitor::DONE;
 
     if (checkCalc) {
         if(doCalcIfNotDone().isFailure()) return IValsTool::Visitor::ERROR;
     }
+    // ADW 26-May-2011: Multiple tuples
+    valMap ntupleMap = proTuple ? m_proNtupleMap : m_ntupleMap;
 
-    constMapIter it = m_ntupleMap.begin();
-    for ( ; it!=m_ntupleMap.end(); ++it) {
+    //constMapIter it = m_ntupleMap.begin();
+    //for ( ; it!=m_ntupleMap.end(); ++it) {
+    constMapIter it = ntupleMap.begin();
+    for ( ; it!=ntupleMap.end(); ++it) {
         valPair* pair = *it;
         TypedPointer* ptr = pair->second;
         valType type = ptr->getType();
