@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.110 2011/01/09 07:47:30 lbaldini Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.111 2011/01/19 17:34:00 lbaldini Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -1142,7 +1142,8 @@ StatusCode CalValsTool::calculate()
     CAL_Num_Xtals_Trunc = float(no_xtals_trunc); 
 
     // No use in continuing if too little energy in CAL
-    if(CAL_EnergyRaw < 5.) return sc;  
+    //if(CAL_EnergyRaw < 5.) return sc;
+    // See JIRA LPATE-48
 
     Point  cal_pos  = calCluster->getPosition();
     Vector cal_dir  = calCluster->getDirection();
