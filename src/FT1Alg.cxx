@@ -1,7 +1,7 @@
 /** @file FT1Alg.cxx
 @brief Declaration and implementation of Gaudi algorithm FT1Alg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.27 2009/10/06 17:27:10 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.28 2010/12/27 20:07:51 lbaldini Exp $
 */
 // Include files
 
@@ -410,81 +410,91 @@ void FT1worker::evaluate()
         }
     }
 
-    // CTBBest[X/Y/Z]Dir can be set even if there's no track, 
+    //
+    // Projection of tracker and calorimeter direction into the sky and the Earth
+    //
+    
+    // First deal with the tracker projection
+    // although CTBBest[X/Y/Z]Dir can be set even if there's no track, 
     // by Cal-only events, for example!
-
     Hep3Vector glastDir;
-    if( CTBBestZDir!=0){ // check that this was set
+    // if there is a BestDir use it
+    if(CTBBestZDir!=0)
         glastDir= Hep3Vector(CTBBestXDir, CTBBestYDir, CTBBestZDir);
-    } else {
-        if(TkrNumTracks>0) {
-            // Track exists, use it
-            glastDir= Hep3Vector(Tkr1XDir, Tkr1YDir, Tkr1ZDir);
-        } else {
-            // nothing to do, leave quietly!
-            return;
-        }
-    }
+    // if there is no BestDir but a Track exists, use it
+    else if(TkrNumTracks>0)
+        glastDir= Hep3Vector(Tkr1XDir, Tkr1YDir, Tkr1ZDir);
+        
+    // if we have a tracker direction to project, do it now
+    if(glastDir != 0) {
+        // instrument coords
+        m_ft1convlayer   = Tkr1FirstLayer;
 
+        m_ft1theta = (-glastDir).theta()*R2D;
+        double phi_deg = (-glastDir).phi(); 
+        if( phi_deg<0 ) phi_deg += 2*M_PI;
+        m_ft1phi =  phi_deg*R2D;
+
+        // celestial coordinates
+        // glastDir points down... 
+        // toSky converts a *particle* direction
+        // into a direction on the sky, so the minus-sign is taken care of
+        SkyDir sdir( gps->toSky(glastDir) ); 
+        m_ft1ra  = sdir.ra();
+        m_ft1dec = sdir.dec();
+        m_ft1l   = sdir.l();
+        m_ft1b   = sdir.b();
+      
+        // local Zenith coordinates
+        SkyDir zenith(gps->zenithDir());  // pointing direction
+        double zenith_theta = sdir.difference(zenith); 
+        if( fabs(zenith_theta)<1e-8) zenith_theta=0;
+          
+        // all this to do the azimuth angle :-(
+        Hep3Vector north_pole(0,0,1);
+        // east is perp to north_pole and zenith
+        Hep3Vector east_dir( north_pole.cross(zenith()).unit() );
+        Hep3Vector north_dir( zenith().cross(east_dir));
+
+        double earth_azimuth=atan2( sdir().dot(east_dir), sdir().dot(north_dir) );
+        if( earth_azimuth <0) earth_azimuth += 2*M_PI; // to 0-360 deg.
+        if( fabs(earth_azimuth)<1e-8) earth_azimuth=0;
+        m_ft1zen  = zenith_theta*R2D;;
+        m_ft1azim = earth_azimuth*R2D;
+    } // done with tracker projections
+    
+    
+    // Now deal with the calorimater projection
+    // for now we project only if we have results from the moment analysis
     Hep3Vector glastCalDir;
     if ( Cal1MomZDir != 0 ) {
-      glastCalDir = Hep3Vector(Cal1MomXDir, Cal1MomYDir, Cal1MomZDir);
-    }
+        glastCalDir = Hep3Vector(Cal1MomXDir, Cal1MomYDir, Cal1MomZDir);
+      
+        // celestial coordinates
+        // The Cal axis points up, so we *do* need the minus sign, here.
+        SkyDir scaldir( gps->toSky(-glastCalDir) ); 
+        m_ft1calra  = scaldir.ra();
+        m_ft1caldec = scaldir.dec();
+        m_ft1call   = scaldir.l();
+        m_ft1calb   = scaldir.b();
 
-    // instrument coords
+        // local Zenith coordinates
+        SkyDir zenith(gps->zenithDir());  // pointing direction
+        double calzenith_theta = scaldir.difference(zenith); 
+        if( fabs(calzenith_theta)<1e-8) calzenith_theta=0;
 
-    m_ft1convlayer   = Tkr1FirstLayer;
+        // all this to do the azimuth angle :-(
+        Hep3Vector north_pole(0,0,1);
+        // east is perp to north_pole and zenith
+        Hep3Vector east_dir( north_pole.cross(zenith()).unit() );
+        Hep3Vector north_dir( zenith().cross(east_dir));
 
-    m_ft1theta = (-glastDir).theta()*R2D;
-    double phi_deg = (-glastDir).phi(); 
-    if( phi_deg<0 ) phi_deg += 2*M_PI;
-    m_ft1phi =  phi_deg*R2D;
+        double calearth_azimuth=atan2( scaldir().dot(east_dir), scaldir().dot(north_dir) );
+        if( calearth_azimuth <0) calearth_azimuth += 2*M_PI; // to 0-360 deg.
+        if( fabs(calearth_azimuth)<1e-8) calearth_azimuth=0;
 
-    // celestial coordinates
-
-    // transform 
-    // glastDir points down... 
-    // toSky converts a *particle* direction
-    // into a direction on the sky, so the minus-sign is taken care of!
-    SkyDir sdir( gps->toSky(glastDir) ); 
-    m_ft1ra  = sdir.ra();
-    m_ft1dec = sdir.dec();
-    m_ft1l   = sdir.l();
-    m_ft1b   = sdir.b();
-
-    // The Cal axis points up, so we *do* need the minus sign, here.
-    SkyDir scaldir( gps->toSky(-glastCalDir) ); 
-    m_ft1calra  = scaldir.ra();
-    m_ft1caldec = scaldir.dec();
-    m_ft1call   = scaldir.l();
-    m_ft1calb   = scaldir.b();
-
-    // local Zenith coordinates
-
-    SkyDir zenith(gps->zenithDir());  // pointing direction
-    double zenith_theta = sdir.difference(zenith); 
-    if( fabs(zenith_theta)<1e-8) zenith_theta=0;
-
-    double calzenith_theta = scaldir.difference(zenith); 
-    if( fabs(calzenith_theta)<1e-8) calzenith_theta=0;
-
-    // all this to do the azimuth angle :-(
-    Hep3Vector north_pole(0,0,1);
-    Hep3Vector east_dir( north_pole.cross(zenith()).unit() ); // east is perp to north_pole and zenith
-    Hep3Vector north_dir( zenith().cross(east_dir));
-
-    double earth_azimuth=atan2( sdir().dot(east_dir), sdir().dot(north_dir) );
-    if( earth_azimuth <0) earth_azimuth += 2*M_PI; // to 0-360 deg.
-    if( fabs(earth_azimuth)<1e-8) earth_azimuth=0;
-
-    double calearth_azimuth=atan2( scaldir().dot(east_dir), scaldir().dot(north_dir) );
-    if( calearth_azimuth <0) calearth_azimuth += 2*M_PI; // to 0-360 deg.
-    if( fabs(calearth_azimuth)<1e-8) calearth_azimuth=0;
-
-    m_ft1zen  = zenith_theta*R2D;;
-    m_ft1azim = earth_azimuth*R2D;
-
-    m_ft1calzen  = calzenith_theta*R2D;
-    m_ft1calazim = calearth_azimuth*R2D;
+        m_ft1calzen  = calzenith_theta*R2D;
+        m_ft1calazim = calearth_azimuth*R2D;      
+   } // done with calorimeter projections
 
  }
