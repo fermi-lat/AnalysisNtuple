@@ -3,6 +3,7 @@
   @verbatim
    * EOH *
  
+ AnalysisNtuple-02-58-05 03-Jun-2011 bregeon bug fix in FT1Alg for new CLHEP
  AnalysisNtuple-02-58-04 31-May-2011 bregeon Quick bug fixes in CalValsTools and FT1Alg, jira LPATE-20,47 and 48
  AnalysisNtuple-02-58-03 20-May-2011  hmk   CLHEP 2.1.0.1 plus update from Tracy
  AnalysisNtuple-02-58-02 21-Apr-2011  lsrea McValsTool: fix for bug in calc of McTkr2DirErr
