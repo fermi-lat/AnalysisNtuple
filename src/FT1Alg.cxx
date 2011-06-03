@@ -1,7 +1,7 @@
 /** @file FT1Alg.cxx
 @brief Declaration and implementation of Gaudi algorithm FT1Alg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.28 2010/12/27 20:07:51 lbaldini Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.29 2011/05/31 12:19:12 bregeon Exp $
 */
 // Include files
 
@@ -426,7 +426,7 @@ void FT1worker::evaluate()
         glastDir= Hep3Vector(Tkr1XDir, Tkr1YDir, Tkr1ZDir);
         
     // if we have a tracker direction to project, do it now
-    if(glastDir != 0) {
+    if(glastDir.mag2() != 0) {
         // instrument coords
         m_ft1convlayer   = Tkr1FirstLayer;
 
