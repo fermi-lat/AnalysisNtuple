@@ -1,7 +1,7 @@
 /** @file FT1Alg.cxx
 @brief Declaration and implementation of Gaudi algorithm FT1Alg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.27.10.1 2010/06/17 00:22:12 echarles Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.27.10.2 2010/06/17 21:58:29 echarles Exp $
 */
 // Include files
 
@@ -24,6 +24,8 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.27.10.1 
 #include "CalibSvc/ICalibPathSvc.h" // helpful service for forming calib TDS paths
 
 //#include "CalibSvc/ICalibDataSvc.h"
+
+#include "facilities/Util.h"
 
 #include "evtUtils/EventClass.h"
 
@@ -81,6 +83,8 @@ private:
     StringProperty m_classDefs;  ///< xml file with events class defs
 
     std::string m_path;    ///< calibration service
+
+    std::string m_defaultEvtClassDefFile; ///< default value for input XML
     
 
 };
@@ -126,13 +130,14 @@ public:
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 FT1Alg::FT1Alg(const std::string& name, ISvcLocator* pSvcLocator) 
 : Algorithm(name, pSvcLocator)
-, m_count(0)
+, m_count(0), m_defaultEvtClassDefFile("$(EVTUTILSROOT)/xml/EvtClassDefs_P7V6.xml")
 {
     declareProperty("TreeName",  treename="MeritTuple");
     declareProperty("NbOfEvtsInFile", nbOfEvtsInFile=100000);
     declareProperty("CorrectForAberration", m_aberrate=false);
     declareProperty("AlignmentFlavor"     , m_flavor="");
-    declareProperty("EventClassDefinitions", m_classDefs="$(EVTUTILSROOT)/xml/EvtClassDefs_P7V3.xml");
+    declareProperty("EventClassDefinitions", m_classDefs);
+    facilities::Util::expandEnvVar(&m_defaultEvtClassDefFile);
 }
 
 StatusCode FT1Alg::initialize()
@@ -161,6 +166,13 @@ StatusCode FT1Alg::initialize()
     rootTupleSvc = m_rootTupleSvc;
 
     m_worker =  new FT1worker;
+
+    std::string inputEvtClassDefFile = m_classDefs;
+    facilities::Util::expandEnvVar(&inputEvtClassDefFile);
+    if (inputEvtClassDefFile.compare(m_defaultEvtClassDefFile) != 0)
+        log << MSG::WARNING << "Event Class Definition File " <<
+            inputEvtClassDefFile << " does not match the default " 
+            << m_defaultEvtClassDefFile << endreq;
     
     m_evtClass = evtUtils::EventClass::loadFromXml(m_classDefs);
     if ( m_evtClass == 0 ) {

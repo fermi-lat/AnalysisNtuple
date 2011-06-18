@@ -3,6 +3,7 @@
   @verbatim
    * EOH *
  
+ AnalysisNtuple-02-55-09-gr03 20-Jun-2011 hmk      FT1Alg mods for EvtClassDefinitions XML file JO parameter
  AnalysisNtuple-02-55-09-gr02 17-Jun-2010 echarles Switched to using EvtClassDefs_P7V3 for event class definitions
  AnalysisNtuple-02-55-09-gr01 17-Jun-2010 echarles Switch to using evtUtils for FT1EventClass
  AnalysisNtuple-02-55-09 06-Oct-2009  lsrea added new classes to FT1Alg
