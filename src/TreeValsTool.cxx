@@ -2,7 +2,7 @@
 @brief Calculates the Tracker Tree variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TreeValsTool.cxx,v 1.7 2011/05/17 22:59:19 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TreeValsTool.cxx,v 1.8 2011/05/20 19:50:15 heather Exp $
 */
 
 // Include files
@@ -14,6 +14,9 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TreeValsTool.cxx,v 1.7 
 #include "GaudiKernel/SmartDataPtr.h"
 #include "GaudiKernel/AlgTool.h"
 #include "GaudiKernel/ToolFactory.h"
+
+//*** Special version to look at tree based tracking timing
+#include "GaudiKernel/IChronoStatSvc.h"
 
 #include "Event/TopLevel/EventModel.h"
 #include "Event/TopLevel/Event.h"
@@ -84,7 +87,9 @@ private:
     /// 
 //    IPropagatorSvc* m_propSvc;
 
-    IPropagator* m_G4PropTool; 
+    IPropagator*           m_G4PropTool; 
+
+    IChronoStatSvc*        m_chronoSvc;
 
     // Tree stuff (if present)
     float Tkr_num_vecPoints;
@@ -140,6 +145,12 @@ private:
     float TFP_bestRmsTrans;
     float TFP_bestRmsLong;
     float TFP_bestRmsLongAsym;
+
+    // For now, the timing info
+    float Aud_treeBasedTool;
+    float Aud_treeBasedTool_link;
+    float Aud_treeBasedTool_node;
+    float Aud_treeBasedTool_build;
 };
 
 // Static factory for instantiation of algtool objects
@@ -258,6 +269,12 @@ StatusCode TreeValsTool::initialize()
             return StatusCode::FAILURE;
         }
 
+        if (service("ChronoStatSvc", m_chronoSvc, true).isFailure())
+        {
+            log << MSG::ERROR << "Couldn't find the ChronoSvc!" << endreq;
+            return StatusCode::FAILURE;
+        }
+
     } else {
         return fail;
     }
@@ -317,6 +334,11 @@ StatusCode TreeValsTool::initialize()
     addItem("TFPBestRmsTrans",      &TFP_bestRmsTrans);
     addItem("TFPBestRmsLong",       &TFP_bestRmsLong);
     addItem("TFPBestRmsLongAsym",   &TFP_bestRmsLongAsym);
+
+    addItem("AudTreeBasedTool",       &Aud_treeBasedTool);
+    addItem("AudTreeBasedTool_link",  &Aud_treeBasedTool_link);
+    addItem("AudTreeBasedTool_node",  &Aud_treeBasedTool_node);
+    addItem("AudTreeBasedTool_build", &Aud_treeBasedTool_build);
 
     zeroVals();
 
@@ -486,6 +508,16 @@ StatusCode TreeValsTool::calculate()
             TFP_bestRmsLongAsym = filterParams->getLongRmsAsym();
         }
     }
+
+    // Get the auditor info
+    IChronoStatSvc::ChronoTime time = m_chronoSvc->chronoDelta("TreeBasedTool",IChronoStatSvc::USER);
+    Aud_treeBasedTool = static_cast<float>(time)*0.000001;
+    time = m_chronoSvc->chronoDelta("TreeBasedTool_link",IChronoStatSvc::USER);
+    Aud_treeBasedTool_link = static_cast<float>(time)*0.000001;
+    time = m_chronoSvc->chronoDelta("TreeBasedTool_node",IChronoStatSvc::USER);
+    Aud_treeBasedTool_node = static_cast<float>(time)*0.000001;
+    time = m_chronoSvc->chronoDelta("TreeBasedTool_build",IChronoStatSvc::USER);
+    Aud_treeBasedTool_build = static_cast<float>(time)*0.000001;
 
     return sc;
 }
