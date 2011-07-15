@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.102 2010/12/05 04:20:35 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.103 2011/02/27 20:06:53 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -1222,8 +1222,8 @@ StatusCode TkrValsTool::calculate()
             const Event::TkrCluster* cluster = hit->getClusterPtr();
             int size =  (int) (const_cast<Event::TkrCluster*>(cluster))->size();
             // get the local slopes
-            double slope  = fabs(hit->getMeasuredSlope(Event::TkrTrackHit::SMOOTHED));
-            double slope1 = fabs(hit->getNonMeasuredSlope(Event::TkrTrackHit::SMOOTHED));
+            double slope1  = fabs(hit->getMeasuredSlope(Event::TkrTrackHit::SMOOTHED));
+            double slope = fabs(hit->getNonMeasuredSlope(Event::TkrTrackHit::SMOOTHED));
 
             // theta1 is the projected angle across the strip
             double theta1       = atan(slope1);
