@@ -2,7 +2,7 @@
 @brief Calculates the Tkr hit analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrHitValsTool.cxx,v 1.22 2010/12/06 20:59:14 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrHitValsTool.cxx,v 1.23 2011/01/21 14:02:49 lbaldini Exp $
 */
 
 // Include files
@@ -296,7 +296,7 @@ StatusCode TkrHitValsTool::calculate()
             if(isWider)     Tkr_numWiderClusters++;
         }
 
-        bool onTrack = clust->hitFlagged();
+        bool onTrack = clust->isSet(Event::TkrCluster::maskUSEDANY);
         if(onTrack) {
             Tkr_numHitsOnTracks++;
             if(isMarked) {
