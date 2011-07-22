@@ -3,6 +3,7 @@
   @verbatim
    * EOH *
  
+ AnalysisNtuple-02-59-01 22-Jul-2011  lsrea Fixed bug in counting ghost hits on tracks
  AnalysisNtuple-02-59-00 15-Jul-2011  lsrea fix slope mixup
  AnalysisNtuple-02-58-05 03-Jun-2011 bregeon bug fix in FT1Alg for new CLHEP
  AnalysisNtuple-02-58-04 31-May-2011 bregeon Quick bug fixes in CalValsTools and FT1Alg, jira LPATE-20,47 and 48
