@@ -2,7 +2,7 @@
 @brief Calculates the Tkr hit analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrHitValsTool.cxx,v 1.24 2011/07/22 14:58:21 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrHitValsTool.cxx,v 1.25 2011/07/24 20:20:24 lsrea Exp $
 */
 
 // Include files
@@ -282,7 +282,7 @@ StatusCode TkrHitValsTool::calculate()
             Tkr_numHitsOnTracks++;
             if(isMarked) {
                 Tkr_numGhostsOnTracks++;
-                if(isFlagged) Tkr_numFlaggedTrackHits;
+                if(isFlagged) Tkr_numFlaggedTrackHits++;
             }
             else {
                 if(isSaturated) Tkr_numSaturatedOnTracks++;
