@@ -2,7 +2,7 @@
 @brief Calculates the Tkr hit analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrHitValsTool.cxx,v 1.23 2011/01/21 14:02:49 lbaldini Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrHitValsTool.cxx,v 1.24 2011/07/22 14:58:21 lsrea Exp $
 */
 
 // Include files
@@ -53,9 +53,9 @@ private:
     int Tkr_Cnv_Lyr_Hits;
     int Tkr_numHitsOnTracks;
     int Tkr_numGhosts;
-    int Tkr_numDiags;
-    int Tkr_numBoth;
-    int Tkr_numToT255s;
+    //int Tkr_numDiags;
+    //int Tkr_numBoth;
+    //int Tkr_numToT255s;
     int Tkr_numSaturated;
     int Tkr_numWideClusters;
     int Tkr_numWiderClusters;
@@ -63,9 +63,9 @@ private:
     int Tkr_numWideGhostClusters;
     int Tkr_numWiderGhostClusters;
     int Tkr_numGhostsOnTracks;
-    int Tkr_numDiagsOnTracks;
-    int Tkr_numBothOnTracks;
-    int Tkr_numToT255sOnTracks;
+    //int Tkr_numDiagsOnTracks;
+    //int Tkr_numBothOnTracks;
+    //int Tkr_numToT255sOnTracks;
     int Tkr_numFlaggedTrackHits;
     int Tkr_numSaturatedOnTracks;
     int Tkr_numWideClustersOnTracks;
@@ -119,13 +119,7 @@ TkrHitValsTool::TkrHitValsTool(const std::string& type,
 <tr><td> TkrNumLayersHit
 <td>I<td>   Total number of hit layers 
 <tr><td> TkrNumGhosts         
-<td>I<td>   Total number of TKR ghost clusters 
-<tr><td> TkrNumDiags        
-<td>I<td>   Total number of TKR ghost clusters as identified by TEM diagnostic info 
-<tr><td> TkrNumBoth        
-<td>I<td>   Total number of TKR clusters as regular and diagnostic ghosts 
-<tr><td> TkrNumToT255s         
-<td>I<td>   Total number of clusters with ToT==255
+<td>I<td>   Total number of TKR ghost clusters (including sametracks and 255s)
 <tr><td> TkrNumSaturated
 <td>I<td>   Number of clusters marked as saturated (all hits in each half-plane share the same ToT!)
 <tr><td> TkrNumWideClusters         
@@ -139,13 +133,7 @@ TkrHitValsTool::TkrHitValsTool(const std::string& type,
 <tr><td> TkrNumWiderClusters        
 <td>I<td>   Number of wider ghost clusters
 <tr><td> TkrNumGhostsOnTracks         
-<td>I<td>   Total number of ghost clusters on tracks
-<tr><td> TkrNumDiagsOnTracks
-<td>I<td>   Total number of track hits flagged as diagnostic ghosts
-<tr><td> TkrNumBothOnTracks
-<td>I<td>   Total number of hits flagged as both regular and diagnostic ghosts
-<tr><td> TkrNumToT255sOnTracks         
-<td>I<td>   Total number of ToT==255 clusters on tracks
+<td>I<td>   Total number of ghost clusters on tracks (including sametracks and 255s)
 <tr><td> TkrNumFlaggedTrackHits         
 <td>I<td>   Total number of track hits flagged because
 the track had some 255 or ghost hits
@@ -200,9 +188,9 @@ StatusCode TkrHitValsTool::initialize()
     addItem("TkrFirstLayer",          &Tkr_Fst_Cnv_Lyr);        
     addItem("TkrNumLayersHit",        &Tkr_NCnv_Lyrs_Hit);
     addItem("TkrNumGhosts",           &Tkr_numGhosts);
-    addItem("TkrNumDiags",            &Tkr_numDiags);
-    addItem("TkrNumBoth",             &Tkr_numBoth);
-    addItem("TkrNumToT255s",          &Tkr_numToT255s);
+    //addItem("TkrNumDiags",            &Tkr_numDiags);
+    //addItem("TkrNumBoth",             &Tkr_numBoth);
+    //addItem("TkrNumToT255s",          &Tkr_numToT255s);
     addItem("TkrNumSaturated",        &Tkr_numSaturated);
     addItem("TkrNumWideClusters",     &Tkr_numWideClusters);
     addItem("TkrNumWiderClusters",    &Tkr_numWiderClusters);
@@ -210,9 +198,9 @@ StatusCode TkrHitValsTool::initialize()
     addItem("TkrNumWideGhosts",      &Tkr_numWideGhostClusters);
     addItem("TkrNumWiderGhosts",     &Tkr_numWiderGhostClusters);
     addItem("TkrNumGhostsOnTracks",    &Tkr_numGhostsOnTracks);
-    addItem("TkrNumDiagsOnTracks",     &Tkr_numDiagsOnTracks);
-    addItem("TkrNumBothOnTracks",     &Tkr_numBothOnTracks);
-    addItem("TkrNumToT255sOnTracks",    &Tkr_numToT255sOnTracks);
+    //addItem("TkrNumDiagsOnTracks",     &Tkr_numDiagsOnTracks);
+    //addItem("TkrNumBothOnTracks",     &Tkr_numBothOnTracks);
+    //addItem("TkrNumToT255sOnTracks",    &Tkr_numToT255sOnTracks);
     addItem("TkrNumFlaggedTrackHits",   &Tkr_numFlaggedTrackHits);
     addItem("TkrNumSaturatedOnTracks", &Tkr_numSaturatedOnTracks);
     addItem("TkrNumWideClustersOnTracks",  &Tkr_numWideClustersOnTracks);
@@ -269,24 +257,16 @@ StatusCode TkrHitValsTool::calculate()
 
     Event::TkrClusterColConItr iter = pClusters->begin();
     for(; iter!=pClusters->end();++iter) {
-        bool isGhost, isDiagGhost, isBoth, is255, isSaturated, isWide, isWider, isMarked;
+        bool isSaturated, isWide, isWider, isMarked;
         Event::TkrCluster* clust = *iter;
 
-        is255       = clust->isSet(Event::TkrCluster::mask255);
-        isGhost     = clust->isSet(Event::TkrCluster::maskGHOST);
-        isDiagGhost = clust->isSet(Event::TkrCluster::maskDIAGNOSTIC);
-        isBoth      = isGhost&&isDiagGhost;
-        isSaturated = (clust->getRawToT()==250);
         isWide      = (clust->size()>=m_minWide);
         isWider     = (clust->size()>=m_minWider);
-        isMarked = 
-            clust->isSet(Event::TkrCluster::maskZAPGHOSTS);
+        isSaturated = (clust->getRawToT()==250);
+        isMarked    = clust->isSet(Event::TkrCluster::maskZAPGHOSTS);
 
         if(isMarked) {
-            if     (is255)       Tkr_numToT255s++;
-            else if(isBoth)      Tkr_numBoth++;
-            else if(isGhost)     Tkr_numGhosts++;
-            else if(isDiagGhost) Tkr_numDiags++;
+            Tkr_numGhosts++;
             if(isSaturated) Tkr_numSaturatedGhosts++;
             if(isWide)      Tkr_numWideGhostClusters++;
             if(isWider)     Tkr_numWiderGhostClusters++;
@@ -297,17 +277,12 @@ StatusCode TkrHitValsTool::calculate()
         }
 
         bool onTrack = clust->isSet(Event::TkrCluster::maskUSEDANY);
+        bool isFlagged = clust->isSet(Event::TkrCluster::maskSAMETRACK);
         if(onTrack) {
             Tkr_numHitsOnTracks++;
             if(isMarked) {
-                if(is255)            Tkr_numToT255sOnTracks++;
-                else if(isBoth)      Tkr_numBothOnTracks++;
-                else if(isGhost)     Tkr_numGhostsOnTracks++;
-                else if(isDiagGhost) Tkr_numDiagsOnTracks++;
-                else                 Tkr_numFlaggedTrackHits++;
-                if(isSaturated) Tkr_numSaturatedGhostsOnTracks++;
-                if(isWide)      Tkr_numWideGhostClustersOnTracks++;
-                if(isWider)     Tkr_numWiderGhostClustersOnTracks++;
+                Tkr_numGhostsOnTracks++;
+                if(isFlagged) Tkr_numFlaggedTrackHits;
             }
             else {
                 if(isSaturated) Tkr_numSaturatedOnTracks++;
