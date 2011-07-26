@@ -1,7 +1,7 @@
 /** @file OverlayValsTool.cxx
 @brief declaration and definition of the class OverlayValsTool
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/OverlayValsTool.cxx,v 1.3 2010/01/01 02:06:13 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/OverlayValsTool.cxx,v 1.4 2010/01/11 01:20:56 lsrea Exp $
 
 */
 
@@ -16,6 +16,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/OverlayValsTool.cxx,v 1
 #include "GaudiKernel/IToolSvc.h"
 #include "GaudiKernel/IParticlePropertySvc.h"
 #include "GaudiKernel/ParticleProperty.h"
+#include "GaudiKernel/DataSvc.h"
 
 // Event for access to time
 #include "OverlayEvent/OverlayEventModel.h"
@@ -75,6 +76,9 @@ private:
 
     StringProperty          m_root_tree;
     StringArrayProperty     m_pointingHistory;///< history file name and launch date
+
+    /// Pointer to the overlay's data provider service
+    DataSvc*                m_dataSvc;
 
     astro::PointingHistory* m_history;
     bool                    m_horizontal;
@@ -197,6 +201,17 @@ StatusCode OverlayValsTool::initialize()
 
     if( ValBase::initialize().isFailure()) return StatusCode::FAILURE;
 
+    // The very first thing to do is to look up the data provider service for the Overlay
+    IService* dataSvc = 0;
+    sc = service("OverlayDataSvc", dataSvc);
+    if (sc.isFailure() ) {
+        log << MSG::WARNING<< "  No OverlayDataSvc available, NOT setting up Overlay tuple vars " << endreq;
+        return StatusCode::SUCCESS;
+    }
+
+    // Caste back to the "correct" pointer
+    m_dataSvc = dynamic_cast<DataSvc*>(dataSvc);
+
     // get the GPS instance: 
     gps = astro::GPS::instance();
 
@@ -296,7 +311,7 @@ StatusCode OverlayValsTool::calculate()
     // Purpose: set tuple items
  
     // Look up the Overlay event timing information
-    SmartDataPtr<Event::EventOverlay> header(m_pEventSvc, OverlayEventModel::Overlay::EventOverlay);
+    SmartDataPtr<Event::EventOverlay> header(m_dataSvc, m_dataSvc->rootName() + OverlayEventModel::Overlay::EventOverlay);
 
     // No overlay event, no variables filled
     if (header)
@@ -307,7 +322,7 @@ StatusCode OverlayValsTool::calculate()
         m_evtEventId64   = header->event();
 
         // Acd overlay information
-        SmartDataPtr<Event::AcdOverlayCol> acdOverlayCol(m_pEventSvc, OverlayEventModel::Overlay::AcdOverlayCol);
+        SmartDataPtr<Event::AcdOverlayCol> acdOverlayCol(m_dataSvc, m_dataSvc->rootName() + OverlayEventModel::Overlay::AcdOverlayCol);
         if (acdOverlayCol)
         {
             // Loop through input ACD overlay objects, counting and summing deposited energy
@@ -321,7 +336,7 @@ StatusCode OverlayValsTool::calculate()
         }
 
         // Cal Overlay information
-        SmartDataPtr<Event::CalOverlayCol> calOverlayCol(m_pEventSvc, OverlayEventModel::Overlay::CalOverlayCol);
+        SmartDataPtr<Event::CalOverlayCol> calOverlayCol(m_dataSvc, m_dataSvc->rootName() + OverlayEventModel::Overlay::CalOverlayCol);
         if(calOverlayCol)
         {
             // Loop through input Cal overlay objects, counting and summing deposited energy
@@ -335,7 +350,7 @@ StatusCode OverlayValsTool::calculate()
         }
 
         // Tkr Overlay information
-        SmartDataPtr<Event::TkrOverlayCol> tkrOverlayCol(m_pEventSvc, OverlayEventModel::Overlay::TkrOverlayCol);
+        SmartDataPtr<Event::TkrOverlayCol> tkrOverlayCol(m_dataSvc, m_dataSvc->rootName() + OverlayEventModel::Overlay::TkrOverlayCol);
         if (tkrOverlayCol)
         {
             // Loop through input Cal overlay objects, counting and summing deposited energy
@@ -349,13 +364,13 @@ StatusCode OverlayValsTool::calculate()
         }
 
         // Look up the Overlay event timing information
-        SmartDataPtr<Event::PtOverlay> ptOverlay(m_pEventSvc, OverlayEventModel::Overlay::PtOverlay);
+        SmartDataPtr<Event::PtOverlay> ptOverlay(m_dataSvc, m_dataSvc->rootName() + OverlayEventModel::Overlay::PtOverlay);
 
         if (ptOverlay) fillPtFromPtOverlay(ptOverlay);
         else           recalculatePtVals(header);
  
         // Look up the Overlay event timing information
-        SmartDataPtr<Event::GemOverlay> gemOverlay(m_pEventSvc, OverlayEventModel::Overlay::GemOverlay);
+        SmartDataPtr<Event::GemOverlay> gemOverlay(m_dataSvc, m_dataSvc->rootName() + OverlayEventModel::Overlay::GemOverlay);
         if (gemOverlay) m_triggerBits = gemOverlay->getConditionSummary();
     }
     
