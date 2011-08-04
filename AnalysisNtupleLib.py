@@ -1,4 +1,4 @@
-# $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/AnalysisNtupleLib.py,v 1.4 2009/11/13 23:19:54 jrb Exp $
+# $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/AnalysisNtupleLib.py,v 1.3.146.2 2011/07/26 14:43:07 heather Exp $
 def generate(env, **kw):
      if not kw.get('depsOnly', 0):
           env.Tool('addLibrary', library = ['AnalysisNtuple'])
@@ -18,6 +18,7 @@ def generate(env, **kw):
      env.Tool('AcdUtilLib')
      env.Tool('astroLib')
      env.Tool('facilitiesLib')
+     env.Tool('evtUtilsLib')
      env.Tool('addLibrary', library=env['gaudiLibs'])
      env.Tool('addLibrary', library=env['rootLibs'])
      env.Tool('addLibrary', library=env['clhepLibs'])
