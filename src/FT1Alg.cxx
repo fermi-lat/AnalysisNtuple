@@ -1,7 +1,7 @@
 /** @file FT1Alg.cxx
 @brief Declaration and implementation of Gaudi algorithm FT1Alg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.27.10.2 2010/06/17 21:58:29 echarles Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.27.10.3 2011/06/18 04:27:02 heather Exp $
 */
 // Include files
 
@@ -130,7 +130,7 @@ public:
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 FT1Alg::FT1Alg(const std::string& name, ISvcLocator* pSvcLocator) 
 : Algorithm(name, pSvcLocator)
-, m_count(0), m_defaultEvtClassDefFile("$(EVTUTILSROOT)/xml/EvtClassDefs_P7V6.xml")
+, m_count(0), m_defaultEvtClassDefFile("$(EVTUTILSXMLPATH)/EvtClassDefs_P7V6.xml")
 {
     declareProperty("TreeName",  treename="MeritTuple");
     declareProperty("NbOfEvtsInFile", nbOfEvtsInFile=100000);
