@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.93 2009/05/06 23:30:07 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.94 2009/09/09 06:05:19 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -684,7 +684,7 @@ StatusCode CalValsTool::initialize()
 
     zeroVals();
 
-    m_ubInterpolate = new UBinterpolate("$(ANALYSISNTUPLEROOT)/calib/BiasMapCalCfpEnergy.txt");
+    m_ubInterpolate = new UBinterpolate("$(ANALYSISNTUPLEDATAPATH)/calib/BiasMapCalCfpEnergy.txt");
 
     return sc;
 }
