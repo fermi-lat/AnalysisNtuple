@@ -3,7 +3,7 @@
 @brief Calculates the "Event" analysis variables from the other ntuple variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.44 2009/09/09 06:05:19 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.44.10.1 2011/08/06 04:16:01 heather Exp $
 */
 
 #include "ValBase.h"
@@ -330,7 +330,7 @@ StatusCode EvtValsTool::initialize()
  
     zeroVals();
 
-    m_ubInterpolate = new UBinterpolate("$(ANALYSISNTUPLEDATAPATH)/calib/BiasMapEvtEnergyCorr.txt");
+    m_ubInterpolate = new UBinterpolate("$(ANALYSISNTUPLEDATAPATH)/BiasMapEvtEnergyCorr.txt");
 
     return sc;
 }
