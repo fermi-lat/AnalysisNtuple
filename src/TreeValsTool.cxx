@@ -2,7 +2,7 @@
 @brief Calculates the Tracker Tree variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TreeValsTool.cxx,v 1.8 2011/05/20 19:50:15 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TreeValsTool.cxx,v 1.9 2011/07/05 20:33:23 usher Exp $
 */
 
 // Include files
@@ -22,6 +22,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TreeValsTool.cxx,v 1.8 
 #include "Event/TopLevel/Event.h"
 
 #include "Event/Recon/TkrRecon/TkrTree.h"
+#include "Event/Recon/TkrRecon/TkrVecPointInfo.h"
 #include "Event/Recon/TkrRecon/TkrFilterParams.h"
 #include "geometry/Ray.h" 
 
@@ -93,6 +94,11 @@ private:
 
     // Tree stuff (if present)
     float Tkr_num_vecPoints;
+    float Tkr_ave_vecPoints;
+    float Tkr_lyr_wVecPoints;
+    float Tkr_lyr_mostVecPoints;
+    float Tkr_num_mostVecPoints;
+
     float Tkr_num_vecLinks;
     float Tkr_num_trees;
     float Tkr_tree1_nTrks;
@@ -100,6 +106,7 @@ private:
     float Tkr_tree1_nLeaves;
     float Tkr_tree1_nNodes;
     float Tkr_tree1_nBranches;
+    float Tkr_tree1_firstLinkAngle;
     float Tkr_tree1_bestRms;
     float Tkr_tree1_bestBiLayers;
     float Tkr_tree1_maxWidthLyr;
@@ -282,58 +289,64 @@ StatusCode TreeValsTool::initialize()
     // load up the map
 
     // Tree stuff
-    addItem("TkrNumVecPoints",      &Tkr_num_vecPoints);
-    addItem("TkrNumVecLinks",       &Tkr_num_vecLinks);
-    addItem("TkrNumTrees",          &Tkr_num_trees);
-    addItem("TkrTree1NTrks",        &Tkr_tree1_nTrks);
-    addItem("TkrTree1Depth",        &Tkr_tree1_depth);
-    addItem("TkrTree1Leaves",       &Tkr_tree1_nLeaves);
-    addItem("TkrTree1Nodes",        &Tkr_tree1_nNodes);
-    addItem("TkrTree1Branches",     &Tkr_tree1_nBranches);
-    addItem("TkrTree1BestRms",      &Tkr_tree1_bestRms);
-    addItem("TkrTree1BestBiLayers", &Tkr_tree1_bestBiLayers);
-    addItem("TkrTree1MaxWidthLyr",  &Tkr_tree1_maxWidthLyr);
-    addItem("TkrTree1MaxWidth",     &Tkr_tree1_maxWidth);
-    addItem("TkrTree1LastWidth",    &Tkr_tree1_lastWidth);
-    addItem("TkrTree1BestLeaves",   &Tkr_tree1_bestLeaves);
-    addItem("TkrTree1ScndLeaves",   &Tkr_tree1_scndLeaves);
-    addItem("TkrTree1ScndRms",      &Tkr_tree1_scndRms);
-    addItem("TkrTree1ScndDepth",    &Tkr_tree1_scndDepth);
-    addItem("TkrTree1PosX",         &Tkr_tree1_PosX);
-    addItem("TkrTree1PosY",         &Tkr_tree1_PosY);
-    addItem("TkrTree1PosZ",         &Tkr_tree1_PosZ);
-    addItem("TkrTree1DirX",         &Tkr_tree1_DirX);
-    addItem("TkrTree1DirY",         &Tkr_tree1_DirY);
-    addItem("TkrTree1DirZ",         &Tkr_tree1_DirZ);
-    addItem("TkrTree1NumBoxes",     &Tkr_tree1_NumBoxes);
-    addItem("TkrTree1ChiSquare",    &Tkr_tree1_ChiSquare);
-    addItem("TkrTree1RmsTrans",     &Tkr_tree1_RmsTrans);
-    addItem("TkrTree1RmsLong",      &Tkr_tree1_RmsLong);
+    addItem("TkrNumVecPoints",        &Tkr_num_vecPoints);
+    addItem("TkrAveVecPtsLyr",        &Tkr_ave_vecPoints);
+    addItem("TkrLyrsWVecPoints",      &Tkr_lyr_wVecPoints);
+    addItem("TkrLyrMostVecPoints",    &Tkr_lyr_mostVecPoints);
+    addItem("TkrNumMostVecPoints",    &Tkr_num_mostVecPoints);
 
-    addItem("TkrTree2NTrks",        &Tkr_tree2_nTrks);
-    addItem("TkrTree2Depth",        &Tkr_tree2_depth);
-    addItem("TkrTree2Leaves",       &Tkr_tree2_nLeaves);
-    addItem("TkrTree2Nodes",        &Tkr_tree2_nNodes);
-    addItem("TkrTree2Branches",     &Tkr_tree2_nBranches);
-    addItem("TkrTree2BestRms",      &Tkr_tree2_bestRms);
-    addItem("TkrTree2BestBiLayers", &Tkr_tree2_bestBiLayers);
-    addItem("TkrTree2MaxWidthLyr",  &Tkr_tree2_maxWidthLyr);
-    addItem("TkrTree2MaxWidth",     &Tkr_tree2_maxWidth);
-    addItem("TkrTree2LastWidth",    &Tkr_tree2_lastWidth);
+    addItem("TkrNumVecLinks",         &Tkr_num_vecLinks);
+    addItem("TkrNumTrees",            &Tkr_num_trees);
+    addItem("TkrTree1NTrks",          &Tkr_tree1_nTrks);
+    addItem("TkrTree1Depth",          &Tkr_tree1_depth);
+    addItem("TkrTree1Leaves",         &Tkr_tree1_nLeaves);
+    addItem("TkrTree1Nodes",          &Tkr_tree1_nNodes);
+    addItem("TkrTree1Branches",       &Tkr_tree1_nBranches);
+    addItem("TkrTree1FirstLinkAngle", &Tkr_tree1_firstLinkAngle);
+    addItem("TkrTree1BestRms",        &Tkr_tree1_bestRms);
+    addItem("TkrTree1BestBiLayers",   &Tkr_tree1_bestBiLayers);
+    addItem("TkrTree1MaxWidthLyr",    &Tkr_tree1_maxWidthLyr);
+    addItem("TkrTree1MaxWidth",       &Tkr_tree1_maxWidth);
+    addItem("TkrTree1LastWidth",      &Tkr_tree1_lastWidth);
+    addItem("TkrTree1BestLeaves",     &Tkr_tree1_bestLeaves);
+    addItem("TkrTree1ScndLeaves",     &Tkr_tree1_scndLeaves);
+    addItem("TkrTree1ScndRms",        &Tkr_tree1_scndRms);
+    addItem("TkrTree1ScndDepth",      &Tkr_tree1_scndDepth);
+    addItem("TkrTree1PosX",           &Tkr_tree1_PosX);
+    addItem("TkrTree1PosY",           &Tkr_tree1_PosY);
+    addItem("TkrTree1PosZ",           &Tkr_tree1_PosZ);
+    addItem("TkrTree1DirX",           &Tkr_tree1_DirX);
+    addItem("TkrTree1DirY",           &Tkr_tree1_DirY);
+    addItem("TkrTree1DirZ",           &Tkr_tree1_DirZ);
+    addItem("TkrTree1NumBoxes",       &Tkr_tree1_NumBoxes);
+    addItem("TkrTree1ChiSquare",      &Tkr_tree1_ChiSquare);
+    addItem("TkrTree1RmsTrans",       &Tkr_tree1_RmsTrans);
+    addItem("TkrTree1RmsLong",        &Tkr_tree1_RmsLong);
 
-    addItem("TFPNumParams",         &TFP_numParams);
-    addItem("TFPBestPosX",          &TFP_bestPosX);
-    addItem("TFPBestPosY",          &TFP_bestPosY);
-    addItem("TFPBestPosZ",          &TFP_bestPosZ);
-    addItem("TFPBestDirX",          &TFP_bestDirX);
-    addItem("TFPBestDirY",          &TFP_bestDirY);
-    addItem("TFPBestDirZ",          &TFP_bestDirZ);
-    addItem("TFPBestNumHits",       &TFP_bestNumHits);
-    addItem("TFPBestChiSquare",     &TFP_bestChiSquare);
-    addItem("TFPBestAverageDist",   &TFP_bestAveDist);
-    addItem("TFPBestRmsTrans",      &TFP_bestRmsTrans);
-    addItem("TFPBestRmsLong",       &TFP_bestRmsLong);
-    addItem("TFPBestRmsLongAsym",   &TFP_bestRmsLongAsym);
+    addItem("TkrTree2NTrks",          &Tkr_tree2_nTrks);
+    addItem("TkrTree2Depth",          &Tkr_tree2_depth);
+    addItem("TkrTree2Leaves",         &Tkr_tree2_nLeaves);
+    addItem("TkrTree2Nodes",          &Tkr_tree2_nNodes);
+    addItem("TkrTree2Branches",       &Tkr_tree2_nBranches);
+    addItem("TkrTree2BestRms",        &Tkr_tree2_bestRms);
+    addItem("TkrTree2BestBiLayers",   &Tkr_tree2_bestBiLayers);
+    addItem("TkrTree2MaxWidthLyr",    &Tkr_tree2_maxWidthLyr);
+    addItem("TkrTree2MaxWidth",       &Tkr_tree2_maxWidth);
+    addItem("TkrTree2LastWidth",      &Tkr_tree2_lastWidth);
+
+    addItem("TFPNumParams",           &TFP_numParams);
+    addItem("TFPBestPosX",            &TFP_bestPosX);
+    addItem("TFPBestPosY",            &TFP_bestPosY);
+    addItem("TFPBestPosZ",            &TFP_bestPosZ);
+    addItem("TFPBestDirX",            &TFP_bestDirX);
+    addItem("TFPBestDirY",            &TFP_bestDirY);
+    addItem("TFPBestDirZ",            &TFP_bestDirZ);
+    addItem("TFPBestNumHits",         &TFP_bestNumHits);
+    addItem("TFPBestChiSquare",       &TFP_bestChiSquare);
+    addItem("TFPBestAverageDist",     &TFP_bestAveDist);
+    addItem("TFPBestRmsTrans",        &TFP_bestRmsTrans);
+    addItem("TFPBestRmsLong",         &TFP_bestRmsLong);
+    addItem("TFPBestRmsLongAsym",     &TFP_bestRmsLongAsym);
 
     addItem("AudTreeBasedTool",       &Aud_treeBasedTool);
     addItem("AudTreeBasedTool_link",  &Aud_treeBasedTool_link);
@@ -352,9 +365,42 @@ StatusCode TreeValsTool::calculate()
     MsgStream log(msgSvc(), name());
 
     // How many TkrVecPoints?
-    SmartDataPtr<Event::TkrVecPointCol> vecPointCol(m_pEventSvc,EventModel::TkrRecon::TkrVecPointCol);
+    Event::TkrVecPointInfo* vecPointInfo = 
+        SmartDataPtr<Event::TkrVecPointInfo>(m_pEventSvc, EventModel::TkrRecon::TkrVecPointInfo);
 
-    if (vecPointCol) Tkr_num_vecPoints = vecPointCol->size();
+    if (vecPointInfo) Tkr_num_vecPoints = vecPointInfo->getNumTkrVecPoints();
+
+    // Go through and determine the average number of vecpoints per layer
+    int nLyrsWVecPoints =  0;
+    int lyrWMostPoints  = -1;
+    int nLyrWMostPoints =  0;
+
+    for(Event::TkrLyrToVecPointItrMapItr vecMapItr  = vecPointInfo->getLyrToVecPointItrMap()->begin();
+                                         vecMapItr != vecPointInfo->getLyrToVecPointItrMap()->end();
+                                         vecMapItr++)
+    {
+        int numLinks = std::distance(vecMapItr->second.first, vecMapItr->second.second);
+
+        if (numLinks) 
+        {
+            nLyrsWVecPoints++;
+
+            if (numLinks > nLyrWMostPoints)
+            {
+                nLyrWMostPoints = numLinks;
+                lyrWMostPoints  = vecMapItr->first;
+            }
+        }
+    }
+
+    Tkr_lyr_wVecPoints = nLyrsWVecPoints;
+
+    if (nLyrsWVecPoints > 0)
+    {
+        Tkr_ave_vecPoints     = Tkr_num_vecPoints / Tkr_lyr_wVecPoints;
+        Tkr_lyr_mostVecPoints = lyrWMostPoints;
+        Tkr_num_mostVecPoints = nLyrWMostPoints;
+    }
 
     // How many TkrVecPointLinks?
     SmartDataPtr<Event::TkrVecPointsLinkCol> vecLinksCol(m_pEventSvc,EventModel::TkrRecon::TkrVecPointsLinkCol);
@@ -376,13 +422,26 @@ StatusCode TreeValsTool::calculate()
             const Event::TkrVecNode* bestLeaf = tree->getBestLeaf();
             const Event::TkrVecNode* scndLeaf = tree->getSecondLeaf();
 
-            Tkr_tree1_nTrks        = tree->size();
-            Tkr_tree1_depth        = headNode->getDepth();
-            Tkr_tree1_nLeaves      = headNode->getNumLeaves();
-            Tkr_tree1_nNodes       = headNode->getNumNodesInTree();
-            Tkr_tree1_nBranches    = headNode->getNumBranches();
-            Tkr_tree1_bestRms      = headNode->getBestRmsAngle();
-            Tkr_tree1_bestBiLayers = headNode->getBestNumBiLayers();
+            Tkr_tree1_nTrks          = tree->size();
+            Tkr_tree1_depth          = headNode->getDepth();
+            Tkr_tree1_nLeaves        = headNode->getNumLeaves();
+            Tkr_tree1_nNodes         = headNode->getNumNodesInTree();
+            Tkr_tree1_nBranches      = headNode->getNumBranches();
+            Tkr_tree1_bestRms        = headNode->getBestRmsAngle();
+            Tkr_tree1_bestBiLayers   = headNode->getBestNumBiLayers();
+            Tkr_tree1_firstLinkAngle = 0.;
+
+            if (!headNode->front()->empty())
+            {
+                const Event::TkrVecNode* firstNode = headNode->front();
+                const Event::TkrVecNode* scndNode  = firstNode->front();
+
+                double cosLinkAngle = 
+                    firstNode->getAssociatedLink()->getVector().dot(scndNode->getAssociatedLink()->getVector());
+
+                cosLinkAngle             = std::max(std::min(cosLinkAngle, 1.), -1.);
+                Tkr_tree1_firstLinkAngle = acos(cosLinkAngle);
+            }
 
             if (bestLeaf) Tkr_tree1_bestLeaves   = getNumLeavesThisBranch(bestLeaf, 0);
 
