@@ -107,6 +107,7 @@ private:
     float Tkr_tree1_nNodes;
     float Tkr_tree1_nBranches;
     float Tkr_tree1_firstLinkAngle;
+    float Tkr_tree1_firstLinkSum;
     float Tkr_tree1_bestRms;
     float Tkr_tree1_bestBiLayers;
     float Tkr_tree1_maxWidthLyr;
@@ -303,6 +304,7 @@ StatusCode TreeValsTool::initialize()
     addItem("TkrTree1Nodes",          &Tkr_tree1_nNodes);
     addItem("TkrTree1Branches",       &Tkr_tree1_nBranches);
     addItem("TkrTree1FirstLinkAngle", &Tkr_tree1_firstLinkAngle);
+    addItem("TkrTree1FirstLinkSum",   &Tkr_tree1_firstLinkSum);
     addItem("TkrTree1BestRms",        &Tkr_tree1_bestRms);
     addItem("TkrTree1BestBiLayers",   &Tkr_tree1_bestBiLayers);
     addItem("TkrTree1MaxWidthLyr",    &Tkr_tree1_maxWidthLyr);
@@ -368,38 +370,41 @@ StatusCode TreeValsTool::calculate()
     Event::TkrVecPointInfo* vecPointInfo = 
         SmartDataPtr<Event::TkrVecPointInfo>(m_pEventSvc, EventModel::TkrRecon::TkrVecPointInfo);
 
-    if (vecPointInfo) Tkr_num_vecPoints = vecPointInfo->getNumTkrVecPoints();
-
-    // Go through and determine the average number of vecpoints per layer
-    int nLyrsWVecPoints =  0;
-    int lyrWMostPoints  = -1;
-    int nLyrWMostPoints =  0;
-
-    for(Event::TkrLyrToVecPointItrMapItr vecMapItr  = vecPointInfo->getLyrToVecPointItrMap()->begin();
-                                         vecMapItr != vecPointInfo->getLyrToVecPointItrMap()->end();
-                                         vecMapItr++)
+    if (vecPointInfo) 
     {
-        int numLinks = std::distance(vecMapItr->second.first, vecMapItr->second.second);
+        Tkr_num_vecPoints = vecPointInfo->getNumTkrVecPoints();
 
-        if (numLinks) 
+        // Go through and determine the average number of vecpoints per layer
+        int nLyrsWVecPoints =  0;
+        int lyrWMostPoints  = -1;
+        int nLyrWMostPoints =  0;
+
+        for(Event::TkrLyrToVecPointItrMapItr vecMapItr  = vecPointInfo->getLyrToVecPointItrMap()->begin();
+                                             vecMapItr != vecPointInfo->getLyrToVecPointItrMap()->end();
+                                             vecMapItr++)
         {
-            nLyrsWVecPoints++;
+            int numLinks = std::distance(vecMapItr->second.first, vecMapItr->second.second);
 
-            if (numLinks > nLyrWMostPoints)
+            if (numLinks) 
             {
-                nLyrWMostPoints = numLinks;
-                lyrWMostPoints  = vecMapItr->first;
+                nLyrsWVecPoints++;
+
+                if (numLinks > nLyrWMostPoints)
+                {
+                    nLyrWMostPoints = numLinks;
+                    lyrWMostPoints  = vecMapItr->first;
+                }
             }
         }
-    }
 
-    Tkr_lyr_wVecPoints = nLyrsWVecPoints;
+        Tkr_lyr_wVecPoints = nLyrsWVecPoints;
 
-    if (nLyrsWVecPoints > 0)
-    {
-        Tkr_ave_vecPoints     = Tkr_num_vecPoints / Tkr_lyr_wVecPoints;
-        Tkr_lyr_mostVecPoints = lyrWMostPoints;
-        Tkr_num_mostVecPoints = nLyrWMostPoints;
+        if (nLyrsWVecPoints > 0)
+        {
+            Tkr_ave_vecPoints     = Tkr_num_vecPoints / Tkr_lyr_wVecPoints;
+            Tkr_lyr_mostVecPoints = lyrWMostPoints;
+            Tkr_num_mostVecPoints = nLyrWMostPoints;
+        }
     }
 
     // How many TkrVecPointLinks?
@@ -441,6 +446,7 @@ StatusCode TreeValsTool::calculate()
 
                 cosLinkAngle             = std::max(std::min(cosLinkAngle, 1.), -1.);
                 Tkr_tree1_firstLinkAngle = acos(cosLinkAngle);
+                Tkr_tree1_firstLinkSum   = sqrt(scndNode->getRmsAngleSum());
             }
 
             if (bestLeaf) Tkr_tree1_bestLeaves   = getNumLeavesThisBranch(bestLeaf, 0);
