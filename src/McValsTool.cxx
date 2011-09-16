@@ -2,7 +2,7 @@
 @brief Calculates the Mc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.56 2011/04/21 17:09:41 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.57 2011/05/30 09:19:14 kadrlica Exp $
 */
 // Include files
 
@@ -30,6 +30,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.56 2
 // Reconstructed Tracks.... 
 #include "Event/Recon/TkrRecon/TkrTrack.h"
 #include "Event/Recon/TkrRecon/TkrVertex.h"
+#include "Event/Recon/TkrRecon/TkrTree.h"
 
 #include "Event/Recon/AcdRecon/AcdTkrHitPoca.h"
 #include "Event/Recon/AcdRecon/AcdTkrPoint.h"
@@ -105,6 +106,12 @@ private:
     float MC_dir_errN1;
     float MC_TKR1_dir_err;
     float MC_TKR2_dir_err;
+
+    // Tree
+    float MC_Tree_match_dir_err;
+    float MC_Tree_match_track1_err;
+    float MC_Tree_match_track2_err;
+    float MC_Tree_match_id;
 
     // ACD
     float MC_AcdXEnter;
@@ -245,6 +252,11 @@ StatusCode McValsTool::initialize()
     addItem("McTkr2DirErr",   &MC_TKR2_dir_err,true); 
     addItem("McDirErrN",      &MC_dir_errN,    true); 
     addItem("McDirErrN1",      &MC_dir_errN1,  true); 
+
+    addItem("McBestTreeDirErr",  &MC_Tree_match_dir_err,    true);
+    addItem("McBestTreeTrk1Err", &MC_Tree_match_track1_err, true);
+    addItem("McBestTreeTrk2Err", &MC_Tree_match_track2_err, true);
+    addItem("McBestTreeId",      &MC_Tree_match_id,         true);
 
     addItem("McAcdXEnter",     &MC_AcdXEnter,  true);
     addItem("McAcdYEnter",     &MC_AcdYEnter,  true);    
@@ -391,6 +403,8 @@ StatusCode McValsTool::calculate()
         
         //Make sure we have valid reconstructed data
         if (pVerts) {
+            // Build a map between track and vertex for charged vertices only
+            std::map<const Event::TkrTrack*, const Event::TkrVertex*> trackToVertexMap;
             
             // Get the first Vertex - First track of first vertex = Best Track
             if(pVerts->size()<=0) return sc;
@@ -398,6 +412,14 @@ StatusCode McValsTool::calculate()
             Event::TkrVertex*   gamma = *pVtxr++; 
             Point  x0 = gamma->getPosition();
             Vector t0 = gamma->getDirection();
+
+            // Keep track of track to vertex map
+            SmartRefVector<Event::TkrTrack>::const_iterator trackItr = gamma->getTrackIterBegin();
+
+            trackToVertexMap[*trackItr++] = gamma;
+
+            if (gamma->getStatusBits() & Event::TkrVertex::TWOTKRVTX) 
+                        trackToVertexMap[*trackItr] = gamma;
 
             // removed 5/5/09
             // Reference position errors at the start of recon track(s)
@@ -423,7 +445,18 @@ StatusCode McValsTool::calculate()
                         VTX_set = true;
                     }
                     MC_dir_errN1 = acostNtMC; // Assumes last VTX is 1Tkr Neutral Vtx
-            }   }   
+                }
+                // Not neutral
+                else
+                {
+                    trackItr = vtxN->getTrackIterBegin();
+
+                    trackToVertexMap[*trackItr++] = vtxN;
+
+                    if (vtxN->getStatusBits() & Event::TkrVertex::TWOTKRVTX) 
+                        trackToVertexMap[*trackItr] = vtxN;
+                }
+            }   
 
             
             double cost0tMC = t0*Mc_t0;
@@ -452,6 +485,61 @@ StatusCode McValsTool::calculate()
                 
                 MC_TKR2_dir_err  = acos(cost2tMC);
             }
+
+            // Now go back to the trees and find the one which is closest in direction to the 
+            // incoming MC direction
+            SmartDataPtr<Event::TkrTreeCol> treeCol(m_pEventSvc,"/Event/TkrRecon/TkrTreeCol");
+
+            if (treeCol)
+            {
+                const Event::TkrTree* bestTree  =  0;
+                double                bestAngle = -1.;
+
+                // Go through tree collection and find best match, determined as closest to the first/best
+                // track from the tree
+                for(Event::TkrTreeCol::const_iterator treeItr  = treeCol->begin();
+                                                      treeItr != treeCol->end();
+                                                      treeItr++)
+                {
+                    const Event::TkrTree* tree   = *treeItr;
+                    const Event::TkrTrack* track = tree->front();
+
+                    double cosToMc = track->front()->getDirection(Event::TkrTrackHit::SMOOTHED) * Mc_t0;
+
+                    if (cosToMc > bestAngle)
+                    {
+                        bestTree  = tree;
+                        bestAngle = cosToMc;
+                    }
+                }
+
+                // Did we make a match?
+                if (bestTree)
+                {
+                    Event::TkrTrackVec::const_iterator trackItr = bestTree->begin();
+
+                    const Event::TkrTrack*  track1 = *trackItr++;
+                    const Event::TkrTrack*  track2 = 0;
+                    const Event::TkrVertex* vertex = trackToVertexMap[track1];
+
+                    if (trackItr != bestTree->end()) track2 = *trackItr;
+
+                    MC_Tree_match_dir_err    = acos(std::max(-1., std::min(1., vertex->getDirection() * Mc_t0)));
+                    MC_Tree_match_track1_err = acos(std::max(-1., 
+                                          std::min(1., track1->front()->getDirection(Event::TkrTrackHit::SMOOTHED) * Mc_t0)));
+
+                    if (track2)  MC_Tree_match_track2_err = acos(std::max(-1., 
+                                          std::min(1., track2->front()->getDirection(Event::TkrTrackHit::SMOOTHED) * Mc_t0)));
+
+                    MC_Tree_match_id = bestTree->getHeadNode()->getTreeId();
+
+                }
+                else
+                {
+                    int probleminrivercity = 0;
+                }
+            }
+
         } 
     }
 
