@@ -108,6 +108,12 @@ private:
     float MC_TKR2_dir_err;
 
     // Tree
+    float MC_Tree_match_PosX;
+    float MC_Tree_match_PosY;
+    float MC_Tree_match_PosZ;
+    float MC_Tree_match_DirX;
+    float MC_Tree_match_DirY;
+    float MC_Tree_match_DirZ;
     float MC_Tree_match_dir_err;
     float MC_Tree_match_track1_err;
     float MC_Tree_match_track2_err;
@@ -247,24 +253,30 @@ StatusCode McValsTool::initialize()
     //addItem("McYDirErr",      &MC_ydir_err);     
     //addItem("McZDirErr",      &MC_zdir_err);     
     
-    addItem("McDirErr",       &MC_dir_err,     true);      
-    addItem("McTkr1DirErr",   &MC_TKR1_dir_err,true); 
-    addItem("McTkr2DirErr",   &MC_TKR2_dir_err,true); 
-    addItem("McDirErrN",      &MC_dir_errN,    true); 
-    addItem("McDirErrN1",      &MC_dir_errN1,  true); 
+    addItem("McDirErr",               &MC_dir_err,               true);      
+    addItem("McTkr1DirErr",           &MC_TKR1_dir_err,          true); 
+    addItem("McTkr2DirErr",           &MC_TKR2_dir_err,          true); 
+    addItem("McDirErrN",              &MC_dir_errN,              true); 
+    addItem("McDirErrN1",             &MC_dir_errN1,             true); 
 
-    addItem("McBestTreeDirErr",  &MC_Tree_match_dir_err,    true);
-    addItem("McBestTreeTrk1Err", &MC_Tree_match_track1_err, true);
-    addItem("McBestTreeTrk2Err", &MC_Tree_match_track2_err, true);
-    addItem("McBestTreeId",      &MC_Tree_match_id,         true);
+    addItem("McBestTreePosX",         &MC_Tree_match_PosX,       true);
+    addItem("McBestTreePosY",         &MC_Tree_match_PosY,       true);
+    addItem("McBestTreePosZ",         &MC_Tree_match_PosZ,       true);
+    addItem("McBestTreeDirX",         &MC_Tree_match_DirX,       true);
+    addItem("McBestTreeDirY",         &MC_Tree_match_DirY,       true);
+    addItem("McBestTreeDirZ",         &MC_Tree_match_DirZ,       true);
+    addItem("McBestTreeDirErr",       &MC_Tree_match_dir_err,    true);
+    addItem("McBestTreeTrk1Err",      &MC_Tree_match_track1_err, true);
+    addItem("McBestTreeTrk2Err",      &MC_Tree_match_track2_err, true);
+    addItem("McBestTreeId",           &MC_Tree_match_id,         true);
 
-    addItem("McAcdXEnter",     &MC_AcdXEnter,  true);
-    addItem("McAcdYEnter",     &MC_AcdYEnter,  true);    
-    addItem("McAcdZEnter",     &MC_AcdZEnter,  true);
+    addItem("McAcdXEnter",            &MC_AcdXEnter,             true);
+    addItem("McAcdYEnter",            &MC_AcdYEnter,             true);    
+    addItem("McAcdZEnter",            &MC_AcdZEnter,             true);
 
-    addItem("McAcdActiveDist3D", &MC_AcdActiveDist3D,          true);
-    addItem("McAcdActDistTileId", &MC_AcdActDistTileId,        true);
-    addItem("McAcdActDistTileEnergy", &MC_AcdActDistTileEnergy,true);
+    addItem("McAcdActiveDist3D",      &MC_AcdActiveDist3D,       true);
+    addItem("McAcdActDistTileId",     &MC_AcdActDistTileId,      true);
+    addItem("McAcdActDistTileEnergy", &MC_AcdActDistTileEnergy,  true);
     
     zeroVals();
     
@@ -492,8 +504,8 @@ StatusCode McValsTool::calculate()
 
             if (treeCol)
             {
-                const Event::TkrTree* bestTree  =  0;
-                double                bestAngle = -1.;
+                const Event::TkrTree* bestTree  = 0;
+                double                bestAngle = 0.;
 
                 // Go through tree collection and find best match, determined as closest to the first/best
                 // track from the tree
@@ -533,6 +545,22 @@ StatusCode McValsTool::calculate()
 
                     MC_Tree_match_id = bestTree->getHeadNode()->getTreeId();
 
+                    // Get the axis parameters
+                    const Event::TkrFilterParams* treeAxis = bestTree->getAxisParams();
+
+                    if (treeAxis)
+                    {
+                        const Point filterPos  = treeAxis->getEventPosition();
+                        const Vector filterDir = treeAxis->getEventAxis();
+
+                        MC_Tree_match_PosX = filterPos.x();
+                        MC_Tree_match_PosY = filterPos.y();
+                        MC_Tree_match_PosZ = filterPos.z();
+                                           
+                        MC_Tree_match_DirX = filterDir.x();
+                        MC_Tree_match_DirY = filterDir.y();
+                        MC_Tree_match_DirZ = filterDir.z();
+                    }
                 }
                 else
                 {
