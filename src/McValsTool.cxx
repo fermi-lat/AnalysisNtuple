@@ -531,8 +531,10 @@ StatusCode McValsTool::calculate()
 
             if (treeCol)
             {
-                const Event::TkrTree* bestTree  = 0;
+                const Event::TkrTree* bestTree  =  0;
                 double                bestAngle = -1.;
+                int                   bestId    =  1;
+                int                   counter   =  1;
 
                 // Go through tree collection and find best match, determined as closest to the first/best
                 // track from the tree
@@ -549,6 +551,7 @@ StatusCode McValsTool::calculate()
                     {
                         bestTree  = tree;
                         bestAngle = cosToMc;
+                        bestId    = counter++;
                     }
                 }
 
@@ -570,7 +573,7 @@ StatusCode McValsTool::calculate()
                     if (track2)  MC_Tree_match_track2_err = acos(std::max(-1., 
                                           std::min(1., track2->front()->getDirection(Event::TkrTrackHit::SMOOTHED) * Mc_t0)));
 
-                    MC_Tree_match_id = bestTree->getHeadNode()->getTreeId();
+                    MC_Tree_match_id = bestId; //bestTree->getHeadNode()->getTreeId();
 
                     // Get the axis parameters
                     const Event::TkrFilterParams* treeAxis = bestTree->getAxisParams();
