@@ -32,6 +32,8 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.57 2
 #include "Event/Recon/TkrRecon/TkrVertex.h"
 #include "Event/Recon/TkrRecon/TkrTree.h"
 
+#include "Event/Recon/CalRecon/CalCluster.h"
+
 #include "Event/Recon/AcdRecon/AcdTkrHitPoca.h"
 #include "Event/Recon/AcdRecon/AcdTkrPoint.h"
 
@@ -118,6 +120,19 @@ private:
     float MC_Tree_match_track1_err;
     float MC_Tree_match_track2_err;
     float MC_Tree_match_id;
+
+    // Best Cal cluster
+    float MC_Cal_match_PosX;
+    float MC_Cal_match_PosY;
+    float MC_Cal_match_PosZ;
+    float MC_Cal_match_DirX;
+    float MC_Cal_match_DirY;
+    float MC_Cal_match_DirZ;
+    float MC_Cal_match_energy;
+    float MC_Cal_match_rmsTrans;
+    float MC_Cal_match_rmsLong;
+    float MC_Cal_match_mcDoca;
+    float MC_Cal_match_id;
 
     // ACD
     float MC_AcdXEnter;
@@ -269,6 +284,18 @@ StatusCode McValsTool::initialize()
     addItem("McBestTreeTrk1Err",      &MC_Tree_match_track1_err, true);
     addItem("McBestTreeTrk2Err",      &MC_Tree_match_track2_err, true);
     addItem("McBestTreeId",           &MC_Tree_match_id,         true);
+
+    addItem("McBestCalPosX",          &MC_Cal_match_PosX,        true);
+    addItem("McBestCalPosY",          &MC_Cal_match_PosY,        true);
+    addItem("McBestCalPosZ",          &MC_Cal_match_PosZ,        true);
+    addItem("McBestCalDirX",          &MC_Cal_match_DirX,        true);
+    addItem("McBestCalDirY",          &MC_Cal_match_DirY,        true);
+    addItem("McBestCalDirZ",          &MC_Cal_match_DirZ,        true);
+    addItem("McBestCalEnergy",        &MC_Cal_match_energy,      true);
+    addItem("McBestCalRmsTrans",      &MC_Cal_match_rmsTrans,    true);
+    addItem("McBestCalRmsLong",       &MC_Cal_match_rmsLong,     true);
+    addItem("McBestCalMcDoca",        &MC_Cal_match_mcDoca,      true);
+    addItem("McBestCalId",            &MC_Cal_match_id,          true);
 
     addItem("McAcdXEnter",            &MC_AcdXEnter,             true);
     addItem("McAcdYEnter",            &MC_AcdYEnter,             true);    
@@ -505,7 +532,7 @@ StatusCode McValsTool::calculate()
             if (treeCol)
             {
                 const Event::TkrTree* bestTree  = 0;
-                double                bestAngle = 0.;
+                double                bestAngle = -1.;
 
                 // Go through tree collection and find best match, determined as closest to the first/best
                 // track from the tree
@@ -568,6 +595,81 @@ StatusCode McValsTool::calculate()
                 }
             }
 
+            // Now do the same thing trying to find the "best" cluster in the cal cluster collection
+            // Recover pointers to CalClusters and Xtals
+            SmartDataPtr<Event::CalClusterCol> calClusterCol(m_pEventSvc,EventModel::CalRecon::CalClusterCol);
+
+            if (calClusterCol)
+            {
+                Event::CalCluster* bestCluster = calClusterCol->front();
+                int                bestId      = 1;
+                double             bestDoca    = 100000.;
+
+                // This is a bit tricky since the photons can come from any direction. 
+                // Constrain ourselves to consider only photons incident in the upper half hemisphere
+                if (Mc_t0.z() < -0.05)
+                {
+                    // don't forget that the current Mc_t0 is opposite what we need here
+                    Mc_t0 = -Mc_t0;
+
+                    // Convert the MC position to a Point
+                    Point mcPos(Mc_x0.x(), Mc_x0.y(), Mc_x0.z());
+
+                    // Count our way through the clusters
+                    int clusCounter = 0;
+
+                    // Set start and stop iterators 
+                    Event::CalClusterCol::iterator startItr = calClusterCol->begin();
+                    Event::CalClusterCol::iterator endItr   = calClusterCol->end();
+
+                    if (calClusterCol->size() > 1) endItr = calClusterCol->end() - 1;
+
+                    // Ok, we are going to loop on clusters and search for the cluster which 
+                    // has the best distance of closest approach of the MC axis to the centroid
+                    for(Event::CalClusterCol::iterator clusItr  = startItr; clusItr != endItr; clusItr++)
+                    {
+                        Event::CalCluster* cluster = *clusItr;
+
+                        // First get the point on the MC axis at the plane of the cluster centroid
+                        double arcLenToCalZ = (cluster->getMomParams().getCentroid().z() - Mc_x0.z()) / Mc_t0.z();
+                        Point  mcInCalPlane = mcPos + arcLenToCalZ * Mc_t0;
+
+                        // Ok, now get the vector from this point to the centroid
+                        Vector mcToCalCent  = cluster->getMomParams().getCentroid() - mcInCalPlane;
+
+                        // Cross product to get distance between the MC trajectory and the cluster
+                        Vector docaVec      = mcToCalCent.cross(Mc_t0);
+
+                        // 3-D DOCA
+                        double doca         = docaVec.mag();
+
+                        clusCounter++;
+
+                        if (doca < bestDoca)
+                        {
+                            bestCluster = cluster;
+                            bestDoca    = doca;
+                            bestId      = clusCounter;
+                        }
+                    }
+                }
+
+                if (bestCluster)
+                {
+                    MC_Cal_match_PosX     = bestCluster->getMomParams().getCentroid().x();
+                    MC_Cal_match_PosY     = bestCluster->getMomParams().getCentroid().y();
+                    MC_Cal_match_PosZ     = bestCluster->getMomParams().getCentroid().z();
+                    MC_Cal_match_DirX     = bestCluster->getMomParams().getAxis().x();
+                    MC_Cal_match_DirY     = bestCluster->getMomParams().getAxis().y();
+                    MC_Cal_match_DirZ     = bestCluster->getMomParams().getAxis().z();
+                    MC_Cal_match_energy   = bestCluster->getXtalsParams().getXtalRawEneSum();
+                    MC_Cal_match_rmsTrans = bestCluster->getMomParams().getTransRms();
+                    MC_Cal_match_rmsLong  = bestCluster->getMomParams().getLongRms();
+                    MC_Cal_match_mcDoca   = bestDoca;
+                    MC_Cal_match_id       = bestId;
+
+                }
+            }
         } 
     }
 
