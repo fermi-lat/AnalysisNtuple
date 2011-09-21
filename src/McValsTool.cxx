@@ -534,7 +534,7 @@ StatusCode McValsTool::calculate()
                 const Event::TkrTree* bestTree  =  0;
                 double                bestAngle = -1.;
                 int                   bestId    =  1;
-                int                   counter   =  1;
+                int                   counter   =  0;
 
                 // Go through tree collection and find best match, determined as closest to the first/best
                 // track from the tree
@@ -547,11 +547,13 @@ StatusCode McValsTool::calculate()
 
                     double cosToMc = track->front()->getDirection(Event::TkrTrackHit::SMOOTHED) * Mc_t0;
 
+                    counter++;
+
                     if (cosToMc > bestAngle)
                     {
                         bestTree  = tree;
                         bestAngle = cosToMc;
-                        bestId    = counter++;
+                        bestId    = counter;
                     }
                 }
 
@@ -665,7 +667,7 @@ StatusCode McValsTool::calculate()
                     MC_Cal_match_DirX     = bestCluster->getMomParams().getAxis().x();
                     MC_Cal_match_DirY     = bestCluster->getMomParams().getAxis().y();
                     MC_Cal_match_DirZ     = bestCluster->getMomParams().getAxis().z();
-                    MC_Cal_match_energy   = bestCluster->getXtalsParams().getXtalRawEneSum();
+                    MC_Cal_match_energy   = bestCluster->getMomParams().getEnergy();
                     MC_Cal_match_rmsTrans = bestCluster->getMomParams().getTransRms();
                     MC_Cal_match_rmsLong  = bestCluster->getMomParams().getLongRms();
                     MC_Cal_match_mcDoca   = bestDoca;
