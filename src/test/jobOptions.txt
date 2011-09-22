@@ -31,7 +31,8 @@ DetectorPersistencySvc.CnvServices += {"CalibMySQLCnvSvc"};
 
 // ----------------------------
 // Point to the particle properties file
-ParticlePropertySvc.ParticlePropertiesFile = "../src/test/ParticleTable.txt";
+//not sure what the fix was, at the HEAD, this line is commented out
+//ParticlePropertySvc.ParticlePropertiesFile = "../src/test/ParticleTable.txt";
 
 // ----------------------------
 //  topalg

@@ -3,6 +3,8 @@
   @verbatim
    * EOH *
 
+ AnalysisNtuple-02-55-09-gr09 22-Sep-2011 hmk patch to unit test JO for SCons
+    to eliminate setting of ParticlePropertySvc file.
  AnalysisNtuple-02-55-09-gr08 10-Aug-2011 hmk patch the patch
  AnalysisNtuple-02-55-09-gr07 05-Aug-2011 hmk  More env var patches
  AnalysisNtuple-02-55-09-gr06 05-Aug-2011 hmk   Use EVTUTILSXMLPATH env var
