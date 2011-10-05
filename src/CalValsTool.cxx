@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.112 2011/05/31 14:26:41 bregeon Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.113 2011/05/31 15:35:19 bregeon Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -862,11 +862,16 @@ StatusCode CalValsTool::calculate()
     Event::CalEventEnergy* calEventEnergy = 
         SmartDataPtr<Event::CalEventEnergy>(m_pEventSvc, EventModel::CalRecon::CalEventEnergy);
 #else
-    Event::CalEventEnergyCol * calEventEnergyCol = 
-        SmartDataPtr<Event::CalEventEnergyCol>(m_pEventSvc,EventModel::CalRecon::CalEventEnergyCol) ;
-    Event::CalEventEnergy * calEventEnergy = 0 ;
-    if ((calEventEnergyCol!=0)&&(!calEventEnergyCol->empty()))
-        calEventEnergy = calEventEnergyCol->front() ;
+    Event::CalEventEnergy* calEventEnergy = 0;
+    Event::CalEventEnergyMap* calEventEnergyMap = 
+        SmartDataPtr<Event::CalEventEnergyMap>(m_pEventSvc,EventModel::CalRecon::CalEventEnergyMap) ;
+
+    if (calEventEnergyMap && !calEventEnergyMap->empty())
+    {
+        Event::CalEventEnergyMap::iterator calEnergyItr = calEventEnergyMap->find(pCals->front());
+
+        if (calEnergyItr != calEventEnergyMap->end()) calEventEnergy = calEnergyItr->second.front();
+    }
 #endif
 
 
