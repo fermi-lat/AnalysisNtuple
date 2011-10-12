@@ -1,7 +1,7 @@
 /** @file McTkrHitValsTool.cxx
     @brief declartion, implementaion of the class UserAlg
 
-    $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McTkrHitValsTool.cxx,v 1.10 2009/09/09 06:05:19 lsrea Exp $
+    $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McTkrHitValsTool.cxx,v 1.11 2010/11/03 19:26:47 usher Exp $
 */
 
 #include "ValBase.h"
@@ -27,11 +27,14 @@
 #include "Event/MonteCarlo/McRelTableDefs.h"
 
 #include "Event/Digi/TkrDigi.h"
+#include "Event/Recon/TkrRecon/TkrTruncationInfo.h"
 
 // Volume identifier stuff
 #include "idents/VolumeIdentifier.h"
 #include "idents/AcdId.h"
 #include "idents/CalXtalId.h"
+
+#include "TkrUtil/ITkrGeometrySvc.h"
 
 #include <algorithm>
 #include <set>
@@ -65,6 +68,9 @@ private:
     int  GetSharedHits(const Event::McParticle* daught1, const Event::McParticle* daught2);
     void CntMcPosHits(const Event::McParticle* primary);
     int  GetInteracted();
+
+    //Attempt to count the number of truncated planes in the MC particle trajectory
+    void countTruncatedPlanes(Event::McParticle* primary);
 
     // Variables for primary track
     int          m_primType;          // Particle type of primary
@@ -105,8 +111,27 @@ private:
     float        m_totEnergyDepCal;   // Total energy deposited in the calorimeter
     float        m_totEnergyDepAcd;   // Total energy deposited in the ACD
 
+    // Variables for keeping track of truncations
+    int          m_planesCrossed;     // Number of planes traversed by primary daughters
+    int          m_topPlane;          // Top plane in event
+    int          m_bottomPlane;       // Bottom plane in event
+    int          m_nTruncatedPlanes;  // Number of truncated planes encountered
+    int          m_nTruncatedLost;    // Number of planes with lost hits due to truncation
+    float        m_truncActDist[36];  // Array of truncated plane "active distances"
+
+    /// pointer to tracker geometry
+    ITkrGeometrySvc*      m_tkrGeom;
+
     // to decode the particle charge
-    IParticlePropertySvc*  m_ppsvc;
+    IParticlePropertySvc* m_ppsvc;    
+
+    // Useful tracker geometry constants
+    float m_siThickness;
+    float m_stripLength;
+    float m_activeWidth;
+    float m_towerPitch;
+    int   m_numXTowers;
+    int   m_numYTowers;
 
     // Relational tables to be set up each event...
     Event::McPartToTrajectoryTab*      m_partToTrajTab;
@@ -174,41 +199,69 @@ StatusCode McTkrHitValsTool::initialize()
         if( service("ParticlePropertySvc", m_ppsvc, true).isFailure() ) {
             log << MSG::ERROR << "Service [ParticlePropertySvc] not found" << endreq;
         }
+        if(service( "TkrGeometrySvc", m_tkrGeom, true ).isFailure()) {
+            log << MSG::ERROR << "Could not find TkrGeometrySvc" << endreq;
+            return StatusCode::FAILURE;
+        }
     } else {
         return StatusCode::FAILURE;
     }
  
-    addItem("McTHPrimType",        &m_primType);
-    addItem("McTHNumDaughters",    &m_numDaughters);
-    addItem("McTHPrimNumHits",     &m_primNumTkrHits);
-    addItem("McTHPrimNumAcdHits",  &m_primNumAcdHits);
-    addItem("McTHPrimNumCalHits",  &m_primNumCalHits);
-    addItem("McTHPrimInteracted",  &m_primInteracted);
-    addItem("McTHDght1Type",       &m_dght1Type);
-    addItem("McTHDght1NumTkrHits", &m_dght1NumTkrHits);
-    addItem("McTHDght1NumAcdHits", &m_dght1NumAcdHits);
-    addItem("McTHDght1NumCalHits", &m_dght1NumCalHits);
-    addItem("McTHDght1Process",     m_dght1Process);
-    addItem("McTHDght2Type",       &m_dght2Type);
-    addItem("McTHDght2NumTkrHits", &m_dght2NumTkrHits);
-    addItem("McTHDght2NumAcdHits", &m_dght2NumAcdHits);
-    addItem("McTHDght2NumCalHits", &m_dght2NumCalHits);
-    addItem("McTHDght2Process",     m_dght2Process);
-    addItem("McTHPosHitPrimary",   &m_posHitPrimary);
-    addItem("McTHPosHitGamma",     &m_posHitGammas);
-    addItem("McTHPosHitElectron",  &m_posHitElectrons);
-    addItem("McTHPosHitPositron",  &m_posHitPositrons);
-    addItem("McTHPosHitOthers",    &m_posHitOthers);
-    addItem("McTHTotalTkrHits",    &m_totalTkrHits);
-    addItem("McTHTotPrmTkrHits",   &m_totalPrimTkrHits);
-    addItem("McTHTotPrmAcdHits",   &m_totalPrimAcdHits);
-    addItem("McTHTotPrmCalHits",   &m_totalPrimCalHits);
-    addItem("McTHTotPrmClusHits",  &m_totalPrimClusHits);
-    addItem("McTHDghtSharedHits",  &m_dghtSharedHits);
-    addItem("McTHTotEneDepCal",    &m_totEnergyDepCal);
-    addItem("McTHTotEneDepAcd",    &m_totEnergyDepAcd);
+    addItem("McTHPrimType",         &m_primType);
+    addItem("McTHNumDaughters",     &m_numDaughters);
+    addItem("McTHPrimNumHits",      &m_primNumTkrHits);
+    addItem("McTHPrimNumAcdHits",   &m_primNumAcdHits);
+    addItem("McTHPrimNumCalHits",   &m_primNumCalHits);
+    addItem("McTHPrimInteracted",   &m_primInteracted);
+    addItem("McTHDght1Type",        &m_dght1Type);
+    addItem("McTHDght1NumTkrHits",  &m_dght1NumTkrHits);
+    addItem("McTHDght1NumAcdHits",  &m_dght1NumAcdHits);
+    addItem("McTHDght1NumCalHits",  &m_dght1NumCalHits);
+    addItem("McTHDght1Process",      m_dght1Process);
+    addItem("McTHDght2Type",        &m_dght2Type);
+    addItem("McTHDght2NumTkrHits",  &m_dght2NumTkrHits);
+    addItem("McTHDght2NumAcdHits",  &m_dght2NumAcdHits);
+    addItem("McTHDght2NumCalHits",  &m_dght2NumCalHits);
+    addItem("McTHDght2Process",      m_dght2Process);
+    addItem("McTHPosHitPrimary",    &m_posHitPrimary);
+    addItem("McTHPosHitGamma",      &m_posHitGammas);
+    addItem("McTHPosHitElectron",   &m_posHitElectrons);
+    addItem("McTHPosHitPositron",   &m_posHitPositrons);
+    addItem("McTHPosHitOthers",     &m_posHitOthers);
+    addItem("McTHTotalTkrHits",     &m_totalTkrHits);
+    addItem("McTHTotPrmTkrHits",    &m_totalPrimTkrHits);
+    addItem("McTHTotPrmAcdHits",    &m_totalPrimAcdHits);
+    addItem("McTHTotPrmCalHits",    &m_totalPrimCalHits);
+    addItem("McTHTotPrmClusHits",   &m_totalPrimClusHits);
+    addItem("McTHDghtSharedHits",   &m_dghtSharedHits);
+    addItem("McTHTotEneDepCal",     &m_totEnergyDepCal);
+    addItem("McTHTotEneDepAcd",     &m_totEnergyDepAcd);
+
+    addItem("McTHPlanesCrossed",    &m_planesCrossed);
+    addItem("McTHTopPlane",         &m_topPlane);
+    addItem("McTHBottomPlane",      &m_bottomPlane);
+    addItem("McTHnTruncatedPlanes", &m_nTruncatedPlanes);
+    addItem("McTHnTruncatedLost",   &m_nTruncatedLost);
+
+    char buffer[20];
+    for(int idx = 0; idx < 36; idx++) 
+    {
+        // vars of form McTHTruncActDist_, NN = (00,35), for 36 planes
+        sprintf(buffer, "McTHTruncActDist_%02i",idx);
+        addItem(buffer, &m_truncActDist[idx]);
+    }
+
 
     zeroVals();
+
+    // Recover useful constants
+    m_towerPitch  = m_tkrGeom->towerPitch();
+    m_siThickness = m_tkrGeom->siThickness();
+    m_numXTowers  = m_tkrGeom->numXTowers();
+    m_numYTowers  = m_tkrGeom->numYTowers();
+    m_stripLength = m_tkrGeom->trayWidth();
+    m_activeWidth = m_tkrGeom->nWaferAcross()*m_tkrGeom->waferPitch() 
+                  + (m_tkrGeom->nWaferAcross()-1)*m_tkrGeom->ladderGap();
     
     return sc;
 }
@@ -285,6 +338,9 @@ StatusCode McTkrHitValsTool::calculate()
 
         // Count the number of McPositionHits due to primary, electrons and positrons
         CntMcPosHits(primary);
+
+        // At this point count the number of truncated planes
+        countTruncatedPlanes(primary);
 
         // Next up is to get the number of hits in the various detectors for each of McParticles in the list
         // First set up maps to hold these hits for each detector element
@@ -884,4 +940,266 @@ int  McTkrHitValsTool::GetInteracted()
     }
 
     return interacted;
+}
+
+
+void McTkrHitValsTool::countTruncatedPlanes(Event::McParticle* primary)
+{
+    // Apparently no way around the issue of having to set the array of active distances to guard values...
+    for(int idx = 0; idx < 36; idx++) m_truncActDist[idx] = -m_towerPitch;
+
+    // Set up to look for truncated planes
+    SmartDataPtr<Event::McPartToTrajectoryTabList> mcPartToTraj(m_pEventSvc, "/Event/MC/McPartToTrajectory");
+
+    if (mcPartToTraj)
+    {
+        // Recover the full relational table
+        Event::McPartToTrajectoryTab mcPartToTrajTab(mcPartToTraj.ptr());
+    
+        // Recover the McPositionHits to trajectory points relational tables
+        SmartDataPtr<Event::McPointToPosHitTabList> mcPointToPosHitList(m_pEventSvc, "/Event/MC/McPointToPosHit");
+
+        if (!mcPointToPosHitList)
+        { 
+            mcPointToPosHitList = new Event::RelationList<Event::McTrajectoryPoint, Event::McPositionHit>;
+        }
+        Event::McPointToPosHitTab mcPosHitTab(mcPointToPosHitList.ptr());
+
+        // Get the truncation information
+        SmartDataPtr<Event::TkrTruncationInfo> truncInfo( m_pEventSvc, EventModel::TkrRecon::TkrTruncationInfo );
+
+        // Ultimate goal is map between planes and active distance to truncated regions
+        std::map<int, bool>    planeIsTruncatedMap;
+        std::map<int, double>  planeToActDistMap;
+
+        // Get the daughter list we will loop over 
+        SmartRefVector<Event::McParticle> daughters = primary->daughterList();
+
+        // Loop over daughters of the primary. In theory, for gammas, there should be two which can be
+        // making tracks. We'll look at each independently.
+        for(SmartRefVector<Event::McParticle>::iterator mcPartItr = daughters.begin(); mcPartItr != daughters.end(); mcPartItr++)
+        {
+            Event::McParticle*           mcPart  = *mcPartItr;
+            Event::McPartToTrajectoryVec trajVec = mcPartToTrajTab.getRelByFirst(mcPart);
+
+            // Goal is to build a map between planes crossed and TkrTruncatedPlane info
+            std::map<Event::SortId, Event::TkrTruncatedPlane*> planeToTruncInfoMap;
+            std::map<Event::SortId, CLHEP::Hep3Vector>         planeToPositionMap;
+
+            // This first task is to go through the trajectory associated with this daughter particle
+            // and store away its position in the sensitive volumes and keep a pointer to the truncation
+            // information for that plane
+            if (!trajVec.empty())
+            {
+                Event::McTrajectory* traj = trajVec.front()->getSecond();
+
+                std::vector<Event::McTrajectoryPoint*> points = traj->getPoints();
+                std::vector<Event::McTrajectoryPoint*>::const_iterator pit;
+
+                // Loop the trajectory points to get positions in the sensitive planes
+                for(pit = points.begin(); pit != points.end(); pit++) 
+                {
+                    Event::McTrajectoryPoint* point = *pit;
+                    idents::VolumeIdentifier  volId = point->getVolumeID();
+
+                    // If not in the tracker then nothing to do here
+                    if (!volId.isTkr()) continue;
+
+                    // If in the tracker, next is to make sure we are in a sensitive volume
+                    // Test for this is that an McPositionHit exists (is there a better way?)
+                    Event::McPointToPosHitVec relVec = mcPosHitTab.getRelByFirst(point);
+
+                    if (relVec.empty()) continue;
+
+                    // Convert the volume identifier into 
+                    idents::TkrId tkrId(volId);
+
+                    // Convert this into a SortId
+                    Event::SortId sortId(idents::TowerId(tkrId.getTowerX(), tkrId.getTowerY()).id(),
+                                         tkrId.getTray(), tkrId.getBotTop(), tkrId.getView());
+
+                    // We can have multiple points within a given sensitive plane as the particle
+                    // interacts as it enters and then exists the silicon. For now we are only
+                    // interested in the position as it enters the silicon - presumed from above
+                    std::map<Event::SortId, CLHEP::Hep3Vector>::iterator planeToPosItr = planeToPositionMap.find(sortId);
+
+                    if (planeToPosItr != planeToPositionMap.end() && planeToPosItr->second.z() > point->getPoint().z())
+                    {
+                        continue;
+                    }
+
+                    // Null pointer for default situation
+                    Event::TkrTruncatedPlane* truncPlane = 0;
+
+                    // If truncation information then see what we can find
+                    if (truncInfo)
+                    {
+                        Event::TkrTruncationInfo::TkrTruncationMap::iterator planeItr = truncInfo->getTruncationMap()->find(sortId);
+
+                        if (planeItr != truncInfo->getTruncationMap()->end()) truncPlane = &planeItr->second;
+                    }
+
+                    // Store entry in map
+                    planeToTruncInfoMap[sortId] = truncPlane;
+                    planeToPositionMap[sortId]  = point->getPoint();
+                }
+            }
+
+            // Once done looping over daughters then try to decode the information we have
+            // The plan is to run through the map and reorganize by planes, but this time
+            // only keeping the "active distance" information
+            for(std::map<Event::SortId, CLHEP::Hep3Vector>::iterator idItr  = planeToPositionMap.begin(); 
+                                                                     idItr != planeToPositionMap.end(); 
+                                                                     idItr++)
+            {
+                Event::SortId     sortId   = idItr->first;
+                CLHEP::Hep3Vector position = idItr->second;
+
+                // Convert back to tracker id to get plane
+                idents::TowerId tower(sortId.getTower());
+                idents::TkrId   tkrId(tower.ix(), tower.iy(), sortId.getTray(), sortId.getFace(), sortId.getView());
+
+                int plane = m_tkrGeom->getPlane(tkrId);
+
+                // Make record for all time
+                std::map<int, bool>::iterator planeIsTruncatedItr = planeIsTruncatedMap.find(plane);
+
+                if (planeIsTruncatedItr == planeIsTruncatedMap.end())
+                {
+                    planeIsTruncatedMap[plane] = false;
+                    planeToActDistMap[plane]   = -10000.;
+                }
+
+                // Recover the pointer to the truncated plane information
+                Event::TkrTruncatedPlane* truncatedPlane = planeToTruncInfoMap[sortId];
+
+                if (truncatedPlane)
+                {
+                    const int status = truncatedPlane->getStatus();
+
+                    if (!status) continue;
+
+                    const Event::intVector&   numStrips  = truncatedPlane->getStripCount();
+                    const Event::floatVector& localX     = truncatedPlane->getLocalX();
+                    double                    z          = truncatedPlane->getPlaneZ();
+                    double                    truncScale = 4;
+                    double                    dz         = 0.5 * m_siThickness * truncScale;
+                    
+                    idents::TowerId towerId(sortId.getTower());
+                    
+                    int    xTower  = towerId.ix();
+                    int    yTower  = towerId.iy();
+                    double offSetX = m_towerPitch * (xTower - 0.5 * (m_numXTowers - 1));
+                    double offSetY = m_towerPitch * (yTower - 0.5 * (m_numYTowers - 1));
+
+                    double xLow  = localX[3];
+                    double xHigh = localX[3];
+
+                    if((status & Event::TkrTruncatedPlane::END0SET)>0)                   xLow  = localX[0];
+                    if((status & Event::TkrTruncatedPlane::RC1SET)>0)                    xHigh = localX[1];
+                    if((status & Event::TkrTruncatedPlane::CC1SET)>0 && numStrips[1]==0) xHigh = localX[2];
+
+                    double activeDist = planeToActDistMap[plane];
+
+                    double xPointPos = position.x() - offSetX;
+                    double yPointPos = position.y() - offSetY;
+
+                    if (sortId.getView() == idents::TkrId::eMeasureY)
+                        std::swap(xPointPos, yPointPos);
+
+                    if(xHigh > xLow) 
+                    {
+                        double x  = 0.5 * (xLow + xHigh);
+                        double dx = 0.5 * (xHigh - xLow);
+                        double y  = 0.0;
+                        double dy = 0.5 * m_stripLength;
+
+                        double dMeasPos   = xPointPos - x;
+                        double dUnMeasPos = yPointPos - y;
+
+                        double activeDistMeas   = dx - fabs(dMeasPos);
+                        double activeDistUnMeas = dy - fabs(dUnMeasPos);
+
+                        // Now, want a specific value here... 
+                        // Assume we are IN a truncated region, want to return the distance in
+                        // the measured direction. Also, if both our "out" then also return the
+                        // same distance.
+                        activeDist = activeDistMeas;
+
+                        // If measured is in but unmeasured is out, return that one...
+                        if (activeDistMeas >=0. && activeDistUnMeas < 0.) 
+                        {
+                            activeDist = activeDistUnMeas;
+                        }
+                    }
+                    if((status&Event::TkrTruncatedPlane::CC1SET)>0 && numStrips[1]>0){
+                        xLow  = localX[2];
+                        xHigh = 0.5 * m_activeWidth;
+
+                        double x  = 0.5 * (xLow + xHigh);
+                        double dx = 0.5 * (xHigh - xLow);
+                        double y  = 0.0;
+                        double dy = 0.5 * m_stripLength;
+
+                        double dMeasPos   = xPointPos - x;
+                        double dUnMeasPos = yPointPos - y;
+
+                        double activeDistMeas   = dx - fabs(dMeasPos);
+                        double activeDistUnMeas = dy - fabs(dUnMeasPos);
+
+                        // Now, want a specific value here... 
+                        // Assume we are IN a truncated region, want to return the distance in
+                        // the measured direction. Also, if both our "out" then also return the
+                        // same distance.
+                        double localActiveDist = activeDistMeas;
+
+                        // If measured is in but unmeasured is out, return that one...
+                        if (activeDistMeas >=0. && activeDistUnMeas < 0.) 
+                        {
+                            localActiveDist = activeDistUnMeas;
+                        }
+
+                        // Combine this result with the possible previous result (though we believe this can't happen)
+                        activeDist = std::max(activeDist, localActiveDist);
+                    }
+
+                    // Store away
+                    planeIsTruncatedMap[plane] = true;           // The plane is truncated
+                    planeToActDistMap[plane]   = activeDist;     // Active distance to the hit
+                }
+            }
+        }
+
+        // Ok, now extract some useful information, but only if there is actually something there!
+        if (!planeIsTruncatedMap.empty())
+        {
+            // First is easy since map arranges bottom plane first in list
+            m_bottomPlane = planeIsTruncatedMap.begin()->first;
+
+            // The number of planes crossed is the number of map entries 
+            // which is NOT the same as the total number of planes from top to bottom!
+            m_planesCrossed = planeIsTruncatedMap.size();
+
+            // Loop through entries in the map, this will be in ascending plane order
+            for(std::map<int, bool>::iterator planeTruncItr = planeIsTruncatedMap.begin(); planeTruncItr != planeIsTruncatedMap.end(); planeTruncItr++)
+            {
+                int plane = planeTruncItr->first;
+
+                if (m_topPlane < plane) m_topPlane = plane;
+
+                if (planeTruncItr->second)
+                {
+                    m_nTruncatedPlanes++;
+
+                    m_truncActDist[plane] = planeToActDistMap[plane];
+
+                    if (planeToActDistMap[plane] >= 0) m_nTruncatedLost++;
+                }
+            }
+
+            int success = 10000;
+        }
+    }
+
+    return;
 }
