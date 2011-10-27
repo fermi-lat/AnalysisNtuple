@@ -1,7 +1,7 @@
 /** @file FT1Alg.cxx
 @brief Declaration and implementation of Gaudi algorithm FT1Alg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.27.10.3 2011/06/18 04:27:02 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.27.10.4 2011/08/05 18:25:08 heather Exp $
 */
 // Include files
 
@@ -136,8 +136,8 @@ FT1Alg::FT1Alg(const std::string& name, ISvcLocator* pSvcLocator)
     declareProperty("NbOfEvtsInFile", nbOfEvtsInFile=100000);
     declareProperty("CorrectForAberration", m_aberrate=false);
     declareProperty("AlignmentFlavor"     , m_flavor="");
-    declareProperty("EventClassDefinitions", m_classDefs);
     facilities::Util::expandEnvVar(&m_defaultEvtClassDefFile);
+    declareProperty("EventClassDefinitions", m_classDefs=m_defaultEvtClassDefFile);
 }
 
 StatusCode FT1Alg::initialize()
