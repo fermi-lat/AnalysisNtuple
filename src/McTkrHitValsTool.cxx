@@ -1,7 +1,7 @@
 /** @file McTkrHitValsTool.cxx
     @brief declartion, implementaion of the class UserAlg
 
-    $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McTkrHitValsTool.cxx,v 1.12 2011/10/12 17:31:28 usher Exp $
+    $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McTkrHitValsTool.cxx,v 1.13 2011/10/15 16:32:46 usher Exp $
 */
 
 #include "ValBase.h"
@@ -1171,8 +1171,11 @@ void McTkrHitValsTool::countTruncatedPlanes(Event::McParticle* primary)
                     }
 
                     // Store away
-                    planeIsTruncatedMap[plane] = true;           // The plane is truncated
-                    planeToActDistMap[plane]   = activeDist;     // Active distance to the hit
+                    if (activeDist > planeToActDistMap[plane])
+                    {
+                        planeIsTruncatedMap[plane] = true;           // The plane is truncated
+                        planeToActDistMap[plane]   = activeDist;     // Active distance to the hit
+                    }
                 }
             }
         }
