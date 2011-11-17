@@ -2,7 +2,7 @@
 @brief Calculates the Mc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.57 2011/05/30 09:19:14 kadrlica Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.62 2011/09/21 18:18:22 usher Exp $
 */
 // Include files
 
@@ -60,7 +60,7 @@ public:
     StatusCode calculate();
     
 private:
-    
+
     //Attempt to calculate the energy exiting the tracker
     double getEnergyExitingTkr(Event::McParticle* mcPart);
 
@@ -230,6 +230,7 @@ StatusCode McValsTool::initialize()
     if( serviceLocator() ) {
         if( service("ParticlePropertySvc", m_ppsvc, true).isFailure() ) {
             log << MSG::ERROR << "Service [ParticlePropertySvc] not found" << endreq;
+            return StatusCode::FAILURE;
         }
     } else {
         return StatusCode::FAILURE;
@@ -315,14 +316,12 @@ StatusCode McValsTool::calculate()
     StatusCode sc = StatusCode::SUCCESS;
     
     // Recover Track associated info. 
-    SmartDataPtr<Event::TkrTrackCol>  pTracks(m_pEventSvc,EventModel::TkrRecon::TkrTrackCol); 
-    SmartDataPtr<Event::TkrVertexCol>       pVerts(m_pEventSvc,EventModel::TkrRecon::TkrVertexCol);
+    SmartDataPtr<Event::TkrTrackCol>   pTracks(m_pEventSvc,EventModel::TkrRecon::TkrTrackCol); 
+    SmartDataPtr<Event::TkrVertexCol>  pVerts(m_pEventSvc,EventModel::TkrRecon::TkrVertexCol);
     // Recover MC Pointer
     SmartDataPtr<Event::McParticleCol> pMcParticle(m_pEventSvc, EventModel::MC::McParticleCol);
     // this is avoid creating the object as a side effect!!
-    SmartDataLocator<Event::MCEvent> pMcEvent(m_pEventSvc, EventModel::MC::Event);
-
-    if(!pMcParticle) return sc;
+    SmartDataLocator<Event::MCEvent>   pMcEvent(m_pEventSvc, EventModel::MC::Event);
 
     if(pMcEvent) {
         char temp[2] = "_";
@@ -342,22 +341,23 @@ StatusCode McValsTool::calculate()
         MC_NumIncident = (*pMCPrimary)->daughterList().size();
 
         // if there are no incident particles
-        if (MC_NumIncident==0) return sc;
+        if (!MC_NumIncident) return sc;
 
-    // ok, go ahead and call the ACD stuff now
-    getAcdReconVars();
+        // ok, go ahead and call the ACD stuff now
+        getAcdReconVars();
 
         // if there is one incident particle, it's okay to use it as before
         // if there are more than one, I don't know what to do, for now
         //     use the mother particle. That way, at least the energy will
         //     be correct.
-
-        if(MC_NumIncident == 1) {
-
-        Event::McParticle::StdHepId hepid= (*pMCPrimary)->particleProperty();
-        MC_Id = (double)hepid;
-        ParticleProperty* ppty = m_ppsvc->findByStdHepID( hepid );
-            if (ppty) {
+        if(MC_NumIncident == 1)
+        {
+            Event::McParticle::StdHepId hepid= (*pMCPrimary)->particleProperty();
+            MC_Id = (double)hepid;
+            ParticleProperty* ppty = m_ppsvc->findByStdHepID( hepid );
+            
+            if (ppty) 
+            {
                 std::string name = ppty->particle(); 
                 MC_Charge = ppty->charge();          
             }
@@ -396,21 +396,30 @@ StatusCode McValsTool::calculate()
         
         MC_StatusWord = (*pMCPrimary)->statusFlags();
 
-        if((*pMCPrimary)->daughterList().size() > 0) {
-            SmartRefVector<Event::McParticle> daughters = (*pMCPrimary)->daughterList();
-            SmartRef<Event::McParticle> pp1 = daughters[0]; 
-            std::string interaction = pp1->getProcess();
-            if(interaction == "conv") { // Its a photon conversion; For comptons "compt" or brems "brem"  
-                CLHEP::HepLorentzVector Mc_p1 = pp1->initialFourMomentum();
-                SmartRef<Event::McParticle> pp2 = daughters[1];
-                CLHEP::HepLorentzVector Mc_p2 = pp2->initialFourMomentum();
+        // If no daughters then nothing happened, e.g. gamma traversed LAT without interacting
+        if((*pMCPrimary)->daughterList().size() > 0) 
+        {
+            SmartRefVector<Event::McParticle> daughters   = (*pMCPrimary)->daughterList();
+            SmartRef<Event::McParticle>       pp1         = daughters[0]; 
+            std::string                       interaction = pp1->getProcess();
+
+            if(interaction == "conv")  // Its a photon conversion; For comptons "compt" or brems "brem"  
+            {
+                CLHEP::HepLorentzVector     Mc_p1 = pp1->initialFourMomentum();
+                SmartRef<Event::McParticle> pp2   = daughters[1];
+                CLHEP::HepLorentzVector     Mc_p2 = pp2->initialFourMomentum();
+
                 double e1 = Mc_p1.t();
                 double e2 = Mc_p2.t();
+
                 MC_EFrac = e1/MC_Energy; 
                 if(e1 < e2) MC_EFrac = e2/MC_Energy;
+                
                 Vector Mc_t1 = Vector(Mc_p1.x(),Mc_p1.y(), Mc_p1.z()).unit();
                 Vector Mc_t2 = Vector(Mc_p2.x(),Mc_p2.y(), Mc_p2.z()).unit();
+                
                 double dot_prod = Mc_t1*Mc_t2;
+                
                 if(dot_prod > 1.) dot_prod = 1.;
                 MC_OpenAngle = acos(dot_prod);
             }  

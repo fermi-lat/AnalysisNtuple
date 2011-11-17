@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.103 2011/02/27 20:06:53 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.104 2011/07/15 04:24:14 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -226,6 +226,11 @@ private:
     float Tkr_2_FirstHits;
     float Tkr_2_FirstLayer; 
     float Tkr_2_LastLayer; 
+
+	float Tkr_2_1stHitRes;
+    float Tkr_2_1stHitSChi;
+    float Tkr_2_2ndHitRes;
+    float Tkr_2_2ndHitSChi;
 
     float Tkr_2_SaturatedFrac;
     float Tkr_2_ToT255Frac;
@@ -826,6 +831,10 @@ StatusCode TkrValsTool::initialize()
     addItem("Tkr2FirstLayer", &Tkr_2_FirstLayer);
     addItem("Tkr2LastLayer",  &Tkr_2_LastLayer);
     //   addItem("Tkr2DifHits",    &Tkr_2_DifHits);
+	addItem("Tkr21stHitRes",  &Tkr_2_1stHitRes);
+    addItem("Tkr21stHitSChi", &Tkr_2_1stHitSChi);
+    addItem("Tkr22ndHitRes",  &Tkr_2_2ndHitRes);
+    addItem("Tkr22ndHitSChi", &Tkr_2_2ndHitSChi);
 
     //  addItem("Tkr2Gaps",       &Tkr_2_Gaps);
     //  addItem("Tkr2FirstGaps",  &Tkr_2_FirstGaps);
@@ -1508,6 +1517,22 @@ StatusCode TkrValsTool::calculate()
             Tkr_2_xdir       = t2.x();
             Tkr_2_ydir       = t2.y();
             Tkr_2_zdir       = t2.z();
+
+			 if (track_2->front()->validCluster())
+        {
+            Tkr_1_1stHitRes  = (*track_2)[0]->getMeasuredPosition(Event::TkrTrackHit::MEASURED)
+                             - (*track_2)[0]->getMeasuredPosition(Event::TkrTrackHit::SMOOTHED);
+            Tkr_1_1stHitSChi = (*track_2)[0]->getChiSquareSmooth();
+        }
+        else Tkr_2_1stHitRes  = -999.;
+
+        if ((*track_2)[1]->validCluster())
+        {
+            Tkr_1_2ndHitRes  = (*track_2)[1]->getMeasuredPosition(Event::TkrTrackHit::MEASURED)
+                             - (*track_2)[1]->getMeasuredPosition(Event::TkrTrackHit::SMOOTHED);
+            Tkr_1_2ndHitSChi = (*track_2)[1]->getChiSquareSmooth();
+        }
+        else Tkr_2_2ndHitRes = -999.;
 
             // this replaces atan used before
             Tkr_2_Phi         = (-t2).phi();
