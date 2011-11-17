@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.113 2011/05/31 15:35:19 bregeon Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.114 2011/10/05 19:31:53 usher Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -176,13 +176,19 @@ private:
     float CAL_xdir_uber;
     float CAL_ydir_uber;
     float CAL_zdir_uber;
-
     float CAL_xEcntr2_uber;
     float CAL_yEcntr2_uber;
     float CAL_zEcntr2_uber;
     float CAL_xdir2_uber;
     float CAL_ydir2_uber;
     float CAL_zdir2_uber;
+
+    float CAL_MomTransRms_uber;
+    float CAL_MomLongRms_uber;
+    float CAL_ClassGamProb_uber;
+    float CAL_ClassHadProb_uber;
+    float CAL_ClassGhostProb_uber;
+    float CAL_ClassMipProb_uber;
 
     float CAL_num_clusters;
     float CAL_rest_energy;
@@ -712,6 +718,13 @@ StatusCode CalValsTool::initialize()
     addItem("CalUberYDir2",       &CAL_ydir2_uber);
     addItem("CalUberZDir2",       &CAL_zdir2_uber);
 
+    addItem("CalUberTransRms",    &CAL_MomTransRms_uber);
+    addItem("CalUberLongRms",     &CAL_MomLongRms_uber);
+    addItem("CalUberGamProb",     &CAL_ClassGamProb_uber);
+    addItem("CalUberHadProb",     &CAL_ClassHadProb_uber);
+    addItem("CalUberGhostProb",   &CAL_ClassGhostProb_uber);
+    addItem("CalUberMipProb",     &CAL_ClassMipProb_uber);
+
     addItem("CalNumClusters",     &CAL_num_clusters);
     addItem("CalRestEnergy",      &CAL_rest_energy);
     addItem("CalRestNumXtals",    &CAL_rest_numXtals);
@@ -984,6 +997,14 @@ StatusCode CalValsTool::calculate()
     CAL_xdir2_uber    = calCluster->getFitParams().getAxis().x();
     CAL_ydir2_uber    = calCluster->getFitParams().getAxis().y();
     CAL_zdir2_uber    = calCluster->getFitParams().getAxis().z();
+    
+    // Add CalTransRms for Uber cluster for development
+    CAL_MomTransRms_uber = calCluster->getMomParams().getTransRms();
+    CAL_MomLongRms_uber  = calCluster->getMomParams().getLongRms();
+    CAL_ClassGamProb_uber = calCluster->getClassParams().getProb("gam");
+    CAL_ClassHadProb_uber = calCluster->getClassParams().getProb("had");
+    CAL_ClassGhostProb_uber = calCluster->getClassParams().getProb("ghost");
+    CAL_ClassMipProb_uber = calCluster->getClassParams().getProb("mip");
 
     CAL_num_clusters  = pCals->size();
     CAL_rest_energy   = 0.;
