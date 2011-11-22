@@ -2,7 +2,7 @@
 @brief Calculates the Tracker Tree variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TreeValsTool.cxx,v 1.11 2011/09/16 23:31:22 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TreeValsTool.cxx,v 1.12 2011/11/17 18:37:47 usher Exp $
 */
 
 // Include files
@@ -438,7 +438,7 @@ StatusCode TreeValsTool::calculate()
     {
         Tkr_num_trees = treeCol->size();
 
-        if (Tkr_num_trees > 0)
+        if (Tkr_num_trees > 0 && (*treeCol->begin())->getHeadNode())
         {
             Event::TkrTreeColConPtr  treeItr  = treeCol->begin(); 
             const Event::TkrTree*    tree     = *treeItr++;
