@@ -2,7 +2,7 @@
 @brief Calculates the Tkr hit analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrHitValsTool.cxx,v 1.25 2011/07/24 20:20:24 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/src/TkrHitValsTool.cxx,v 1.21.16.1 2011/04/19 18:10:25 heather Exp $
 */
 
 // Include files
@@ -88,8 +88,9 @@ private:
 };
 
 // Static factory for instantiation of algtool objects
-static ToolFactory<TkrHitValsTool> s_factory;
-const IToolFactory& TkrHitValsToolFactory = s_factory;
+//static ToolFactory<TkrHitValsTool> s_factory;
+//const IToolFactory& TkrHitValsToolFactory = s_factory;
+DECLARE_TOOL_FACTORY(TkrHitValsTool);
 
 // Standard Constructor
 TkrHitValsTool::TkrHitValsTool(const std::string& type, 

@@ -2,7 +2,7 @@
 @brief Calculates the Tracker Tree variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TreeValsTool.cxx,v 1.12 2011/11/17 18:37:47 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/src/TreeValsTool.cxx,v 1.13 2011/11/22 00:05:26 usher Exp $
 */
 
 // Include files
@@ -171,8 +171,9 @@ private:
 };
 
 // Static factory for instantiation of algtool objects
-static ToolFactory<TreeValsTool> s_factory;
-const IToolFactory& TreeValsToolFactory = s_factory;
+//static ToolFactory<TreeValsTool> s_factory;
+//const IToolFactory& TreeValsToolFactory = s_factory;
+DECLARE_TOOL_FACTORY(TreeValsTool);
 
 // Standard Constructor
 TreeValsTool::TreeValsTool(const std::string& type, 

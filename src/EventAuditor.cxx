@@ -1,6 +1,7 @@
 
 #include "GaudiKernel/Auditor.h"
 #include "GaudiKernel/MsgStream.h"
+#include "GaudiKernel/IChronoStatSvc.h"
 #include "GaudiKernel/Chrono.h"
 #include "GaudiKernel/IAlgorithm.h"
 #include "GaudiKernel/DeclareFactoryEntries.h"
@@ -15,7 +16,7 @@
 *
 * Experiment the monitoring of algorithms.
 *
-* $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EventAuditor.cxx,v 1.6 2011/01/21 14:02:48 lbaldini Exp $
+* $Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/src/EventAuditor.cxx,v 1.5.16.1 2011/04/19 18:10:24 heather Exp $
 */
 
 class EventAuditor : virtual public Auditor

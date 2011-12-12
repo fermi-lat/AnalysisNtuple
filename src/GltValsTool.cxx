@@ -2,7 +2,7 @@
 @brief Calculates the Trigger analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.43 2009/05/06 23:30:07 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/src/GltValsTool.cxx,v 1.43.80.1 2011/04/19 18:10:24 heather Exp $
 */
 
 // Include files
@@ -177,8 +177,9 @@ produces 13 potential triggers
 
 
 // Static factory for instantiation of algtool objects
-static ToolFactory<GltValsTool> s_factory;
-const IToolFactory& GltValsToolFactory = s_factory;
+//static ToolFactory<GltValsTool> s_factory;
+//const IToolFactory& GltValsToolFactory = s_factory;
+DECLARE_TOOL_FACTORY(GltValsTool);
 
 // Standard Constructor
 GltValsTool::GltValsTool(const std::string& type, 

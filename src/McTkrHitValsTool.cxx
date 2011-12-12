@@ -1,7 +1,7 @@
 /** @file McTkrHitValsTool.cxx
     @brief declartion, implementaion of the class UserAlg
 
-    $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McTkrHitValsTool.cxx,v 1.13 2011/10/15 16:32:46 usher Exp $
+    $Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/src/McTkrHitValsTool.cxx,v 1.10.42.1 2011/04/19 18:10:25 heather Exp $
 */
 
 #include "ValBase.h"
@@ -144,8 +144,9 @@ private:
 };
 
 // Static factory for instantiation of algtool objects
-static ToolFactory<McTkrHitValsTool> s_factory;
-const IToolFactory& McTkrHitValsToolFactory = s_factory;
+//static ToolFactory<McTkrHitValsTool> s_factory;
+//const IToolFactory& McTkrHitValsToolFactory = s_factory;
+DECLARE_TOOL_FACTORY(McTkrHitValsTool);
 
 // Standard Constructor
 McTkrHitValsTool::McTkrHitValsTool(const std::string& type, 

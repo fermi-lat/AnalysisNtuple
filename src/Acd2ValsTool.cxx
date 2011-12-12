@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/Acd2ValsTool.cxx,v 1.1 2010/10/27 19:12:08 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/src/Acd2ValsTool.cxx,v 1.2 2010/11/04 15:15:49 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -302,8 +302,9 @@ number of sigmas track propagation is away from tile or ribbon most likely to ve
 
 
 // Static factory for instantiation of algtool objects
-static ToolFactory<Acd2ValsTool> s_factory;
-const IToolFactory& Acd2ValsToolFactory = s_factory;
+//static ToolFactory<Acd2ValsTool> s_factory;
+//const IToolFactory& Acd2ValsToolFactory = s_factory;
+DECLARE_TOOL_FACTORY(Acd2ValsTool);
 
 // Standard Constructor
 Acd2ValsTool::Acd2ValsTool(const std::string& type, 

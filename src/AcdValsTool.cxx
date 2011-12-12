@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.57 2011/01/21 14:02:48 lbaldini Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/src/AcdValsTool.cxx,v 1.58 2011/02/27 20:06:53 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -286,8 +286,9 @@ namespace {
 } 
 
 // Static factory for instantiation of algtool objects
-static ToolFactory<AcdValsTool> s_factory;
-const IToolFactory& AcdValsToolFactory = s_factory;
+//static ToolFactory<AcdValsTool> s_factory;
+//const IToolFactory& AcdValsToolFactory = s_factory;
+DECLARE_TOOL_FACTORY(AcdValsTool);
 
 // Standard Constructor
 AcdValsTool::AcdValsTool(const std::string& type, 
@@ -521,15 +522,12 @@ StatusCode AcdValsTool::calculate()
 
         // Reset variables for loop over all tracks
         ACD_ActiveDist3D = ACD_ribbon_ActiveDist = -2000.;
-//<<<<<<< AcdValsTool.cxx
                 ACD_CR_ActiveDist3D = ACD_CR_ribbon_ActiveDist = -2000.;  //RJ
                 ACD_CR1_ActiveDist = ACD_CR1_ribbon_ActiveDist = -2000.;  //RJ
                 ACD_CR_ActiveDist_TrackNum = ACD_CR1_ActiveDist_TrackNum = -999; //RJ
                 ACD_CR_ActiveDist_Energy = ACD_CR_ribbon_EnergyPmtA = ACD_CR_ribbon_EnergyPmtB = 0.;  //RJ
                 ACD_CR1_ActiveDist_Energy = ACD_CR1_ribbon_EnergyPmtA = ACD_CR1_ribbon_EnergyPmtB = 0.;  //RJ
-//=======
         ACD_ActiveDist3D_ID = ACD_ribbon_ActiveDist_ID = ACD_TkrRibbon_Dist_ID = 700;
-//>>>>>>> 1.53
         ACD_ActiveDist_Energy = ACD_ribbon_EnergyPmtA = ACD_ribbon_EnergyPmtB = 0.;
         ACD_ActiveDist3D_Err = ACD_ribbon_ActiveDist_Err = -1.;        
         ACD_Corner_DOCA = ACD_TkrRibbon_Dist = ACD_TkrHole_Dist = -2000.;
@@ -629,7 +627,6 @@ StatusCode AcdValsTool::calculate()
 
             if ( isUpGoing && isTrack) {
                 // Fill variables for all tracks
-//<<<<<<< AcdValsTool.cxx
                                 if (isCosmic) {     //RJ: add section here for cosmic-ray tracks
                                         if (theId.tile()) {
                                                 if (ACD_CR_ActiveDist3D < -1999.99 || aPoca->getDoca() > min_ActiveDistance) {
@@ -675,7 +672,6 @@ StatusCode AcdValsTool::calculate()
                                                         ACD_ribbon_EnergyPmtB = ribbonEnergyIdMap[theId].second;
                                                 }
                                         }
-//=======
 /*
                 if ( theId.tile() ) {
                     if ( ACD_ActiveDist3D < -1999.99 
@@ -704,7 +700,6 @@ StatusCode AcdValsTool::calculate()
                         ACD_ribbon_EnergyPmtA = ribbonEnergyIdMap[theId].first;
                         ACD_ribbon_EnergyPmtB = ribbonEnergyIdMap[theId].second;
                     }
->>>>>>> 1.53
 */
                 }
                 // Fill variables for best track, if appropiate

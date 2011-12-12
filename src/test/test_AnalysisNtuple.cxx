@@ -2,7 +2,7 @@
 @brief Placeholder: the actual test module is AnalysisNtupleAlg
 @author Leon Rochester
 
-$Header$
+$Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/src/test/test_AnalysisNtuple.cxx,v 1.8.664.1 2011/04/19 18:10:25 heather Exp $
 */
 
 // Include files
@@ -47,8 +47,9 @@ private:
 // expect that the xxx_load.cxx file contains a call     
 //     DLL_DECL_ALGORITHM( test_AnalysisNtuple );
 
-static const AlgFactory<test_AnalysisNtuple>  Factory;
-const IAlgFactory& test_AnalysisNtupleFactory = Factory;
+//static const AlgFactory<test_AnalysisNtuple>  Factory;
+//const IAlgFactory& test_AnalysisNtupleFactory = Factory;
+DECLARE_ALGORITHM_FACTORY(test_AnalysisNtuple);
 
 //------------------------------------------------------------------------
 //! ctor
