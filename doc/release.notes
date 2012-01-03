@@ -3,6 +3,8 @@
   @verbatim
    * EOH *
 
+ AnalysisNtuple-02-60-01 03-Jan-2011 HMK Patch test JO to remove reference
+   to AcdValsTool parameter that does not exist
  AnalysisNtuple-02-60-00 05-Dec-2011 HMK Merge in Gaudi v21r7 upgrade
  AnalysisNtuple-02-59-06 17-Nov-2011  TU Modifications to McValsTool, TkrValsTool and TreeValsTool to include more output, also
                                       Johan added CalUber Trans, Long, GamProb, HadProb, MipProb, GhostProb
