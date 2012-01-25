@@ -2,7 +2,7 @@
 @brief Calculates the Tkr hit analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/src/TkrHitValsTool.cxx,v 1.21.16.1 2011/04/19 18:10:25 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrHitValsTool.cxx,v 1.27 2011/12/12 20:36:35 heather Exp $
 */
 
 // Include files
@@ -238,6 +238,7 @@ StatusCode TkrHitValsTool::calculate()
     //Make sure we have valid cluster data
 
     if (!pClusters) return sc;
+    if(pClusters->size()==0) return sc;
 
     int layerIdx;
     for(layerIdx=0;layerIdx<_nLayers;++layerIdx) {
