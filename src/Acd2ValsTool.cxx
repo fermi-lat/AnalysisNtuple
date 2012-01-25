@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/src/Acd2ValsTool.cxx,v 1.2 2010/11/04 15:15:49 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/Acd2ValsTool.cxx,v 1.3 2011/12/12 20:36:35 heather Exp $
 */
 
 #include "ValBase.h"
@@ -76,6 +76,7 @@ private:
   
   // Global ACD Tuple Items
   unsigned int ACD_Tile_Count; 
+  int          ACD_Trigger_Veto; 
   unsigned int ACD_Ribbon_Count;
   unsigned int ACD_Veto_Count; 
   unsigned int ACD_Veto_Faces;
@@ -171,6 +172,8 @@ positive if inside.
 <tr><th> Variable <th> Type <th> Description                    
 <tr><td> Acd2TileCount 
 <td>U<td>   Number of tiles fired
+<tr><td> Acd2TriggerVeto 
+<td>U<td>   Trigger veto for the fast signal
 <tr><td> Acd2RibbonCount 
 <td>U<td>   Number of ribbons fired
 <tr><td> Acd2VetoCount 
@@ -358,6 +361,7 @@ StatusCode Acd2ValsTool::initialize()
   
   // load up the map
   addItem(m_prefix + "TileCount",    &ACD_Tile_Count);
+  addItem(m_prefix + "TriggerVeto",    &ACD_Trigger_Veto);
   addItem(m_prefix + "RibbonCount", &ACD_Ribbon_Count);
   addItem(m_prefix + "VetoCount",    &ACD_Veto_Count);
   addItem(m_prefix + "VetoFaces", &ACD_Veto_Faces);
@@ -458,12 +462,27 @@ StatusCode Acd2ValsTool::calculate()
   const Event::AcdHitCol& hitCol = pACD->getHitCol();
   int nHit = hitCol.size();
   
+  // Set to zero for each event (MPR)
+  int TriggerVeto = 0;
+
   // Loop over the hits and fill the maps
+
   for (int iHit(0); iHit < nHit; iHit++ ){
     const Event::AcdHit* aHit = hitCol[iHit];
     const idents::AcdId& id = aHit->getAcdId();
+  
+    //Trigger veto for the fast signal (MPR).
+    int triggerVetoBit_0 = ((aHit->getFlags(0) >> 1) & 0x1);
+    int triggerVetoBit_1 = ((aHit->getFlags(1) >> 1) & 0x1);
+    if (triggerVetoBit_0 == 1 or triggerVetoBit_1 == 1){
+      TriggerVeto = 1;
+    }
+   
+    ACD_Trigger_Veto = TriggerVeto;
     hitMap[id] = aHit;
+   
   }
+
 
   static const float maxSigma = 10000.;
   static const float maxSigmaSq = maxSigma*maxSigma;
