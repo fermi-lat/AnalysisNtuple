@@ -2,7 +2,7 @@
 @brief Calculates the Tracker Tree variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TreeValsTool.cxx,v 1.11 2011/09/16 23:31:22 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TreeValsTool.cxx,v 1.13 2011/11/22 00:05:26 usher Exp $
 */
 
 // Include files
@@ -168,6 +168,8 @@ private:
     float Aud_treeBasedTool_link;
     float Aud_treeBasedTool_node;
     float Aud_treeBasedTool_build;
+    float Aud_tkrVecLinkBuilderTool_singleLink;
+    float Aud_tkrVecLinkBuilderTool_multiLink;
 };
 
 // Static factory for instantiation of algtool objects
@@ -373,6 +375,8 @@ StatusCode TreeValsTool::initialize()
     addItem("AudTreeBasedTool_link",  &Aud_treeBasedTool_link);
     addItem("AudTreeBasedTool_node",  &Aud_treeBasedTool_node);
     addItem("AudTreeBasedTool_build", &Aud_treeBasedTool_build);
+    addItem("AudLinkTool_singleLink", &Aud_tkrVecLinkBuilderTool_singleLink);
+    addItem("AudLinkTool_multiLink",  &Aud_tkrVecLinkBuilderTool_multiLink);
 
     zeroVals();
 
@@ -438,7 +442,7 @@ StatusCode TreeValsTool::calculate()
     {
         Tkr_num_trees = treeCol->size();
 
-        if (Tkr_num_trees > 0)
+        if (Tkr_num_trees > 0 && (*treeCol->begin())->getHeadNode())
         {
             Event::TkrTreeColConPtr  treeItr  = treeCol->begin(); 
             const Event::TkrTree*    tree     = *treeItr++;
@@ -612,6 +616,10 @@ StatusCode TreeValsTool::calculate()
     Aud_treeBasedTool_node = static_cast<float>(time)*0.000001;
     time = m_chronoSvc->chronoDelta("TreeBasedTool_build",IChronoStatSvc::USER);
     Aud_treeBasedTool_build = static_cast<float>(time)*0.000001;
+    time = m_chronoSvc->chronoDelta("TkrVecLinkBuilderTool_singleLink",IChronoStatSvc::USER);
+    Aud_tkrVecLinkBuilderTool_singleLink = static_cast<float>(time)*0.000001;
+    time = m_chronoSvc->chronoDelta("TkrVecLinkBuilderTool_multiLink",IChronoStatSvc::USER);
+    Aud_tkrVecLinkBuilderTool_multiLink = static_cast<float>(time)*0.000001;
 
     return sc;
 }
