@@ -1,7 +1,7 @@
 /** @file PtValsAlg.cxx
 @brief declaration and definition of the class PtValsAlg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/PtValsAlg.cxx,v 1.11 2008/10/01 07:02:16 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/PtValsAlg.cxx,v 1.13 2011/12/12 20:36:35 heather Exp $
 
 */
 
@@ -75,8 +75,9 @@ private:
 //------------------------------------------------------------------------
 
 
-static const AlgFactory<PtValsAlg>  Factory;
-const IAlgFactory& PtValsAlgFactory = Factory;
+//static const AlgFactory<PtValsAlg>  Factory;
+//const IAlgFactory& PtValsAlgFactory = Factory;
+DECLARE_ALGORITHM_FACTORY(PtValsAlg);
 
 //------------------------------------------------------------------------
 //! ctor

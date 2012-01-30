@@ -3,7 +3,7 @@
 @brief Calculates the Cal Mip analysis variables
 @author F. Piron
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalMipValsTool.cxx,v 1.9 2007/06/07 17:00:13 lsrea Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalMipValsTool.cxx,v 1.12 2011/12/12 20:36:35 heather Exp $
 */
 
 // Include files
@@ -58,8 +58,8 @@ class CalMipValsTool :   public ValBase
 {
 public:  
   CalMipValsTool( const std::string& type, 
-		  const std::string& name, 
-		  const IInterface* parent);
+                  const std::string& name, 
+                  const IInterface* parent);
   
   virtual ~CalMipValsTool() { }
   
@@ -119,8 +119,9 @@ around the best track
 */
 
 // Static factory for instantiation of algtool objects
-static ToolFactory<CalMipValsTool> s_factory;
-const IToolFactory& CalMipValsToolFactory = s_factory;
+//static ToolFactory<CalMipValsTool> s_factory;
+//const IToolFactory& CalMipValsToolFactory = s_factory;
+DECLARE_TOOL_FACTORY(CalMipValsTool);
   
 // Standard Constructor
 CalMipValsTool::CalMipValsTool(const std::string& type, 
@@ -323,43 +324,43 @@ StatusCode CalMipValsTool::calculate()
       return sc;
     else
       {
-	// Count number of tracks
-	int nTracks = pTracks->size();
-	//int Tkr_No_Tracks   = nTracks;
-	
-	if(nTracks < 1) return sc;
-	
-	// Get the first Track - it should be the "Best Track"
-	Event::TkrTrackColConPtr pTrack = pTracks->begin();
-	
-	const Event::TkrTrack* track_1 = *pTrack;
-	
-	Point  x1 = track_1->getInitialPosition();
-	Vector t1 = track_1->getInitialDirection();
-	
-	float Tkr_1_xdir        = t1.x();
-	float Tkr_1_ydir        = t1.y();
-	float Tkr_1_zdir        = t1.z();
-	
-	float Tkr_1_x0          = x1.x();
-	float Tkr_1_y0          = x1.y();
-	float Tkr_1_z0          = x1.z();
+        // Count number of tracks
+        int nTracks = pTracks->size();
+        //int Tkr_No_Tracks   = nTracks;
+        
+        if(nTracks < 1) return sc;
+        
+        // Get the first Track - it should be the "Best Track"
+        Event::TkrTrackColConPtr pTrack = pTracks->begin();
+        
+        const Event::TkrTrack* track_1 = *pTrack;
+        
+        Point  x1 = track_1->getInitialPosition();
+        Vector t1 = track_1->getInitialDirection();
+        
+        float Tkr_1_xdir        = t1.x();
+        float Tkr_1_ydir        = t1.y();
+        float Tkr_1_zdir        = t1.z();
+        
+        float Tkr_1_x0          = x1.x();
+        float Tkr_1_y0          = x1.y();
+        float Tkr_1_z0          = x1.z();
 
-	if (m_arcLen>0)
-	  ermc=m_erm/m_arcLen;
-	else if (m_arcLen<=0)
-	  ermc=-100.;
-	//@@@@@
-	derr=TMath::ACos(m_xDir*Tkr_1_xdir+
-				m_yDir*Tkr_1_ydir+
-				m_zDir*Tkr_1_zdir);
-	
-	//@@@@@ Distance between tracker track & calorimeter track's centroid point
-	double l=(Tkr_1_xdir*(m_x0-Tkr_1_x0)+Tkr_1_ydir*(m_y0-Tkr_1_y0)+Tkr_1_zdir*(m_z0-Tkr_1_z0))/(TMath::Power(Tkr_1_xdir,2)+TMath::Power(Tkr_1_ydir,2)+TMath::Power(Tkr_1_zdir,2));
-	double Bx   = l*Tkr_1_xdir+Tkr_1_x0;
-	double By   = l*Tkr_1_ydir+Tkr_1_y0;
-	double Bz   = l*Tkr_1_zdir+Tkr_1_z0;
-	barDist = TMath::Sqrt(TMath::Power(m_x0-Bx,2)+TMath::Power(m_y0-By,2)+TMath::Power(m_z0-Bz,2));
+        if (m_arcLen>0)
+          ermc=m_erm/m_arcLen;
+        else if (m_arcLen<=0)
+          ermc=-100.;
+        //@@@@@
+        derr=TMath::ACos(m_xDir*Tkr_1_xdir+
+                                m_yDir*Tkr_1_ydir+
+                                m_zDir*Tkr_1_zdir);
+        
+        //@@@@@ Distance between tracker track & calorimeter track's centroid point
+        double l=(Tkr_1_xdir*(m_x0-Tkr_1_x0)+Tkr_1_ydir*(m_y0-Tkr_1_y0)+Tkr_1_zdir*(m_z0-Tkr_1_z0))/(TMath::Power(Tkr_1_xdir,2)+TMath::Power(Tkr_1_ydir,2)+TMath::Power(Tkr_1_zdir,2));
+        double Bx   = l*Tkr_1_xdir+Tkr_1_x0;
+        double By   = l*Tkr_1_ydir+Tkr_1_y0;
+        double Bz   = l*Tkr_1_zdir+Tkr_1_z0;
+        barDist = TMath::Sqrt(TMath::Power(m_x0-Bx,2)+TMath::Power(m_y0-By,2)+TMath::Power(m_z0-Bz,2));
       }
 
     m_ermc=ermc;

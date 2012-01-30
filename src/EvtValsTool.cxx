@@ -3,7 +3,7 @@
 @brief Calculates the "Event" analysis variables from the other ntuple variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.44.10.1 2011/08/06 04:16:01 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.44.10.2 2011/08/10 21:09:36 heather Exp $
 */
 
 #include "ValBase.h"
@@ -118,8 +118,9 @@ private:
 
 
 // Static factory for instantiation of algtool objects
-static ToolFactory<EvtValsTool> s_factory;
-const IToolFactory& EvtValsToolFactory = s_factory;
+//static ToolFactory<EvtValsTool> s_factory;
+//const IToolFactory& EvtValsToolFactory = s_factory;
+DECLARE_TOOL_FACTORY(EvtValsTool);
 
 // Standard Constructor
 EvtValsTool::EvtValsTool(const std::string& type, 

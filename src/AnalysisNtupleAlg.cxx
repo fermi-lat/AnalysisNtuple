@@ -2,7 +2,7 @@
 @brief Uses the XxxValsTools to produce a comprehensive ntuple
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.43 2009/03/18 23:17:08 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.44 2009/03/19 15:06:37 usher Exp $
 */
 
 // Gaudi system includes
@@ -175,8 +175,9 @@ private:
     IValsTool::Visitor* m_visitor; 
 };
 
-static const AlgFactory<AnalysisNtupleAlg>  Factory;
-const IAlgFactory& AnalysisNtupleAlgFactory = Factory;
+//static const AlgFactory<AnalysisNtupleAlg>  Factory;
+//const IAlgFactory& AnalysisNtupleAlgFactory = Factory;
+DECLARE_ALGORITHM_FACTORY(AnalysisNtupleAlg);
 
 AnalysisNtupleAlg::AnalysisNtupleAlg(const std::string& name, ISvcLocator* pSvcLocator)
 :Algorithm(name, pSvcLocator)

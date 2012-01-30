@@ -2,7 +2,7 @@
 @brief Calculates the Trigger analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.42 2009/02/07 21:36:27 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.45 2011/12/12 20:36:35 heather Exp $
 */
 
 // Include files
@@ -138,7 +138,7 @@ produces 13 potential triggers
 <tr><td> GltType 
 <td>F<td>   Number of exposed sides for the triggered tower: <br>
             0 = central tower, 1 = side tower, <br> 
-            2 = edge edge tower, 4 = any single-tower setup 	
+            2 = edge edge tower, 4 = any single-tower setup         
 <tr><td> GltMoment 
 <td>F<td>   REMOVED!
 <tr><td> GltZDir 
@@ -177,8 +177,9 @@ produces 13 potential triggers
 
 
 // Static factory for instantiation of algtool objects
-static ToolFactory<GltValsTool> s_factory;
-const IToolFactory& GltValsToolFactory = s_factory;
+//static ToolFactory<GltValsTool> s_factory;
+//const IToolFactory& GltValsToolFactory = s_factory;
+DECLARE_TOOL_FACTORY(GltValsTool);
 
 // Standard Constructor
 GltValsTool::GltValsTool(const std::string& type, 

@@ -3,7 +3,7 @@
 @brief Calculates the GcrRecon analysis variables
 @author C. Lavalley
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GcrReconValsTool.cxx,v 1.7 2005/12/13 19:00:37 lsrea Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GcrReconValsTool.cxx,v 1.1 2006/11/13 09:20:21 claval Exp $
 */
 
 // Include files
@@ -84,8 +84,9 @@ private:
 };
   
 // Static factory for instantiation of algtool objects
-static ToolFactory<GcrReconValsTool> s_factory;
-const IToolFactory& GcrReconValsToolFactory = s_factory;
+//static ToolFactory<GcrReconValsTool> s_factory;
+//const IToolFactory& GcrReconValsToolFactory = s_factory;
+DECLARE_TOOL_FACTORY(GcrReconValsTool);
   
 // Standard Constructor
 GcrReconValsTool::GcrReconValsTool(const std::string& type, 

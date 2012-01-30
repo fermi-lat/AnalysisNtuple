@@ -1,7 +1,7 @@
 # -*-python-*-
-# $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/SConscript,v 1.33.8.9 2011/09/22 16:52:47 heather Exp $
+# $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/SConscript,v 1.80 2012/01/25 05:19:24 lsrea Exp $
 # Authors: Leon Rochester <lsrea@slac.stanford.edu>
-# Version: AnalysisNtuple-02-55-09-gr10
+# Version: AnalysisNtuple-02-55-09-gr11
 
 import platform
 
@@ -25,8 +25,8 @@ if baseEnv['PLATFORM'] != 'win32':
 else:
 	libEnv.AppendUnique(CPPDEFINES = ['WIN32'])
 
-AnalysisNtuple = libEnv.SharedLibrary('AnalysisNtuple',
-                                      listFiles(['src/*.cxx','src/Dll/*.cxx']))
+AnalysisNtuple = libEnv.ComponentLibrary('AnalysisNtuple',
+					 listFiles(['src/*.cxx']))
 
 
 progEnv.Tool('AnalysisNtupleLib')

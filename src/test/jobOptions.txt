@@ -9,11 +9,11 @@
 //
 
 ApplicationMgr.ExtSvc = { 
-//    "GlastEventSelector/EventSelector" , 
-    "EventCnvSvc"
+    "DbEvtSelector/EventSelector" 
     };
 EventPersistencySvc.CnvServices = {"EventCnvSvc"};
-EventSelector.Input = "NONE";
+//EventSelector.Input = "NONE";
+ApplicationMgr.HistogramPersistency = "NONE";
 
 // ----------------------------
 //  Geometry definition
@@ -30,9 +30,9 @@ ApplicationMgr.DLLs   += { "CalibSvc" };
 DetectorPersistencySvc.CnvServices += {"CalibMySQLCnvSvc"};
 
 // ----------------------------
-// Point to the particle properties file
-//not sure what the fix was, at the HEAD, this line is commented out
-//ParticlePropertySvc.ParticlePropertiesFile = "../src/test/ParticleTable.txt";
+// Point to the particle properties file .. none of the following works
+// ParticlePropertySvc.ParticlePropertiesFile = "../src/test/ParticleTable.txt";
+// ParticlePropertySvc.ParticlePropertiesFile = "$(ANALYSISNTUPLEJOBOPTIONSPATH)/test/ParticleTable.txt";
 
 // ----------------------------
 //  topalg

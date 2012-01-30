@@ -3,6 +3,7 @@
   @verbatim
    * EOH *
 
+ AnalysisNtuple-02-55-09-gr11 30-Jan-2012 hmk Gaudi v21r7
  AnalysisNtuple-02-55-09-gr10 24-Oct-2011 hmk patch from M.E. and E.C to expand
    env var before it is used to set default value for EvtClassDefFile.  Note that using a default prevents the value from being stored in the merit header due
 to flaw in the JO service
