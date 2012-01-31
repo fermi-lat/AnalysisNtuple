@@ -170,6 +170,10 @@ private:
     float Aud_treeBasedTool_build;
     float Aud_tkrVecLinkBuilderTool_singleLink;
     float Aud_tkrVecLinkBuilderTool_multiLink;
+    float Aud_houghFilterTool;
+    float Aud_houghFilterTool_fill;
+    float Aud_houghFilterTool_peak;
+    float Aud_houghFilterTool_build;
 };
 
 // Static factory for instantiation of algtool objects
@@ -301,82 +305,86 @@ StatusCode TreeValsTool::initialize()
     // load up the map
 
     // Tree stuff
-    addItem("TkrNumVecPoints",        &Tkr_num_vecPoints);
-    addItem("TkrAveVecPtsLyr",        &Tkr_ave_vecPoints);
-    addItem("TkrLyrsWVecPoints",      &Tkr_lyr_wVecPoints);
-    addItem("TkrLyrMostVecPoints",    &Tkr_lyr_mostVecPoints);
-    addItem("TkrNumMostVecPoints",    &Tkr_num_mostVecPoints);
-
-    addItem("TkrNumVecLinks",         &Tkr_num_vecLinks);
-    addItem("TkrNumTrees",            &Tkr_num_trees);
-    addItem("TkrTree1NTrks",          &Tkr_tree1_nTrks);
-    addItem("TkrTree1Depth",          &Tkr_tree1_depth);
-    addItem("TkrTree1Leaves",         &Tkr_tree1_nLeaves);
-
-    addItem("TkrTree1Nodes",          &Tkr_tree1_nNodes);
-	addItem("TkrTree1ThinNodes",      &Tkr_tree1_Thin_nNodes);
-	addItem("TkrTree1ThickNodes",     &Tkr_tree1_Thick_nNodes);
-	addItem("TkrTree1ThinLeaves",     &Tkr_tree1_Thin_Leaves);
-	addItem("TkrTree1ThickLeaves",    &Tkr_tree1_Thick_Leaves);
- 
-    addItem("TkrTree1BlankNodes",     &Tkr_tree1_Blank_nNodes);
-	addItem("TkrTree1ThinRLnNodes",   &Tkr_tree1_ThinNodes_RLn);
-	addItem("TkrTree1ThickRLnNodes",  &Tkr_tree1_ThickNodes_RLn);
-
-    addItem("TkrTree1Branches",       &Tkr_tree1_nBranches);
-    addItem("TkrTree1FirstLinkAngle", &Tkr_tree1_firstLinkAngle);
-    addItem("TkrTree1FirstLinkSum",   &Tkr_tree1_firstLinkSum);
-    addItem("TkrTree1BestRms",        &Tkr_tree1_bestRms);
-    addItem("TkrTree1BestBiLayers",   &Tkr_tree1_bestBiLayers);
-    addItem("TkrTree1MaxWidthLyr",    &Tkr_tree1_maxWidthLyr);
-    addItem("TkrTree1MaxWidth",       &Tkr_tree1_maxWidth);
-    addItem("TkrTree1LastWidth",      &Tkr_tree1_lastWidth);
-    addItem("TkrTree1BestLeaves",     &Tkr_tree1_bestLeaves);
-    addItem("TkrTree1ScndLeaves",     &Tkr_tree1_scndLeaves);
-    addItem("TkrTree1ScndRms",        &Tkr_tree1_scndRms);
-    addItem("TkrTree1ScndDepth",      &Tkr_tree1_scndDepth);
-    addItem("TkrTree1PosX",           &Tkr_tree1_PosX);
-    addItem("TkrTree1PosY",           &Tkr_tree1_PosY);
-    addItem("TkrTree1PosZ",           &Tkr_tree1_PosZ);
-    addItem("TkrTree1DirX",           &Tkr_tree1_DirX);
-    addItem("TkrTree1DirY",           &Tkr_tree1_DirY);
-    addItem("TkrTree1DirZ",           &Tkr_tree1_DirZ);
-    addItem("TkrTree1NumBoxes",       &Tkr_tree1_NumBoxes);
-    addItem("TkrTree1ChiSquare",      &Tkr_tree1_ChiSquare);
-    addItem("TkrTree1RmsTrans",       &Tkr_tree1_RmsTrans);
-    addItem("TkrTree1RmsLong",        &Tkr_tree1_RmsLong);
-
-    addItem("TkrTree2NTrks",          &Tkr_tree2_nTrks);
-    addItem("TkrTree2Depth",          &Tkr_tree2_depth);
-    addItem("TkrTree2Leaves",         &Tkr_tree2_nLeaves);
-    addItem("TkrTree2Nodes",          &Tkr_tree2_nNodes);
-    addItem("TkrTree2Branches",       &Tkr_tree2_nBranches);
-    addItem("TkrTree2BestRms",        &Tkr_tree2_bestRms);
-    addItem("TkrTree2BestBiLayers",   &Tkr_tree2_bestBiLayers);
-    addItem("TkrTree2MaxWidthLyr",    &Tkr_tree2_maxWidthLyr);
-    addItem("TkrTree2MaxWidth",       &Tkr_tree2_maxWidth);
-    addItem("TkrTree2LastWidth",      &Tkr_tree2_lastWidth);
-
-    addItem("TFPNumParams",           &TFP_numParams);
-    addItem("TFPBestPosX",            &TFP_bestPosX);
-    addItem("TFPBestPosY",            &TFP_bestPosY);
-    addItem("TFPBestPosZ",            &TFP_bestPosZ);
-    addItem("TFPBestDirX",            &TFP_bestDirX);
-    addItem("TFPBestDirY",            &TFP_bestDirY);
-    addItem("TFPBestDirZ",            &TFP_bestDirZ);
-    addItem("TFPBestNumHits",         &TFP_bestNumHits);
-    addItem("TFPBestChiSquare",       &TFP_bestChiSquare);
-    addItem("TFPBestAverageDist",     &TFP_bestAveDist);
-    addItem("TFPBestRmsTrans",        &TFP_bestRmsTrans);
-    addItem("TFPBestRmsLong",         &TFP_bestRmsLong);
-    addItem("TFPBestRmsLongAsym",     &TFP_bestRmsLongAsym);
-
-    addItem("AudTreeBasedTool",       &Aud_treeBasedTool);
-    addItem("AudTreeBasedTool_link",  &Aud_treeBasedTool_link);
-    addItem("AudTreeBasedTool_node",  &Aud_treeBasedTool_node);
-    addItem("AudTreeBasedTool_build", &Aud_treeBasedTool_build);
-    addItem("AudLinkTool_singleLink", &Aud_tkrVecLinkBuilderTool_singleLink);
-    addItem("AudLinkTool_multiLink",  &Aud_tkrVecLinkBuilderTool_multiLink);
+    addItem("TkrNumVecPoints",          &Tkr_num_vecPoints);
+    addItem("TkrAveVecPtsLyr",          &Tkr_ave_vecPoints);
+    addItem("TkrLyrsWVecPoints",        &Tkr_lyr_wVecPoints);
+    addItem("TkrLyrMostVecPoints",      &Tkr_lyr_mostVecPoints);
+    addItem("TkrNumMostVecPoints",      &Tkr_num_mostVecPoints);
+                                     
+    addItem("TkrNumVecLinks",           &Tkr_num_vecLinks);
+    addItem("TkrNumTrees",              &Tkr_num_trees);
+    addItem("TkrTree1NTrks",            &Tkr_tree1_nTrks);
+    addItem("TkrTree1Depth",            &Tkr_tree1_depth);
+    addItem("TkrTree1Leaves",           &Tkr_tree1_nLeaves);
+                                     
+    addItem("TkrTree1Nodes",            &Tkr_tree1_nNodes);
+	addItem("TkrTree1ThinNodes",        &Tkr_tree1_Thin_nNodes);
+	addItem("TkrTree1ThickNodes",       &Tkr_tree1_Thick_nNodes);
+	addItem("TkrTree1ThinLeaves",       &Tkr_tree1_Thin_Leaves);
+	addItem("TkrTree1ThickLeaves",      &Tkr_tree1_Thick_Leaves);
+                                     
+    addItem("TkrTree1BlankNodes",       &Tkr_tree1_Blank_nNodes);
+	addItem("TkrTree1ThinRLnNodes",     &Tkr_tree1_ThinNodes_RLn);
+	addItem("TkrTree1ThickRLnNodes",    &Tkr_tree1_ThickNodes_RLn);
+                                     
+    addItem("TkrTree1Branches",         &Tkr_tree1_nBranches);
+    addItem("TkrTree1FirstLinkAngle",   &Tkr_tree1_firstLinkAngle);
+    addItem("TkrTree1FirstLinkSum",     &Tkr_tree1_firstLinkSum);
+    addItem("TkrTree1BestRms",          &Tkr_tree1_bestRms);
+    addItem("TkrTree1BestBiLayers",     &Tkr_tree1_bestBiLayers);
+    addItem("TkrTree1MaxWidthLyr",      &Tkr_tree1_maxWidthLyr);
+    addItem("TkrTree1MaxWidth",         &Tkr_tree1_maxWidth);
+    addItem("TkrTree1LastWidth",        &Tkr_tree1_lastWidth);
+    addItem("TkrTree1BestLeaves",       &Tkr_tree1_bestLeaves);
+    addItem("TkrTree1ScndLeaves",       &Tkr_tree1_scndLeaves);
+    addItem("TkrTree1ScndRms",          &Tkr_tree1_scndRms);
+    addItem("TkrTree1ScndDepth",        &Tkr_tree1_scndDepth);
+    addItem("TkrTree1PosX",             &Tkr_tree1_PosX);
+    addItem("TkrTree1PosY",             &Tkr_tree1_PosY);
+    addItem("TkrTree1PosZ",             &Tkr_tree1_PosZ);
+    addItem("TkrTree1DirX",             &Tkr_tree1_DirX);
+    addItem("TkrTree1DirY",             &Tkr_tree1_DirY);
+    addItem("TkrTree1DirZ",             &Tkr_tree1_DirZ);
+    addItem("TkrTree1NumBoxes",         &Tkr_tree1_NumBoxes);
+    addItem("TkrTree1ChiSquare",        &Tkr_tree1_ChiSquare);
+    addItem("TkrTree1RmsTrans",         &Tkr_tree1_RmsTrans);
+    addItem("TkrTree1RmsLong",          &Tkr_tree1_RmsLong);
+                                     
+    addItem("TkrTree2NTrks",            &Tkr_tree2_nTrks);
+    addItem("TkrTree2Depth",            &Tkr_tree2_depth);
+    addItem("TkrTree2Leaves",           &Tkr_tree2_nLeaves);
+    addItem("TkrTree2Nodes",            &Tkr_tree2_nNodes);
+    addItem("TkrTree2Branches",         &Tkr_tree2_nBranches);
+    addItem("TkrTree2BestRms",          &Tkr_tree2_bestRms);
+    addItem("TkrTree2BestBiLayers",     &Tkr_tree2_bestBiLayers);
+    addItem("TkrTree2MaxWidthLyr",      &Tkr_tree2_maxWidthLyr);
+    addItem("TkrTree2MaxWidth",         &Tkr_tree2_maxWidth);
+    addItem("TkrTree2LastWidth",        &Tkr_tree2_lastWidth);
+                                     
+    addItem("TFPNumParams",             &TFP_numParams);
+    addItem("TFPBestPosX",              &TFP_bestPosX);
+    addItem("TFPBestPosY",              &TFP_bestPosY);
+    addItem("TFPBestPosZ",              &TFP_bestPosZ);
+    addItem("TFPBestDirX",              &TFP_bestDirX);
+    addItem("TFPBestDirY",              &TFP_bestDirY);
+    addItem("TFPBestDirZ",              &TFP_bestDirZ);
+    addItem("TFPBestNumHits",           &TFP_bestNumHits);
+    addItem("TFPBestChiSquare",         &TFP_bestChiSquare);
+    addItem("TFPBestAverageDist",       &TFP_bestAveDist);
+    addItem("TFPBestRmsTrans",          &TFP_bestRmsTrans);
+    addItem("TFPBestRmsLong",           &TFP_bestRmsLong);
+    addItem("TFPBestRmsLongAsym",       &TFP_bestRmsLongAsym);
+                                     
+    addItem("AudTreeBasedTool",         &Aud_treeBasedTool);
+    addItem("AudTreeBasedTool_link",    &Aud_treeBasedTool_link);
+    addItem("AudTreeBasedTool_node",    &Aud_treeBasedTool_node);
+    addItem("AudTreeBasedTool_build",   &Aud_treeBasedTool_build);
+    addItem("AudLinkTool_singleLink",   &Aud_tkrVecLinkBuilderTool_singleLink);
+    addItem("AudLinkTool_multiLink",    &Aud_tkrVecLinkBuilderTool_multiLink);
+    addItem("AudHoughFilterTool",       &Aud_houghFilterTool);
+    addItem("AudHoughFilterTool_fill",  &Aud_houghFilterTool_fill);
+    addItem("AudHoughFilterTool_peak",  &Aud_houghFilterTool_peak);
+    addItem("AudHoughFilterTool_build", &Aud_houghFilterTool_build);
 
     zeroVals();
 
@@ -620,6 +628,14 @@ StatusCode TreeValsTool::calculate()
     Aud_tkrVecLinkBuilderTool_singleLink = static_cast<float>(time)*0.000001;
     time = m_chronoSvc->chronoDelta("TkrVecLinkBuilderTool_multiLink",IChronoStatSvc::USER);
     Aud_tkrVecLinkBuilderTool_multiLink = static_cast<float>(time)*0.000001;
+    time = m_chronoSvc->chronoDelta("TkrHoughFilterTool",IChronoStatSvc::USER);
+    Aud_houghFilterTool = static_cast<float>(time)*0.000001;
+    time = m_chronoSvc->chronoDelta("TkrHoughFilterTool_fill",IChronoStatSvc::USER);
+    Aud_houghFilterTool_fill = static_cast<float>(time)*0.000001;
+    time = m_chronoSvc->chronoDelta("TkrHoughFilterTool_peak",IChronoStatSvc::USER);
+    Aud_houghFilterTool_peak = static_cast<float>(time)*0.000001;
+    time = m_chronoSvc->chronoDelta("TkrHoughFilterTool_build",IChronoStatSvc::USER);
+    Aud_houghFilterTool_build = static_cast<float>(time)*0.000001;
 
     return sc;
 }
