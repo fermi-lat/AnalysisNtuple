@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/Acd2ValsTool.cxx,v 1.4 2012/01/25 13:54:06 pesce Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/Acd2ValsTool.cxx,v 1.2.60.1 2012/01/29 17:12:48 usher Exp $
 */
 
 #include "ValBase.h"
@@ -473,9 +473,9 @@ StatusCode Acd2ValsTool::calculate()
     const idents::AcdId& id = aHit->getAcdId();
   
     //Trigger veto for the fast signal (MPR).
-    int triggerVetoBit_0 = ((aHit->getFlags(0) >> 1) & 0x1);
-    int triggerVetoBit_1 = ((aHit->getFlags(1) >> 1) & 0x1);
-    if (triggerVetoBit_0 == 1 or triggerVetoBit_1 == 1){
+    int triggerVetoBit_0 = ((aHit->getFlags(Event::AcdHit::A) >> 1) & 0x1);
+    int triggerVetoBit_1 = ((aHit->getFlags(Event::AcdHit::B) >> 1) & 0x1);
+    if (triggerVetoBit_0 == 1 || triggerVetoBit_1 == 1){
       TriggerVeto = 1;
     }
    
