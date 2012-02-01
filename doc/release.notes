@@ -3,6 +3,7 @@
   @verbatim
    * EOH *
 
+ AnalysisNtuple-02-60-01-gr03 01-Feb-2012 TU Fix compile time issue on windows
  AnalysisNtuple-02-60-01-gr02 31-Jan-2012  lsrea Melissa's addtions
  AnalysisNtuple-02-60-01-gr01 24-Jan-2012  lsrea More protection for empty events
  AnalysisNtuple-02-59-06 17-Nov-2011  TU Modifications to McValsTool, TkrValsTool and TreeValsTool to include more output, also
