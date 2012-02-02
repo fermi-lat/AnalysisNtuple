@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/src/TkrValsTool.cxx,v 1.99.16.1 2011/04/19 18:10:25 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.106 2011/12/12 20:36:35 heather Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -256,7 +256,7 @@ private:
     float Tkr_2_x0;
     float Tkr_2_y0;
     float Tkr_2_z0;
-
+    float Tkr_2_CovDet;
     float Tkr_2TkrAngle;
     float Tkr_2TkrHDoca;
 
@@ -828,7 +828,7 @@ StatusCode TkrValsTool::initialize()
     addItem("Tkr2FirstChisq", &Tkr_2_FirstChisq);
 
     addItem("Tkr2Hits",       &Tkr_2_Hits);
-    //    addItem("Tkr2FirstHits",  &Tkr_2_FirstHits);
+    addItem("Tkr2FirstHits",  &Tkr_2_FirstHits);
     addItem("Tkr2FirstLayer", &Tkr_2_FirstLayer);
     addItem("Tkr2LastLayer",  &Tkr_2_LastLayer);
     //   addItem("Tkr2DifHits",    &Tkr_2_DifHits);
@@ -867,7 +867,7 @@ StatusCode TkrValsTool::initialize()
       addItem("Tkr2X0",         &Tkr_2_x0);
       addItem("Tkr2Y0",         &Tkr_2_y0);
       addItem("Tkr2Z0",         &Tkr_2_z0);    
-
+    addItem("Tkr2CovDet",     &Tkr_2_CovDet);
     addItem("Tkr2TkrAngle",   &Tkr_2TkrAngle); 
     addItem("Tkr2TkrHDoca",   &Tkr_2TkrHDoca); 
 
@@ -1513,12 +1513,26 @@ StatusCode TkrValsTool::calculate()
             Tkr_2_KalThetaMS   = track_2->getKalThetaMS(); 
             Tkr_2_DifHits      = track_2->getNumXHits()-track_2->getNumYHits();
 
+			
+
             Point  x2 = track_2->getInitialPosition();
             Vector t2 = track_2->getInitialDirection();
             Tkr_2_xdir       = t2.x();
             Tkr_2_ydir       = t2.y();
             Tkr_2_zdir       = t2.z();
 
+			const Event::TkrTrackParams& Tkr_2_Cov 
+            = track_2->front()->getTrackParams(Event::TkrTrackHit::SMOOTHED);
+
+			float Tkr_2_Sxx         = Tkr_2_Cov.getxSlpxSlp();
+            float Tkr_2_Sxy         = Tkr_2_Cov.getxSlpySlp();
+            float Tkr_2_Syy         = Tkr_2_Cov.getySlpySlp();
+       
+            Tkr_2_CovDet = 
+            sqrt(std::max(0.0f,Tkr_2_Sxx*Tkr_2_Syy-Tkr_2_Sxy*Tkr_2_Sxy))*
+            Tkr_2_zdir*Tkr_2_zdir;
+
+	
 			 if (track_2->front()->validCluster())
         {
             Tkr_1_1stHitRes  = (*track_2)[0]->getMeasuredPosition(Event::TkrTrackHit::MEASURED)
