@@ -73,7 +73,8 @@ AnalysisNtupleAlg.enableDebugCalc = true;
 // Cut for the new TkrHitsCount ntuple variable
 // Using 250 mm as the default distance between clusters and center of Acd
 // tiles
-ToolSvc.AcdValsTool.tkrHitsCountCut = 250.0; 
+//ToolSvc.AcdValsTool.tkrHitsCountCut = 250.0; 
+// This parameter is not defined in AcdValsTool
 
 
 // Set output level threshold (2=DEBUG, 3=INFO, 4=WARNING, 5=ERROR, 6=FATAL )
