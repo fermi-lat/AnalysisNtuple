@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/Acd2ValsTool.cxx,v 1.3 2011/12/12 20:36:35 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/Acd2ValsTool.cxx,v 1.4 2012/01/25 13:54:06 pesce Exp $
 */
 
 #include "ValBase.h"
@@ -130,10 +130,29 @@ private:
   float ACD_Tkr1RibbonLength;
     
   // New stuff EAC
+  //float ACD_Tkr1_VetoSigmaHit;
+  //float ACD_Tkr1_VetoSigmaGap;
+  //float ACD_Tkr_VetoSigmaHit;
+  //float ACD_Tkr_VetoSigmaGap;
+  // New, new stuff ADW
   float ACD_Tkr1_VetoSigmaHit;
   float ACD_Tkr1_VetoSigmaGap;
+  float ACD_Tkr1_VetoSigmaMip;
+  float ACD_Tkr1_VetoSigmaProp;
+  float ACD_Tkr1_VetoSigmaProj;
   float ACD_Tkr_VetoSigmaHit;
   float ACD_Tkr_VetoSigmaGap;
+
+  // Variables computed for best CAL cluster
+  float ACD_Cal1_VetoSigmaHit;
+  float ACD_Cal1_VetoSigmaMip;
+  float ACD_Cal1_VetoSigmaProp;
+  float ACD_Cal1_VetoSigmaProj;
+
+  // Variables computed by taking best cluster w.r.t. hit tiles
+  float ACD_Cal1Energy15;
+  float ACD_Cal1Energy30;
+  float ACD_Cal1Energy45;
   
   // Variables about number of ACD tiles by row
   unsigned int ACD_tileTopCount;
@@ -248,7 +267,7 @@ The gap appears larger for tracks coming from the + side than the - side.
 <tr><td> Acd2Tkr1Energy15
 <td>F<td>   Energy in 15 deg. cone ahead of Track
 <tr><td> Acd2Tkr1Energy30
-<td>F<td>   Energy in 45 deg. cone ahead of Track
+<td>F<td>   Energy in 30 deg. cone ahead of Track
 <tr><td> Acd2Tkr1Energy45
 <td>F<td>   Energy in 45 deg. cone ahead of Track
 
@@ -279,6 +298,12 @@ The gap appears larger for tracks coming from the + side than the - side.
 <td>F<td>   Length along ribbon where point of closest approach occured. 
 0 is center of ribbon; + going towards +x or +y side of ACD
 
+<tr><td> Acd2Tkr1VetoSigmaMip
+<td>F<td>Number of sigmas less than an expected mip for signal in tile or ribbon most likely to veto the best track.
+<tr><td> Acd2Tkr1VetoSigmaProp
+<td>F<td>Number of sigmas track propagation is away from tile or ribbon most likely to veto the best track.
+<tr><td> Acd2Tkr1VetoSigmaProj
+<td>F<td>Number of sigmas track projection is away from tile or ribbon most likely to veto the best track.
 <tr><td> Acd2Tkr1VetoSigmaHit
 <td>F<td>Number of sigmas less than an expected mip for signal combined with the
 number of sigmas track propagation is away from tile or ribbon most likely to veto the best track.
@@ -289,6 +314,25 @@ number of sigmas track propagation is away from tile or ribbon most likely to ve
 number of sigmas track propagation is away from tile or ribbon most likely to veto any track.
 <tr><td> Acd2TkrVetoSigmaGap
 <td>F<td>Number of sigmas track propagation is away from closest GAP in ACD for any track.
+
+<tr><td> Acd2Cal1VetoSigmaMip
+<td>F<td>Number of sigmas less than an expected mip for signal in tile or ribbon most likely to veto the first 
+CAL cluster.
+<tr><td> Acd2Cal1VetoSigmaProp
+<td>F<td>Number of sigmas track propagation is away from tile or ribbon most likely to veto the first CAL cluster.
+<tr><td> Acd2Cal1VetoSigmaProj
+<td>F<td>Number of sigmas track projection is away from tile or ribbon most likely to veto the first CAL cluster.
+<tr><td> Acd2Cal1VetoSigmaHit
+<td>F<td>Number of sigmas less than an expected mip for signal combined with the
+number of sigmas track propagation is away from tile or ribbon most likely to veto the first CAL cluster.
+
+<tr><td> Acd2Cal1Energy15
+<td>F<td>   Energy in 15 deg. cone ahead of CAL cluster
+<tr><td> Acd2Cal1Energy30
+<td>F<td>   Energy in 30 deg. cone ahead of CAL cluster
+<tr><td> Acd2Cal1Energy45
+<td>F<td>   Energy in 45 deg. cone ahead of CAL cluster
+
 
 <tr><td> Acd2NoTop
 <td>U<td>   Hit Tile counts top of ACD
@@ -422,8 +466,20 @@ StatusCode Acd2ValsTool::initialize()
   
   addItem(m_prefix + "Tkr1VetoSigmaHit", & ACD_Tkr1_VetoSigmaHit);
   addItem(m_prefix + "Tkr1VetoSigmaGap", & ACD_Tkr1_VetoSigmaGap);
+  addItem(m_prefix + "Tkr1VetoSigmaMip", & ACD_Tkr1_VetoSigmaMip);
+  addItem(m_prefix + "Tkr1VetoSigmaProp", & ACD_Tkr1_VetoSigmaProp);
+  addItem(m_prefix + "Tkr1VetoSigmaProj", & ACD_Tkr1_VetoSigmaProj);
   addItem(m_prefix + "TkrVetoSigmaHit", & ACD_Tkr_VetoSigmaHit);
   addItem(m_prefix + "TkrVetoSigmaGap", & ACD_Tkr_VetoSigmaGap);   
+
+  addItem(m_prefix + "Cal1VetoSigmaHit", & ACD_Cal1_VetoSigmaHit);
+  addItem(m_prefix + "Cal1VetoSigmaMip", & ACD_Cal1_VetoSigmaMip);
+  addItem(m_prefix + "Cal1VetoSigmaProp", & ACD_Cal1_VetoSigmaProp);
+  addItem(m_prefix + "Cal1VetoSigmaProj", & ACD_Cal1_VetoSigmaProj);
+
+  addItem(m_prefix + "Cal1Energy15", &ACD_Cal1Energy15);
+  addItem(m_prefix + "Cal1Energy30", &ACD_Cal1Energy30);
+  addItem(m_prefix + "Cal1Energy45", &ACD_Cal1Energy45);
   
   zeroVals();
   ACD_ActiveDist_TrackNum = -1;
@@ -508,8 +564,11 @@ StatusCode Acd2ValsTool::calculate()
 
   ACD_Tkr1_VetoSigmaHit = maxSigma;
   ACD_Tkr1_VetoSigmaGap = maxSigma;
+  ACD_Tkr1_VetoSigmaMip = maxSigma;
+  ACD_Tkr1_VetoSigmaProp = maxSigma;
+  ACD_Tkr1_VetoSigmaProj = maxSigma;
 
-  // LOOP over AcdTkrHitPoca & get least distance sutff
+  // LOOP over AcdTkrHitPoca & get least distance stuff
   // Note that the Poca are sorted.  
   // Once we have filled all the variables we can split
   const Event::AcdTkrHitPoca* tile_vetoPoca = 0;
@@ -517,8 +576,8 @@ StatusCode Acd2ValsTool::calculate()
   const Event::AcdTkrGapPoca* gap_vetoPoca = 0;
 
 
-  float best_tileVetoHitSq(maxSigmaSq);
-  float best_ribbonVetoHitSq(maxSigmaSq);
+  float best_tileVetoSq(maxSigmaSq);
+  float best_ribbonVetoSq(maxSigmaSq);
   float best_gapVetoSq(maxSigmaSq);
   float bestCornerGapMeasure(maxDist);
   
@@ -532,8 +591,18 @@ StatusCode Acd2ValsTool::calculate()
     bool isBestTrack = trackIndex == 0;
     bool isUpGoing = anAssoc->getUpward();
     
-    float track_tileBestVetoHitSq(maxSigmaSq);
-    float track_ribbonBestVetoHitSq(maxSigmaSq);
+    // These are the best veto values if the element is
+    // a tile (not the best tile veto)
+    float track_tileBestVetoSq(maxSigmaSq);
+    float track_tileBestVetoHit(maxSigma);
+    float track_tileBestVetoProp(maxSigma);
+    float track_tileBestVetoProj(maxSigma);
+    // These are the best veto values if the element is
+    // a ribbon (not the best ribbon veto)
+    float track_ribbonBestVetoSq(maxSigmaSq);
+    float track_ribbonBestVetoHit(maxSigma);
+    float track_ribbonBestVetoProp(maxSigma);
+    float track_ribbonBestVetoProj(maxSigma);
     float track_gapBestVetoSq(maxSigmaSq);
 
     const Event::AcdTkrHitPoca* track_tileVetoPoca(0);
@@ -554,41 +623,48 @@ StatusCode Acd2ValsTool::calculate()
       // We could check this earlier, but it helps to have it here, because this makes it easier to 
       // add variables associated with the down going end
       if ( isUpGoing ) {
-    // Fill variables for all tracks
-    float testHitSigma2 = aPoca->vetoSigma2();
-    if ( theId.tile() ) {
-      if ( testHitSigma2  <  track_tileBestVetoHitSq) {
-        track_tileVetoPoca = aPoca;
-        track_tileBestVetoHitSq = testHitSigma2;
-      }   
-    } else if ( theId.ribbon() ) {
-      if ( testHitSigma2 <  track_ribbonBestVetoHitSq) {
-        track_ribbonVetoPoca = aPoca;
-        track_ribbonBestVetoHitSq = testHitSigma2;
-      }
-    }      
+        // Fill variables for all tracks
+        float testHitSigma2 = aPoca->vetoSigma2();
+        if ( theId.tile() ) {
+          if ( testHitSigma2  <  track_tileBestVetoSq) {
+            track_tileVetoPoca = aPoca;
+            track_tileBestVetoSq = testHitSigma2;
+            track_tileBestVetoHit = aPoca->vetoSigmaHit();
+            track_tileBestVetoProp = aPoca->vetoSigmaProp();
+            track_tileBestVetoProj = aPoca->vetoSigmaProj();
+          }   
+        } else if ( theId.ribbon() ) {
+          if ( testHitSigma2 <  track_ribbonBestVetoSq) {
+            track_ribbonVetoPoca = aPoca;
+            track_ribbonBestVetoSq = testHitSigma2;
+            track_ribbonBestVetoHit = aPoca->vetoSigmaHit();
+            track_ribbonBestVetoProp = aPoca->vetoSigmaProp();
+            track_ribbonBestVetoProj = aPoca->vetoSigmaProj();
+          }
+        }      
 
-    // Fill special vars for best track
-    if ( isBestTrack ) {
-      // check to see if it is in xx deg cone around track
-      if ( theId.tile() ) {
-        if ( aPoca->getArcLength() > 0.1 ) {
-          static const float tan30 = 5.77350288616910401e-01;
-          static const float tan15 = 2.67949200239410490e-01;
-          float tanAngle = ( -1 * aPoca->getDoca() )/ aPoca->getArcLength();
-          float tileEng = hitMap[theId]->tileEnergy();
-          if ( tanAngle < 1. ) {
-        ACD_Tkr1Energy45 += tileEng;
-        if ( tanAngle < tan30 ) {
-          ACD_Tkr1Energy30 += tileEng;
-          if ( tanAngle < tan15 ) {
-            ACD_Tkr1Energy15 += tileEng;
+        // Fill special vars for best track
+        if ( isBestTrack ) {
+          // check to see if it is in xx deg cone around track
+          if ( theId.tile() ) {
+            if ( aPoca->getArcLength() > 0.1 ) {
+              static const float tan30 = 5.77350288616910401e-01;
+              static const float tan15 = 2.67949200239410490e-01;
+              float tanAngle = ( -1 * aPoca->getDoca() )/ aPoca->getArcLength();
+              float tileEng = hitMap[theId]->tileEnergy();
+              if ( tanAngle < 1. ) {
+                ACD_Tkr1Energy45 += tileEng;
+                if ( tanAngle < tan30 ) {
+                  ACD_Tkr1Energy30 += tileEng;
+                  if ( tanAngle < tan15 ) {
+                    ACD_Tkr1Energy15 += tileEng;
+                  }
+                }
+              }
+            }
           }
         }
-          }
-        }
-      }
-    }   
+
       }
     }
 
@@ -611,8 +687,8 @@ StatusCode Acd2ValsTool::calculate()
     float cornerGapMeasure = cornerDoca > 0 ? fabs(cornerDoca) : fabs(0.2 * cornerDoca);
     if ( isUpGoing ) {
       if ( cornerGapMeasure < bestCornerGapMeasure ) {
-    ACD_Corner_DOCA = cornerDoca;
-    bestCornerGapMeasure = cornerGapMeasure;
+        ACD_Corner_DOCA = cornerDoca;
+        bestCornerGapMeasure = cornerGapMeasure;
       }
     }
 
@@ -620,47 +696,63 @@ StatusCode Acd2ValsTool::calculate()
     if ( isBestTrack ) {
       
       if ( isUpGoing ) {
-    ACD_Tkr1Corner_DOCA = cornerDoca;
-    ACD_Tkr1_VetoSigmaHit = track_tileBestVetoHitSq < track_ribbonBestVetoHitSq ? 
-      sqrt(track_tileBestVetoHitSq) : sqrt(track_ribbonBestVetoHitSq);
+      ACD_Tkr1Corner_DOCA = cornerDoca;
+       
+      if (track_tileBestVetoSq < track_ribbonBestVetoSq) { 
+          ACD_Tkr1_VetoSigmaHit = sqrt(track_tileBestVetoSq);
+          ACD_Tkr1_VetoSigmaMip =  track_tileBestVetoHit > 0. ?
+            track_tileBestVetoHit : 0.;
+          ACD_Tkr1_VetoSigmaProp = track_tileBestVetoProp > 0. ?
+            track_tileBestVetoProp : 0.;
+          ACD_Tkr1_VetoSigmaProj = track_tileBestVetoProj > 0. ?
+            track_tileBestVetoProj : 0.;
+        } else {
+          ACD_Tkr1_VetoSigmaHit = sqrt(track_ribbonBestVetoSq);
+          ACD_Tkr1_VetoSigmaMip =  track_ribbonBestVetoHit > 0. ?
+            track_ribbonBestVetoHit : 0.;
+          ACD_Tkr1_VetoSigmaProp = track_ribbonBestVetoProp > 0. ?
+            track_ribbonBestVetoProp : 0.;
+          ACD_Tkr1_VetoSigmaProj = track_ribbonBestVetoProj > 0. ?
+            track_ribbonBestVetoProj : 0.;
+        }
       }
- 
+       
       if ( track_tileVetoPoca != 0 && isUpGoing ) {
-    ACD_Tkr1ActiveDist = track_tileVetoPoca->getDoca();
-    ACD_Tkr1ActiveDist_Err = track_tileVetoPoca->getDocaErrProj();
-    ACD_Tkr1ActiveDist_Energy = hitMap[track_tileVetoPoca->getId()]->tileEnergy();
-    ACD_Tkr1ActiveDist_Arc = track_tileVetoPoca->getArcLength();
+        ACD_Tkr1ActiveDist = track_tileVetoPoca->getDoca();
+        ACD_Tkr1ActiveDist_Err = track_tileVetoPoca->getDocaErrProj();
+        ACD_Tkr1ActiveDist_Energy = hitMap[track_tileVetoPoca->getId()]->tileEnergy();
+        ACD_Tkr1ActiveDist_Arc = track_tileVetoPoca->getArcLength();
       }
-      
+        
       if ( track_ribbonVetoPoca != 0 && isUpGoing ) {
-    ACD_Tkr1_ribbon_ActiveDist =  track_ribbonVetoPoca->getDoca();
-    ACD_Tkr1_ribbon_ActiveDist_Err = track_ribbonVetoPoca->getDocaErrProj();
-    ACD_Tkr1_ribbon_ActiveLength = track_ribbonVetoPoca->getLocalY();
-    ACD_Tkr1_ribbon_EnergyPmtA = hitMap[track_ribbonVetoPoca->getId()]->ribbonEnergy(Event::AcdHit::A);
-    ACD_Tkr1_ribbon_EnergyPmtB = hitMap[track_ribbonVetoPoca->getId()]->ribbonEnergy(Event::AcdHit::B);
+        ACD_Tkr1_ribbon_ActiveDist =  track_ribbonVetoPoca->getDoca();
+        ACD_Tkr1_ribbon_ActiveDist_Err = track_ribbonVetoPoca->getDocaErrProj();
+        ACD_Tkr1_ribbon_ActiveLength = track_ribbonVetoPoca->getLocalY();
+        ACD_Tkr1_ribbon_EnergyPmtA = hitMap[track_ribbonVetoPoca->getId()]->ribbonEnergy(Event::AcdHit::A);
+        ACD_Tkr1_ribbon_EnergyPmtB = hitMap[track_ribbonVetoPoca->getId()]->ribbonEnergy(Event::AcdHit::B);
       }
-
+       
       if ( aGap != 0 && isUpGoing ) {
-    ACD_Tkr1_VetoSigmaGap = sqrt(track_gapBestVetoSq);
-    ACD_Tkr1Ribbon_Dist = aGap->getDoca();
-    ACD_Tkr1Ribbon_Dist_Err = aGap->getDocaErrProj();
-    ACD_Tkr1RibbonLength = aGap->getLocalY();
+        ACD_Tkr1_VetoSigmaGap = sqrt(track_gapBestVetoSq);
+        ACD_Tkr1Ribbon_Dist = aGap->getDoca();
+        ACD_Tkr1Ribbon_Dist_Err = aGap->getDocaErrProj();
+        ACD_Tkr1RibbonLength = aGap->getLocalY();
       }
     }
-
+       
     // Latch vars for all tracks
     if ( isUpGoing ) {
-      if ( track_tileBestVetoHitSq < best_tileVetoHitSq  ) {
-    best_tileVetoHitSq = track_tileBestVetoHitSq;
-    tile_vetoPoca = track_tileVetoPoca;
+      if ( track_tileBestVetoSq < best_tileVetoSq  ) {
+        best_tileVetoSq = track_tileBestVetoSq;
+        tile_vetoPoca = track_tileVetoPoca;
       }
-      if (track_ribbonBestVetoHitSq < best_ribbonVetoHitSq  ) {
-    best_ribbonVetoHitSq = track_ribbonBestVetoHitSq;
-    ribbon_vetoPoca = track_ribbonVetoPoca;
+      if (track_ribbonBestVetoSq < best_ribbonVetoSq  ) {
+        best_ribbonVetoSq = track_ribbonBestVetoSq;
+        ribbon_vetoPoca = track_ribbonVetoPoca;
       }
       if ( track_gapBestVetoSq < best_gapVetoSq ) {
-    best_gapVetoSq = track_gapBestVetoSq;
-    gap_vetoPoca = aGap;
+        best_gapVetoSq = track_gapBestVetoSq;
+        gap_vetoPoca = aGap;
       }     
     }
   }
@@ -689,10 +781,145 @@ StatusCode Acd2ValsTool::calculate()
     ACD_TkrRibbonLength = gap_vetoPoca->getLocalY();    
   }
 
-  ACD_Tkr_VetoSigmaHit = best_tileVetoHitSq < best_ribbonVetoHitSq ?
-    sqrt(best_tileVetoHitSq) : sqrt(best_ribbonVetoHitSq);
+  ACD_Tkr_VetoSigmaHit = best_tileVetoSq < best_ribbonVetoSq ?
+    sqrt(best_tileVetoSq) : sqrt(best_ribbonVetoSq);
   ACD_Tkr_VetoSigmaGap = sqrt(best_gapVetoSq);
+
+  /// ADW: 2/2/12
+  /// Calorimeter Associations
+
+  // Reset variables for first CAL cluster
+  ACD_Cal1Energy15 = ACD_Cal1Energy30 = ACD_Cal1Energy45 = 0.;
+
+  ACD_Cal1_VetoSigmaHit = maxSigma;
+  ACD_Cal1_VetoSigmaMip = maxSigma;
+  ACD_Cal1_VetoSigmaProp = maxSigma;
+  ACD_Cal1_VetoSigmaProj = maxSigma;
+
+  // LOOP over AcdTkrHitPoca & get least distance stuff
+  // Note that the Poca are sorted.  
+  // Once we have filled all the variables we can split
+  tile_vetoPoca = 0;
+  ribbon_vetoPoca = 0;
+
+  best_tileVetoSq = maxSigmaSq;
+  best_ribbonVetoSq = maxSigmaSq;
+  
+  const Event::AcdCalAssocCol& calAssocs = pACD->getCalAssocCol();
+  for (Event::AcdCalAssocCol::const_iterator itrAssoc = calAssocs.begin(); 
+       itrAssoc != calAssocs.end(); itrAssoc++ ) {
+
+    const Event::AcdCalAssoc* anAssoc = (*itrAssoc);
+    int clusterIndex = anAssoc->getTrackIndex();
+    if ( clusterIndex < 0 ) continue;
+    bool isBestCluster = clusterIndex == 0;
+    bool isUpGoing = anAssoc->getUpward();
     
+    // These are the best veto values if the element is
+    // a tile (not the best tile veto)
+    float cluster_tileBestVetoSq(maxSigmaSq);
+    float cluster_tileBestVetoHit(maxSigma);
+    float cluster_tileBestVetoProp(maxSigma);
+    float cluster_tileBestVetoProj(maxSigma);
+    // These are the best veto values if the element is
+    // a ribbon (not the best ribbon veto)
+    float cluster_ribbonBestVetoSq(maxSigmaSq);
+    float cluster_ribbonBestVetoHit(maxSigma);
+    float cluster_ribbonBestVetoProp(maxSigma);
+    float cluster_ribbonBestVetoProj(maxSigma);
+
+    const Event::AcdTkrHitPoca* cluster_tileVetoPoca(0);
+    const Event::AcdTkrHitPoca* cluster_ribbonVetoPoca(0);
+
+    // Remove this to calculate variables for all clusters
+    if ( !isBestCluster ) continue;
+
+    int nHitPoca = anAssoc->nHitPoca();    
+    for ( int iHitPoca(0); iHitPoca < nHitPoca; iHitPoca++ ) {
+      
+      const Event::AcdTkrHitPoca* aPoca = anAssoc->getHitPoca(iHitPoca);
+      if ( aPoca == 0 ) continue;
+      
+      // make sure there is associated signal
+      if ( aPoca->mipsPmtA() < 0.001 && aPoca->mipsPmtB() < 0.001 ) continue;
+            
+      // get the id
+      idents::AcdId theId = aPoca->getId();
+      
+      // We could check this earlier, but it helps to have it here, because this makes it easier to 
+      // add variables associated with the down going end
+      if ( isUpGoing ) {
+        // Fill variables for all tracks
+        float testHitSigma2 = aPoca->vetoSigma2();
+        if ( theId.tile() ) {
+          if ( testHitSigma2  <  cluster_tileBestVetoSq) {
+            cluster_tileVetoPoca = aPoca;
+            cluster_tileBestVetoSq = testHitSigma2;
+            cluster_tileBestVetoHit = aPoca->vetoSigmaHit();
+            cluster_tileBestVetoProp = aPoca->vetoSigmaProp();
+            cluster_tileBestVetoProj = aPoca->vetoSigmaProj();
+          }   
+        } else if ( theId.ribbon() ) {
+          if ( testHitSigma2 <  cluster_ribbonBestVetoSq) {
+            cluster_ribbonVetoPoca = aPoca;
+            cluster_ribbonBestVetoSq = testHitSigma2;
+            cluster_ribbonBestVetoHit = aPoca->vetoSigmaHit();
+            cluster_ribbonBestVetoProp = aPoca->vetoSigmaProp();
+            cluster_ribbonBestVetoProj = aPoca->vetoSigmaProj();
+          }
+        }      
+
+        // Fill special vars for best track
+        if ( isBestCluster ) {
+          // check to see if it is in xx deg cone around track
+          if ( theId.tile() ) {
+            if ( aPoca->getArcLength() > 0.1 ) {
+              static const float tan30 = 5.77350288616910401e-01;
+              static const float tan15 = 2.67949200239410490e-01;
+              float tanAngle = ( -1 * aPoca->getDoca() )/ aPoca->getArcLength();
+              float tileEng = hitMap[theId]->tileEnergy();
+              if ( tanAngle < 1. ) {
+                ACD_Cal1Energy45 += tileEng;
+                if ( tanAngle < tan30 ) {
+                  ACD_Cal1Energy30 += tileEng;
+                  if ( tanAngle < tan15 ) {
+                    ACD_Cal1Energy15 += tileEng;
+                  }
+                }
+              }
+            }
+          }
+        }
+
+      }
+
+    }
+
+    // Fill vars for best track
+    if ( isBestCluster ) {
+      if ( isUpGoing ) {
+        if (cluster_tileBestVetoSq < cluster_ribbonBestVetoSq) { 
+          ACD_Cal1_VetoSigmaHit = sqrt(cluster_tileBestVetoSq);
+          ACD_Cal1_VetoSigmaMip =  cluster_tileBestVetoHit > 0. ?
+            cluster_tileBestVetoHit : 0.;
+          ACD_Cal1_VetoSigmaProp = cluster_tileBestVetoProp > 0. ?
+            cluster_tileBestVetoProp : 0.;
+          ACD_Cal1_VetoSigmaProj = cluster_tileBestVetoProj > 0. ?
+            cluster_tileBestVetoProj : 0.;
+        } else {
+          ACD_Cal1_VetoSigmaHit = sqrt(cluster_ribbonBestVetoSq);
+          ACD_Cal1_VetoSigmaMip =  cluster_ribbonBestVetoHit > 0. ?
+            cluster_ribbonBestVetoHit : 0.;
+          ACD_Cal1_VetoSigmaProp = cluster_ribbonBestVetoProp > 0. ?
+            cluster_ribbonBestVetoProp : 0.;
+          ACD_Cal1_VetoSigmaProj = cluster_ribbonBestVetoProj > 0. ?
+            cluster_ribbonBestVetoProj : 0.;
+        }
+      }
+    }
+
+  }    
+
   return sc;
 }
 
