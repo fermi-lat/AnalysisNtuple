@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.114 2011/10/05 19:31:53 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.115 2011/11/17 09:29:13 bregeon Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -260,6 +260,53 @@ private:
     float CAL_cfp_calfit_alpha;       // fit parameter alpha
     float CAL_cfp_calfit_tmax;        // fit parameter tmax
     float CAL_cfp_calfit_fiterrflg;   // fit error flag
+
+  float CAL_newcfp_energy;      // Energy from Full Profile tool
+  float CAL_newcfp_energy_err;
+  float CAL_newcfp_totChiSq;    // Total ChiSquare of fit divided by 11
+  float CAL_newcfp_seltotChiSq;    // Total ChiSquare of fit divided by 11
+  float CAL_newcfp_ChiSqdist;    // Total ChiSquare of fit divided by 11
+  float CAL_newcfp_Chidist;    // Total ChiSquare of fit divided by 11
+  float CAL_newcfp_energyUB;    // Energy from Full Profile tool unbiased
+  float CAL_newcfp_calEffRLn;   // Effective radiation lengths in the Cal
+  float CAL_newcfp_tkrRLn;   // Effective radiation lengths in the tkr
+  float CAL_newcfp_par0;
+  float CAL_newcfp_par1;
+  float CAL_newcfp_parcf;
+  float CAL_newcfp_xcor;
+  float CAL_newcfp_ycor;
+  float CAL_newcfp_alpha;       // fit parameter alpha
+  float CAL_newcfp_tmax;        // fit parameter tmax
+  float CAL_newcfp_fiterrflg;   // fit error flag
+  float CAL_newcfp_widening;   // 
+  float CAL_newcfp_nxtalsat;
+  float CAL_newcfp_nxtalsel;
+  float CAL_newcfp_nlayersat;
+
+  float CAL_newcfp_p0;
+  float CAL_newcfp_p1;
+  float CAL_newcfp_p2;
+  float CAL_newcfp_v0;
+  float CAL_newcfp_v1;
+  float CAL_newcfp_v2;
+
+  float CAL_newcfp_calfit_energy;      // Energy from Full Profile tool
+  float CAL_newcfp_calfit_energy_err;
+  float CAL_newcfp_calfit_totChiSq;    // Total ChiSquare of fit divided by 11
+  float CAL_newcfp_calfit_seltotChiSq;    // Total ChiSquare of fit divided by 11
+  float CAL_newcfp_calfit_ChiSqdist;    // Total ChiSquare of fit divided by 11
+  float CAL_newcfp_calfit_Chidist;    // Total ChiSquare of fit divided by 11
+  float CAL_newcfp_calfit_calEffRLn;   // Effective radiation lengths in the Cal
+  float CAL_newcfp_calfit_par0;
+  float CAL_newcfp_calfit_par1;
+  float CAL_newcfp_calfit_parcf;
+  float CAL_newcfp_calfit_xcor;
+  float CAL_newcfp_calfit_ycor;
+  float CAL_newcfp_calfit_alpha;       // fit parameter alpha
+  float CAL_newcfp_calfit_tmax;        // fit parameter tmax
+  float CAL_newcfp_calfit_fiterrflg;   // fit error flag
+  float CAL_newcfp_calfit_widening;   // 
+  float CAL_newcfp_calfit_nxtalsel;
 
     //float CAL_lll_energy;      // Energy from the Last Layer Likelihood tool
     //float CAL_lll_energyErr;   // Chisquare from the Last Layer Likelihood
@@ -797,6 +844,50 @@ StatusCode CalValsTool::initialize()
     addItem("CalCfpCalAlpha",  &CAL_cfp_calfit_alpha);
     addItem("CalCfpCalTmax",  &CAL_cfp_calfit_tmax);
     addItem("CalCfpCalFitErrFlg",  &CAL_cfp_calfit_fiterrflg);
+
+    addItem("CalNewCfpEnergy",  &CAL_newcfp_energy);
+    addItem("CalNewCfpEnergyErr",  &CAL_newcfp_energy_err);
+    addItem("CalNewCfpChiSq",   &CAL_newcfp_totChiSq);
+    addItem("CalNewCfpSelChiSq",   &CAL_newcfp_seltotChiSq);
+    addItem("CalNewCfpSelChiSqDist",   &CAL_newcfp_ChiSqdist);
+    addItem("CalNewCfpSelChiDist",   &CAL_newcfp_Chidist);
+    addItem("CalNewCfpEnergyUB",&CAL_newcfp_energyUB);
+    addItem("CalNewCfpEffRLn",  &CAL_newcfp_calEffRLn);
+    addItem("CalNewCfpTkrRLn",  &CAL_newcfp_tkrRLn);
+    addItem("CalNewCfpPar0",  &CAL_newcfp_par0);
+    addItem("CalNewCfpPar1",  &CAL_newcfp_par1);
+    addItem("CalNewCfpParcf",  &CAL_newcfp_parcf);
+    addItem("CalNewCfpXcor",  &CAL_newcfp_xcor);
+    addItem("CalNewCfpYcor",  &CAL_newcfp_ycor);
+    addItem("CalNewCfpAlpha",  &CAL_newcfp_alpha);
+    addItem("CalNewCfpTmax",  &CAL_newcfp_tmax);
+    addItem("CalNewCfpFitErrFlg",  &CAL_newcfp_fiterrflg);
+    addItem("CalNewCfpNLsat",  &CAL_newcfp_nlayersat);
+    addItem("CalNewCfpNsat",  &CAL_newcfp_nxtalsat);
+    addItem("CalNewCfpNsel",  &CAL_newcfp_nxtalsel);
+    addItem("CalNewCfpPx",  &CAL_newcfp_p0);
+    addItem("CalNewCfpPy",  &CAL_newcfp_p1);
+    addItem("CalNewCfpPz",  &CAL_newcfp_p2);
+    addItem("CalNewCfpVx",  &CAL_newcfp_v0);
+    addItem("CalNewCfpVy",  &CAL_newcfp_v1);
+    addItem("CalNewCfpVz",  &CAL_newcfp_v2);
+    addItem("CalNewCfpCalEnergy",  &CAL_newcfp_calfit_energy);
+    addItem("CalNewCfpCalEnergyErr",  &CAL_newcfp_calfit_energy_err);
+    addItem("CalNewCfpCalChiSq",   &CAL_newcfp_calfit_totChiSq);
+    addItem("CalNewCfpCalSelChiSq",   &CAL_newcfp_calfit_seltotChiSq);
+    addItem("CalNewCfpCalSelChiSqDist",   &CAL_newcfp_calfit_ChiSqdist);
+    addItem("CalNewCfpCalSelChiDist",   &CAL_newcfp_calfit_Chidist);
+    addItem("CalNewCfpCalEffRLn",  &CAL_newcfp_calfit_calEffRLn);
+    addItem("CalNewCfpCalPar0",  &CAL_newcfp_calfit_par0);
+    addItem("CalNewCfpCalPar1",  &CAL_newcfp_calfit_par1);
+    addItem("CalNewCfpCalParcf",  &CAL_newcfp_calfit_parcf);
+    addItem("CalNewCfpCalXcor",  &CAL_newcfp_calfit_xcor);
+    addItem("CalNewCfpCalYcor",  &CAL_newcfp_calfit_ycor);
+    addItem("CalNewCfpCalAlpha",  &CAL_newcfp_calfit_alpha);
+    addItem("CalNewCfpCalTmax",  &CAL_newcfp_calfit_tmax);
+    addItem("CalNewCfpCalFitErrFlg",  &CAL_newcfp_calfit_fiterrflg);
+    addItem("CalNewCfpCalNsel",  &CAL_newcfp_calfit_nxtalsel);
+
     //addItem("CalLllEnergy",  &CAL_lll_energy);
     //addItem("CalLllEneErr",  &CAL_lll_energyErr);
     //addItem("CalTklEnergy",  &CAL_tkl_energy);
@@ -952,6 +1043,59 @@ StatusCode CalValsTool::calculate()
                     //   std::cout << "EvtValsTool CAL_cfp_energy " << CAL_cfp_energy << " ( " << log10(CAL_cfp_energy) << " ) " << CAL_cfp_energyUB << " ( " << log10(CAL_cfp_energyUB) << " ) " << tkr1ZDir << std::endl;
                 }
             }
+            else if (corResult.getCorrectionName() == "NewCalFullProfileTool")
+              {
+                CAL_newcfp_energy    = corResult.getParams().getEnergy();
+                CAL_newcfp_energy_err    = corResult["energy_err"];
+                CAL_newcfp_totChiSq  = corResult["totchisq"];
+                CAL_newcfp_seltotChiSq  = corResult["seltotchisq"];
+                CAL_newcfp_ChiSqdist  = corResult["chisqdist"];
+                CAL_newcfp_Chidist  = corResult["chidist"];
+                CAL_newcfp_calEffRLn = corResult["cal_eff_RLn"];
+                CAL_newcfp_tkrRLn = corResult["tkr_RLn"];
+                CAL_newcfp_par0 = corResult["par0"];
+                CAL_newcfp_par1 = corResult["par1"];
+                CAL_newcfp_parcf = corResult["parcf"];
+                CAL_newcfp_xcor = corResult["xcor"];
+                CAL_newcfp_ycor = corResult["ycor"];
+                CAL_newcfp_alpha = corResult["alpha"];
+                CAL_newcfp_tmax = corResult["tmax"];
+                CAL_newcfp_fiterrflg = corResult["fitflag"];
+                CAL_newcfp_nlayersat = corResult["nlayersat"];
+                CAL_newcfp_nxtalsat = corResult["nxtalsat"];
+                CAL_newcfp_nxtalsel = corResult["nxtalsel"];
+                CAL_newcfp_p0 = corResult["recp0"];
+                CAL_newcfp_p1 = corResult["recp1"];
+                CAL_newcfp_p2 = corResult["recp2"];
+                CAL_newcfp_v0 = corResult["recv0"];
+                CAL_newcfp_v1 = corResult["recv1"];
+                CAL_newcfp_v2 = corResult["recv2"];
+                //
+                CAL_newcfp_calfit_energy    = corResult["calfit_fit_energy"];
+                CAL_newcfp_calfit_energy_err    = corResult["calfit_energy_err"];
+                CAL_newcfp_calfit_totChiSq  = corResult["calfit_totchisq"];
+                CAL_newcfp_calfit_seltotChiSq  = corResult["calfit_seltotchisq"];
+                CAL_newcfp_calfit_ChiSqdist  = corResult["calfit_chisqdist"];
+                CAL_newcfp_calfit_Chidist  = corResult["calfit_chidist"];
+                CAL_newcfp_calfit_calEffRLn = corResult["calfit_cal_eff_RLn"];
+                CAL_newcfp_calfit_par0 = corResult["calfit_par0"];
+                CAL_newcfp_calfit_par1 = corResult["calfit_par1"];
+                CAL_newcfp_calfit_parcf = corResult["calfit_parcf"];
+                CAL_newcfp_calfit_xcor = corResult["calfit_xcor"];
+                CAL_newcfp_calfit_ycor = corResult["calfit_ycor"];
+                CAL_newcfp_calfit_alpha = corResult["calfit_alpha"];
+                CAL_newcfp_calfit_tmax = corResult["calfit_tmax"];
+                CAL_newcfp_calfit_fiterrflg = corResult["calfit_fitflag"];
+                CAL_newcfp_calfit_widening = corResult["calfit_widening"];
+                CAL_newcfp_calfit_nxtalsel = corResult["calfit_nxtalsel"];
+                //
+                if ( CAL_newcfp_energy == 0 ) {
+                  CAL_newcfp_energyUB = 0;
+                }
+                else {
+                  CAL_newcfp_energyUB = CAL_newcfp_energy;
+                }
+              }
             // Removed 5/5/09 LSR
             //else if (corResult.getCorrectionName() == "CalLastLayerLikelihoodTool")
             //{
