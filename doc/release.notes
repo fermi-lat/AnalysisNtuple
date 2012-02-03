@@ -3,6 +3,7 @@
   @verbatim
    * EOH *
 
+ AnalysisNtuple-02-60-01-gr05 03-Feb-2012 TU Added Philippe's cal variables
  AnalysisNtuple-02-60-01-gr04 02-Feb-2012 kadrlica Added calorimeter cluster association variables to Acd2 output. Split up projected Acd2 sigma values into distances and hit signal.
  AnalysisNtuple-02-60-01-gr03 01-Feb-2012 TU Fix compile time issue on windows
  AnalysisNtuple-02-60-01-gr02 31-Jan-2012  lsrea Melissa's addtions
