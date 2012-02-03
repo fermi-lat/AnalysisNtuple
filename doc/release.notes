@@ -3,6 +3,7 @@
   @verbatim
    * EOH *
 
+ AnalysisNtuple-02-60-03 02-Feb-2012 kadrlica Adding Acd2 variables for Tkr1 and Cal1.
  AnalysisNtuple-02-60-02 24-Jan-2012  lsrea More protection for empty events
  AnalysisNtuple-02-60-01 03-Jan-2011 HMK Patch test JO to remove reference
    to AcdValsTool parameter that does not exist
