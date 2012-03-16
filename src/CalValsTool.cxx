@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.115.4.1 2012/02/03 17:06:37 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.115.4.2 2012/03/16 18:06:35 bruel Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -1821,7 +1821,9 @@ StatusCode CalValsTool::calculate()
 
     // Find angle between Track and Cal. Moment axis
     // Note: the direction in Cal is opposite to tracking!
-    if(num_tracks>0 && fabs(cal_dir.x()) < 1.) {
+    
+    if(num_tracks>0 && fabs(cal_dir.x()) < 1. &&
+       calCluster->checkStatusBit(Event::CalCluster::MOMENTS) ) {
         double cosCalt0 = std::min(1., -t0*cal_dir); 
         cosCalt0 = std::max(cosCalt0, -1.);  // just in case...
         CAL_Track_Angle = acos(cosCalt0);
