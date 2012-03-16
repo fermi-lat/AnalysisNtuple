@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/Acd2ValsTool.cxx,v 1.2.60.2 2012/02/01 17:21:16 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/Acd2ValsTool.cxx,v 1.2.60.3 2012/02/02 21:58:41 kadrlica Exp $
 */
 
 #include "ValBase.h"
@@ -140,8 +140,13 @@ private:
   float ACD_Tkr1_VetoSigmaMip;
   float ACD_Tkr1_VetoSigmaProp;
   float ACD_Tkr1_VetoSigmaProj;
+  unsigned int  ACD_Tkr1_TriggerVeto;
   float ACD_Tkr_VetoSigmaHit;
   float ACD_Tkr_VetoSigmaGap;
+  float ACD_Tkr_VetoSigmaMip;
+  float ACD_Tkr_VetoSigmaProp;
+  float ACD_Tkr_VetoSigmaProj;
+  unsigned int  ACD_Tkr_TriggerVeto;
 
   // Variables computed for best CAL cluster
   float ACD_Cal1_VetoSigmaHit;
@@ -309,11 +314,21 @@ The gap appears larger for tracks coming from the + side than the - side.
 number of sigmas track propagation is away from tile or ribbon most likely to veto the best track.
 <tr><td> Acd2Tkr1VetoSigmaGap
 <td>F<td>Number of sigmas track propagation is away from clostest GAP in ACD for the best track.
+<tr><td> Acd2Tkr1TriggerVeto
+<td>U<td>Veto trigger for the tile or ribbon most likely to veto the best track.
+<tr><td> Acd2TkrVetoSigmaMip
+<td>F<td>Number of sigmas less than an expected mip for signal in tile or ribbon most likely to veto any track.
+<tr><td> Acd2TkrVetoSigmaProp
+<td>F<td>Number of sigmas track propagation is away from tile or ribbon most likely to veto any track.
+<tr><td> Acd2TkrVetoSigmaProj
+<td>F<td>Number of sigmas track projection is away from tile or ribbon most likely to veto any track.
 <tr><td> Acd2TkrVetoSigmaHit
 <td>F<td>Number of sigmas less than an expected mip for signal combined with the
 number of sigmas track propagation is away from tile or ribbon most likely to veto any track.
 <tr><td> Acd2TkrVetoSigmaGap
 <td>F<td>Number of sigmas track propagation is away from closest GAP in ACD for any track.
+<tr><td> Acd2Tkr1TriggerVeto
+<td>U<td>Veto trigger for the tile or ribbon most likely to veto any track.
 
 <tr><td> Acd2Cal1VetoSigmaMip
 <td>F<td>Number of sigmas less than an expected mip for signal in tile or ribbon most likely to veto the first 
@@ -470,8 +485,13 @@ StatusCode Acd2ValsTool::initialize()
   addItem(m_prefix + "Tkr1VetoSigmaMip", & ACD_Tkr1_VetoSigmaMip);
   addItem(m_prefix + "Tkr1VetoSigmaProp", & ACD_Tkr1_VetoSigmaProp);
   addItem(m_prefix + "Tkr1VetoSigmaProj", & ACD_Tkr1_VetoSigmaProj);
+  addItem(m_prefix + "Tkr1TriggerVeto", & ACD_Tkr1_TriggerVeto);
   addItem(m_prefix + "TkrVetoSigmaHit", & ACD_Tkr_VetoSigmaHit);
   addItem(m_prefix + "TkrVetoSigmaGap", & ACD_Tkr_VetoSigmaGap);   
+  addItem(m_prefix + "TkrVetoSigmaMip", & ACD_Tkr_VetoSigmaMip);
+  addItem(m_prefix + "TkrVetoSigmaProp", & ACD_Tkr_VetoSigmaProp);
+  addItem(m_prefix + "TkrVetoSigmaProj", & ACD_Tkr_VetoSigmaProj);
+  addItem(m_prefix + "TkrTriggerVeto", & ACD_Tkr_TriggerVeto);
 
   addItem(m_prefix + "Cal1VetoSigmaHit", & ACD_Cal1_VetoSigmaHit);
   addItem(m_prefix + "Cal1VetoSigmaMip", & ACD_Cal1_VetoSigmaMip);
@@ -569,6 +589,16 @@ StatusCode Acd2ValsTool::calculate()
   ACD_Tkr1_VetoSigmaProp = maxSigma;
   ACD_Tkr1_VetoSigmaProj = maxSigma;
 
+  ACD_Tkr1_TriggerVeto = 0;
+
+  ACD_Tkr_VetoSigmaHit = maxSigma;
+  ACD_Tkr_VetoSigmaGap = maxSigma;
+  ACD_Tkr_VetoSigmaMip = maxSigma;
+  ACD_Tkr_VetoSigmaProp = maxSigma;
+  ACD_Tkr_VetoSigmaProj = maxSigma;
+
+  ACD_Tkr_TriggerVeto = 0;
+
   // LOOP over AcdTkrHitPoca & get least distance stuff
   // Note that the Poca are sorted.  
   // Once we have filled all the variables we can split
@@ -598,6 +628,7 @@ StatusCode Acd2ValsTool::calculate()
     float track_tileBestVetoHit(maxSigma);
     float track_tileBestVetoProp(maxSigma);
     float track_tileBestVetoProj(maxSigma);
+    unsigned int track_tileBestTriggerVeto(0);
     // These are the best veto values if the element is
     // a ribbon (not the best ribbon veto)
     float track_ribbonBestVetoSq(maxSigmaSq);
@@ -605,6 +636,7 @@ StatusCode Acd2ValsTool::calculate()
     float track_ribbonBestVetoProp(maxSigma);
     float track_ribbonBestVetoProj(maxSigma);
     float track_gapBestVetoSq(maxSigmaSq);
+    unsigned int track_ribbonBestTriggerVeto(0);
 
     const Event::AcdTkrHitPoca* track_tileVetoPoca(0);
     const Event::AcdTkrHitPoca* track_ribbonVetoPoca(0);
@@ -633,6 +665,7 @@ StatusCode Acd2ValsTool::calculate()
             track_tileBestVetoHit = aPoca->vetoSigmaHit();
             track_tileBestVetoProp = aPoca->vetoSigmaProp();
             track_tileBestVetoProj = aPoca->vetoSigmaProj();
+            track_tileBestTriggerVeto = aPoca->hasTriggerVeto();
           }   
         } else if ( theId.ribbon() ) {
           if ( testHitSigma2 <  track_ribbonBestVetoSq) {
@@ -641,6 +674,7 @@ StatusCode Acd2ValsTool::calculate()
             track_ribbonBestVetoHit = aPoca->vetoSigmaHit();
             track_ribbonBestVetoProp = aPoca->vetoSigmaProp();
             track_ribbonBestVetoProj = aPoca->vetoSigmaProj();
+            track_ribbonBestTriggerVeto = aPoca->hasTriggerVeto();
           }
         }      
 
@@ -707,6 +741,7 @@ StatusCode Acd2ValsTool::calculate()
             track_tileBestVetoProp : 0.;
           ACD_Tkr1_VetoSigmaProj = track_tileBestVetoProj > 0. ?
             track_tileBestVetoProj : 0.;
+          ACD_Tkr1_TriggerVeto = track_tileBestTriggerVeto;
         } else {
           ACD_Tkr1_VetoSigmaHit = sqrt(track_ribbonBestVetoSq);
           ACD_Tkr1_VetoSigmaMip =  track_ribbonBestVetoHit > 0. ?
@@ -715,6 +750,7 @@ StatusCode Acd2ValsTool::calculate()
             track_ribbonBestVetoProp : 0.;
           ACD_Tkr1_VetoSigmaProj = track_ribbonBestVetoProj > 0. ?
             track_ribbonBestVetoProj : 0.;
+          ACD_Tkr1_TriggerVeto = track_ribbonBestTriggerVeto;
         }
       }
        
@@ -782,8 +818,26 @@ StatusCode Acd2ValsTool::calculate()
     ACD_TkrRibbonLength = gap_vetoPoca->getLocalY();    
   }
 
-  ACD_Tkr_VetoSigmaHit = best_tileVetoSq < best_ribbonVetoSq ?
-    sqrt(best_tileVetoSq) : sqrt(best_ribbonVetoSq);
+  if (best_tileVetoSq < best_ribbonVetoSq) {
+    ACD_Tkr_VetoSigmaHit = sqrt(best_tileVetoSq);
+    if ( tile_vetoPoca != 0 ) {
+      ACD_Tkr_VetoSigmaMip  =  tile_vetoPoca->vetoSigmaHit();      
+      ACD_Tkr_VetoSigmaProj =  tile_vetoPoca->vetoSigmaProp();     
+      ACD_Tkr_VetoSigmaProp =  tile_vetoPoca->vetoSigmaProj();     
+      ACD_Tkr_TriggerVeto = tile_vetoPoca->hasTriggerVeto();
+    }
+  } else {
+    ACD_Tkr_VetoSigmaHit = sqrt(best_ribbonVetoSq);
+    if ( ribbon_vetoPoca != 0 ) {
+      ACD_Tkr_VetoSigmaMip  =  ribbon_vetoPoca->vetoSigmaHit();      
+      ACD_Tkr_VetoSigmaProj =  ribbon_vetoPoca->vetoSigmaProp();     
+      ACD_Tkr_VetoSigmaProp =  ribbon_vetoPoca->vetoSigmaProj();     
+      ACD_Tkr_TriggerVeto = ribbon_vetoPoca->hasTriggerVeto();
+    }
+  }
+  //ACD_Tkr_VetoSigmaHit = best_tileVetoSq < best_ribbonVetoSq ?
+  //  sqrt(best_tileVetoSq) : sqrt(best_ribbonVetoSq);
+
   ACD_Tkr_VetoSigmaGap = sqrt(best_gapVetoSq);
 
   /// ADW: 2/2/12
