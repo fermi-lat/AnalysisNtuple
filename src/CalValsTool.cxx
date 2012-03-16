@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.115 2011/11/17 09:29:13 bregeon Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.115.4.1 2012/02/03 17:06:37 usher Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -18,6 +18,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.115
 #include "GaudiKernel/SmartDataPtr.h"
 #include "GaudiKernel/ToolFactory.h"
 #include "GaudiKernel/IToolSvc.h"
+#include "GaudiKernel/DataSvc.h"
 
 #include "Event/TopLevel/EventModel.h"
 #include "Event/TopLevel/Event.h"
@@ -29,6 +30,10 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.115
 #include "Event/Recon/CalRecon/CalEventEnergy.h"
 #include "Event/Recon/CalRecon/CalParams.h"
 #include "Event/Recon/CalRecon/CalXtalRecData.h"
+
+#include "OverlayEvent/OverlayEventModel.h"
+#include "OverlayEvent/EventOverlay.h"
+#include "OverlayEvent/CalOverlay.h"
 
 #include "GaudiKernel/IToolSvc.h"
 //#include "GlastSvc/Reco/IPropagatorTool.h"
@@ -242,6 +247,104 @@ private:
     float CAL_Clu1_ClassHadProb;
     float CAL_Clu1_ClassGhostProb;
     float CAL_Clu1_ClassMipProb;
+  // Energy due to overlay
+    float CAL_Clu1_OverlayEnergy;
+
+  float CAL_Clu2_NumXtals;
+  float CAL_Clu2_RawEnergySum;
+  float CAL_Clu2_XtalEneMax;
+  float CAL_Clu2_MomXCntr;
+  float CAL_Clu2_MomYCntr;
+  float CAL_Clu2_MomZCntr;
+  float CAL_Clu2_MomXDir;
+  float CAL_Clu2_MomYDir;
+  float CAL_Clu2_MomZDir;
+  float CAL_Clu2_MomNumCoreXtals;
+  float CAL_Clu2_MomTransRms;
+  float CAL_Clu2_MomLongRms;
+  float CAL_Clu2_ClassGamProb;
+  float CAL_Clu2_ClassHadProb;
+  float CAL_Clu2_ClassGhostProb;
+  float CAL_Clu2_ClassMipProb;
+  float CAL_Clu2_OverlayEnergy;
+  float CAL_Clu2_Dist;
+  float CAL_Clu2_Doca;
+
+  float CAL_Clu3_NumXtals;
+  float CAL_Clu3_RawEnergySum;
+  float CAL_Clu3_XtalEneMax;
+  float CAL_Clu3_MomXCntr;
+  float CAL_Clu3_MomYCntr;
+  float CAL_Clu3_MomZCntr;
+  float CAL_Clu3_MomXDir;
+  float CAL_Clu3_MomYDir;
+  float CAL_Clu3_MomZDir;
+  float CAL_Clu3_MomNumCoreXtals;
+  float CAL_Clu3_MomTransRms;
+  float CAL_Clu3_MomLongRms;
+  float CAL_Clu3_ClassGamProb;
+  float CAL_Clu3_ClassHadProb;
+  float CAL_Clu3_ClassGhostProb;
+  float CAL_Clu3_ClassMipProb;
+  float CAL_Clu3_OverlayEnergy;
+  float CAL_Clu3_Dist;
+  float CAL_Clu3_Doca;
+
+  float CAL_Clu4_NumXtals;
+  float CAL_Clu4_RawEnergySum;
+  float CAL_Clu4_XtalEneMax;
+  float CAL_Clu4_MomXCntr;
+  float CAL_Clu4_MomYCntr;
+  float CAL_Clu4_MomZCntr;
+  float CAL_Clu4_MomXDir;
+  float CAL_Clu4_MomYDir;
+  float CAL_Clu4_MomZDir;
+  float CAL_Clu4_MomNumCoreXtals;
+  float CAL_Clu4_MomTransRms;
+  float CAL_Clu4_MomLongRms;
+  float CAL_Clu4_ClassGamProb;
+  float CAL_Clu4_ClassHadProb;
+  float CAL_Clu4_ClassGhostProb;
+  float CAL_Clu4_ClassMipProb;
+  float CAL_Clu4_OverlayEnergy;
+  float CAL_Clu4_Dist;
+  float CAL_Clu4_Doca;
+
+  float CAL_Clu5_NumXtals;
+  float CAL_Clu5_RawEnergySum;
+  float CAL_Clu5_XtalEneMax;
+  float CAL_Clu5_MomXCntr;
+  float CAL_Clu5_MomYCntr;
+  float CAL_Clu5_MomZCntr;
+  float CAL_Clu5_MomXDir;
+  float CAL_Clu5_MomYDir;
+  float CAL_Clu5_MomZDir;
+  float CAL_Clu5_MomNumCoreXtals;
+  float CAL_Clu5_MomTransRms;
+  float CAL_Clu5_MomLongRms;
+  float CAL_Clu5_ClassGamProb;
+  float CAL_Clu5_ClassHadProb;
+  float CAL_Clu5_ClassGhostProb;
+  float CAL_Clu5_ClassMipProb;
+  float CAL_Clu5_OverlayEnergy;
+  float CAL_Clu5_Dist;
+  float CAL_Clu5_Doca;
+
+  float CAL_Uber2_NumXtals;
+  float CAL_Uber2_RawEnergySum;
+  float CAL_Uber2_XtalEneMax;
+  float CAL_Uber2_MomXCntr;
+  float CAL_Uber2_MomYCntr;
+  float CAL_Uber2_MomZCntr;
+  float CAL_Uber2_MomXDir;
+  float CAL_Uber2_MomYDir;
+  float CAL_Uber2_MomZDir;
+  float CAL_Uber2_MomNumCoreXtals;
+  float CAL_Uber2_MomTransRms;
+  float CAL_Uber2_MomLongRms;
+  float CAL_Uber2_OverlayEnergy;
+
+
 
     // New variables for new energy correction tools
     // Full profile fit
@@ -829,6 +932,101 @@ StatusCode CalValsTool::initialize()
     addItem("Cal1HadProb",  &CAL_Clu1_ClassHadProb);
     addItem("Cal1GhostProb",  &CAL_Clu1_ClassGhostProb);
     addItem("Cal1MipProb",  &CAL_Clu1_ClassMipProb);
+    addItem("Cal1OvrEnergy",  &CAL_Clu1_OverlayEnergy);
+
+    addItem("Cal2NumXtals",  &CAL_Clu2_NumXtals);
+    addItem("Cal2RawEnergySum",  &CAL_Clu2_RawEnergySum);
+    addItem("Cal2XtalEneMax",  &CAL_Clu2_XtalEneMax);
+    addItem("Cal2MomXCntr",  &CAL_Clu2_MomXCntr);
+    addItem("Cal2MomYCntr",  &CAL_Clu2_MomYCntr);
+    addItem("Cal2MomZCntr",  &CAL_Clu2_MomZCntr);
+    addItem("Cal2MomXDir",  &CAL_Clu2_MomXDir);
+    addItem("Cal2MomYDir",  &CAL_Clu2_MomYDir);
+    addItem("Cal2MomZDir",  &CAL_Clu2_MomZDir);
+    addItem("Cal2MomNumCoreXtals",  &CAL_Clu2_MomNumCoreXtals);
+    addItem("Cal2TransRms",  &CAL_Clu2_MomTransRms);
+    addItem("Cal2LongRms",  &CAL_Clu2_MomLongRms);
+    addItem("Cal2GamProb",  &CAL_Clu2_ClassGamProb);
+    addItem("Cal2HadProb",  &CAL_Clu2_ClassHadProb);
+    addItem("Cal2GhostProb",  &CAL_Clu2_ClassGhostProb);
+    addItem("Cal2MipProb",  &CAL_Clu2_ClassMipProb);
+    addItem("Cal2OvrEnergy",  &CAL_Clu2_OverlayEnergy);
+    addItem("Cal2Dist",  &CAL_Clu2_Dist);
+    addItem("Cal2Doca",  &CAL_Clu2_Doca);
+
+    addItem("Cal3NumXtals",  &CAL_Clu3_NumXtals);
+    addItem("Cal3RawEnergySum",  &CAL_Clu3_RawEnergySum);
+    addItem("Cal3XtalEneMax",  &CAL_Clu3_XtalEneMax);
+    addItem("Cal3MomXCntr",  &CAL_Clu3_MomXCntr);
+    addItem("Cal3MomYCntr",  &CAL_Clu3_MomYCntr);
+    addItem("Cal3MomZCntr",  &CAL_Clu3_MomZCntr);
+    addItem("Cal3MomXDir",  &CAL_Clu3_MomXDir);
+    addItem("Cal3MomYDir",  &CAL_Clu3_MomYDir);
+    addItem("Cal3MomZDir",  &CAL_Clu3_MomZDir);
+    addItem("Cal3MomNumCoreXtals",  &CAL_Clu3_MomNumCoreXtals);
+    addItem("Cal3TransRms",  &CAL_Clu3_MomTransRms);
+    addItem("Cal3LongRms",  &CAL_Clu3_MomLongRms);
+    addItem("Cal3GamProb",  &CAL_Clu3_ClassGamProb);
+    addItem("Cal3HadProb",  &CAL_Clu3_ClassHadProb);
+    addItem("Cal3GhostProb",  &CAL_Clu3_ClassGhostProb);
+    addItem("Cal3MipProb",  &CAL_Clu3_ClassMipProb);
+    addItem("Cal3OvrEnergy",  &CAL_Clu3_OverlayEnergy);
+    addItem("Cal3Dist",  &CAL_Clu3_Dist);
+    addItem("Cal3Doca",  &CAL_Clu3_Doca);
+
+    addItem("Cal4NumXtals",  &CAL_Clu4_NumXtals);
+    addItem("Cal4RawEnergySum",  &CAL_Clu4_RawEnergySum);
+    addItem("Cal4XtalEneMax",  &CAL_Clu4_XtalEneMax);
+    addItem("Cal4MomXCntr",  &CAL_Clu4_MomXCntr);
+    addItem("Cal4MomYCntr",  &CAL_Clu4_MomYCntr);
+    addItem("Cal4MomZCntr",  &CAL_Clu4_MomZCntr);
+    addItem("Cal4MomXDir",  &CAL_Clu4_MomXDir);
+    addItem("Cal4MomYDir",  &CAL_Clu4_MomYDir);
+    addItem("Cal4MomZDir",  &CAL_Clu4_MomZDir);
+    addItem("Cal4MomNumCoreXtals",  &CAL_Clu4_MomNumCoreXtals);
+    addItem("Cal4TransRms",  &CAL_Clu4_MomTransRms);
+    addItem("Cal4LongRms",  &CAL_Clu4_MomLongRms);
+    addItem("Cal4GamProb",  &CAL_Clu4_ClassGamProb);
+    addItem("Cal4HadProb",  &CAL_Clu4_ClassHadProb);
+    addItem("Cal4GhostProb",  &CAL_Clu4_ClassGhostProb);
+    addItem("Cal4MipProb",  &CAL_Clu4_ClassMipProb);
+    addItem("Cal4OvrEnergy",  &CAL_Clu4_OverlayEnergy);
+    addItem("Cal4Dist",  &CAL_Clu4_Dist);
+    addItem("Cal4Doca",  &CAL_Clu4_Doca);
+
+    addItem("Cal5NumXtals",  &CAL_Clu5_NumXtals);
+    addItem("Cal5RawEnergySum",  &CAL_Clu5_RawEnergySum);
+    addItem("Cal5XtalEneMax",  &CAL_Clu5_XtalEneMax);
+    addItem("Cal5MomXCntr",  &CAL_Clu5_MomXCntr);
+    addItem("Cal5MomYCntr",  &CAL_Clu5_MomYCntr);
+    addItem("Cal5MomZCntr",  &CAL_Clu5_MomZCntr);
+    addItem("Cal5MomXDir",  &CAL_Clu5_MomXDir);
+    addItem("Cal5MomYDir",  &CAL_Clu5_MomYDir);
+    addItem("Cal5MomZDir",  &CAL_Clu5_MomZDir);
+    addItem("Cal5MomNumCoreXtals",  &CAL_Clu5_MomNumCoreXtals);
+    addItem("Cal5TransRms",  &CAL_Clu5_MomTransRms);
+    addItem("Cal5LongRms",  &CAL_Clu5_MomLongRms);
+    addItem("Cal5GamProb",  &CAL_Clu5_ClassGamProb);
+    addItem("Cal5HadProb",  &CAL_Clu5_ClassHadProb);
+    addItem("Cal5GhostProb",  &CAL_Clu5_ClassGhostProb);
+    addItem("Cal5MipProb",  &CAL_Clu5_ClassMipProb);
+    addItem("Cal5OvrEnergy",  &CAL_Clu5_OverlayEnergy);
+    addItem("Cal5Dist",  &CAL_Clu5_Dist);
+    addItem("Cal5Doca",  &CAL_Clu5_Doca);
+
+    addItem("CalUber2NumXtals",  &CAL_Uber2_NumXtals);
+    addItem("CalUber2RawEnergySum",  &CAL_Uber2_RawEnergySum);
+    addItem("CalUber2XtalEneMax",  &CAL_Uber2_XtalEneMax);
+    addItem("CalUber2MomXCntr",  &CAL_Uber2_MomXCntr);
+    addItem("CalUber2MomYCntr",  &CAL_Uber2_MomYCntr);
+    addItem("CalUber2MomZCntr",  &CAL_Uber2_MomZCntr);
+    addItem("CalUber2MomXDir",  &CAL_Uber2_MomXDir);
+    addItem("CalUber2MomYDir",  &CAL_Uber2_MomYDir);
+    addItem("CalUber2MomZDir",  &CAL_Uber2_MomZDir);
+    addItem("CalUber2MomNumCoreXtals",  &CAL_Uber2_MomNumCoreXtals);
+    addItem("CalUber2TransRms",  &CAL_Uber2_MomTransRms);
+    addItem("CalUber2LongRms",  &CAL_Uber2_MomLongRms);
+    addItem("CalUber2OvrEnergy",  &CAL_Uber2_OverlayEnergy);
 
     addItem("CalCfpEnergy",  &CAL_cfp_energy);
     addItem("CalCfpChiSq",   &CAL_cfp_totChiSq);
@@ -977,6 +1175,41 @@ StatusCode CalValsTool::calculate()
         if (calEnergyItr != calEventEnergyMap->end()) calEventEnergy = calEnergyItr->second.front();
     }
 #endif
+
+    // Get overlay energy in xtals
+    int i,j,k;
+    float xtalovrenergy[16][8][12];
+    for(i=0;i<16;++i)
+      for(j=0;j<8;++j)
+        for(k=0;k<12;++k)
+          xtalovrenergy[i][j][k] = 0;
+
+    IService* dataSvc = 0;
+    StatusCode scovr = StatusCode::SUCCESS;
+    scovr = service("OverlayDataSvc", dataSvc);
+    if (!scovr.isFailure() )
+      {
+        // Caste back to the "correct" pointer
+        DataSvc* m_dataSvc = dynamic_cast<DataSvc*>(dataSvc);
+        
+        SmartDataPtr<Event::CalOverlayCol> calOverlayCol(m_dataSvc, m_dataSvc->rootName() + OverlayEventModel::Overlay::CalOverlayCol);
+        if(calOverlayCol)
+          {
+            // Loop through input Cal overlay objects, counting and summing deposited energy
+            for(Event::CalOverlayCol::iterator overIter  = calOverlayCol->begin(); overIter != calOverlayCol->end(); overIter++)
+              {
+                Event::CalOverlay* calOverlay = *overIter;
+                idents::CalXtalId id = calOverlay->getCalXtalId();
+                //
+                xtalovrenergy[(int)id.getTower()][(int)id.getLayer()][(int)id.getColumn()] += calOverlay->getEnergy();
+              }
+          }
+      }
+
+    // Get relation between clusters and xtals
+    Event::CalClusterHitTabList* xTal2ClusTabList = SmartDataPtr<Event::CalClusterHitTabList>(m_pEventSvc,EventModel::CalRecon::CalClusterHitTab);
+    Event::CalClusterHitTab* xTal2ClusTab = 0;
+    if (xTal2ClusTabList) xTal2ClusTab = new Event::CalClusterHitTab(xTal2ClusTabList);
 
 
     // If calEventEnergy then fill TkrEventParams
@@ -1149,6 +1382,21 @@ StatusCode CalValsTool::calculate()
     CAL_ClassHadProb_uber = calCluster->getClassParams().getProb("had");
     CAL_ClassGhostProb_uber = calCluster->getClassParams().getProb("ghost");
     CAL_ClassMipProb_uber = calCluster->getClassParams().getProb("mip");
+
+    // Fill Uber2 (=Uber without second cluster): by default it is the same as Uber
+    CAL_Uber2_NumXtals = calCluster->getXtalsParams().getNumXtals();
+    CAL_Uber2_RawEnergySum = calCluster->getXtalsParams().getXtalRawEneSum();
+    CAL_Uber2_XtalEneMax = calCluster->getXtalsParams().getXtalEneMax();
+    CAL_Uber2_MomXCntr = calCluster->getMomParams().getCentroid().x();
+    CAL_Uber2_MomYCntr = calCluster->getMomParams().getCentroid().y();
+    CAL_Uber2_MomZCntr = calCluster->getMomParams().getCentroid().z();
+    CAL_Uber2_MomXDir = calCluster->getMomParams().getAxis().x();
+    CAL_Uber2_MomYDir = calCluster->getMomParams().getAxis().y();
+    CAL_Uber2_MomZDir = calCluster->getMomParams().getAxis().z();
+    CAL_Uber2_MomNumCoreXtals = calCluster->getMomParams().getNumCoreXtals();
+    CAL_Uber2_MomTransRms = calCluster->getMomParams().getTransRms();
+    CAL_Uber2_MomLongRms = calCluster->getMomParams().getLongRms();
+    CAL_Uber2_OverlayEnergy = 0;
 
     CAL_num_clusters  = pCals->size();
     CAL_rest_energy   = 0.;
@@ -1826,11 +2074,277 @@ StatusCode CalValsTool::calculate()
         }
     }
 
-    // throw an exception
-    //int ii = 1;
-    //int j = 0;
-    //int k = ii/j;
-    //k++;
+    // Fill information of the clusters (on top of Clu1) and the overlay energy
+  CAL_Clu1_OverlayEnergy = 0;
+
+  CAL_Clu2_NumXtals = 0;
+  CAL_Clu2_RawEnergySum = 0;
+  CAL_Clu2_XtalEneMax = 0;
+  CAL_Clu2_MomXCntr = 0;
+  CAL_Clu2_MomYCntr = 0;
+  CAL_Clu2_MomZCntr = 0;
+  CAL_Clu2_MomXDir = 0;
+  CAL_Clu2_MomYDir = 0;
+  CAL_Clu2_MomZDir = 0;
+  CAL_Clu2_MomNumCoreXtals = 0;
+  CAL_Clu2_MomTransRms = 0;
+  CAL_Clu2_MomLongRms = 0;
+  CAL_Clu2_ClassGamProb = 0;
+  CAL_Clu2_ClassHadProb = 0;
+  CAL_Clu2_ClassGhostProb = 0;
+  CAL_Clu2_ClassMipProb = 0;
+  CAL_Clu2_OverlayEnergy = 0;
+  CAL_Clu2_Dist = 0;
+  CAL_Clu2_Doca = 0;
+
+  CAL_Clu3_NumXtals = 0;
+  CAL_Clu3_RawEnergySum = 0;
+  CAL_Clu3_XtalEneMax = 0;
+  CAL_Clu3_MomXCntr = 0;
+  CAL_Clu3_MomYCntr = 0;
+  CAL_Clu3_MomZCntr = 0;
+  CAL_Clu3_MomXDir = 0;
+  CAL_Clu3_MomYDir = 0;
+  CAL_Clu3_MomZDir = 0;
+  CAL_Clu3_MomNumCoreXtals = 0;
+  CAL_Clu3_MomTransRms = 0;
+  CAL_Clu3_MomLongRms = 0;
+  CAL_Clu3_ClassGamProb = 0;
+  CAL_Clu3_ClassHadProb = 0;
+  CAL_Clu3_ClassGhostProb = 0;
+  CAL_Clu3_ClassMipProb = 0;
+  CAL_Clu3_OverlayEnergy = 0;
+  CAL_Clu3_Dist = 0;
+  CAL_Clu3_Doca = 0;
+
+  CAL_Clu4_NumXtals = 0;
+  CAL_Clu4_RawEnergySum = 0;
+  CAL_Clu4_XtalEneMax = 0;
+  CAL_Clu4_MomXCntr = 0;
+  CAL_Clu4_MomYCntr = 0;
+  CAL_Clu4_MomZCntr = 0;
+  CAL_Clu4_MomXDir = 0;
+  CAL_Clu4_MomYDir = 0;
+  CAL_Clu4_MomZDir = 0;
+  CAL_Clu4_MomNumCoreXtals = 0;
+  CAL_Clu4_MomTransRms = 0;
+  CAL_Clu4_MomLongRms = 0;
+  CAL_Clu4_ClassGamProb = 0;
+  CAL_Clu4_ClassHadProb = 0;
+  CAL_Clu4_ClassGhostProb = 0;
+  CAL_Clu4_ClassMipProb = 0;
+  CAL_Clu4_OverlayEnergy = 0;
+  CAL_Clu4_Dist = 0;
+  CAL_Clu4_Doca = 0;
+
+  CAL_Clu5_NumXtals = 0;
+  CAL_Clu5_RawEnergySum = 0;
+  CAL_Clu5_XtalEneMax = 0;
+  CAL_Clu5_MomXCntr = 0;
+  CAL_Clu5_MomYCntr = 0;
+  CAL_Clu5_MomZCntr = 0;
+  CAL_Clu5_MomXDir = 0;
+  CAL_Clu5_MomYDir = 0;
+  CAL_Clu5_MomZDir = 0;
+  CAL_Clu5_MomNumCoreXtals = 0;
+  CAL_Clu5_MomTransRms = 0;
+  CAL_Clu5_MomLongRms = 0;
+  CAL_Clu5_ClassGamProb = 0;
+  CAL_Clu5_ClassHadProb = 0;
+  CAL_Clu5_ClassGhostProb = 0;
+  CAL_Clu5_ClassMipProb = 0;
+  CAL_Clu5_OverlayEnergy = 0;
+  CAL_Clu5_Dist = 0;
+  CAL_Clu5_Doca = 0;
+
+  // Fill overlay energy fraction for the 1st cluster and all the info for the other clusters
+  Event::CalClusterCol* clusters = SmartDataPtr<Event::CalClusterCol>(m_pEventSvc,EventModel::CalRecon::CalClusterCol);
+
+  int iclu = 0;
+  int numClusters = 0;
+
+    double eTotovr   = 0.0;
+    double lambda;
+    double pp[3];
+    iclu = 0;
+    // if pointer is not zero, start drawing
+    if(clusters)
+      {
+        numClusters = clusters->size();
+
+        Event::CalClusterCol::iterator clusIter = clusters->begin();
+        while(clusIter != clusters->end())
+          {
+            if(iclu>0 && iclu==numClusters-1) break; // stopping before the uber cluster
+            //
+            eTotovr   = 0.0;
+            //
+            // get pointer to the cluster 
+            Event::CalCluster* cl = *clusIter++;
+            if(xTal2ClusTab)
+              {
+                std::vector<Event::CalClusterHitRel*> xTalRelVec = xTal2ClusTab->getRelBySecond(cl);
+                //
+                if(!xTalRelVec.empty())
+                  {
+                    eTotovr   = 0.0;
+                    
+                    std::vector<Event::CalClusterHitRel*>::const_iterator it = xTalRelVec.begin();
+                    
+                    // to find maximum energy per crystal
+                    for (; it != xTalRelVec.end(); it++)
+                      {
+                        // get poiner to the reconstructed data for individual crystal
+                        Event::CalXtalRecData* recData = (*it)->getFirst();
+                        //
+                        int itow=recData->getPackedId().getTower();
+                        int ilay=recData->getPackedId().getLayer();
+                        int icol=recData->getPackedId().getColumn();
+                        eTotovr += xtalovrenergy[itow][ilay][icol];
+                      }
+                  }
+              }
+            //
+            if(iclu==0)
+              {
+                CAL_Clu1_OverlayEnergy = eTotovr;
+                if(numClusters==1) CAL_Uber2_OverlayEnergy = eTotovr;
+              }
+            else if(iclu==1)
+              {
+                CAL_Clu2_NumXtals = cl->getXtalsParams().getNumXtals();
+                CAL_Clu2_RawEnergySum = cl->getXtalsParams().getXtalRawEneSum();
+                CAL_Clu2_XtalEneMax = cl->getXtalsParams().getXtalEneMax();
+                CAL_Clu2_MomXCntr = cl->getMomParams().getCentroid().x();
+                CAL_Clu2_MomYCntr = cl->getMomParams().getCentroid().y();
+                CAL_Clu2_MomZCntr = cl->getMomParams().getCentroid().z();
+                CAL_Clu2_MomXDir = cl->getMomParams().getAxis().x();
+                CAL_Clu2_MomYDir = cl->getMomParams().getAxis().y();
+                CAL_Clu2_MomZDir = cl->getMomParams().getAxis().z();
+                CAL_Clu2_MomNumCoreXtals = cl->getMomParams().getNumCoreXtals();
+                CAL_Clu2_MomTransRms = cl->getMomParams().getTransRms();
+                CAL_Clu2_MomLongRms = cl->getMomParams().getLongRms();
+                CAL_Clu2_ClassGamProb = cl->getClassParams().getProb("gam");
+                CAL_Clu2_ClassHadProb = cl->getClassParams().getProb("had");
+                CAL_Clu2_ClassGhostProb = cl->getClassParams().getProb("ghost");
+                CAL_Clu2_ClassMipProb = cl->getClassParams().getProb("mip");
+                CAL_Clu2_OverlayEnergy = eTotovr;
+                CAL_Clu2_Dist = sqrt((cl->getMomParams().getCentroid().x()-CAL_Clu1_MomXCntr)*(cl->getMomParams().getCentroid().x()-CAL_Clu1_MomXCntr)+
+                                     (cl->getMomParams().getCentroid().y()-CAL_Clu1_MomYCntr)*(cl->getMomParams().getCentroid().y()-CAL_Clu1_MomYCntr)+
+                                     (cl->getMomParams().getCentroid().z()-CAL_Clu1_MomZCntr)*(cl->getMomParams().getCentroid().z()-CAL_Clu1_MomZCntr));
+                lambda = ((cl->getMomParams().getCentroid().x()-CAL_Clu1_MomXCntr)*CAL_Clu1_MomXDir+
+                          (cl->getMomParams().getCentroid().y()-CAL_Clu1_MomYCntr)*CAL_Clu1_MomYDir+
+                          (cl->getMomParams().getCentroid().z()-CAL_Clu1_MomZCntr)*CAL_Clu1_MomZDir);
+                CAL_Clu2_Doca = sqrt((cl->getMomParams().getCentroid().x()-(CAL_Clu1_MomXCntr+lambda*CAL_Clu1_MomXDir))*(cl->getMomParams().getCentroid().x()-(CAL_Clu1_MomXCntr+lambda*CAL_Clu1_MomXDir))+
+                                     (cl->getMomParams().getCentroid().y()-(CAL_Clu1_MomYCntr+lambda*CAL_Clu1_MomYDir))*(cl->getMomParams().getCentroid().y()-(CAL_Clu1_MomYCntr+lambda*CAL_Clu1_MomYDir))+
+                                     (cl->getMomParams().getCentroid().z()-(CAL_Clu1_MomZCntr+lambda*CAL_Clu1_MomZDir))*(cl->getMomParams().getCentroid().z()-(CAL_Clu1_MomZCntr+lambda*CAL_Clu1_MomZDir)));
+              }
+            else if(iclu==2)
+              {
+                CAL_Clu3_NumXtals = cl->getXtalsParams().getNumXtals();
+                CAL_Clu3_RawEnergySum = cl->getXtalsParams().getXtalRawEneSum();
+                CAL_Clu3_XtalEneMax = cl->getXtalsParams().getXtalEneMax();
+                CAL_Clu3_MomXCntr = cl->getMomParams().getCentroid().x();
+                CAL_Clu3_MomYCntr = cl->getMomParams().getCentroid().y();
+                CAL_Clu3_MomZCntr = cl->getMomParams().getCentroid().z();
+                CAL_Clu3_MomXDir = cl->getMomParams().getAxis().x();
+                CAL_Clu3_MomYDir = cl->getMomParams().getAxis().y();
+                CAL_Clu3_MomZDir = cl->getMomParams().getAxis().z();
+                CAL_Clu3_MomNumCoreXtals = cl->getMomParams().getNumCoreXtals();
+                CAL_Clu3_MomTransRms = cl->getMomParams().getTransRms();
+                CAL_Clu3_MomLongRms = cl->getMomParams().getLongRms();
+                CAL_Clu3_ClassGamProb = cl->getClassParams().getProb("gam");
+                CAL_Clu3_ClassHadProb = cl->getClassParams().getProb("had");
+                CAL_Clu3_ClassGhostProb = cl->getClassParams().getProb("ghost");
+                CAL_Clu3_ClassMipProb = cl->getClassParams().getProb("mip");
+                CAL_Clu3_OverlayEnergy = eTotovr;
+                CAL_Clu3_Dist = sqrt((cl->getMomParams().getCentroid().x()-CAL_Clu1_MomXCntr)*(cl->getMomParams().getCentroid().x()-CAL_Clu1_MomXCntr)+
+                                     (cl->getMomParams().getCentroid().y()-CAL_Clu1_MomYCntr)*(cl->getMomParams().getCentroid().y()-CAL_Clu1_MomYCntr)+
+                                     (cl->getMomParams().getCentroid().z()-CAL_Clu1_MomZCntr)*(cl->getMomParams().getCentroid().z()-CAL_Clu1_MomZCntr));
+                lambda = ((cl->getMomParams().getCentroid().x()-CAL_Clu1_MomXCntr)*CAL_Clu1_MomXDir+
+                          (cl->getMomParams().getCentroid().y()-CAL_Clu1_MomYCntr)*CAL_Clu1_MomYDir+
+                          (cl->getMomParams().getCentroid().z()-CAL_Clu1_MomZCntr)*CAL_Clu1_MomZDir);
+                CAL_Clu3_Doca = sqrt((cl->getMomParams().getCentroid().x()-(CAL_Clu1_MomXCntr+lambda*CAL_Clu1_MomXDir))*(cl->getMomParams().getCentroid().x()-(CAL_Clu1_MomXCntr+lambda*CAL_Clu1_MomXDir))+
+                                     (cl->getMomParams().getCentroid().y()-(CAL_Clu1_MomYCntr+lambda*CAL_Clu1_MomYDir))*(cl->getMomParams().getCentroid().y()-(CAL_Clu1_MomYCntr+lambda*CAL_Clu1_MomYDir))+
+                                     (cl->getMomParams().getCentroid().z()-(CAL_Clu1_MomZCntr+lambda*CAL_Clu1_MomZDir))*(cl->getMomParams().getCentroid().z()-(CAL_Clu1_MomZCntr+lambda*CAL_Clu1_MomZDir)));
+              }
+            else if(iclu==3)
+              {
+                CAL_Clu4_NumXtals = cl->getXtalsParams().getNumXtals();
+                CAL_Clu4_RawEnergySum = cl->getXtalsParams().getXtalRawEneSum();
+                CAL_Clu4_XtalEneMax = cl->getXtalsParams().getXtalEneMax();
+                CAL_Clu4_MomXCntr = cl->getMomParams().getCentroid().x();
+                CAL_Clu4_MomYCntr = cl->getMomParams().getCentroid().y();
+                CAL_Clu4_MomZCntr = cl->getMomParams().getCentroid().z();
+                CAL_Clu4_MomXDir = cl->getMomParams().getAxis().x();
+                CAL_Clu4_MomYDir = cl->getMomParams().getAxis().y();
+                CAL_Clu4_MomZDir = cl->getMomParams().getAxis().z();
+                CAL_Clu4_MomNumCoreXtals = cl->getMomParams().getNumCoreXtals();
+                CAL_Clu4_MomTransRms = cl->getMomParams().getTransRms();
+                CAL_Clu4_MomLongRms = cl->getMomParams().getLongRms();
+                CAL_Clu4_ClassGamProb = cl->getClassParams().getProb("gam");
+                CAL_Clu4_ClassHadProb = cl->getClassParams().getProb("had");
+                CAL_Clu4_ClassGhostProb = cl->getClassParams().getProb("ghost");
+                CAL_Clu4_ClassMipProb = cl->getClassParams().getProb("mip");
+                CAL_Clu4_OverlayEnergy = eTotovr;
+                CAL_Clu4_Dist = sqrt((cl->getMomParams().getCentroid().x()-CAL_Clu1_MomXCntr)*(cl->getMomParams().getCentroid().x()-CAL_Clu1_MomXCntr)+
+                                     (cl->getMomParams().getCentroid().y()-CAL_Clu1_MomYCntr)*(cl->getMomParams().getCentroid().y()-CAL_Clu1_MomYCntr)+
+                                     (cl->getMomParams().getCentroid().z()-CAL_Clu1_MomZCntr)*(cl->getMomParams().getCentroid().z()-CAL_Clu1_MomZCntr));
+                lambda = ((cl->getMomParams().getCentroid().x()-CAL_Clu1_MomXCntr)*CAL_Clu1_MomXDir+
+                          (cl->getMomParams().getCentroid().y()-CAL_Clu1_MomYCntr)*CAL_Clu1_MomYDir+
+                          (cl->getMomParams().getCentroid().z()-CAL_Clu1_MomZCntr)*CAL_Clu1_MomZDir);
+                CAL_Clu4_Doca = sqrt((cl->getMomParams().getCentroid().x()-(CAL_Clu1_MomXCntr+lambda*CAL_Clu1_MomXDir))*(cl->getMomParams().getCentroid().x()-(CAL_Clu1_MomXCntr+lambda*CAL_Clu1_MomXDir))+
+                                     (cl->getMomParams().getCentroid().y()-(CAL_Clu1_MomYCntr+lambda*CAL_Clu1_MomYDir))*(cl->getMomParams().getCentroid().y()-(CAL_Clu1_MomYCntr+lambda*CAL_Clu1_MomYDir))+
+                                     (cl->getMomParams().getCentroid().z()-(CAL_Clu1_MomZCntr+lambda*CAL_Clu1_MomZDir))*(cl->getMomParams().getCentroid().z()-(CAL_Clu1_MomZCntr+lambda*CAL_Clu1_MomZDir)));
+              }
+            else if(iclu==4)
+              {
+                CAL_Clu5_NumXtals = cl->getXtalsParams().getNumXtals();
+                CAL_Clu5_RawEnergySum = cl->getXtalsParams().getXtalRawEneSum();
+                CAL_Clu5_XtalEneMax = cl->getXtalsParams().getXtalEneMax();
+                CAL_Clu5_MomXCntr = cl->getMomParams().getCentroid().x();
+                CAL_Clu5_MomYCntr = cl->getMomParams().getCentroid().y();
+                CAL_Clu5_MomZCntr = cl->getMomParams().getCentroid().z();
+                CAL_Clu5_MomXDir = cl->getMomParams().getAxis().x();
+                CAL_Clu5_MomYDir = cl->getMomParams().getAxis().y();
+                CAL_Clu5_MomZDir = cl->getMomParams().getAxis().z();
+                CAL_Clu5_MomNumCoreXtals = cl->getMomParams().getNumCoreXtals();
+                CAL_Clu5_MomTransRms = cl->getMomParams().getTransRms();
+                CAL_Clu5_MomLongRms = cl->getMomParams().getLongRms();
+                CAL_Clu5_ClassGamProb = cl->getClassParams().getProb("gam");
+                CAL_Clu5_ClassHadProb = cl->getClassParams().getProb("had");
+                CAL_Clu5_ClassGhostProb = cl->getClassParams().getProb("ghost");
+                CAL_Clu5_ClassMipProb = cl->getClassParams().getProb("mip");
+                CAL_Clu5_OverlayEnergy = eTotovr;
+                CAL_Clu5_Dist = sqrt((cl->getMomParams().getCentroid().x()-CAL_Clu1_MomXCntr)*(cl->getMomParams().getCentroid().x()-CAL_Clu1_MomXCntr)+
+                                     (cl->getMomParams().getCentroid().y()-CAL_Clu1_MomYCntr)*(cl->getMomParams().getCentroid().y()-CAL_Clu1_MomYCntr)+
+                                     (cl->getMomParams().getCentroid().z()-CAL_Clu1_MomZCntr)*(cl->getMomParams().getCentroid().z()-CAL_Clu1_MomZCntr));
+                lambda = ((cl->getMomParams().getCentroid().x()-CAL_Clu1_MomXCntr)*CAL_Clu1_MomXDir+
+                          (cl->getMomParams().getCentroid().y()-CAL_Clu1_MomYCntr)*CAL_Clu1_MomYDir+
+                          (cl->getMomParams().getCentroid().z()-CAL_Clu1_MomZCntr)*CAL_Clu1_MomZDir);
+                CAL_Clu5_Doca = sqrt((cl->getMomParams().getCentroid().x()-(CAL_Clu1_MomXCntr+lambda*CAL_Clu1_MomXDir))*(cl->getMomParams().getCentroid().x()-(CAL_Clu1_MomXCntr+lambda*CAL_Clu1_MomXDir))+
+                                     (cl->getMomParams().getCentroid().y()-(CAL_Clu1_MomYCntr+lambda*CAL_Clu1_MomYDir))*(cl->getMomParams().getCentroid().y()-(CAL_Clu1_MomYCntr+lambda*CAL_Clu1_MomYDir))+
+                                     (cl->getMomParams().getCentroid().z()-(CAL_Clu1_MomZCntr+lambda*CAL_Clu1_MomZDir))*(cl->getMomParams().getCentroid().z()-(CAL_Clu1_MomZCntr+lambda*CAL_Clu1_MomZDir)));
+              }     
+            else if(iclu==numClusters-2)
+              {
+                CAL_Uber2_NumXtals = cl->getXtalsParams().getNumXtals();
+                CAL_Uber2_RawEnergySum = cl->getXtalsParams().getXtalRawEneSum();
+                CAL_Uber2_XtalEneMax = cl->getXtalsParams().getXtalEneMax();
+                CAL_Uber2_MomXCntr = cl->getMomParams().getCentroid().x();
+                CAL_Uber2_MomYCntr = cl->getMomParams().getCentroid().y();
+                CAL_Uber2_MomZCntr = cl->getMomParams().getCentroid().z();
+                CAL_Uber2_MomXDir = cl->getMomParams().getAxis().x();
+                CAL_Uber2_MomYDir = cl->getMomParams().getAxis().y();
+                CAL_Uber2_MomZDir = cl->getMomParams().getAxis().z();
+                CAL_Uber2_MomNumCoreXtals = cl->getMomParams().getNumCoreXtals();
+                CAL_Uber2_MomTransRms = cl->getMomParams().getTransRms();
+                CAL_Uber2_MomLongRms = cl->getMomParams().getLongRms();
+                CAL_Uber2_OverlayEnergy = eTotovr;
+              }
+            ++iclu;
+          }
+      }
 
     return sc;
 }
