@@ -2,7 +2,7 @@
 @brief Calculates the Tracker Tree variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TreeValsTool.cxx,v 1.13 2011/11/22 00:05:26 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TreeValsTool.cxx,v 1.12.4.2 2012/01/31 04:55:23 usher Exp $
 */
 
 // Include files
@@ -24,6 +24,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TreeValsTool.cxx,v 1.13
 #include "Event/Recon/TkrRecon/TkrTree.h"
 #include "Event/Recon/TkrRecon/TkrVecPointInfo.h"
 #include "Event/Recon/TkrRecon/TkrFilterParams.h"
+#include "Event/Recon/TreeClusterRelation.h"
 #include "geometry/Ray.h" 
 
 #include "GlastSvc/GlastDetSvc/IGlastDetSvc.h"
@@ -136,6 +137,11 @@ private:
     float Tkr_tree1_ChiSquare;
     float Tkr_tree1_RmsTrans;
     float Tkr_tree1_RmsLong;
+
+    float Tkr_tree1_numLinks;
+    float Tkr_tree1_calDoca68;
+    float Tkr_tree1_calDoca95;
+    float Tkr_tree1_calDocaMax;
 
     float Tkr_tree2_nTrks;
     float Tkr_tree2_depth;
@@ -349,6 +355,11 @@ StatusCode TreeValsTool::initialize()
     addItem("TkrTree1ChiSquare",        &Tkr_tree1_ChiSquare);
     addItem("TkrTree1RmsTrans",         &Tkr_tree1_RmsTrans);
     addItem("TkrTree1RmsLong",          &Tkr_tree1_RmsLong);
+
+    addItem("TkrTree1NumLinks",         &Tkr_tree1_numLinks);
+    addItem("TkrTree1CalDoca68",        &Tkr_tree1_calDoca68);
+    addItem("TkrTree1CalDoca95",        &Tkr_tree1_calDoca95);
+    addItem("TkrTree1CalDocaMax",       &Tkr_tree1_calDocaMax);
                                      
     addItem("TkrTree2NTrks",            &Tkr_tree2_nTrks);
     addItem("TkrTree2Depth",            &Tkr_tree2_depth);
@@ -448,6 +459,10 @@ StatusCode TreeValsTool::calculate()
 
     if (treeCol)
     {
+        // Recover the map between tree and relations to calorimeter
+        Event::TreeToRelationMap* treeToRelationMap = SmartDataPtr<Event::TreeToRelationMap>(m_pEventSvc, EventModel::Recon::TreeToRelationMap);
+        Event::CalCluster*        calCluster        = 0;
+
         Tkr_num_trees = treeCol->size();
 
         if (Tkr_num_trees > 0 && (*treeCol->begin())->getHeadNode())
@@ -518,6 +533,94 @@ StatusCode TreeValsTool::calculate()
                 {
                     Tkr_tree1_maxWidthLyr = sibItr->first;
                     Tkr_tree1_maxWidth    = nodeVecSize;
+                }
+            }
+
+            // Try calculating link doca to cal cluster
+            // To do that we need to use the relations between tree and cluster, provided it exists
+            if (treeToRelationMap)
+            {
+                Event::TreeToRelationMap::iterator relationItr = treeToRelationMap->find(const_cast<Event::TkrTree*>(tree));
+
+                if (relationItr != treeToRelationMap->end())
+                {
+
+                    calCluster = relationItr->second.front()->getCluster();
+                }
+
+                // If an associated cluster then calculate the docas
+                if (calCluster)
+                {
+                    const Point& clusPos = calCluster->getPosition();
+
+                    // Now we need to visit EVERY link in the tree. To do so we use a list...
+                    std::list<const Event::TkrVecNode*> nodeList;
+
+                    // Add the first node to the list to start to populate it
+                    nodeList.push_back(tree->getHeadNode());
+
+                    // Create an iterator to run over the entries in the list
+                    std::list<const Event::TkrVecNode*>::const_iterator nodeListItr = nodeList.begin();
+
+                    // Create a vector to keep track of the docas we calculate
+                    std::vector<double> docaVec;
+
+                    // We loop until we exhaust the entries in the list
+                    while(nodeListItr != nodeList.end())
+                    {
+                        const Event::TkrVecNode* node = *nodeListItr;
+
+                        // First lets add the child nodes of this node to our list
+                        for(Event::TkrVecNodeSet::const_iterator childItr = node->begin(); childItr != node->end(); childItr++)
+                        {
+                            nodeList.push_back(*childItr);
+                        }
+
+                        // Ok, now increment the node list iterator
+                        nodeListItr++;
+
+                        // Recover the associated link (if there is one)
+                        const Event::TkrVecPointsLink* link = node->getAssociatedLink();
+
+                        if (link)
+                        {
+                            // We want to determine the distance of the link, projected to a disk perpendicular to the 
+                            // axis from the link position to the cluster centroid, at the cluster centroid. 
+                            // Start with the axis from the link position to the cluster centroid
+                            Vector linkToPos = clusPos - link->getPosition();
+
+                            // Get the angle between this axis and the link
+                            double cosTheta  = link->getVector().dot(linkToPos.unit());
+
+                            // Compute the arclength along the link direction to the disk
+                            double arcLen    = linkToPos.magnitude() / cosTheta;
+
+                            // Calculate the point on this disk
+                            Point  docaPos   = link->getPosition() + arcLen * link->getVector();
+
+                            // Get a vector from the cluster centroid to this point
+                            Vector clus2Doca = docaPos - clusPos;
+
+                            // Get the doca
+                            double doca      = clus2Doca.magnitude();
+
+                            docaVec.push_back(doca);
+                        }
+                    }
+
+                    // Sort out vector of docas
+                    std::sort(docaVec.begin(), docaVec.end());
+
+                    // Extract the 68%, 95% and final elements
+                    int idx68 = 0.68 * docaVec.size();
+                    int idx95 = 0.95 * docaVec.size();
+
+                    Tkr_tree1_numLinks   = docaVec.size();
+                    Tkr_tree1_calDoca68  = docaVec[idx68];
+                    Tkr_tree1_calDoca95  = docaVec[idx95];
+                    Tkr_tree1_calDocaMax = docaVec.back();
+
+                    int check = 0;
                 }
             }
 
