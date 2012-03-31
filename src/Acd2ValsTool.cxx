@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/Acd2ValsTool.cxx,v 1.2.60.3 2012/02/02 21:58:41 kadrlica Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/Acd2ValsTool.cxx,v 1.2.60.4 2012/03/16 20:51:36 kadrlica Exp $
 */
 
 #include "ValBase.h"
@@ -25,6 +25,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/Acd2ValsTool.cxx,v 1.2.
 #include "Event/Recon/AcdRecon/AcdTkrGapPoca.h"
 #include "Event/Recon/AcdRecon/AcdHit.h"
 #include "Event/Recon/AcdRecon/AcdEventTopology.h"
+#include "Event/Recon/AcdRecon/AcdAssoc.h"
 
 
 #include "Event/Recon/CalRecon/CalCluster.h"
@@ -616,7 +617,7 @@ StatusCode Acd2ValsTool::calculate()
   for (Event::AcdTkrAssocCol::const_iterator itrAssoc = assocs.begin(); 
        itrAssoc != assocs.end(); itrAssoc++ ) {
     
-    const Event::AcdTkrAssoc* anAssoc = (*itrAssoc);
+    const Event::AcdAssoc* anAssoc = (*itrAssoc);
     int trackIndex = anAssoc->getTrackIndex();
     if ( trackIndex < 0 ) continue;
     bool isBestTrack = trackIndex == 0;
@@ -864,7 +865,7 @@ StatusCode Acd2ValsTool::calculate()
   for (Event::AcdCalAssocCol::const_iterator itrAssoc = calAssocs.begin(); 
        itrAssoc != calAssocs.end(); itrAssoc++ ) {
 
-    const Event::AcdCalAssoc* anAssoc = (*itrAssoc);
+    const Event::AcdAssoc* anAssoc = (*itrAssoc);
     int clusterIndex = anAssoc->getTrackIndex();
     if ( clusterIndex < 0 ) continue;
     bool isBestCluster = clusterIndex == 0;
