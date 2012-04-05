@@ -2,7 +2,7 @@
 @brief Calculates the Tracker Tree variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TreeValsTool.cxx,v 1.12.4.2 2012/01/31 04:55:23 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TreeValsTool.cxx,v 1.12.4.3 2012/03/29 15:25:21 usher Exp $
 */
 
 // Include files
@@ -139,6 +139,7 @@ private:
     float Tkr_tree1_RmsLong;
 
     float Tkr_tree1_numLinks;
+    float Tkr_tree1_calPosDoca;
     float Tkr_tree1_calDoca68;
     float Tkr_tree1_calDoca95;
     float Tkr_tree1_calDocaMax;
@@ -357,6 +358,7 @@ StatusCode TreeValsTool::initialize()
     addItem("TkrTree1RmsLong",          &Tkr_tree1_RmsLong);
 
     addItem("TkrTree1NumLinks",         &Tkr_tree1_numLinks);
+    addItem("TkrTree1CalPosDoca",       &Tkr_tree1_calPosDoca);
     addItem("TkrTree1CalDoca68",        &Tkr_tree1_calDoca68);
     addItem("TkrTree1CalDoca95",        &Tkr_tree1_calDoca95);
     addItem("TkrTree1CalDocaMax",       &Tkr_tree1_calDocaMax);
@@ -616,6 +618,7 @@ StatusCode TreeValsTool::calculate()
                     int idx95 = 0.95 * docaVec.size();
 
                     Tkr_tree1_numLinks   = docaVec.size();
+                    Tkr_tree1_calPosDoca = relationItr->second.front()->getTreeClusDoca();
                     Tkr_tree1_calDoca68  = docaVec[idx68];
                     Tkr_tree1_calDoca95  = docaVec[idx95];
                     Tkr_tree1_calDocaMax = docaVec.back();
