@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/Acd2ValsTool.cxx,v 1.2.60.6 2012/04/20 03:50:38 kadrlica Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/Acd2ValsTool.cxx,v 1.2.60.7 2012/04/20 03:57:06 kadrlica Exp $
 */
 
 #include "ValBase.h"
@@ -589,13 +589,12 @@ StatusCode Acd2ValsTool::calculate()
   // Make a map relating AcdId to calibrated hits
   std::map<idents::AcdId, const Event::AcdHit*> hitMap;
     
-  /*
-  /// ADW: Incorporated into AcdEventTopology
   const Event::AcdHitCol& hitCol = pACD->getHitCol();
   int nHit = hitCol.size();
 
+  /// ADW: Incorporated into AcdEventTopology
   // Set to zero for each event (MPR)
-  int TriggerVeto = 0;
+  //int TriggerVeto = 0;
 
   // Loop over the hits and fill the maps
 
@@ -604,16 +603,15 @@ StatusCode Acd2ValsTool::calculate()
     const idents::AcdId& id = aHit->getAcdId();
   
     //Trigger veto for the fast signal (MPR).
-    int triggerVetoBit_0 = ((aHit->getFlags(Event::AcdHit::A) >> 1) & 0x1);
-    int triggerVetoBit_1 = ((aHit->getFlags(Event::AcdHit::B) >> 1) & 0x1);
-    if (triggerVetoBit_0 == 1 || triggerVetoBit_1 == 1){
-      TriggerVeto = 1;
-    }
-   
-    ACD_Trigger_Veto = TriggerVeto;
+    //int triggerVetoBit_0 = ((aHit->getFlags(Event::AcdHit::A) >> 1) & 0x1);
+    //int triggerVetoBit_1 = ((aHit->getFlags(Event::AcdHit::B) >> 1) & 0x1);
+    //if (triggerVetoBit_0 == 1 || triggerVetoBit_1 == 1){
+    //  TriggerVeto = 1;
+    //}
+    // 
+    //ACD_Trigger_Veto = TriggerVeto;
     hitMap[id] = aHit;
   }
-  */
 
   static const float maxSigma = 10000.;
   static const float maxSigmaSq = maxSigma*maxSigma;
