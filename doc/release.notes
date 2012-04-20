@@ -3,6 +3,7 @@
   @verbatim
    * EOH *
 
+ AnalysisNtuple-02-60-01-gr07 19-Apr-2012 kadrlica Added Acd2 de-ghosting and trigger variables. Tried to standardize other variable names. Moved Acd2TriggerVeto calculation into AcdEventTopology
  AnalysisNtuple-02-60-01-gr06 16-Mar-2012 kadrlica & bruel 
       Check that moments analysis has run before calculating CalTrackAngle
       CalValsTool = add information on cal clusters 2 to 5 and the Uber2 
