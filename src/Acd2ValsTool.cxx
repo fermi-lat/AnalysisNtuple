@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/Acd2ValsTool.cxx,v 1.2.60.4 2012/03/16 20:51:36 kadrlica Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/Acd2ValsTool.cxx,v 1.2.60.5 2012/03/31 00:22:53 kadrlica Exp $
 */
 
 #include "ValBase.h"
@@ -81,8 +81,15 @@ private:
   unsigned int ACD_Ribbon_Count;
   unsigned int ACD_Veto_Count; 
   unsigned int ACD_Veto_Faces;
-  float        ACD_Total_Energy;
+  float        ACD_Total_Tile_Energy;
   float        ACD_Total_Ribbon_Energy;
+  // ADW: More global items
+  float        ACD_Tile_Energy;
+  float        ACD_Ribbon_Energy;
+  float        ACD_Ghost_Tile_Energy;
+  float        ACD_Ghost_Ribbon_Energy;
+  float        ACD_Trigger_Tile_Energy;
+  float        ACD_Trigger_Ribbon_Energy;
 
   unsigned int ACD_TileIdRecon;
   unsigned int ACD_RibbonIdRecon;
@@ -115,6 +122,10 @@ private:
   float ACD_Tkr1Energy15;
   float ACD_Tkr1Energy30;
   float ACD_Tkr1Energy45;
+  // ADW: Trigger energy in cone
+  float ACD_Tkr1TriggerEnergy15;
+  float ACD_Tkr1TriggerEnergy30;
+  float ACD_Tkr1TriggerEnergy45;
   
   // Variables computed by taking best track w.r.t. hit ribbons
   float ACD_Tkr1_ribbon_ActiveDist;
@@ -130,12 +141,7 @@ private:
   float ACD_Tkr1Ribbon_Dist_Err;
   float ACD_Tkr1RibbonLength;
     
-  // New stuff EAC
-  //float ACD_Tkr1_VetoSigmaHit;
-  //float ACD_Tkr1_VetoSigmaGap;
-  //float ACD_Tkr_VetoSigmaHit;
-  //float ACD_Tkr_VetoSigmaGap;
-  // New, new stuff ADW
+  // New stuff EAC & ADW
   float ACD_Tkr1_VetoSigmaHit;
   float ACD_Tkr1_VetoSigmaGap;
   float ACD_Tkr1_VetoSigmaMip;
@@ -159,6 +165,9 @@ private:
   float ACD_Cal1Energy15;
   float ACD_Cal1Energy30;
   float ACD_Cal1Energy45;
+  float ACD_Cal1TriggerEnergy15;
+  float ACD_Cal1TriggerEnergy30;
+  float ACD_Cal1TriggerEnergy45;
   
   // Variables about number of ACD tiles by row
   unsigned int ACD_tileTopCount;
@@ -192,23 +201,49 @@ Notes
 - Default Doca/ActiveDistance is -2000.
 - Active distance is negative if a track is outside a tile, 
 positive if inside.
+- Default action is to de-ghost energies at the global level, 
+but not at the individual track association level.
 
 <table>
 <tr><th> Variable <th> Type <th> Description                    
+<tr><td> Acd2TriggerVeto 
+<td>U<td>   Set if any ACD trigger veto fired
 <tr><td> Acd2TileCount 
 <td>U<td>   Number of tiles fired
-<tr><td> Acd2TriggerVeto 
-<td>U<td>   Trigger veto for the fast signal
 <tr><td> Acd2RibbonCount 
 <td>U<td>   Number of ribbons fired
 <tr><td> Acd2VetoCount 
-<td>U<td>   Number of vetos fired
+<td>U<td>   Total number of vetoes fired in ACD
 <tr><td> Acd2VetoFaces
-<td>U<td>   Number of Acd faces with vetos
-<tr><td> Acd2TotalEnergy    
-<td>F<td>   Total energy deposited in ACD Tiles
+<td>U<td>   Number of ACD faces with tile vetos
+<tr><td> Acd2NumTileVetoTop
+<td>U<td>   Number of top tiles with a veto
+<tr><td> Acd2NumTileVetoSideRow[0...3] 
+<td>U<td>   Number of tiles in side row [0...3] with a veto
+<tr><td> Acd2NumTotalTileHitRow3
+<td>U<td>   Number of tiles with a hit for side row 3, no veto threshold applied (includes ghosts)
+
+<tr><td> Acd2TotalTileEnergy    
+<td>F<td>   Total energy deposited in ACD Tiles (includes ghosts)
+<tr><td> Acd2TotalRibbonEnergy   
+<td>F<td>   Total energy deposited in ACD Ribbons (includes ghosts)
+<tr><td> Acd2TotalTileEnergyTop
+<td>F<td>   Total energy deposited in top tiles (includes ghosts)
+<tr><td> Acd2TotalTileEnergyRow[0...3]
+<td>F<td>   Total energy deposited in the tiles in side row 0 to 3 (includes ghosts)
+
+<tr><td> Acd2TileEnergy    
+<td>F<td>   Energy (de-ghosted) deposited in ACD Tiles
 <tr><td> Acd2RibbonEnergy   
-<td>F<td>   Total energy deposited in ACD Ribbons
+<td>F<td>   Energy (de-ghosted) deposited in ACD Ribbons 
+<tr><td> Acd2GhostTileEnergy    
+<td>F<td>   Energy deposited in ACD Tiles from hits tagged as ghosts
+<tr><td> Acd2GhostRibbonEnergy   
+<td>F<td>   Energy deposited in ACD Ribbons from hits tagged as ghosts
+<tr><td> Acd2TriggerTileEnergy    
+<td>F<td>   Energy deposited in ACD Tiles with trigger veto asserted
+<tr><td> Acd2TriggerRibbonEnergy   
+<td>F<td>   Energy deposited in ACD Ribbons with trigger veto asserted
 
 <tr><td> Acd2TileIdRecon
 <td>U<td> Tile identifier that was pierced by the reconstructed track.  
@@ -220,16 +255,16 @@ A value of 899 (N/A) is the default and denotes that no ACD ribbon was
 intersected by a reconstructed track.
 
 
-<tr><td> Acd2ActiveDist3D   
-<td>F<td>   Active Distance most likely to give a veto.  
+<tr><td> Acd2TileActDist3D   
+<td>F<td>   Tile Active Distance most likely to give a veto.  
 Corresponds to Act. Dist. that is greater than a set 
 an energy dep. min. distance and has the largest pulse height
-<tr><td> Acd2ActiveDist3DErr
+<tr><td> Acd2TileActDist3DErr
 <td>F<td>   Error on most likely veto active distance of any track 
 to the edge of any tile 
-<tr><td> Acd2ActDistTileEnergy 
-<td>F<td>   The deposited energy in the corresponding hit tile 
-<tr><td> Acd2ActDistTrackNum
+<tr><td> Acd2TileActDistEnergy 
+<td>F<td>   The deposited energy (not de-ghosted) in the corresponding hit tile 
+<tr><td> Acd2TileActDistTrackNum
 <td>F<td>   Track number of track which was used for AcdActiveDist3D. 
 Track numbering starts at zero; best track number is zero; -1 means no track
 
@@ -243,16 +278,15 @@ Track numbering starts at zero; best track number is zero; -1 means no track
 <td>F<td>   Length along ribbon where point of closest approach occured. 
 0 is center of ribbon; + going towards +x or +y side of ACD
 <tr><td> Acd2RibbonActEnergyPmtA
-<td>F<td>   The deposited energy in the A PMT of the corresponding hit ribbon
+<td>F<td>   The deposited energy (not de-ghosted) in the A PMT of the corresponding hit ribbon
 <tr><td> Acd2RibbonActEnergyPmtB
-
-<td>F<td>   The deposited energy in the B PMT of the corresponding hit ribbon
-<tr><td> Acd2CornerDoca 
+<td>F<td>   The deposited energy (not de-ghosted) in the B PMT of the corresponding hit ribbon
+<tr><td> Acd2Tkr1CornerDoca 
 <td>F<td>   Minimum Distance of Closest Approach of best track to the corner side gaps
 This variable is signed to match the direction of the overlaps in the tiles. 
 The gap appears larger for tracks coming from the + side than the - side.  
-<tr><td> Acd2TkrHoleDist (fixme)
-<td>F<td>   Minimum Distance of Closest Approach of any track to any of the tile screw holes
+<tr><td> Acd2TkrHoleDist
+<td>F<td>   FIXME: Minimum Distance of Closest Approach of any track to any of the tile screw holes
 <tr><td> Acd2TkrRibbonDist
 <td>F<td>   Minimum Distance of Closest Approach of any track to any ribbons that cover gaps
 <tr><td> Acd2TkrRibbonDistErr
@@ -262,20 +296,14 @@ The gap appears larger for tracks coming from the + side than the - side.
 0 is center of ribbon + going towards +x or +y side of ACD.
 
 
-<tr><td> Acd2Tkr1ActiveDist 
+<tr><td> Acd2Tkr1TileActDist 
 <td>F<td>   Largest active distance from  track 1 to the edge of any tile
-<tr><td> Acd2Tkr1ActiveDistErr
+<tr><td> Acd2Tkr1TileActDistErr
 <td>F<td>   Error on largest active distance from track 1 to the edge of any tile
-<tr><td> Acd2Tkr1ActDistTileEnergy
-<td>F<td>   The deposited energy in the corresponding hit tile
-<tr><td> Acd2Tkr1ActDistTileArc
+<tr><td> Acd2Tkr1TileActDistEnergy
+<td>F<td>   The deposited energy (not de-ghosted) in the corresponding hit tile
+<tr><td> Acd2Tkr1TileActDistArc
 <td>F<td>   Length from head of track to point where active distances was calculated
-<tr><td> Acd2Tkr1Energy15
-<td>F<td>   Energy in 15 deg. cone ahead of Track
-<tr><td> Acd2Tkr1Energy30
-<td>F<td>   Energy in 30 deg. cone ahead of Track
-<tr><td> Acd2Tkr1Energy45
-<td>F<td>   Energy in 45 deg. cone ahead of Track
 
 <tr><td> Acd2Tkr1RibbonActDist   
 <td>F<td>   Largest active distance to any ribbon 
@@ -285,10 +313,23 @@ The gap appears larger for tracks coming from the + side than the - side.
 <tr><td> Acd2Tkr1RibbonActLength
 <td>F<td>   Length along ribbon where point of closest approach occured. 
 0 is center of ribbon + going towards +x or +y side of ACD
-<tr><td> Acd2Tkr1RibbonActEnergyPmtA   
-<td>F<td>   The deposited energy in the A PMT of the corresponding hit ribbon
-<tr><td> Acd2Tkr1RibbonActEnergyPmtB   
-<td>F<td>   The deposited energy in the A PMT of the corresponding hit ribbon
+<tr><td> Acd2Tkr1RibbonActDistEnergyPmtA   
+<td>F<td>   The deposited energy (not de-ghosted) in the A PMT of the corresponding hit ribbon
+<tr><td> Acd2Tkr1RibbonActDistEnergyPmtB   
+<td>F<td>   The deposited energy (not de-ghosted) in the A PMT of the corresponding hit ribbon
+
+<tr><td> Acd2Tkr1Energy15
+<td>F<td>   Energy (de-ghosted) in 15 deg. cone ahead of Track
+<tr><td> Acd2Tkr1Energy30
+<td>F<td>   Energy (de-ghosted) in 30 deg. cone ahead of Track
+<tr><td> Acd2Tkr1Energy45
+<td>F<td>   Energy (de-ghosted) in 45 deg. cone ahead of Track
+<tr><td> Acd2Tkr1TriggerEnergy15
+<td>F<td>   Trigger energy in 15 deg. cone ahead of Track
+<tr><td> Acd2Tkr1TriggerEnergy30
+<td>F<td>   Trigger energy in 30 deg. cone ahead of Track
+<tr><td> Acd2Tkr1TriggerEnergy45
+<td>F<td>   Trigger energy in 45 deg. cone ahead of Track
 
 <tr><td> Acd2Tkr1CornerDoca 
 <td>F<td>   Minimum Distance of Closest Approach of best track to the corner side gaps 
@@ -317,6 +358,7 @@ number of sigmas track propagation is away from tile or ribbon most likely to ve
 <td>F<td>Number of sigmas track propagation is away from clostest GAP in ACD for the best track.
 <tr><td> Acd2Tkr1TriggerVeto
 <td>U<td>Veto trigger for the tile or ribbon most likely to veto the best track.
+
 <tr><td> Acd2TkrVetoSigmaMip
 <td>F<td>Number of sigmas less than an expected mip for signal in tile or ribbon most likely to veto any track.
 <tr><td> Acd2TkrVetoSigmaProp
@@ -343,23 +385,18 @@ CAL cluster.
 number of sigmas track propagation is away from tile or ribbon most likely to veto the first CAL cluster.
 
 <tr><td> Acd2Cal1Energy15
-<td>F<td>   Energy in 15 deg. cone ahead of CAL cluster
+<td>F<td>   Energy (de-ghosted) in 15 deg. cone ahead of CAL cluster
 <tr><td> Acd2Cal1Energy30
-<td>F<td>   Energy in 30 deg. cone ahead of CAL cluster
+<td>F<td>   Energy (de-ghosted) in 30 deg. cone ahead of CAL cluster
 <tr><td> Acd2Cal1Energy45
-<td>F<td>   Energy in 45 deg. cone ahead of CAL cluster
+<td>F<td>   Energy (de-ghosted) in 45 deg. cone ahead of CAL cluster
+<tr><td> Acd2Cal1TriggerEnergy15
+<td>F<td>   Trigger energy in 15 deg. cone ahead of CAL cluster
+<tr><td> Acd2Cal1TriggerEnergy30
+<td>F<td>   Trigger energy in 30 deg. cone ahead of CAL cluster
+<tr><td> Acd2Cal1TriggerEnergy45
+<td>F<td>   Trigger energy in 45 deg. cone ahead of CAL cluster
 
-
-<tr><td> Acd2NoTop
-<td>U<td>   Hit Tile counts top of ACD
-<tr><td> Acd2NoSideRow[0...3] 
-<td>U<td>   Hit Tile counts for side row [0...3] that have energy > TileCountThreshold (= .8)
-<tr><td> Acd2NoRow3Readout
-<td>U<td>   Hit Tile counds for side row 3, no threshold cut
-<tr><td> Acd2EnergyTop
-<td>F<td>   Total energy deposited in top tiles
-<tr><td> Acd2EnergyRow[0...3]
-<td>F<td>   Total energy deposited in the tiles in side row 0 to 3
 </table>
 */
 
@@ -421,65 +458,77 @@ StatusCode Acd2ValsTool::initialize()
   }
   
   // load up the map
-  addItem(m_prefix + "TileCount",    &ACD_Tile_Count);
   addItem(m_prefix + "TriggerVeto",    &ACD_Trigger_Veto);
+  addItem(m_prefix + "TileCount",    &ACD_Tile_Count);
   addItem(m_prefix + "RibbonCount", &ACD_Ribbon_Count);
   addItem(m_prefix + "VetoCount",    &ACD_Veto_Count);
   addItem(m_prefix + "VetoFaces", &ACD_Veto_Faces);
-  addItem(m_prefix + "TotalEnergy", &ACD_Total_Energy);
-  addItem(m_prefix + "RibbonEnergy", &ACD_Total_Ribbon_Energy);
+
+  addItem(m_prefix + "NumTileVetoTop",        &ACD_tileTopCount);
+  addItem(m_prefix + "NumTileVetoSideRow0",   &ACD_tileCount0);
+  addItem(m_prefix + "NumTileVetoSideRow1",   &ACD_tileCount1);
+  addItem(m_prefix + "NumTileVetoSideRow2",   &ACD_tileCount2);   
+  addItem(m_prefix + "NumTileVetoSideRow3",   &ACD_tileCount3);
+  addItem(m_prefix + "NumTotalTileHitRow3",   &ACD_countRow3Readout);
+
+  addItem(m_prefix + "TotalTileEnergy", &ACD_Total_Tile_Energy);
+  addItem(m_prefix + "TotalRibbonEnergy", &ACD_Total_Ribbon_Energy);
+  addItem(m_prefix + "TotalTileEnergyTop",      & ACD_energyTop);
+  addItem(m_prefix + "TotalTileEnergyRow0",     & ACD_energyRow0);
+  addItem(m_prefix + "TotalTileEnergyRow1",     & ACD_energyRow1);
+  addItem(m_prefix + "TotalTileEnergyRow2",     & ACD_energyRow2);
+  addItem(m_prefix + "TotalTileEnergyRow3",     & ACD_energyRow3);
+
+
+  addItem(m_prefix + "TileEnergy", &ACD_Tile_Energy);
+  addItem(m_prefix + "RibbonEnergy", &ACD_Ribbon_Energy);
+  addItem(m_prefix + "GhostTileEnergy", &ACD_Ghost_Tile_Energy);
+  addItem(m_prefix + "GhostRibbonEnergy", &ACD_Ghost_Ribbon_Energy);
+  addItem(m_prefix + "TriggerTileEnergy", &ACD_Trigger_Tile_Energy);
+  addItem(m_prefix + "TriggerRibbonEnergy", &ACD_Trigger_Ribbon_Energy);
   addItem(m_prefix + "TileIdRecon", &ACD_TileIdRecon);
   addItem(m_prefix + "RibbonIdRecon", &ACD_RibbonIdRecon);
   
-  addItem(m_prefix + "ActiveDist3D",   &ACD_ActiveDist3D);
-  addItem(m_prefix + "ActiveDist3DErr",   &ACD_ActiveDist3D_Err);
-  addItem(m_prefix + "ActDistTileEnergy",   &ACD_ActiveDist_Energy);
-  addItem(m_prefix + "ActDistTrackNum", &ACD_ActiveDist_TrackNum);
+  addItem(m_prefix + "TileActDist3D",       &ACD_ActiveDist3D);
+  addItem(m_prefix + "TileActDist3DErr",    &ACD_ActiveDist3D_Err);
+  addItem(m_prefix + "TileActDistEnergy",   &ACD_ActiveDist_Energy);
+  addItem(m_prefix + "TileActDistTrackNum", &ACD_ActiveDist_TrackNum);
   
-  addItem(m_prefix + "RibbonActDist", &ACD_ribbon_ActiveDist);
-  addItem(m_prefix + "RibbonActDistErr", &ACD_ribbon_ActiveDist_Err);
-  addItem(m_prefix + "RibbonActLength", &ACD_ribbon_ActiveLength);
+  addItem(m_prefix + "RibbonActDist",       &ACD_ribbon_ActiveDist);
+  addItem(m_prefix + "RibbonActDistErr",    &ACD_ribbon_ActiveDist_Err);
+  addItem(m_prefix + "RibbonActLength",     &ACD_ribbon_ActiveLength);
   addItem(m_prefix + "RibbonActEnergyPmtA", &ACD_ribbon_EnergyPmtA);
   addItem(m_prefix + "RibbonActEnergyPmtB", &ACD_ribbon_EnergyPmtB);
 
-  addItem(m_prefix + "CornerDoca",    &ACD_Corner_DOCA);
-  addItem(m_prefix + "TkrHoleDist",    &ACD_TkrHole_Dist);
-  addItem(m_prefix + "TkrRibbonDist",    &ACD_TkrRibbon_Dist);
-  addItem(m_prefix + "TkrRibbonDistErr",    &ACD_TkrRibbon_Dist_Err);
+  addItem(m_prefix + "CornerDoca",         &ACD_Corner_DOCA);
+  addItem(m_prefix + "TkrHoleDist",        &ACD_TkrHole_Dist);
+  addItem(m_prefix + "TkrRibbonDist",      &ACD_TkrRibbon_Dist);
+  addItem(m_prefix + "TkrRibbonDistErr",   &ACD_TkrRibbon_Dist_Err);
   addItem(m_prefix + "TkrRibbonLength",    &ACD_TkrRibbonLength);
   
-  addItem(m_prefix + "Tkr1ActiveDist", &ACD_Tkr1ActiveDist);
-  addItem(m_prefix + "Tkr1ActiveDistErr", &ACD_Tkr1ActiveDist_Err);
-  addItem(m_prefix + "Tkr1ActiveDistArc", &ACD_Tkr1ActiveDist_Arc);
-  addItem(m_prefix + "Tkr1ActDistTileEnergy", &ACD_Tkr1ActiveDist_Energy);
-  addItem(m_prefix + "Tkr1Energy15", &ACD_Tkr1Energy15);
-  addItem(m_prefix + "Tkr1Energy30", &ACD_Tkr1Energy30);
-  addItem(m_prefix + "Tkr1Energy45", &ACD_Tkr1Energy45);
-  
-  addItem(m_prefix + "Tkr1RibbonActDist", &ACD_Tkr1_ribbon_ActiveDist);
-  addItem(m_prefix + "Tkr1RibbonActDistErr", &ACD_Tkr1_ribbon_ActiveDist_Err);
-  addItem(m_prefix + "Tkr1RibbonActLength", &ACD_Tkr1_ribbon_ActiveLength);
+  addItem(m_prefix + "Tkr1TileActDist",       &ACD_Tkr1ActiveDist);
+  addItem(m_prefix + "Tkr1TileActDistErr",    &ACD_Tkr1ActiveDist_Err);
+  addItem(m_prefix + "Tkr1TileActDistArc",    &ACD_Tkr1ActiveDist_Arc);
+  addItem(m_prefix + "Tkr1TileActDistEnergy", &ACD_Tkr1ActiveDist_Energy);
+
+  addItem(m_prefix + "Tkr1RibbonActDist",       &ACD_Tkr1_ribbon_ActiveDist);
+  addItem(m_prefix + "Tkr1RibbonActDistErr",    &ACD_Tkr1_ribbon_ActiveDist_Err);
+  addItem(m_prefix + "Tkr1RibbonActLength",     &ACD_Tkr1_ribbon_ActiveLength);
   addItem(m_prefix + "Tkr1RibbonActEnergyPmtA", &ACD_Tkr1_ribbon_EnergyPmtA);
   addItem(m_prefix + "Tkr1RibbonActEnergyPmtB", &ACD_Tkr1_ribbon_EnergyPmtB);
   
-  addItem(m_prefix + "Tkr1CornerDoca",    &ACD_Tkr1Corner_DOCA);
-  addItem(m_prefix + "Tkr1HoleDist",    &ACD_Tkr1Hole_Dist);
-  addItem(m_prefix + "Tkr1RibbonDist",    &ACD_Tkr1Ribbon_Dist);
-  addItem(m_prefix + "Tkr1RibbonDistErr",    &ACD_Tkr1Ribbon_Dist_Err);
+  addItem(m_prefix + "Tkr1Energy15",        &ACD_Tkr1Energy15);
+  addItem(m_prefix + "Tkr1Energy30",        &ACD_Tkr1Energy30);
+  addItem(m_prefix + "Tkr1Energy45",        &ACD_Tkr1Energy45);
+  addItem(m_prefix + "Tkr1TriggerEnergy15", &ACD_Tkr1TriggerEnergy15);
+  addItem(m_prefix + "Tkr1TriggerEnergy30", &ACD_Tkr1TriggerEnergy30);
+  addItem(m_prefix + "Tkr1TriggerEnergy45", &ACD_Tkr1TriggerEnergy45);
+  
+  addItem(m_prefix + "Tkr1CornerDoca",      &ACD_Tkr1Corner_DOCA);
+  addItem(m_prefix + "Tkr1HoleDist",        &ACD_Tkr1Hole_Dist);
+  addItem(m_prefix + "Tkr1RibbonDist",      &ACD_Tkr1Ribbon_Dist);
+  addItem(m_prefix + "Tkr1RibbonDistErr",   &ACD_Tkr1Ribbon_Dist_Err);
   addItem(m_prefix + "Tkr1RibbonLength",    &ACD_Tkr1RibbonLength);    
-  
-  addItem(m_prefix + "NoTop",        &ACD_tileTopCount);
-  addItem(m_prefix + "NoSideRow0",   &ACD_tileCount0);
-  addItem(m_prefix + "NoSideRow1",   &ACD_tileCount1);
-  addItem(m_prefix + "NoSideRow2",   &ACD_tileCount2);   
-  addItem(m_prefix + "NoSideRow3",   &ACD_tileCount3);
-  
-  addItem(m_prefix + "NoRow3Readout", &ACD_countRow3Readout);
-  addItem(m_prefix + "EnergyTop",  & ACD_energyTop);
-  addItem(m_prefix + "EnergyRow0", & ACD_energyRow0);
-  addItem(m_prefix + "EnergyRow1", & ACD_energyRow1);
-  addItem(m_prefix + "EnergyRow2", & ACD_energyRow2);
-  addItem(m_prefix + "EnergyRow3", & ACD_energyRow3);
   
   addItem(m_prefix + "Tkr1VetoSigmaHit", & ACD_Tkr1_VetoSigmaHit);
   addItem(m_prefix + "Tkr1VetoSigmaGap", & ACD_Tkr1_VetoSigmaGap);
@@ -502,6 +551,9 @@ StatusCode Acd2ValsTool::initialize()
   addItem(m_prefix + "Cal1Energy15", &ACD_Cal1Energy15);
   addItem(m_prefix + "Cal1Energy30", &ACD_Cal1Energy30);
   addItem(m_prefix + "Cal1Energy45", &ACD_Cal1Energy45);
+  addItem(m_prefix + "Cal1TriggerEnergy15", &ACD_Cal1TriggerEnergy15);
+  addItem(m_prefix + "Cal1TriggerEnergy30", &ACD_Cal1TriggerEnergy30);
+  addItem(m_prefix + "Cal1TriggerEnergy45", &ACD_Cal1TriggerEnergy45);
   
   zeroVals();
   ACD_ActiveDist_TrackNum = -1;
@@ -537,9 +589,11 @@ StatusCode Acd2ValsTool::calculate()
   // Make a map relating AcdId to calibrated hits
   std::map<idents::AcdId, const Event::AcdHit*> hitMap;
     
+  /*
+  /// ADW: Incorporated into AcdEventTopology
   const Event::AcdHitCol& hitCol = pACD->getHitCol();
   int nHit = hitCol.size();
-  
+
   // Set to zero for each event (MPR)
   int TriggerVeto = 0;
 
@@ -558,9 +612,8 @@ StatusCode Acd2ValsTool::calculate()
    
     ACD_Trigger_Veto = TriggerVeto;
     hitMap[id] = aHit;
-   
   }
-
+  */
 
   static const float maxSigma = 10000.;
   static const float maxSigmaSq = maxSigma*maxSigma;
@@ -583,6 +636,7 @@ StatusCode Acd2ValsTool::calculate()
   ACD_Tkr1Corner_DOCA = ACD_Tkr1Ribbon_Dist = ACD_Tkr1Hole_Dist = negMaxDist;
   ACD_Tkr1_ribbon_ActiveLength = ACD_Tkr1RibbonLength = -10000.;
   ACD_Tkr1Energy15 = ACD_Tkr1Energy30 = ACD_Tkr1Energy45 = 0.;
+  ACD_Tkr1TriggerEnergy15 = ACD_Tkr1TriggerEnergy30 = ACD_Tkr1TriggerEnergy45 = 0.;
 
   ACD_Tkr1_VetoSigmaHit = maxSigma;
   ACD_Tkr1_VetoSigmaGap = maxSigma;
@@ -666,7 +720,7 @@ StatusCode Acd2ValsTool::calculate()
             track_tileBestVetoHit = aPoca->vetoSigmaHit();
             track_tileBestVetoProp = aPoca->vetoSigmaProp();
             track_tileBestVetoProj = aPoca->vetoSigmaProj();
-            track_tileBestTriggerVeto = aPoca->hasTriggerVeto();
+            track_tileBestTriggerVeto = hitMap[theId]->getTriggerVeto();
           }   
         } else if ( theId.ribbon() ) {
           if ( testHitSigma2 <  track_ribbonBestVetoSq) {
@@ -675,25 +729,30 @@ StatusCode Acd2ValsTool::calculate()
             track_ribbonBestVetoHit = aPoca->vetoSigmaHit();
             track_ribbonBestVetoProp = aPoca->vetoSigmaProp();
             track_ribbonBestVetoProj = aPoca->vetoSigmaProj();
-            track_ribbonBestTriggerVeto = aPoca->hasTriggerVeto();
+            track_ribbonBestTriggerVeto = hitMap[theId]->getTriggerVeto();
           }
         }      
 
         // Fill special vars for best track
         if ( isBestTrack ) {
           // check to see if it is in xx deg cone around track
+          // ADW: Use de-ghosted tile energy and fill trigger tile energy
           if ( theId.tile() ) {
             if ( aPoca->getArcLength() > 0.1 ) {
               static const float tan30 = 5.77350288616910401e-01;
               static const float tan15 = 2.67949200239410490e-01;
               float tanAngle = ( -1 * aPoca->getDoca() )/ aPoca->getArcLength();
-              float tileEng = hitMap[theId]->tileEnergy();
+              float tileEng = hitMap[theId]->tileEnergy() * ( !hitMap[theId]->getGhost() );
+              float triggerTileEng = tileEng * ( hitMap[theId]->getTriggerVeto() );
               if ( tanAngle < 1. ) {
                 ACD_Tkr1Energy45 += tileEng;
+                ACD_Tkr1TriggerEnergy45 += triggerTileEng;
                 if ( tanAngle < tan30 ) {
                   ACD_Tkr1Energy30 += tileEng;
+                  ACD_Tkr1TriggerEnergy30 += triggerTileEng;
                   if ( tanAngle < tan15 ) {
                     ACD_Tkr1Energy15 += tileEng;
+                    ACD_Tkr1TriggerEnergy15 += triggerTileEng;
                   }
                 }
               }
@@ -825,7 +884,7 @@ StatusCode Acd2ValsTool::calculate()
       ACD_Tkr_VetoSigmaMip  =  tile_vetoPoca->vetoSigmaHit();      
       ACD_Tkr_VetoSigmaProj =  tile_vetoPoca->vetoSigmaProp();     
       ACD_Tkr_VetoSigmaProp =  tile_vetoPoca->vetoSigmaProj();     
-      ACD_Tkr_TriggerVeto = tile_vetoPoca->hasTriggerVeto();
+      ACD_Tkr_TriggerVeto = hitMap[tile_vetoPoca->getId()]->getTriggerVeto();
     }
   } else {
     ACD_Tkr_VetoSigmaHit = sqrt(best_ribbonVetoSq);
@@ -833,7 +892,7 @@ StatusCode Acd2ValsTool::calculate()
       ACD_Tkr_VetoSigmaMip  =  ribbon_vetoPoca->vetoSigmaHit();      
       ACD_Tkr_VetoSigmaProj =  ribbon_vetoPoca->vetoSigmaProp();     
       ACD_Tkr_VetoSigmaProp =  ribbon_vetoPoca->vetoSigmaProj();     
-      ACD_Tkr_TriggerVeto = ribbon_vetoPoca->hasTriggerVeto();
+      ACD_Tkr_TriggerVeto = hitMap[ribbon_vetoPoca->getId()]->getTriggerVeto();
     }
   }
   //ACD_Tkr_VetoSigmaHit = best_tileVetoSq < best_ribbonVetoSq ?
@@ -934,12 +993,16 @@ StatusCode Acd2ValsTool::calculate()
               static const float tan15 = 2.67949200239410490e-01;
               float tanAngle = ( -1 * aPoca->getDoca() )/ aPoca->getArcLength();
               float tileEng = hitMap[theId]->tileEnergy();
+              float triggerTileEng = tileEng * ( hitMap[theId]->getTriggerVeto() );
               if ( tanAngle < 1. ) {
                 ACD_Cal1Energy45 += tileEng;
+                ACD_Cal1TriggerEnergy45 += triggerTileEng;
                 if ( tanAngle < tan30 ) {
                   ACD_Cal1Energy30 += tileEng;
+                  ACD_Cal1TriggerEnergy30 += triggerTileEng;
                   if ( tanAngle < tan15 ) {
                     ACD_Cal1Energy15 += tileEng;
+                    ACD_Cal1TriggerEnergy15 += triggerTileEng;
                   }
                 }
               }
@@ -987,11 +1050,22 @@ void Acd2ValsTool::loadTopologyVars(const Event::AcdReconV2& pACD) {
   ACD_Tile_Count = evtTopo.getTileCount();
   ACD_Ribbon_Count = evtTopo.getRibbonCount();
 
-  ACD_Veto_Count = evtTopo.getTileVeto();
+  ACD_Veto_Count = evtTopo.getVetoCount();
+  ACD_Trigger_Veto = (ACD_Veto_Count > 0);
+
   ACD_Veto_Faces = evtTopo.getNSidesVeto();
 
-  ACD_Total_Energy = evtTopo.getTileEnergy();
-  ACD_Total_Ribbon_Energy = evtTopo.getRibbonEnergy();
+  ACD_Total_Tile_Energy = evtTopo.getTotalTileEnergy();
+  ACD_Total_Ribbon_Energy = evtTopo.getTotalRibbonEnergy();
+
+  ACD_Tile_Energy = evtTopo.getTileEnergy();
+  ACD_Ribbon_Energy = evtTopo.getRibbonEnergy();
+
+  ACD_Ghost_Tile_Energy = evtTopo.getGhostTileEnergy();
+  ACD_Ghost_Ribbon_Energy = evtTopo.getGhostRibbonEnergy();
+
+  ACD_Trigger_Tile_Energy = evtTopo.getTriggerTileEnergy();
+  ACD_Trigger_Ribbon_Energy = evtTopo.getTriggerRibbonEnergy();
  
   ACD_tileTopCount = evtTopo.getVetoCountTop();
   ACD_tileCount0 = evtTopo.getVetoCountSideRow(0);
