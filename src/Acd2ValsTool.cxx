@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/Acd2ValsTool.cxx,v 1.2.60.5 2012/03/31 00:22:53 kadrlica Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/Acd2ValsTool.cxx,v 1.2.60.6 2012/04/20 03:50:38 kadrlica Exp $
 */
 
 #include "ValBase.h"
@@ -281,8 +281,8 @@ Track numbering starts at zero; best track number is zero; -1 means no track
 <td>F<td>   The deposited energy (not de-ghosted) in the A PMT of the corresponding hit ribbon
 <tr><td> Acd2RibbonActEnergyPmtB
 <td>F<td>   The deposited energy (not de-ghosted) in the B PMT of the corresponding hit ribbon
-<tr><td> Acd2Tkr1CornerDoca 
-<td>F<td>   Minimum Distance of Closest Approach of best track to the corner side gaps
+<tr><td> Acd2CornerDoca 
+<td>F<td>   Minimum Distance of Closest Approach of a track to the corner side gaps
 This variable is signed to match the direction of the overlaps in the tiles. 
 The gap appears larger for tracks coming from the + side than the - side.  
 <tr><td> Acd2TkrHoleDist
