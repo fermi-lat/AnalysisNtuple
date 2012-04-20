@@ -3,6 +3,7 @@
   @verbatim
    * EOH *
 
+ AnalysisNtuple-02-60-01-gr09 20-Apr-2012 kadrlica Fixed bug in filling hitMap in Acd2ValsTool
  AnalysisNtuple-02-60-01-gr08 19-Apr-2012 kadrlica Added Acd2 de-ghosting and trigger variables. Tried to standardize other variable names. Moved Acd2TriggerVeto calculation into AcdEventTopology. Fixed typo in Acd2CornerDoca documentation.
  AnalysisNtuple-02-60-01-gr07 19-Apr-2012 kadrlica Added Acd2 de-ghosting and trigger variables. Tried to standardize other variable names. Moved Acd2TriggerVeto calculation into AcdEventTopology
  AnalysisNtuple-02-60-01-gr06 16-Mar-2012 kadrlica & bruel 
