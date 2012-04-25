@@ -3,11 +3,26 @@
   @verbatim
    * EOH *
 
+ AnalysisNtuple-02-61-00 24-Apr-2012 hmk Merge GlastREleasev19r4p1 branch
  AnalysisNtuple-02-60-03 02-Feb-2012 kadrlica Adding Acd2 variables for Tkr1 and Cal1.
  AnalysisNtuple-02-60-02 24-Jan-2012  lsrea More protection for empty events
  AnalysisNtuple-02-60-01 03-Jan-2011 HMK Patch test JO to remove reference
    to AcdValsTool parameter that does not exist
  AnalysisNtuple-02-60-00 05-Dec-2011 HMK Merge in Gaudi v21r7 upgrade
+ -- End GlastReleasev19r4p1 branch
+ AnalysisNtuple-02-60-01-gr09 20-Apr-2012 kadrlica Fixed bug in filling hitMap in Acd2ValsTool
+ AnalysisNtuple-02-60-01-gr08 19-Apr-2012 kadrlica Added Acd2 de-ghosting and trigger variables. Tried to standardize other variable names. Moved Acd2TriggerVeto calculation into AcdEventTopology. Fixed typo in Acd2CornerDoca documentation.
+ AnalysisNtuple-02-60-01-gr07 19-Apr-2012 kadrlica Added Acd2 de-ghosting and trigger variables. Tried to standardize other variable names. Moved Acd2TriggerVeto calculation into AcdEventTopology
+ AnalysisNtuple-02-60-01-gr06 16-Mar-2012 kadrlica & bruel 
+      Check that moments analysis has run before calculating CalTrackAngle
+      CalValsTool = add information on cal clusters 2 to 5 and the Uber2 
+         cluster - add the cluster energy due to overlay
+ AnalysisNtuple-02-60-01-gr05 03-Feb-2012 TU Added Philippe's cal variables
+ AnalysisNtuple-02-60-01-gr04 02-Feb-2012 kadrlica Added calorimeter cluster association variables to Acd2 output. Split up projected Acd2 sigma values into distances and hit signal.
+ AnalysisNtuple-02-60-01-gr03 01-Feb-2012 TU Fix compile time issue on windows
+ AnalysisNtuple-02-60-01-gr02 31-Jan-2012  lsrea Melissa's addtions
+ AnalysisNtuple-02-60-01-gr01 24-Jan-2012  lsrea More protection for empty events
+ -- Start GlastReleasev19r4p1 branch
  AnalysisNtuple-02-59-06 17-Nov-2011  TU Modifications to McValsTool, TkrValsTool and TreeValsTool to include more output, also
                                       Johan added CalUber Trans, Long, GamProb, HadProb, MipProb, GhostProb
  AnalysisNtuple-02-59-05 26-Sep-2011  TU Add variables to McValsTool and TreeValsTool to further study Tree Based performance

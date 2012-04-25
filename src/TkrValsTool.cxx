@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.106 2011/12/12 20:36:35 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.107 2012/02/02 18:48:30 atwood Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -257,6 +257,7 @@ private:
     float Tkr_2_y0;
     float Tkr_2_z0;
     float Tkr_2_CovDet;
+
     float Tkr_2TkrAngle;
     float Tkr_2TkrHDoca;
 
@@ -868,6 +869,7 @@ StatusCode TkrValsTool::initialize()
       addItem("Tkr2Y0",         &Tkr_2_y0);
       addItem("Tkr2Z0",         &Tkr_2_z0);    
     addItem("Tkr2CovDet",     &Tkr_2_CovDet);
+
     addItem("Tkr2TkrAngle",   &Tkr_2TkrAngle); 
     addItem("Tkr2TkrHDoca",   &Tkr_2TkrHDoca); 
 
@@ -1533,6 +1535,7 @@ StatusCode TkrValsTool::calculate()
             Tkr_2_zdir*Tkr_2_zdir;
 
 	
+
 			 if (track_2->front()->validCluster())
         {
             Tkr_1_1stHitRes  = (*track_2)[0]->getMeasuredPosition(Event::TkrTrackHit::MEASURED)
