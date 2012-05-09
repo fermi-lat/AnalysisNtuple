@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.107 2012/02/02 18:48:30 atwood Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.108 2012/04/25 04:58:15 heather Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -173,6 +173,7 @@ private:
     float Tkr_1_KalEne;
     float Tkr_1_ConEne;
     float Tkr_1_KalThetaMS;
+    float Tkr_1_RangeEne;
     float Tkr_1_TwrEdge;
     float Tkr_1_PrjTwrEdge;
     float Tkr_1_DieEdge;
@@ -245,6 +246,7 @@ private:
     float Tkr_2_KalEne;
     float Tkr_2_ConEne;
     float Tkr_2_KalThetaMS;
+    float Tkr_2_RangeEne;
     float Tkr_2_TwrEdge;
     float Tkr_2_PrjTwrEdge;
     float Tkr_2_DieEdge;
@@ -493,7 +495,10 @@ of the first layer (See Tkr1TwrEdge.)
 <td>F<td>   Kalman energy of track 1; this is the energy determined from the multiple scattering 
 along the track (goes like 1/E). Since it is possible to measure a 
 zero scattering angle, which would lead to infinite energy, 
-the minimum measureable angle, which limits the energy to reasonable values  
+the minimum measureable angle, which limits the energy to reasonable values
+<tr><td> Tkr[1/2]RangeEnergy
+<td>F<td>  Energy estimated for "stopping tracks", which means (so far) a track that ends before
+exiting the bottom, with a wide cluster in the last layer
 <tr><td> Tkr[1/2]ConEne  
 <td>F<td>   Energy from PatRec energy tool for track 1. 
 The tool computes the total event energy and then partitions it 
@@ -782,6 +787,7 @@ StatusCode TkrValsTool::initialize()
     addItem("Tkr1KalEne",     &Tkr_1_KalEne);
     addItem("Tkr1ConEne",     &Tkr_1_ConEne);
     addItem("Tkr1KalThetaMS", &Tkr_1_KalThetaMS);
+    addItem("Tkr1RangeEne",   &Tkr_1_RangeEne);
 
     addItem("Tkr1XDir",       &Tkr_1_xdir);
     addItem("Tkr1YDir",       &Tkr_1_ydir);
@@ -858,7 +864,8 @@ StatusCode TkrValsTool::initialize()
 
     addItem("Tkr2KalEne",     &Tkr_2_KalEne);
     addItem("Tkr2ConEne",     &Tkr_2_ConEne);
-    //  addItem("Tkr2KalThetaMS", &Tkr_2_KalThetaMS);
+    addItem("Tkr2KalThetaMS", &Tkr_2_KalThetaMS);
+    addItem("Tkr2RangeEne",   &Tkr_2_RangeEne);
 
       addItem("Tkr2XDir",       &Tkr_2_xdir);
       addItem("Tkr2YDir",       &Tkr_2_ydir);
@@ -1033,6 +1040,7 @@ StatusCode TkrValsTool::calculate()
         Tkr_1_KalEne       = track_1->getKalEnergy(); 
         Tkr_1_ConEne       = track_1->getInitialEnergy(); 
         Tkr_1_KalThetaMS   = track_1->getKalThetaMS(); 
+        Tkr_1_RangeEne     = track_1->getRangeEnergy();
         Tkr_1_DifHits      = track_1->getNumXHits()-track_1->getNumYHits();
 
         Point  x1 = track_1->getInitialPosition();
@@ -1512,10 +1520,9 @@ StatusCode TkrValsTool::calculate()
             Tkr_2_Gaps         = track_2->getNumGaps();
             Tkr_2_KalEne       = track_2->getKalEnergy(); 
             Tkr_2_ConEne       = track_2->getInitialEnergy(); 
-            Tkr_2_KalThetaMS   = track_2->getKalThetaMS(); 
+            Tkr_2_KalThetaMS   = track_2->getKalThetaMS();
+            Tkr_2_RangeEne     = track_2->getRangeEnergy();
             Tkr_2_DifHits      = track_2->getNumXHits()-track_2->getNumYHits();
-
-			
 
             Point  x2 = track_2->getInitialPosition();
             Vector t2 = track_2->getInitialDirection();
