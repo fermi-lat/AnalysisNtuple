@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.120 2012/05/11 12:47:29 bruel Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.121 2012/05/11 19:51:55 kadrlica Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -92,6 +92,8 @@ private:
     IPropagator*     m_G4PropTool;    
 
     IValsTool*       m_pTkrTool;
+
+    DataSvc*        m_dataSvc;
 
     /// some Geometry
     double m_towerPitch;
@@ -723,6 +725,15 @@ StatusCode CalValsTool::initialize()
             return StatusCode::FAILURE;
         }
 
+        IService* dataSvc = 0;
+        if(service("OverlayDataSvc", dataSvc, true).isSuccess()) {
+            // Caste back to the "correct" pointer
+            m_dataSvc = dynamic_cast<DataSvc*>(dataSvc);
+        } else {
+            log << MSG::INFO << "Couldn't find OverlayDataSvc, will ignore" << endreq;
+            m_dataSvc = 0;
+        }
+
         m_detSvc->getNumericConstByName("CALnLayer", &m_nLayers);
         m_detSvc->getNumericConstByName("nCsIPerLayer", &m_nCsI);
 
@@ -1185,27 +1196,20 @@ StatusCode CalValsTool::calculate()
         for(k=0;k<12;++k)
           xtalovrenergy[i][j][k] = 0;
 
-    IService* dataSvc = 0;
-    StatusCode scovr = StatusCode::SUCCESS;
-    scovr = service("OverlayDataSvc", dataSvc);
-    if (!scovr.isFailure() )
-      {
-        // Caste back to the "correct" pointer
-        DataSvc* m_dataSvc = dynamic_cast<DataSvc*>(dataSvc);
-        
+    if(m_dataSvc) {
         SmartDataPtr<Event::CalOverlayCol> calOverlayCol(m_dataSvc, m_dataSvc->rootName() + OverlayEventModel::Overlay::CalOverlayCol);
         if(calOverlayCol)
-          {
+        {
             // Loop through input Cal overlay objects, counting and summing deposited energy
             for(Event::CalOverlayCol::iterator overIter  = calOverlayCol->begin(); overIter != calOverlayCol->end(); overIter++)
-              {
+            {
                 Event::CalOverlay* calOverlay = *overIter;
                 idents::CalXtalId id = calOverlay->getCalXtalId();
                 //
                 xtalovrenergy[(int)id.getTower()][(int)id.getLayer()][(int)id.getColumn()] += calOverlay->getEnergy();
-              }
-          }
-      }
+            }
+        }
+    }
 
     // Get relation between clusters and xtals
     Event::CalClusterHitTabList* xTal2ClusTabList = SmartDataPtr<Event::CalClusterHitTabList>(m_pEventSvc,EventModel::CalRecon::CalClusterHitTab);
@@ -2168,7 +2172,7 @@ StatusCode CalValsTool::calculate()
 
     double eTotovr   = 0.0;
     double lambda;
-    double pp[3];
+    //double pp[3];
     iclu = 0;
     // if pointer is not zero, start drawing
     if(clusters)
@@ -2363,7 +2367,7 @@ StatusCode CalValsTool::calculate()
 			int ilay=recData->getPackedId().getLayer();
 			int icol=recData->getPackedId().getColumn();
 			eTotovr += xtalovrenergy[itow][ilay][icol];
-			myxtal2clus[itow][ilay][icol] = iclu;
+			//myxtal2clus[itow][ilay][icol] = iclu;
 		      }
 		  }
 	      }
