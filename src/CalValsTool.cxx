@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.117 2012/02/03 14:30:04 bruel Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.118 2012/04/25 04:58:15 heather Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -2329,24 +2329,56 @@ StatusCode CalValsTool::calculate()
                                      (cl->getMomParams().getCentroid().y()-(CAL_Clu1_MomYCntr+lambda*CAL_Clu1_MomYDir))*(cl->getMomParams().getCentroid().y()-(CAL_Clu1_MomYCntr+lambda*CAL_Clu1_MomYDir))+
                                      (cl->getMomParams().getCentroid().z()-(CAL_Clu1_MomZCntr+lambda*CAL_Clu1_MomZDir))*(cl->getMomParams().getCentroid().z()-(CAL_Clu1_MomZCntr+lambda*CAL_Clu1_MomZDir)));
               }     
-            else if(iclu==numClusters-2)
-              {
-                CAL_Uber2_NumXtals = cl->getXtalsParams().getNumXtals();
-                CAL_Uber2_RawEnergySum = cl->getXtalsParams().getXtalRawEneSum();
-                CAL_Uber2_XtalEneMax = cl->getXtalsParams().getXtalEneMax();
-                CAL_Uber2_MomXCntr = cl->getMomParams().getCentroid().x();
-                CAL_Uber2_MomYCntr = cl->getMomParams().getCentroid().y();
-                CAL_Uber2_MomZCntr = cl->getMomParams().getCentroid().z();
-                CAL_Uber2_MomXDir = cl->getMomParams().getAxis().x();
-                CAL_Uber2_MomYDir = cl->getMomParams().getAxis().y();
-                CAL_Uber2_MomZDir = cl->getMomParams().getAxis().z();
-                CAL_Uber2_MomNumCoreXtals = cl->getMomParams().getNumCoreXtals();
-                CAL_Uber2_MomTransRms = cl->getMomParams().getTransRms();
-                CAL_Uber2_MomLongRms = cl->getMomParams().getLongRms();
-                CAL_Uber2_OverlayEnergy = eTotovr;
-              }
-            ++iclu;
           }
+	//
+	iclu = -1;
+	clusIter = clusters->begin();
+        while(clusIter != clusters->end())
+	  {
+	    ++iclu;
+	    Event::CalCluster* cl = *clusIter++;
+	    if(iclu!=numClusters-2) continue;
+	    //
+	    eTotovr   = 0.0;
+	    //
+            // get pointer to the cluster 
+	    if(xTal2ClusTab)
+	      {
+		std::vector<Event::CalClusterHitRel*> xTalRelVec = xTal2ClusTab->getRelBySecond(cl);
+		//
+		if(!xTalRelVec.empty())
+		  {
+		    eTotovr   = 0.0;
+		        
+		    std::vector<Event::CalClusterHitRel*>::const_iterator it = xTalRelVec.begin();
+		        
+		    // to find maximum energy per crystal
+		    for (; it != xTalRelVec.end(); it++)
+		      {
+			// get poiner to the reconstructed data for individual crystal
+			Event::CalXtalRecData* recData = (*it)->getFirst();
+			//
+			int itow=recData->getPackedId().getTower();
+			int ilay=recData->getPackedId().getLayer();
+			int icol=recData->getPackedId().getColumn();
+			eTotovr += xtalovrenergy[itow][ilay][icol];
+			myxtal2clus[itow][ilay][icol] = iclu;
+		      }
+		  }
+	      }
+	    CAL_Uber2_NumXtals = cl->getXtalsParams().getNumXtals();
+	    CAL_Uber2_RawEnergySum = cl->getXtalsParams().getXtalRawEneSum();
+	    CAL_Uber2_XtalEneMax = cl->getXtalsParams().getXtalEneMax();
+	    CAL_Uber2_MomXCntr = cl->getMomParams().getCentroid().x();
+	    CAL_Uber2_MomYCntr = cl->getMomParams().getCentroid().y();
+	    CAL_Uber2_MomZCntr = cl->getMomParams().getCentroid().z();
+	    CAL_Uber2_MomXDir = cl->getMomParams().getAxis().x();
+	    CAL_Uber2_MomYDir = cl->getMomParams().getAxis().y();
+	    CAL_Uber2_MomZDir = cl->getMomParams().getAxis().z();
+	    CAL_Uber2_MomTransRms = cl->getMomParams().getTransRms();
+	    CAL_Uber2_MomLongRms = cl->getMomParams().getLongRms();
+	    CAL_Uber2_OverlayEnergy = eTotovr;
+	  }
       }
 
     return sc;
