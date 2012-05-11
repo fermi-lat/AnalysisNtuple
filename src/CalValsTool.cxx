@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.119 2012/05/11 12:28:27 bruel Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.120 2012/05/11 12:47:29 bruel Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -852,7 +852,7 @@ StatusCode CalValsTool::initialize()
     addItem("CalZDir2",       &CAL_zdir2);
     addItem("CalPosDirChisq",       &CAL_posdir_chisq);
     addItem("CalPosDirNLayers",       &CAL_posdir_nlayers);
-    addItem("CalNSaturated",       &CAL_nsaturated);
+    addItem("CalNSaturated",       &CAL_nsaturated, true);
 
     addItem("CalUberEnergy",     &CAL_energy_uber);
     addItem("CalUberXEcntr",     &CAL_xEcntr_uber);
@@ -1029,9 +1029,9 @@ StatusCode CalValsTool::initialize()
     addItem("CalUber2LongRms",  &CAL_Uber2_MomLongRms);
     addItem("CalUber2OvrEnergy",  &CAL_Uber2_OverlayEnergy);
 
-    addItem("CalCfpEnergy",  &CAL_cfp_energy);
+    addItem("CalCfpEnergy",  &CAL_cfp_energy, true);
     addItem("CalCfpChiSq",   &CAL_cfp_totChiSq);
-    addItem("CalCfpEnergyUB",&CAL_cfp_energyUB);
+    addItem("CalCfpEnergyUB",&CAL_cfp_energyUB, true);
     addItem("CalCfpEffRLn",  &CAL_cfp_calEffRLn);
     addItem("CalCfpTkrRLn",  &CAL_cfp_tkrRLn);
     addItem("CalCfpAlpha",  &CAL_cfp_alpha);

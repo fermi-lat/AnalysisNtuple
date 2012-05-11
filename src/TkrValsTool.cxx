@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.108 2012/04/25 04:58:15 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.109 2012/05/09 01:32:13 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -811,7 +811,7 @@ StatusCode TkrValsTool::initialize()
     addItem("Tkr1ToTTrAve",   &Tkr_1_ToTTrAve);
     addItem("Tkr1ToTAsym",    &Tkr_1_ToTAsym);
     addItem("Tkr1ChisqAsym",  &Tkr_1_ChisqAsym);
-    addItem("Tkr1SSDVeto",    &Tkr_1_SSDVeto);
+    addItem("Tkr1SSDVeto",    &Tkr_1_SSDVeto, true);
     addItem("TkrPlaneCrossed",  &Tkr_1_VetoPlaneCrossed);
 
     if(m_enableVetoDiagnostics) {

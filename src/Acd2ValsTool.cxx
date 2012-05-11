@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/Acd2ValsTool.cxx,v 1.5 2012/02/02 23:33:42 kadrlica Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/Acd2ValsTool.cxx,v 1.6 2012/04/25 04:58:15 heather Exp $
 */
 
 #include "ValBase.h"
@@ -486,7 +486,7 @@ StatusCode Acd2ValsTool::initialize()
   addItem(m_prefix + "RibbonEnergy", &ACD_Ribbon_Energy);
   addItem(m_prefix + "GhostTileEnergy", &ACD_Ghost_Tile_Energy);
   addItem(m_prefix + "GhostRibbonEnergy", &ACD_Ghost_Ribbon_Energy);
-  addItem(m_prefix + "TriggerTileEnergy", &ACD_Trigger_Tile_Energy);
+  addItem(m_prefix + "TriggerTileEnergy", &ACD_Trigger_Tile_Energy, true);
   addItem(m_prefix + "TriggerRibbonEnergy", &ACD_Trigger_Ribbon_Energy);
   addItem(m_prefix + "TileIdRecon", &ACD_TileIdRecon);
   addItem(m_prefix + "RibbonIdRecon", &ACD_RibbonIdRecon);
@@ -520,37 +520,37 @@ StatusCode Acd2ValsTool::initialize()
   addItem(m_prefix + "Tkr1RibbonActEnergyPmtB", &ACD_Tkr1_ribbon_EnergyPmtB);
   
   addItem(m_prefix + "Tkr1Energy15",        &ACD_Tkr1Energy15);
-  addItem(m_prefix + "Tkr1Energy30",        &ACD_Tkr1Energy30);
+  addItem(m_prefix + "Tkr1Energy30",        &ACD_Tkr1Energy30, true);
   addItem(m_prefix + "Tkr1Energy45",        &ACD_Tkr1Energy45);
   addItem(m_prefix + "Tkr1TriggerEnergy15", &ACD_Tkr1TriggerEnergy15);
   addItem(m_prefix + "Tkr1TriggerEnergy30", &ACD_Tkr1TriggerEnergy30);
   addItem(m_prefix + "Tkr1TriggerEnergy45", &ACD_Tkr1TriggerEnergy45);
   
-  addItem(m_prefix + "Tkr1CornerDoca",      &ACD_Tkr1Corner_DOCA);
+  addItem(m_prefix + "Tkr1CornerDoca",      &ACD_Tkr1Corner_DOCA, true);
   addItem(m_prefix + "Tkr1HoleDist",        &ACD_Tkr1Hole_Dist);
   addItem(m_prefix + "Tkr1RibbonDist",      &ACD_Tkr1Ribbon_Dist);
   addItem(m_prefix + "Tkr1RibbonDistErr",   &ACD_Tkr1Ribbon_Dist_Err);
   addItem(m_prefix + "Tkr1RibbonLength",    &ACD_Tkr1RibbonLength);    
   
-  addItem(m_prefix + "Tkr1VetoSigmaHit", & ACD_Tkr1_VetoSigmaHit);
-  addItem(m_prefix + "Tkr1VetoSigmaGap", & ACD_Tkr1_VetoSigmaGap);
-  addItem(m_prefix + "Tkr1VetoSigmaMip", & ACD_Tkr1_VetoSigmaMip);
+  addItem(m_prefix + "Tkr1VetoSigmaHit",  & ACD_Tkr1_VetoSigmaHit);
+  addItem(m_prefix + "Tkr1VetoSigmaGap",  & ACD_Tkr1_VetoSigmaGap,  true);
+  addItem(m_prefix + "Tkr1VetoSigmaMip",  & ACD_Tkr1_VetoSigmaMip,  true);
   addItem(m_prefix + "Tkr1VetoSigmaProp", & ACD_Tkr1_VetoSigmaProp);
-  addItem(m_prefix + "Tkr1VetoSigmaProj", & ACD_Tkr1_VetoSigmaProj);
-  addItem(m_prefix + "Tkr1TriggerVeto", & ACD_Tkr1_TriggerVeto);
-  addItem(m_prefix + "TkrVetoSigmaHit", & ACD_Tkr_VetoSigmaHit);
-  addItem(m_prefix + "TkrVetoSigmaGap", & ACD_Tkr_VetoSigmaGap);   
-  addItem(m_prefix + "TkrVetoSigmaMip", & ACD_Tkr_VetoSigmaMip);
-  addItem(m_prefix + "TkrVetoSigmaProp", & ACD_Tkr_VetoSigmaProp);
-  addItem(m_prefix + "TkrVetoSigmaProj", & ACD_Tkr_VetoSigmaProj);
-  addItem(m_prefix + "TkrTriggerVeto", & ACD_Tkr_TriggerVeto);
+  addItem(m_prefix + "Tkr1VetoSigmaProj", & ACD_Tkr1_VetoSigmaProj, true);
+  addItem(m_prefix + "Tkr1TriggerVeto",   & ACD_Tkr1_TriggerVeto);
+  addItem(m_prefix + "TkrVetoSigmaHit",   & ACD_Tkr_VetoSigmaHit);
+  addItem(m_prefix + "TkrVetoSigmaGap",   & ACD_Tkr_VetoSigmaGap);   
+  addItem(m_prefix + "TkrVetoSigmaMip",   & ACD_Tkr_VetoSigmaMip);
+  addItem(m_prefix + "TkrVetoSigmaProp",  & ACD_Tkr_VetoSigmaProp);
+  addItem(m_prefix + "TkrVetoSigmaProj",  & ACD_Tkr_VetoSigmaProj);
+  addItem(m_prefix + "TkrTriggerVeto",    & ACD_Tkr_TriggerVeto);
 
   addItem(m_prefix + "Cal1VetoSigmaHit", & ACD_Cal1_VetoSigmaHit);
   addItem(m_prefix + "Cal1VetoSigmaMip", & ACD_Cal1_VetoSigmaMip);
   addItem(m_prefix + "Cal1VetoSigmaProp", & ACD_Cal1_VetoSigmaProp);
   addItem(m_prefix + "Cal1VetoSigmaProj", & ACD_Cal1_VetoSigmaProj);
 
-  addItem(m_prefix + "Cal1Energy15", &ACD_Cal1Energy15);
+  addItem(m_prefix + "Cal1Energy15", &ACD_Cal1Energy15, true);
   addItem(m_prefix + "Cal1Energy30", &ACD_Cal1Energy30);
   addItem(m_prefix + "Cal1Energy45", &ACD_Cal1Energy45);
   addItem(m_prefix + "Cal1TriggerEnergy15", &ACD_Cal1TriggerEnergy15);
