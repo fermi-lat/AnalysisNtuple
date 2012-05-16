@@ -1,7 +1,7 @@
 /** @file OverlayValsTool.cxx
 @brief declaration and definition of the class OverlayValsTool
 
-$Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/src/OverlayValsTool.cxx,v 1.4.16.1 2011/04/19 18:10:25 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/OverlayValsTool.cxx,v 1.6 2011/12/12 20:36:35 heather Exp $
 
 */
 
@@ -26,6 +26,12 @@ $Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/src/Over
 #include "OverlayEvent/AcdOverlay.h"
 #include "OverlayEvent/CalOverlay.h"
 #include "OverlayEvent/TkrOverlay.h"
+
+#include "Event/TopLevel/EventModel.h"
+#include "Event/Recon/CalRecon/CalCluster.h"
+#include "Event/Recon/CalRecon/CalXtalRecData.h"
+#include "idents/TowerId.h" 
+#include "idents/VolumeIdentifier.h"
 
 // stuff for exposure info (not really MC)
 #include "Event/TopLevel/MCEvent.h"
@@ -121,6 +127,13 @@ private:
     float                   m_bEast;
     float                   m_bNorth;
     float                   m_bUp;
+
+  // Overlay energy in cal clusters
+  float CAL_Clu1_OverlayEnergy;
+  float CAL_Clu2_OverlayEnergy;
+  float CAL_Clu3_OverlayEnergy;
+  float CAL_Clu4_OverlayEnergy;
+  float CAL_Clu5_OverlayEnergy;
 };
 //------------------------------------------------------------------------
 
@@ -297,6 +310,12 @@ StatusCode OverlayValsTool::initialize()
     addItem("OvrPtBNorth",     &m_bNorth);
     addItem("OvrPtBUp",        &m_bUp);
 
+    addItem("OvrCal1Energy",  &CAL_Clu1_OverlayEnergy);
+    addItem("OvrCal2Energy",  &CAL_Clu2_OverlayEnergy);
+    addItem("OvrCal3Energy",  &CAL_Clu3_OverlayEnergy);
+    addItem("OvrCal4Energy",  &CAL_Clu4_OverlayEnergy);
+    addItem("OvrCal5Energy",  &CAL_Clu5_OverlayEnergy);
+
     zeroVals();
 
     return sc;
@@ -373,6 +392,84 @@ StatusCode OverlayValsTool::calculate()
         // Look up the Overlay event timing information
         SmartDataPtr<Event::GemOverlay> gemOverlay(m_dataSvc, m_dataSvc->rootName() + OverlayEventModel::Overlay::GemOverlay);
         if (gemOverlay) m_triggerBits = gemOverlay->getConditionSummary();
+
+        //
+        // Fill overlay energy of clusters
+        //
+        Event::CalClusterCol* clusters = SmartDataPtr<Event::CalClusterCol>(m_pEventSvc,EventModel::CalRecon::CalClusterCol);
+        Event::CalClusterHitTabList* xTal2ClusTabList = SmartDataPtr<Event::CalClusterHitTabList>(m_pEventSvc,EventModel::CalRecon::CalClusterHitTab);
+        Event::CalClusterHitTab* xTal2ClusTab = 0;
+        if (xTal2ClusTabList) xTal2ClusTab = new Event::CalClusterHitTab(xTal2ClusTabList);
+        if(calOverlayCol && clusters && xTal2ClusTab)
+          {
+            // Get overlay energy in xtals
+            int i,j,k;
+            float xtalovrenergy[16][8][12];
+            for(i=0;i<16;++i)
+              for(j=0;j<8;++j)
+                for(k=0;k<12;++k)
+                  xtalovrenergy[i][j][k] = 0;
+
+            // Loop through input Cal overlay objects, counting and summing deposited energy
+            for(Event::CalOverlayCol::iterator overIter  = calOverlayCol->begin(); overIter != calOverlayCol->end(); overIter++)
+              {
+                Event::CalOverlay* calOverlay = *overIter;
+                idents::CalXtalId id = calOverlay->getCalXtalId();
+                //
+                xtalovrenergy[(int)id.getTower()][(int)id.getLayer()][(int)id.getColumn()] += calOverlay->getEnergy();
+              }
+
+            int numClusters = clusters->size();
+            double eTotovr   = 0.0;
+            int iclu = -1;
+            Event::CalClusterCol::iterator clusIter = clusters->begin();
+            while(clusIter != clusters->end())
+              {
+                ++iclu;
+                Event::CalCluster* cl = *clusIter++;
+                if(iclu>0 && iclu==numClusters-1) break; // stopping before the uber cluster
+                //
+                std::vector<Event::CalClusterHitRel*> xTalRelVec = xTal2ClusTab->getRelBySecond(cl);
+                //
+                eTotovr   = 0.0;
+                if(!xTalRelVec.empty())
+                  {
+                    eTotovr   = 0.0;                    
+                    std::vector<Event::CalClusterHitRel*>::const_iterator it = xTalRelVec.begin();
+                    for (; it != xTalRelVec.end(); it++)
+                      {
+                        // get poiner to the reconstructed data for individual crystal
+                        Event::CalXtalRecData* recData = (*it)->getFirst();
+                        //
+                        int itow=recData->getPackedId().getTower();
+                        int ilay=recData->getPackedId().getLayer();
+                        int icol=recData->getPackedId().getColumn();
+                        eTotovr += xtalovrenergy[itow][ilay][icol];
+                      }
+                  }
+                //
+                if(iclu==0)
+                  {
+                    CAL_Clu1_OverlayEnergy = eTotovr;
+                  }
+                else if(iclu==1)
+                  {
+                    CAL_Clu2_OverlayEnergy = eTotovr;
+                  }
+                else if(iclu==2)
+                  {
+                    CAL_Clu3_OverlayEnergy = eTotovr;
+                  }
+                else if(iclu==3)
+                  {
+                    CAL_Clu4_OverlayEnergy = eTotovr;
+                  }
+                else if(iclu==4)
+                  {
+                    CAL_Clu5_OverlayEnergy = eTotovr;
+                  }     
+              }
+          }
     }
     
     return StatusCode::SUCCESS;

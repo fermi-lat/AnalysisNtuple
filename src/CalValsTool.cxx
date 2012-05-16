@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.121 2012/05/11 19:51:55 kadrlica Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.118 2012/04/25 04:58:15 heather Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -30,10 +30,6 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.121
 #include "Event/Recon/CalRecon/CalEventEnergy.h"
 #include "Event/Recon/CalRecon/CalParams.h"
 #include "Event/Recon/CalRecon/CalXtalRecData.h"
-
-#include "OverlayEvent/OverlayEventModel.h"
-#include "OverlayEvent/EventOverlay.h"
-#include "OverlayEvent/CalOverlay.h"
 
 #include "GaudiKernel/IToolSvc.h"
 //#include "GlastSvc/Reco/IPropagatorTool.h"
@@ -92,8 +88,6 @@ private:
     IPropagator*     m_G4PropTool;    
 
     IValsTool*       m_pTkrTool;
-
-    DataSvc*        m_dataSvc;
 
     /// some Geometry
     double m_towerPitch;
@@ -249,8 +243,6 @@ private:
     float CAL_Clu1_ClassHadProb;
     float CAL_Clu1_ClassGhostProb;
     float CAL_Clu1_ClassMipProb;
-  // Energy due to overlay
-    float CAL_Clu1_OverlayEnergy;
 
   float CAL_Clu2_NumXtals;
   float CAL_Clu2_RawEnergySum;
@@ -268,7 +260,6 @@ private:
   float CAL_Clu2_ClassHadProb;
   float CAL_Clu2_ClassGhostProb;
   float CAL_Clu2_ClassMipProb;
-  float CAL_Clu2_OverlayEnergy;
   float CAL_Clu2_Dist;
   float CAL_Clu2_Doca;
 
@@ -288,7 +279,6 @@ private:
   float CAL_Clu3_ClassHadProb;
   float CAL_Clu3_ClassGhostProb;
   float CAL_Clu3_ClassMipProb;
-  float CAL_Clu3_OverlayEnergy;
   float CAL_Clu3_Dist;
   float CAL_Clu3_Doca;
 
@@ -308,7 +298,6 @@ private:
   float CAL_Clu4_ClassHadProb;
   float CAL_Clu4_ClassGhostProb;
   float CAL_Clu4_ClassMipProb;
-  float CAL_Clu4_OverlayEnergy;
   float CAL_Clu4_Dist;
   float CAL_Clu4_Doca;
 
@@ -328,7 +317,6 @@ private:
   float CAL_Clu5_ClassHadProb;
   float CAL_Clu5_ClassGhostProb;
   float CAL_Clu5_ClassMipProb;
-  float CAL_Clu5_OverlayEnergy;
   float CAL_Clu5_Dist;
   float CAL_Clu5_Doca;
 
@@ -344,7 +332,6 @@ private:
   float CAL_Uber2_MomNumCoreXtals;
   float CAL_Uber2_MomTransRms;
   float CAL_Uber2_MomLongRms;
-  float CAL_Uber2_OverlayEnergy;
 
 
 
@@ -725,15 +712,6 @@ StatusCode CalValsTool::initialize()
             return StatusCode::FAILURE;
         }
 
-        IService* dataSvc = 0;
-        if(service("OverlayDataSvc", dataSvc, true).isSuccess()) {
-            // Caste back to the "correct" pointer
-            m_dataSvc = dynamic_cast<DataSvc*>(dataSvc);
-        } else {
-            log << MSG::INFO << "Couldn't find OverlayDataSvc, will ignore" << endreq;
-            m_dataSvc = 0;
-        }
-
         m_detSvc->getNumericConstByName("CALnLayer", &m_nLayers);
         m_detSvc->getNumericConstByName("nCsIPerLayer", &m_nCsI);
 
@@ -944,7 +922,6 @@ StatusCode CalValsTool::initialize()
     addItem("Cal1HadProb",  &CAL_Clu1_ClassHadProb);
     addItem("Cal1GhostProb",  &CAL_Clu1_ClassGhostProb);
     addItem("Cal1MipProb",  &CAL_Clu1_ClassMipProb);
-    addItem("Cal1OvrEnergy",  &CAL_Clu1_OverlayEnergy);
 
     addItem("Cal2NumXtals",  &CAL_Clu2_NumXtals);
     addItem("Cal2RawEnergySum",  &CAL_Clu2_RawEnergySum);
@@ -962,7 +939,6 @@ StatusCode CalValsTool::initialize()
     addItem("Cal2HadProb",  &CAL_Clu2_ClassHadProb);
     addItem("Cal2GhostProb",  &CAL_Clu2_ClassGhostProb);
     addItem("Cal2MipProb",  &CAL_Clu2_ClassMipProb);
-    addItem("Cal2OvrEnergy",  &CAL_Clu2_OverlayEnergy);
     addItem("Cal2Dist",  &CAL_Clu2_Dist);
     addItem("Cal2Doca",  &CAL_Clu2_Doca);
 
@@ -982,7 +958,6 @@ StatusCode CalValsTool::initialize()
     addItem("Cal3HadProb",  &CAL_Clu3_ClassHadProb);
     addItem("Cal3GhostProb",  &CAL_Clu3_ClassGhostProb);
     addItem("Cal3MipProb",  &CAL_Clu3_ClassMipProb);
-    addItem("Cal3OvrEnergy",  &CAL_Clu3_OverlayEnergy);
     addItem("Cal3Dist",  &CAL_Clu3_Dist);
     addItem("Cal3Doca",  &CAL_Clu3_Doca);
 
@@ -1002,7 +977,6 @@ StatusCode CalValsTool::initialize()
     addItem("Cal4HadProb",  &CAL_Clu4_ClassHadProb);
     addItem("Cal4GhostProb",  &CAL_Clu4_ClassGhostProb);
     addItem("Cal4MipProb",  &CAL_Clu4_ClassMipProb);
-    addItem("Cal4OvrEnergy",  &CAL_Clu4_OverlayEnergy);
     addItem("Cal4Dist",  &CAL_Clu4_Dist);
     addItem("Cal4Doca",  &CAL_Clu4_Doca);
 
@@ -1022,7 +996,6 @@ StatusCode CalValsTool::initialize()
     addItem("Cal5HadProb",  &CAL_Clu5_ClassHadProb);
     addItem("Cal5GhostProb",  &CAL_Clu5_ClassGhostProb);
     addItem("Cal5MipProb",  &CAL_Clu5_ClassMipProb);
-    addItem("Cal5OvrEnergy",  &CAL_Clu5_OverlayEnergy);
     addItem("Cal5Dist",  &CAL_Clu5_Dist);
     addItem("Cal5Doca",  &CAL_Clu5_Doca);
 
@@ -1038,7 +1011,6 @@ StatusCode CalValsTool::initialize()
     addItem("CalUber2MomNumCoreXtals",  &CAL_Uber2_MomNumCoreXtals);
     addItem("CalUber2TransRms",  &CAL_Uber2_MomTransRms);
     addItem("CalUber2LongRms",  &CAL_Uber2_MomLongRms);
-    addItem("CalUber2OvrEnergy",  &CAL_Uber2_OverlayEnergy);
 
     addItem("CalCfpEnergy",  &CAL_cfp_energy, true);
     addItem("CalCfpChiSq",   &CAL_cfp_totChiSq);
@@ -1187,29 +1159,6 @@ StatusCode CalValsTool::calculate()
         if (calEnergyItr != calEventEnergyMap->end()) calEventEnergy = calEnergyItr->second.front();
     }
 #endif
-
-    // Get overlay energy in xtals
-    int i,j,k;
-    float xtalovrenergy[16][8][12];
-    for(i=0;i<16;++i)
-      for(j=0;j<8;++j)
-        for(k=0;k<12;++k)
-          xtalovrenergy[i][j][k] = 0;
-
-    if(m_dataSvc) {
-        SmartDataPtr<Event::CalOverlayCol> calOverlayCol(m_dataSvc, m_dataSvc->rootName() + OverlayEventModel::Overlay::CalOverlayCol);
-        if(calOverlayCol)
-        {
-            // Loop through input Cal overlay objects, counting and summing deposited energy
-            for(Event::CalOverlayCol::iterator overIter  = calOverlayCol->begin(); overIter != calOverlayCol->end(); overIter++)
-            {
-                Event::CalOverlay* calOverlay = *overIter;
-                idents::CalXtalId id = calOverlay->getCalXtalId();
-                //
-                xtalovrenergy[(int)id.getTower()][(int)id.getLayer()][(int)id.getColumn()] += calOverlay->getEnergy();
-            }
-        }
-    }
 
     // Get relation between clusters and xtals
     Event::CalClusterHitTabList* xTal2ClusTabList = SmartDataPtr<Event::CalClusterHitTabList>(m_pEventSvc,EventModel::CalRecon::CalClusterHitTab);
@@ -1401,7 +1350,6 @@ StatusCode CalValsTool::calculate()
     CAL_Uber2_MomNumCoreXtals = calCluster->getMomParams().getNumCoreXtals();
     CAL_Uber2_MomTransRms = calCluster->getMomParams().getTransRms();
     CAL_Uber2_MomLongRms = calCluster->getMomParams().getLongRms();
-    CAL_Uber2_OverlayEnergy = 0;
 
     CAL_num_clusters  = pCals->size();
     CAL_rest_energy   = 0.;
@@ -2081,8 +2029,7 @@ StatusCode CalValsTool::calculate()
         }
     }
 
-    // Fill information of the clusters (on top of Clu1) and the overlay energy
-  CAL_Clu1_OverlayEnergy = 0;
+    // Fill information of the clusters (on top of Clu1)
 
   CAL_Clu2_NumXtals = 0;
   CAL_Clu2_RawEnergySum = 0;
@@ -2100,7 +2047,6 @@ StatusCode CalValsTool::calculate()
   CAL_Clu2_ClassHadProb = 0;
   CAL_Clu2_ClassGhostProb = 0;
   CAL_Clu2_ClassMipProb = 0;
-  CAL_Clu2_OverlayEnergy = 0;
   CAL_Clu2_Dist = 0;
   CAL_Clu2_Doca = 0;
 
@@ -2120,7 +2066,6 @@ StatusCode CalValsTool::calculate()
   CAL_Clu3_ClassHadProb = 0;
   CAL_Clu3_ClassGhostProb = 0;
   CAL_Clu3_ClassMipProb = 0;
-  CAL_Clu3_OverlayEnergy = 0;
   CAL_Clu3_Dist = 0;
   CAL_Clu3_Doca = 0;
 
@@ -2140,7 +2085,6 @@ StatusCode CalValsTool::calculate()
   CAL_Clu4_ClassHadProb = 0;
   CAL_Clu4_ClassGhostProb = 0;
   CAL_Clu4_ClassMipProb = 0;
-  CAL_Clu4_OverlayEnergy = 0;
   CAL_Clu4_Dist = 0;
   CAL_Clu4_Doca = 0;
 
@@ -2160,64 +2104,30 @@ StatusCode CalValsTool::calculate()
   CAL_Clu5_ClassHadProb = 0;
   CAL_Clu5_ClassGhostProb = 0;
   CAL_Clu5_ClassMipProb = 0;
-  CAL_Clu5_OverlayEnergy = 0;
   CAL_Clu5_Dist = 0;
   CAL_Clu5_Doca = 0;
 
-  // Fill overlay energy fraction for the 1st cluster and all the info for the other clusters
+  // Fill the info for the first 5 clusters and the Uber2 cluster
   Event::CalClusterCol* clusters = SmartDataPtr<Event::CalClusterCol>(m_pEventSvc,EventModel::CalRecon::CalClusterCol);
 
-  int iclu = 0;
+  int iclu = -1;
   int numClusters = 0;
 
-    double eTotovr   = 0.0;
     double lambda;
-    //double pp[3];
-    iclu = 0;
     // if pointer is not zero, start drawing
     if(clusters)
       {
         numClusters = clusters->size();
 
+        iclu = -1;
         Event::CalClusterCol::iterator clusIter = clusters->begin();
         while(clusIter != clusters->end())
           {
-            if(iclu>0 && iclu==numClusters-1) break; // stopping before the uber cluster
-            //
-            eTotovr   = 0.0;
-            //
-            // get pointer to the cluster 
+            ++iclu;
             Event::CalCluster* cl = *clusIter++;
-            if(xTal2ClusTab)
-              {
-                std::vector<Event::CalClusterHitRel*> xTalRelVec = xTal2ClusTab->getRelBySecond(cl);
-                //
-                if(!xTalRelVec.empty())
-                  {
-                    eTotovr   = 0.0;
-                    
-                    std::vector<Event::CalClusterHitRel*>::const_iterator it = xTalRelVec.begin();
-                    
-                    // to find maximum energy per crystal
-                    for (; it != xTalRelVec.end(); it++)
-                      {
-                        // get poiner to the reconstructed data for individual crystal
-                        Event::CalXtalRecData* recData = (*it)->getFirst();
-                        //
-                        int itow=recData->getPackedId().getTower();
-                        int ilay=recData->getPackedId().getLayer();
-                        int icol=recData->getPackedId().getColumn();
-                        eTotovr += xtalovrenergy[itow][ilay][icol];
-                      }
-                  }
-              }
+            if(iclu>0 && iclu==numClusters-2) break; // stopping before the uber2 cluster
             //
-            if(iclu==0)
-              {
-                CAL_Clu1_OverlayEnergy = eTotovr;
-                if(numClusters==1) CAL_Uber2_OverlayEnergy = eTotovr;
-              }
-            else if(iclu==1)
+            if(iclu==1)
               {
                 CAL_Clu2_NumXtals = cl->getXtalsParams().getNumXtals();
                 CAL_Clu2_RawEnergySum = cl->getXtalsParams().getXtalRawEneSum();
@@ -2235,7 +2145,6 @@ StatusCode CalValsTool::calculate()
                 CAL_Clu2_ClassHadProb = cl->getClassParams().getProb("had");
                 CAL_Clu2_ClassGhostProb = cl->getClassParams().getProb("ghost");
                 CAL_Clu2_ClassMipProb = cl->getClassParams().getProb("mip");
-                CAL_Clu2_OverlayEnergy = eTotovr;
                 CAL_Clu2_Dist = sqrt((cl->getMomParams().getCentroid().x()-CAL_Clu1_MomXCntr)*(cl->getMomParams().getCentroid().x()-CAL_Clu1_MomXCntr)+
                                      (cl->getMomParams().getCentroid().y()-CAL_Clu1_MomYCntr)*(cl->getMomParams().getCentroid().y()-CAL_Clu1_MomYCntr)+
                                      (cl->getMomParams().getCentroid().z()-CAL_Clu1_MomZCntr)*(cl->getMomParams().getCentroid().z()-CAL_Clu1_MomZCntr));
@@ -2264,7 +2173,6 @@ StatusCode CalValsTool::calculate()
                 CAL_Clu3_ClassHadProb = cl->getClassParams().getProb("had");
                 CAL_Clu3_ClassGhostProb = cl->getClassParams().getProb("ghost");
                 CAL_Clu3_ClassMipProb = cl->getClassParams().getProb("mip");
-                CAL_Clu3_OverlayEnergy = eTotovr;
                 CAL_Clu3_Dist = sqrt((cl->getMomParams().getCentroid().x()-CAL_Clu1_MomXCntr)*(cl->getMomParams().getCentroid().x()-CAL_Clu1_MomXCntr)+
                                      (cl->getMomParams().getCentroid().y()-CAL_Clu1_MomYCntr)*(cl->getMomParams().getCentroid().y()-CAL_Clu1_MomYCntr)+
                                      (cl->getMomParams().getCentroid().z()-CAL_Clu1_MomZCntr)*(cl->getMomParams().getCentroid().z()-CAL_Clu1_MomZCntr));
@@ -2293,7 +2201,6 @@ StatusCode CalValsTool::calculate()
                 CAL_Clu4_ClassHadProb = cl->getClassParams().getProb("had");
                 CAL_Clu4_ClassGhostProb = cl->getClassParams().getProb("ghost");
                 CAL_Clu4_ClassMipProb = cl->getClassParams().getProb("mip");
-                CAL_Clu4_OverlayEnergy = eTotovr;
                 CAL_Clu4_Dist = sqrt((cl->getMomParams().getCentroid().x()-CAL_Clu1_MomXCntr)*(cl->getMomParams().getCentroid().x()-CAL_Clu1_MomXCntr)+
                                      (cl->getMomParams().getCentroid().y()-CAL_Clu1_MomYCntr)*(cl->getMomParams().getCentroid().y()-CAL_Clu1_MomYCntr)+
                                      (cl->getMomParams().getCentroid().z()-CAL_Clu1_MomZCntr)*(cl->getMomParams().getCentroid().z()-CAL_Clu1_MomZCntr));
@@ -2322,7 +2229,6 @@ StatusCode CalValsTool::calculate()
                 CAL_Clu5_ClassHadProb = cl->getClassParams().getProb("had");
                 CAL_Clu5_ClassGhostProb = cl->getClassParams().getProb("ghost");
                 CAL_Clu5_ClassMipProb = cl->getClassParams().getProb("mip");
-                CAL_Clu5_OverlayEnergy = eTotovr;
                 CAL_Clu5_Dist = sqrt((cl->getMomParams().getCentroid().x()-CAL_Clu1_MomXCntr)*(cl->getMomParams().getCentroid().x()-CAL_Clu1_MomXCntr)+
                                      (cl->getMomParams().getCentroid().y()-CAL_Clu1_MomYCntr)*(cl->getMomParams().getCentroid().y()-CAL_Clu1_MomYCntr)+
                                      (cl->getMomParams().getCentroid().z()-CAL_Clu1_MomZCntr)*(cl->getMomParams().getCentroid().z()-CAL_Clu1_MomZCntr));
@@ -2333,57 +2239,29 @@ StatusCode CalValsTool::calculate()
                                      (cl->getMomParams().getCentroid().y()-(CAL_Clu1_MomYCntr+lambda*CAL_Clu1_MomYDir))*(cl->getMomParams().getCentroid().y()-(CAL_Clu1_MomYCntr+lambda*CAL_Clu1_MomYDir))+
                                      (cl->getMomParams().getCentroid().z()-(CAL_Clu1_MomZCntr+lambda*CAL_Clu1_MomZDir))*(cl->getMomParams().getCentroid().z()-(CAL_Clu1_MomZCntr+lambda*CAL_Clu1_MomZDir)));
               }     
-	    ++iclu;
           }
-	//
-	iclu = -1;
-	clusIter = clusters->begin();
+        //
+        iclu = -1;
+        clusIter = clusters->begin();
         while(clusIter != clusters->end())
-	  {
-	    ++iclu;
-	    Event::CalCluster* cl = *clusIter++;
-	    if(iclu!=numClusters-2) continue;
-	    //
-	    eTotovr   = 0.0;
-	    //
-            // get pointer to the cluster 
-	    if(xTal2ClusTab)
-	      {
-		std::vector<Event::CalClusterHitRel*> xTalRelVec = xTal2ClusTab->getRelBySecond(cl);
-		//
-		if(!xTalRelVec.empty())
-		  {
-		    eTotovr   = 0.0;
-		        
-		    std::vector<Event::CalClusterHitRel*>::const_iterator it = xTalRelVec.begin();
-		        
-		    // to find maximum energy per crystal
-		    for (; it != xTalRelVec.end(); it++)
-		      {
-			// get poiner to the reconstructed data for individual crystal
-			Event::CalXtalRecData* recData = (*it)->getFirst();
-			//
-			int itow=recData->getPackedId().getTower();
-			int ilay=recData->getPackedId().getLayer();
-			int icol=recData->getPackedId().getColumn();
-			eTotovr += xtalovrenergy[itow][ilay][icol];
-			//myxtal2clus[itow][ilay][icol] = iclu;
-		      }
-		  }
-	      }
-	    CAL_Uber2_NumXtals = cl->getXtalsParams().getNumXtals();
-	    CAL_Uber2_RawEnergySum = cl->getXtalsParams().getXtalRawEneSum();
-	    CAL_Uber2_XtalEneMax = cl->getXtalsParams().getXtalEneMax();
-	    CAL_Uber2_MomXCntr = cl->getMomParams().getCentroid().x();
-	    CAL_Uber2_MomYCntr = cl->getMomParams().getCentroid().y();
-	    CAL_Uber2_MomZCntr = cl->getMomParams().getCentroid().z();
-	    CAL_Uber2_MomXDir = cl->getMomParams().getAxis().x();
-	    CAL_Uber2_MomYDir = cl->getMomParams().getAxis().y();
-	    CAL_Uber2_MomZDir = cl->getMomParams().getAxis().z();
-	    CAL_Uber2_MomTransRms = cl->getMomParams().getTransRms();
-	    CAL_Uber2_MomLongRms = cl->getMomParams().getLongRms();
-	    CAL_Uber2_OverlayEnergy = eTotovr;
-	  }
+          {
+            ++iclu;
+            Event::CalCluster* cl = *clusIter++;
+            if(iclu!=numClusters-2) continue;
+            //
+            CAL_Uber2_NumXtals = cl->getXtalsParams().getNumXtals();
+            CAL_Uber2_RawEnergySum = cl->getXtalsParams().getXtalRawEneSum();
+            CAL_Uber2_XtalEneMax = cl->getXtalsParams().getXtalEneMax();
+            CAL_Uber2_MomXCntr = cl->getMomParams().getCentroid().x();
+            CAL_Uber2_MomYCntr = cl->getMomParams().getCentroid().y();
+            CAL_Uber2_MomZCntr = cl->getMomParams().getCentroid().z();
+            CAL_Uber2_MomXDir = cl->getMomParams().getAxis().x();
+            CAL_Uber2_MomYDir = cl->getMomParams().getAxis().y();
+            CAL_Uber2_MomZDir = cl->getMomParams().getAxis().z();
+            CAL_Uber2_MomNumCoreXtals = cl->getMomParams().getNumCoreXtals();
+            CAL_Uber2_MomTransRms = cl->getMomParams().getTransRms();
+            CAL_Uber2_MomLongRms = cl->getMomParams().getLongRms();
+          }
       }
 
     return sc;
