@@ -3,6 +3,7 @@
   @verbatim
    * EOH *
 
+ AnalysisNtuple-02-62-07 16-May-2012  lsrea Move EvtDeltaEoE to McEvtDeltaEoE, and move McValsTool after EvtValsTool
  AnalysisNtuple-02-62-06 16-May-2012  lsrea Move CAL overlay stuff from CAL to OverlayValsTool
  AnalysisNtuple-02-62-05 15-May-2012  lsrea Removed McKludgeValsTool
  AnalysisNtuple-02-62-04 14-May-2012 heather patch build of unit test on Win
