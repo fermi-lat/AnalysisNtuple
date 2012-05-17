@@ -2,7 +2,7 @@
 @brief Calculates the Mc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/src/McValsTool.cxx,v 1.53.18.1 2011/04/19 18:10:25 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.64 2011/12/12 20:36:35 heather Exp $
 */
 // Include files
 
@@ -109,6 +109,8 @@ private:
     float MC_TKR1_dir_err;
     float MC_TKR2_dir_err;
 
+    float MC_EvtDeltaEoE;
+
     // Tree
     float MC_Tree_match_PosX;
     float MC_Tree_match_PosY;
@@ -144,7 +146,10 @@ private:
     float MC_AcdActDistTileEnergy;
 
     // to decode the particle charge
-    IParticlePropertySvc* m_ppsvc;    
+    IParticlePropertySvc* m_ppsvc; 
+
+    IValsTool* m_pEvtTool;
+
 };
 
 // Static factory for instantiation of algtool objects
@@ -208,6 +213,8 @@ McValsTool::McValsTool(const std::string& type,
 <td>F<td>   Angle between found direction and Mc direction (radians )
 <tr><td> McTkr[1/2]DirErr 
 <td>F<td>   Angle between direction of [best/second] track and Mc direction (radians) 
+<tr><td> McEvtDeltaEoE
+<td>F<td>   fractional error of best from McEnergy
 <tr><td> McAcd[X/Y/Z]Enter
 <td>F<td>   Position where MC particle enters volume surrounded by ACD
 <tr><td> McAcdActiveDist3D
@@ -236,7 +243,20 @@ StatusCode McValsTool::initialize()
     } else {
         return StatusCode::FAILURE;
     }
-    
+
+    IToolSvc* pToolSvc = 0; 
+    sc = service("ToolSvc", pToolSvc, true);
+    if (!sc.isSuccess ()){
+        log << MSG::ERROR << "Can't find ToolSvc, no McEvtDeltaEoE" << endreq;
+    } else {
+        m_pEvtTool = 0;
+        sc = pToolSvc->retrieveTool("EvtValsTool", m_pEvtTool);
+        if( sc.isFailure() ) {
+            log << MSG::INFO << "Unable to find tool: " "EvtValsTool" << endreq;
+            log << "Will carry on anyway, McEvtDeltaEoE will not be calculated" << endreq;
+        }
+    }
+
     // load up the map
 
     addItem("McSourceId",     &MC_SourceId,    true);
@@ -252,6 +272,8 @@ StatusCode McValsTool::initialize()
 
     // added 5/5/09 LSR
     addItem("McStatusWord",   &MC_StatusWord,  true);
+
+    addItem("McEvtDeltaEoE",  &MC_EvtDeltaEoE);   // moved from EvtValsTool 16-May-2012 LSR
     
     addItem("McX0",           &MC_x0,          true);           
     addItem("McY0",           &MC_y0,          true);           
@@ -381,6 +403,16 @@ StatusCode McValsTool::calculate()
         MC_Energy = std::max(Mc_p0.t() - mass, 0.0);
         MC_LogEnergy = log10(MC_Energy);
         
+        MC_EvtDeltaEoE = -2.;
+        float EvtEnergyCorr;
+        if(m_pEvtTool) {
+            if(m_pEvtTool->getVal("EvtEnergyCorr", EvtEnergyCorr, NOCALC).isSuccess()){
+                if (MC_Energy>0) { 
+                    MC_EvtDeltaEoE = (EvtEnergyCorr - MC_Energy)/(MC_Energy);
+                }
+            } 
+        }
+
         MC_x0     = Mc_x0.x();
         MC_y0     = Mc_x0.y();
         MC_z0     = Mc_x0.z();

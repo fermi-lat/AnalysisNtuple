@@ -2,7 +2,7 @@
 @brief Uses the XxxValsTools to produce a comprehensive ntuple
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.49 2011/12/12 20:36:35 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.50 2012/05/16 05:41:10 lsrea Exp $
 */
 
 // Gaudi system includes
@@ -216,8 +216,8 @@ StatusCode AnalysisNtupleAlg::initialize(){
     setProperties();
 
     //probably a better way to do this!
-    // default set:
-    std::string toolnames [] = {"Mc", "Glt", "Acd", "Acd2", "TkrHit", "Tkr", "Tree", "Vtx",  "Cal",  "Evt", "Obf", "McTkrHit", ""};
+    // default set: Mc is now called after Evt
+    std::string toolnames [] = {"Glt", "Acd", "Acd2", "TkrHit", "Tkr", "Tree", "Vtx",  "Cal",  "Evt", "Obf", "Mc", "McTkrHit", ""};
     unsigned int i;
     unsigned int namesSize = m_toolnames.size();
 
@@ -266,21 +266,18 @@ StatusCode AnalysisNtupleAlg::initialize(){
         log << MSG::ERROR << "Can't find ToolSvc, will quit now" << endreq;
         return StatusCode::FAILURE;
     }
+    // for real data, remove all tools that start with "Mc"
+    if(m_realData) removeMc();
 
     // take care of the Acd/Tkr load order: Acd comes first!
+    // also, Mc after Evt
     // I wish we didn't have this restriction!
     fixLoadOrder();
 
-    // now, fix up Mc stuff for real data
-    // the plan is to substitute McKludgeValsTool for McValsTool 
-    //    McKludgeValsTool is no longer needed, so just remove the 'MC" tools
-    // and remove any other tool with "Mc" in the name.
-    if(m_realData) removeMc();
-
     namesSize = m_toolnames.size();
     for (i =0; i!=namesSize; ++i){
-         m_toolvec.push_back(0);
-         m_toolnames[i]+="ValsTool";
+        m_toolvec.push_back(0);
+        m_toolnames[i]+="ValsTool";
         sc = pToolSvc->retrieveTool(m_toolnames[i], m_toolvec.back());
         m_toolvec.back()->setLoadOrder(i);
         if( sc.isFailure() ) {
@@ -452,19 +449,54 @@ StatusCode AnalysisNtupleAlg::finalize(){
 
 void AnalysisNtupleAlg::fixLoadOrder()
 {
-    MsgStream log(msgSvc(), name());
-    std::vector<std::string>::iterator tkrIter, acdIter, endIter;
+    bool fixedAcd1 = false;
+    bool fixedAcd2 = false;
+    bool fixedMc   = false;
 
-    tkrIter = find(m_toolnames.begin(), m_toolnames.end(), "Tkr");
-    acdIter = find(m_toolnames.begin(), m_toolnames.end(), "Acd");
+    MsgStream log(msgSvc(), name());
+    std::vector<std::string>::iterator tkrIter, acdIter, endIter, mcIter, evtIter, tkrHitIter;
+
     endIter = m_toolnames.end();
+    tkrIter = find(m_toolnames.begin(), m_toolnames.end(), "Tkr");
+    tkrHitIter = find(m_toolnames.begin(), m_toolnames.end(), "TkrHit");
+    if(tkrHitIter!=endIter&&tkrHitIter<tkrIter) tkrIter = tkrHitIter;
+    acdIter = find(m_toolnames.begin(), m_toolnames.end(), "Acd");
 
     if(acdIter!=endIter&&tkrIter!=endIter&&acdIter-tkrIter>0) {
         m_toolnames.erase(acdIter);
         m_toolnames.insert(tkrIter, "Acd");
+        fixedAcd1 = true;
+    }
+
+    endIter = m_toolnames.end();
+    tkrIter = find(m_toolnames.begin(), m_toolnames.end(), "Tkr");
+    tkrHitIter = find(m_toolnames.begin(), m_toolnames.end(), "TkrHit");
+    if(tkrHitIter!=endIter&&tkrHitIter<tkrIter) tkrIter = tkrHitIter;
+    acdIter = find(m_toolnames.begin(), m_toolnames.end(), "Acd2");
+
+    if(acdIter!=endIter&&tkrIter!=endIter&&acdIter-tkrIter>0) {
+        m_toolnames.erase(acdIter);
+        m_toolnames.insert(tkrIter, "Acd2");
+        fixedAcd2 = true;
+    }
+
+    mcIter  = find(m_toolnames.begin(), m_toolnames.end(), "Mc");
+    evtIter = find(m_toolnames.begin(), m_toolnames.end(), "Evt");
+    endIter = m_toolnames.end();
+
+    if(mcIter!=endIter&&evtIter!=endIter&&evtIter-mcIter>0) {
+        m_toolnames.push_back("Mc");
+        mcIter  = find(m_toolnames.begin(), m_toolnames.end(), "Mc");
+        m_toolnames.erase(mcIter);
+        fixedMc = true;
+    }
+
+    if(fixedAcd1||fixedAcd2||fixedMc) {
         log << MSG::WARNING << endreq << 
-            "Load order of ValsTools changed" << endreq
-            << "AcdValsTool inserted beforeTkrValsTool" << endreq;
+            "Load order of ValsTools changed" << endreq;
+        if(fixedAcd1) log << "AcdValsTool inserted before Tkr[Hit]ValsTool" << endreq;
+        if(fixedAcd2) log << "Acd2ValsTool inserted before Tkr[Hit]ValsTool" << endreq;
+        if(fixedMc)   log << "McValsTool moved to end" << endreq;
         unsigned int i;
         unsigned int namesSize = m_toolnames.size();
         log << MSG::WARNING << "New order: " << endreq;
@@ -473,6 +505,7 @@ void AnalysisNtupleAlg::fixLoadOrder()
         }
         log << endreq;
     }
+
 }
 
 void AnalysisNtupleAlg::removeMc() 

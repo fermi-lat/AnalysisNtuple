@@ -1,7 +1,7 @@
 /** @file OverlayValsTool.cxx
 @brief declaration and definition of the class OverlayValsTool
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/OverlayValsTool.cxx,v 1.6 2011/12/12 20:36:35 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/OverlayValsTool.cxx,v 1.7 2012/05/16 10:28:21 bruel Exp $
 
 */
 
@@ -400,7 +400,7 @@ StatusCode OverlayValsTool::calculate()
         Event::CalClusterHitTabList* xTal2ClusTabList = SmartDataPtr<Event::CalClusterHitTabList>(m_pEventSvc,EventModel::CalRecon::CalClusterHitTab);
         Event::CalClusterHitTab* xTal2ClusTab = 0;
         if (xTal2ClusTabList) xTal2ClusTab = new Event::CalClusterHitTab(xTal2ClusTabList);
-        if(calOverlayCol && clusters && xTal2ClusTab)
+        if(calOverlayCol  && clusters!=0 && xTal2ClusTab)
           {
             // Get overlay energy in xtals
             int i,j,k;

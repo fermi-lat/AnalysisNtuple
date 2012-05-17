@@ -3,7 +3,7 @@
 @brief Calculates the "Event" analysis variables from the other ntuple variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.47 2011/12/12 20:36:35 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.48t 2012/05/11 19:51:56 kadrlica Exp $
 */
 
 #include "ValBase.h"
@@ -87,7 +87,7 @@ private:
     //test
     //char  EvtEvtNum[20];
 
-    IValsTool* m_pMcTool;
+    //IValsTool* m_pMcTool;
     IValsTool* m_pGltTool;
     IValsTool* m_pTkrHitTool;
     IValsTool* m_pTkrTool;
@@ -158,8 +158,6 @@ NOTE
             (TkrEnergyCorr) to the layer-by-layer corrected cal. energy CalEnergyCorr. 
 <tr><td> EvtEnergyRaw 
 <td>F<td>   TkrEnergy + CalEnergyRaw
-<tr><td> EvtDeltaEoE 
-<td>F<td>   (EvtEneryCorr -  McEnergy)/ McEnergy. Was EvtMcEnergySigma 
 <tr><td> EvtCalEdgeAngle 
 <td>F<td>   Obsolete; replaced by CalTwrGap 
 <tr><td> EvtTkrEdgeAngle 
@@ -237,12 +235,12 @@ StatusCode EvtValsTool::initialize()
         return StatusCode::FAILURE;
     }
 
-    m_pMcTool = 0;
-    sc = pToolSvc->retrieveTool("McValsTool", m_pMcTool);
-    if( sc.isFailure() ) {
-        log << MSG::INFO << "Unable to find tool: " "McValsTool" << endreq;
-        log << "Will carry on anyway, EvtDeltaEoE will not be calculated" << endreq;
-    }
+    //m_pMcTool = 0;
+    //sc = pToolSvc->retrieveTool("McValsTool", m_pMcTool);
+    //if( sc.isFailure() ) {
+    //    log << MSG::INFO << "Unable to find tool: " "McValsTool" << endreq;
+    //    log << "Will carry on anyway, EvtDeltaEoE will not be calculated" << endreq;
+    //}
         
     /*    
     m_pGltTool = 0;
@@ -300,7 +298,7 @@ StatusCode EvtValsTool::initialize()
     addItem("EvtEnergyCorr",    &EvtEnergyCorr,   true);
     addItem("EvtEnergyCorrUB",  &EvtEnergyCorrUB, true);
     addItem("EvtEnergyRaw",     &EvtEnergyRaw);
-    addItem("EvtDeltaEoE",      &EvtDeltaEoE);
+    //addItem("EvtDeltaEoE",      &EvtDeltaEoE);  // moved to McValsTool
     addItem("EvtCalEdgeAngle",  &EvtCalEdgeAngle);
     addItem("EvtTkrEdgeAngle",  &EvtTkrEdgeAngle);
     addItem("EvtLogEnergy",     &EvtLogEnergy);
@@ -423,16 +421,17 @@ StatusCode EvtValsTool::calculate()
             //        }
     }
 
-    float mcEnergy;
-    EvtDeltaEoE = -2.0;
+    // this variable moved to McValsTools and renamed McDeltaEoE 16-May-2012 LSR
+    //float mcEnergy;
+    //EvtDeltaEoE = -2.0;
 
-    if(m_pMcTool!=NULL&&m_pMcTool->isLoaded()) {
-        if(m_pMcTool->getVal("McEnergy", mcEnergy, nextCheck).isSuccess()){
-            if (mcEnergy>0) { 
-                EvtDeltaEoE = (EvtEnergyCorr - mcEnergy)/(mcEnergy);
-            }
-        } 
-    }
+    //if(m_pMcTool!=NULL&&m_pMcTool->isLoaded()) {
+    //    if(m_pMcTool->getVal("McEnergy", mcEnergy, nextCheck).isSuccess()){
+    //        if (mcEnergy>0) { 
+    //            EvtDeltaEoE = (EvtEnergyCorr - mcEnergy)/(mcEnergy);
+    //        }
+    //    } 
+    //}
 
     // Model simple for PSF(68%) 
     EvtPSFModel = sqrt(pow((.061/pow((std::max(EvtEnergyCorr*1.,1.)/100),.8)),2) + (.001745*.001745));
