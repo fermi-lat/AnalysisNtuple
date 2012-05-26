@@ -1,7 +1,7 @@
 /** @file OverlayValsTool.cxx
 @brief declaration and definition of the class OverlayValsTool
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/OverlayValsTool.cxx,v 1.7 2012/05/16 10:28:21 bruel Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/OverlayValsTool.cxx,v 1.8 2012/05/17 17:48:29 lsrea Exp $
 
 */
 
@@ -469,6 +469,7 @@ StatusCode OverlayValsTool::calculate()
                     CAL_Clu5_OverlayEnergy = eTotovr;
                   }     
               }
+            delete xTal2ClusTab;
           }
     }
     
