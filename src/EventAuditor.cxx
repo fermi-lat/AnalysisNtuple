@@ -28,12 +28,6 @@ public:
     virtual StatusCode finalize() ;
     virtual ~EventAuditor() ;
 
-    //virtual StatusCode beforeInitialize( IAlgorithm * ) ;
-    //virtual StatusCode afterInitialize( IAlgorithm * ) ;
-    virtual StatusCode beforeExecute( IAlgorithm * ) ;
-    virtual StatusCode afterExecute( IAlgorithm * ) ;
-    //virtual StatusCode beforeFinalize( IAlgorithm * ) ;
-    //virtual StatusCode afterFinalize( IAlgorithm * ) ;
     virtual void before(StandardEventType, INamedInterface*);
     virtual void after(StandardEventType, INamedInterface*, const StatusCode&);
 
@@ -45,7 +39,6 @@ private :
 
 
     //! names of algorithms to audit
-    //StringArrayProperty  m_algoNames ;
     std::vector<std::string>  m_algoNames ;
     int m_nAlgs;
 
@@ -169,51 +162,6 @@ StatusCode EventAuditor::initialize()
 // events loop
 //==========================================================
 
-//StatusCode EventAuditor::beforeInitialize( IAlgorithm * alg )
-//{
-//    (*m_log)<<MSG::DEBUG<<"beforeInitialize("<<alg->name()<<") "<<endreq ;
-//    return StatusCode::SUCCESS ;
-//}
-//
-//
-//StatusCode EventAuditor::afterInitialize( IAlgorithm * algo )
-//{
-//    (*m_log)<<MSG::DEBUG<<"afterInitialize("<<algo->name()<<") "<<endreq ;
-//    return StatusCode::SUCCESS ;
-//}
-
-StatusCode EventAuditor::beforeExecute( IAlgorithm * algo )
-{
-    // upgrade m_algoStatus
-    std::string thisName = algo->name();
-    if(thisName=="Event") {
-        // initialize the timers
-        m_timeVals.assign(m_nAlgs, -1.0);
-    } 
-
-    std::map< IAlgorithm *, bool >::iterator itr ;
-    itr = m_algoStatus.find(algo) ;
-    if ( itr == m_algoStatus.end() )
-    {
-        const std::vector< std::string > & algoNames = m_algoNames ;
-        std::vector< std::string >::const_iterator algoName ;
-
-        algoName = std::find(algoNames.begin(), algoNames.end(), thisName);
-        if(algoName==algoNames.end()) {
-            m_algoStatus[algo] = false ; 
-            return StatusCode::SUCCESS ;
-        } else {
-            m_algoStatus[algo] = true ;
-        }
-    }
-
-    if(m_algoStatus[algo]) {
-        m_chronoSvc->chronoStart("EA_"+thisName) ;
-        (*m_log) << MSG::DEBUG << "start " << thisName << std::endl;
-    }
-    return StatusCode::SUCCESS ;
-}
-
 void EventAuditor::before(StandardEventType type, INamedInterface* namedInterface)
 {
     // Only running on "execute"
@@ -257,9 +205,8 @@ void EventAuditor::after(StandardEventType type, INamedInterface* namedInterface
     std::map<INamedInterface*,bool>::iterator itr = m_nameStatus.find(namedInterface);
 
     // look if the algo is under monitoring
-    if (itr == m_nameStatus.end() || itr->second == false || type != IAuditor::Stop)
+    if (itr == m_nameStatus.end() || itr->second == false || type != IAuditor::Execute)
     { 
-//        sc = StatusCode::SUCCESS ; 
         return;
     }
 
@@ -284,65 +231,9 @@ void EventAuditor::after(StandardEventType type, INamedInterface* namedInterface
             break;
         }
     }
-
     return;
 }
 
-StatusCode EventAuditor::afterExecute( IAlgorithm * algo )
-{
-    // look if the algo is under monitoring
-    if (m_algoStatus[algo]==false)
-    { return StatusCode::SUCCESS ; }
-
-    std::string thisName = algo->name();
-
-    // stop chrono
-    m_chronoSvc->chronoStop("EA_"+thisName) ;
-
-    // retrieve and log the last time interval
-    
-    IChronoStatSvc::ChronoTime delta
-        = m_chronoSvc->chronoDelta("EA_"+thisName,IChronoStatSvc::USER) ;
-
-    float fDelta = static_cast<float>(delta)*0.000001;
-    (*m_log) << MSG::DEBUG << thisName <<" user time: " << fDelta << " sec" << endreq ;
-
-    const std::vector< std::string > & algoNames = m_algoNames ;
-    int i;
-    for(i=0;i<m_nAlgs;++i) {
-        if(thisName==algoNames[i]) {
-            m_timeVals[i] = fDelta;
-            break;
-        }
-    }
-
-/* HMK Apr172008
-    Do not want EventAuditor forcing events to be stored to the MeritTuple
-    without meeting our trigger requirements.  Other algorithms will set
-    this flag for us, such as AnalysisNtupleAlg
-
-    m_save_tuple = true;
-    if( m_rootTupleSvc!=0 && !m_root_tree.value().empty()){
-        m_rootTupleSvc->storeRowFlag(m_root_tree.value(), m_save_tuple);
-    }
-*/
-
-    return StatusCode::SUCCESS ;
-}
-
-//StatusCode EventAuditor::beforeFinalize( IAlgorithm * alg )
-// {
-//     (*m_log) << MSG::DEBUG << "beforeFinalize("<<alg->name()<<") "<< endreq ;
-//  return StatusCode::SUCCESS ;
-// }
-//
-//
-//StatusCode EventAuditor::afterFinalize( IAlgorithm * alg )
-// {
-//     (*m_log) << MSG::DEBUG << "afterFinalize("<<alg->name()<<") "<< endreq ;
-//  return StatusCode::SUCCESS ;
-// }
-//
 
 //==========================================================
 // destruction
@@ -358,6 +249,3 @@ StatusCode EventAuditor::finalize()
 
 EventAuditor::~EventAuditor()
 {}
-
-
-
