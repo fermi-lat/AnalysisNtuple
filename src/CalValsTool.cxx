@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.118 2012/04/25 04:58:15 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.123 2012/05/16 10:28:21 bruel Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -210,6 +210,9 @@ private:
     float CAL_Clu1_MomXCntr;
     float CAL_Clu1_MomYCntr;
     float CAL_Clu1_MomZCntr;
+    float CAL_Clu1_MomXCntrcor;
+    float CAL_Clu1_MomYCntrcor;
+    float CAL_Clu1_MomZCntrcor;
     float CAL_Clu1_MomXDir;
     float CAL_Clu1_MomYDir;
     float CAL_Clu1_MomZDir;
@@ -414,6 +417,7 @@ private:
 
     //Calimeter items with Recon - Tracks
     float CAL_Track_DOCA;
+    float CAL_Track_DOCA_cor;
     float CAL_Track_Angle;
     float CAL_Track_Sep;
     float CAL_track_rms;
@@ -784,6 +788,7 @@ StatusCode CalValsTool::initialize()
     addItem("CalLATEdge",    &CAL_LATEdge);
     addItem("CalEdgeEnergy", &CAL_EdgeEnergy);
     addItem("CalTrackDoca",  &CAL_Track_DOCA);
+    addItem("CalTrackDocacor",  &CAL_Track_DOCA_cor);
     addItem("CalTrackAngle", &CAL_Track_Angle);
     addItem("CalTrackSep",   &CAL_Track_Sep);
 
@@ -889,6 +894,9 @@ StatusCode CalValsTool::initialize()
     addItem("Cal1MomXCntr",  &CAL_Clu1_MomXCntr);
     addItem("Cal1MomYCntr",  &CAL_Clu1_MomYCntr);
     addItem("Cal1MomZCntr",  &CAL_Clu1_MomZCntr);
+    addItem("Cal1MomXCntrcor",  &CAL_Clu1_MomXCntrcor);
+    addItem("Cal1MomYCntrcor",  &CAL_Clu1_MomYCntrcor);
+    addItem("Cal1MomZCntrcor",  &CAL_Clu1_MomZCntrcor);
     addItem("Cal1MomXDir",  &CAL_Clu1_MomXDir);
     addItem("Cal1MomYDir",  &CAL_Clu1_MomYDir);
     addItem("Cal1MomZDir",  &CAL_Clu1_MomZDir);
@@ -1658,6 +1666,12 @@ StatusCode CalValsTool::calculate()
         */
         Doca track1(x1, t1);
         CAL_Track_DOCA = (float)track1.docaOfPoint(cal_pos);
+
+	Point cor_cal_pos = calCluster->getCorPosition(t1);
+        CAL_Track_DOCA_cor = (float)track1.docaOfPoint(cor_cal_pos);
+	CAL_Clu1_MomXCntrcor = cor_cal_pos.x();
+	CAL_Clu1_MomYCntrcor = cor_cal_pos.y();
+	CAL_Clu1_MomZCntrcor = cor_cal_pos.z();
 
         // Image the top of the Calorimeter - use last hit FILTERED
         const Event::TkrTrackParams& tkr1_params = track_1->back()->getTrackParams(Event::TkrTrackHit::FILTERED);
