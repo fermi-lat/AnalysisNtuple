@@ -3,6 +3,7 @@
   @verbatim
    * EOH *
 
+ AnalysisNtuple-02-63-02 09-Aug-2012 TU Fix UBinterpolate to respect array boundaries
  AnalysisNtuple-02-63-01 02-Jul-2012 TU Sweep up Philippe's added Cal variables in new tag
  AnalysisNtuple-02-63-00 29-May-2012  lsrea EventAuditor: Fix for new Gaudi
  AnalysisNtple-02-62-09 27-May-2012 bruel tagging memory leak fix
