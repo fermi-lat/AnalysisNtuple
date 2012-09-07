@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.123 2012/05/16 10:28:21 bruel Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.124 2012/06/30 15:19:37 bruel Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -38,6 +38,8 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.123
 #include "GlastSvc/GlastDetSvc/IGlastDetSvc.h"
 #include "GlastSvc/Reco/IPropagatorSvc.h"
 #include "TkrUtil/ITkrGeometrySvc.h"
+#include "TkrUtil/ITkrQueryClustersTool.h"
+#include "TkrUtil/ITkrFlagHitsTool.h"
 
 #include "idents/TowerId.h" 
 #include "idents/VolumeIdentifier.h"
@@ -59,6 +61,9 @@ namespace {
     double truncFraction = 0.9;
     const int _badInt = -1;
     const float _badFloat = -2.0;
+    double maxPath         = 2500.;  // limit the upward propagator
+    double _vetoRegion     = 10.0;   // regions for Tkr1SSDVeto hit counts
+
 }
 
 class CalValsTool :   public ValBase
@@ -89,6 +94,11 @@ private:
 
     IValsTool*       m_pTkrTool;
 
+    /// pointer to queryclusterstool
+    ITkrQueryClustersTool* pQueryClusters;
+    /// pointer to flagHitsTool
+    ITkrFlagHitsTool* pFlagHits;
+  
     /// some Geometry
     double m_towerPitch;
     int    m_xNum;
@@ -99,6 +109,27 @@ private:
     /// gets the CAL info from detModel
     StatusCode getCalInfo();
     double activeDist(Point pos, int &view) const;
+  
+    /// SSD Veto function, emulated from Tkr one
+    float CalSSDEvaluation(const Event::CalCluster* cluster);
+    // Local variables to transfer results of SSD calculation
+    float m_VetoPlaneCrossed; 
+    float m_VetoTrials;
+    float m_SSDVeto;
+    float m_VetoUnknown;
+    float m_VetoDeadPlane;
+    float m_VetoTruncated; 
+    float m_VetoTower;   
+    float m_VetoGapCorner;
+    float m_VetoGapEdge;   
+    float m_VetoBadCluster;
+    float m_VetoHitFound;
+    // flag for additional veto info
+    bool  m_enableVetoDiagnostics;
+    // properties
+    double m_minVetoError;
+    double m_maxVetoError;
+    double m_vetoNSigma;
 
     /// CAL vars
     double m_calXWidth;
@@ -246,6 +277,18 @@ private:
     float CAL_Clu1_ClassHadProb;
     float CAL_Clu1_ClassGhostProb;
     float CAL_Clu1_ClassMipProb;
+  // Variables fron SSD Veto
+  float CAL_Clu1_SSDVeto;
+  float CAL_Clu1_VetoPlaneCrossed;
+  float CAL_Clu1_VetoHitFound;
+  float CAL_Clu1_VetoTrials;
+  float CAL_Clu1_VetoUnknown;
+  float CAL_Clu1_VetoDeadPlane;
+  float CAL_Clu1_VetoTruncated;
+  float CAL_Clu1_VetoTower;     
+  float CAL_Clu1_VetoGapCorner;
+  float CAL_Clu1_VetoGapEdge;
+  float CAL_Clu1_VetoBadCluster; 
 
   float CAL_Clu2_NumXtals;
   float CAL_Clu2_RawEnergySum;
@@ -504,6 +547,12 @@ CalValsTool::CalValsTool(const std::string& type,
 {    
     // Declare additional interface
     declareInterface<IValsTool>(this); 
+
+    // params for SSD Veto
+    declareProperty("enableVetoDiagnostics", m_enableVetoDiagnostics=true);
+    declareProperty("minVetoError", m_minVetoError=1.0);
+    declareProperty("maxVetoError", m_maxVetoError=100000.0);
+    declareProperty("vetoNSigma", m_vetoNSigma=2.0);
 }
 
 /** @page anatup_vars 
@@ -693,6 +742,11 @@ Y across the length.
 <td>F<td> Transverse size of shower as function of energy fraction : Tkr =  using tkr position and direction; T = using only crystal transverse information
 <tr><td> CalTrSizeTkrTL[68,90,95,99,100] 
 <td>F<td> Transverse size of shower as function of energy fraction : Tkr =  using tkr position and direction; TL = using crystal transverse and longitudinal information
+<tr><td> Cal11SSDVeto  
+<td>F<td> A version of SSD Veto that uses Cal moments analysis direction. Emulating Tkr calculation.
+<tr><td> Cal1SSDVetoPlaneCrossed
+<td>I<td>   Number of planes contributiong to the SSD Veto. This doesn't count the points
+where a track crosses in a gap.
 </table>
 
 */
@@ -736,6 +790,15 @@ StatusCode CalValsTool::initialize()
             return StatusCode::FAILURE;
         }
 
+        if(!toolSvc->retrieveTool("TkrQueryClustersTool", pQueryClusters)) {
+          log << MSG::ERROR << "Couldn't retrieve TkrQueryClusterTool" << endreq;
+          return StatusCode::FAILURE;
+        }
+        
+        if(!toolSvc->retrieveTool("TkrFlagHitsTool", pFlagHits)) {
+          log << MSG::ERROR << "Couldn't retrieve TkrFlagHitsTool" << endreq;
+          return StatusCode::FAILURE;
+        }
 
         m_towerPitch = m_tkrGeom->towerPitch();
         m_xNum = m_tkrGeom->numXTowers();
@@ -930,6 +993,21 @@ StatusCode CalValsTool::initialize()
     addItem("Cal1HadProb",  &CAL_Clu1_ClassHadProb);
     addItem("Cal1GhostProb",  &CAL_Clu1_ClassGhostProb);
     addItem("Cal1MipProb",  &CAL_Clu1_ClassMipProb);
+    // Variables for SSD Veto
+    addItem("Cal1SSDVeto",  &CAL_Clu1_SSDVeto);
+    addItem("Cal1SSDVetoPlaneCrossed",  &CAL_Clu1_VetoPlaneCrossed);
+
+    if(m_enableVetoDiagnostics) {
+        addItem("Cal1SSDVetoHitFound",   &CAL_Clu1_VetoHitFound);
+        addItem("Cal1SSDVetoTrials",     &CAL_Clu1_VetoTrials);
+        addItem("Cal1SSDVetoUnknown",    &CAL_Clu1_VetoUnknown);
+        addItem("Cal1SSDVetoTower",      &CAL_Clu1_VetoTower);
+        addItem("Cal1SSDVetoGapCorner",  &CAL_Clu1_VetoGapCorner);
+        addItem("Cal1SSDVetoGapEdge",    &CAL_Clu1_VetoGapEdge);
+        addItem("Cal1SSDVetoBadCluster", &CAL_Clu1_VetoBadCluster);
+        addItem("Cal1SSDVetoDeadPlane",  &CAL_Clu1_VetoDeadPlane);
+        addItem("Cal1SSDVetoTruncated",  &CAL_Clu1_VetoTruncated);
+    }
 
     addItem("Cal2NumXtals",  &CAL_Clu2_NumXtals);
     addItem("Cal2RawEnergySum",  &CAL_Clu2_RawEnergySum);
@@ -1458,6 +1536,33 @@ StatusCode CalValsTool::calculate()
     CAL_Clu1_ClassHadProb = calCluster->getClassParams().getProb("had");
     CAL_Clu1_ClassGhostProb = calCluster->getClassParams().getProb("ghost");
     CAL_Clu1_ClassMipProb = calCluster->getClassParams().getProb("mip");
+
+
+    // SSD Veto stuff here:
+    if(calCluster->getMomParams().getNumIterations()>0){
+      CAL_Clu1_SSDVeto = CalSSDEvaluation(calCluster); // cs: first cluster
+      CAL_Clu1_VetoPlaneCrossed = (int)floor(m_VetoPlaneCrossed + 0.5); 
+      CAL_Clu1_VetoTrials       = (int)floor(m_VetoTrials + 0.5);
+      CAL_Clu1_VetoUnknown      = (int)floor(m_VetoUnknown + 0.5);
+      CAL_Clu1_VetoDeadPlane    = (int)floor(m_VetoDeadPlane + 0.5);
+      CAL_Clu1_VetoTruncated    = (int)floor(m_VetoTruncated + 0.5); 
+      CAL_Clu1_VetoTower        = (int)floor(m_VetoTower + 0.5);   
+      CAL_Clu1_VetoGapCorner    = (int)floor(m_VetoGapCorner + 0.5);
+      CAL_Clu1_VetoGapEdge      = (int)floor(m_VetoGapEdge + 0.5);   
+      CAL_Clu1_VetoBadCluster   = (int)floor(m_VetoBadCluster + 0.5);
+    }
+    else { 
+      CAL_Clu1_SSDVeto       = _badFloat;   
+      CAL_Clu1_VetoPlaneCrossed = _badFloat;
+      CAL_Clu1_VetoTrials       = _badFloat;
+      CAL_Clu1_VetoUnknown      = _badFloat;
+      CAL_Clu1_VetoDeadPlane    = _badFloat;
+      CAL_Clu1_VetoTruncated    = _badFloat;
+      CAL_Clu1_VetoTower        = _badFloat;
+      CAL_Clu1_VetoGapCorner    = _badFloat;
+      CAL_Clu1_VetoGapEdge      = _badFloat;
+      CAL_Clu1_VetoBadCluster   = _badFloat;
+      }
 
     if(CAL_EnergyRaw>0.0) {
         CAL_Lyr0_Ratio  = CAL_eLayer[0]/CAL_EnergyRaw;
@@ -2491,4 +2596,250 @@ void CalValsTool::zeroVals()
         Event::CalCluster* calCluster = pCals->front();
         CAL_EnergyRaw  = calCluster->getMomParams().getEnergy();
     }
+}
+
+
+float CalValsTool::CalSSDEvaluation(const Event::CalCluster* cluster)
+{// Method to compute the number of SSD Vetoes for the given cal direction
+  //m_SSDVeto = cluster->getMomParams().getAxis().z();
+
+
+  MsgStream log(msgSvc(), name());
+
+  Point  x1 = cluster->getMomParams().getCentroid(); // lest start from cal centroid, use topcal? corrected centroid?
+  Vector t1 = cluster->getMomParams().getAxis();
+
+  //Event::TkrTrackHitVecConItr pHit = track->begin();
+  //const Event::TkrTrackParams params((*pHit)->getTrackParams(Event::TkrTrackHit::SMOOTHED));
+
+  // Need to fake the Track Params object that will be used by the propagator
+  // Eventually this will be the cal covariance matrix
+
+  // Start with reasonable error, NO FULL Cov Matrix yet
+  float stheta = 0.03; //rad ~1.7 deg error on Theta
+  float sphi   = 0;    //Phi
+  // (Theta,Phi) => t1=(xdir,ydir, zdir)
+  // t1+ dx, dy => ((x0 , sx , y0 , sy))
+
+  // fill 4x4 representation
+  // super fake case just to compile
+  const Event::TkrTrackParams params(x1.x(), t1.x()/t1.z(), x1.y(), t1.y()/t1.z(),
+                                     0.,     0.,     0.,     0,
+                                     0.025,  0.,     0.,
+                                     0.,     0.,
+                                     0.);
+  /*
+    Notice the Tkr representation as (x0 , sx , y0 , sy) with sx = vx/vz and sy = vy/vz
+
+    /// Direct construction from all the elements (the old fashioned way)
+    TkrTrackParams(double xPosition, double xSlope, double yPosition, double ySlope,
+                   double xPosxPos, double xPosxSlp, double xPosyPos, double xPosySlp,
+                   double xSlpxSlp, double xSlpyPos, double xSlpySlp,
+                   double yPosyPos, double yPosySlp,
+                   double ySlpySlp);
+    /// Track parameters
+    m_xPosition  = xPosition;
+    m_xSlope     = xSlope;
+    m_yPosition  = yPosition;
+    m_ySlope     = ySlope;
+
+    /// Track parameter error matrix elements
+    m_xPos_xPos  = xPosxPos;     // Cov(1,1) = xPositionErr * xPositionErr
+    m_xPos_xSlp  = xPosxSlp;     // Cov(1,2) = Cov(2,1) = xPositionErr * xSlopeErr
+    m_xPos_yPos  = xPosyPos;     // Cov(1,3) = Cov(3,1) = xPositionErr * yPositionErr
+    m_xPos_ySlp  = xPosySlp;     // Cov(1,4) = Cov(4,1) = xPositionERr * ySlopeErr
+    m_xSlp_xSlp  = xSlpxSlp;     // Cov(2,2) = xSlopeErr * xSlopeErr
+    m_xSlp_yPos  = xSlpyPos;     // Cov(2,3) = Cov(3,2) = xSlopeErr * yPositionErr
+    m_xSlp_ySlp  = xSlpySlp;     // Cov(2,4) = Cov(4,2) = xSlopeErr * ySlopeErr
+    m_yPos_yPos  = yPosyPos;     // Cov(3,3) = yPositionErr * yPositionErr
+    m_yPos_ySlp  = yPosySlp;     // Cov(3,4) = Cov(4,3) = yPositionErr * ySlopeErr
+    m_ySlp_ySlp  = ySlpySlp;     // Cov(4,4) = ySlopeErr * ySlopeErr
+  */
+
+
+  // No idea how this one matters, let's start with Sum of Raw Energy
+  float ConEne  = cluster->getXtalsParams().getXtalRawEneSum();
+  
+  int topPlane = m_tkrGeom->numPlanes()-1; 
+  double topOfTkr = m_tkrGeom->getPlaneZ(topPlane) + 1.0;
+  double arc_min = fabs((topOfTkr-x1.z())/t1.z());
+  arc_min = std::min( arc_min, maxPath);
+
+  bool upwards = true;
+
+  m_VetoPlaneCrossed = _badFloat; 
+  m_VetoTrials = _badFloat;
+  m_SSDVeto = _badFloat;
+  m_VetoUnknown = _badFloat;
+  m_VetoDeadPlane = _badFloat;
+  m_VetoTruncated = _badFloat; 
+  m_VetoTower = -1.;   
+  m_VetoGapCorner = _badFloat;
+  m_VetoGapEdge = _badFloat;   
+  m_VetoBadCluster = _badFloat;
+  m_VetoHitFound = _badFloat;
+
+  try {
+    m_G4PropTool->setStepStart(params, x1.z(), upwards);
+    m_G4PropTool->step(arc_min);
+  } catch( std::exception& /*e*/) {
+    printHeader(log);
+    setAnaTupBit();
+    log << "See previous exception printout." << endreq;
+    log << " Skipping the Cal1 Veto calculations" << endreq;
+    return m_SSDVeto;
+
+  } catch (...) {
+    printHeader(log);
+    setAnaTupBit();
+    log << "Unknown exception, see previous exception message, if any" << endreq;
+    log << "Skipping the CAL1 Veto calculations" << endreq;
+    log << "Initial track parameters: pos: " << x1 << endreq 
+        << "dir: " << t1 << " arclen: " << arc_min << endreq;
+    return m_SSDVeto;
+    }
+    
+  m_VetoPlaneCrossed = 0.0; 
+  m_VetoTrials = 0.0;
+  m_SSDVeto = 0.0;
+  m_VetoUnknown = 0.0;
+  m_VetoDeadPlane = 0.0;
+  m_VetoTruncated = 0.0; 
+  m_VetoTower = -1.;   
+  m_VetoGapCorner = 0.0;
+  m_VetoGapEdge = 0.0;   
+  m_VetoBadCluster = 0.0;
+  m_VetoHitFound = 0.0;
+
+  int numSteps = m_G4PropTool->getNumberSteps();
+
+  idents::VolumeIdentifier volId;
+  idents::VolumeIdentifier prefix = m_detSvc->getIDPrefix();
+
+  //int firstPlane = m_tkrGeom->getPlane(track->front()->getTkrId()); 
+  //int firstLayer = m_tkrGeom->getLayer(firstPlane);
+  //double zFirstLayer = m_tkrGeom->getLayerZ(firstLayer);
+  
+  //double costh = fabs(t1.z());
+  //double secth = 1./costh;
+  
+  // for the footprints
+  double secthX = 1./sqrt(1.0 - t1.x()*t1.x());
+  double secthY = 1./sqrt(1.0 - t1.y()*t1.y());
+  
+  double xVetoRgn = _vetoRegion*secthX;
+  double yVetoRgn = _vetoRegion*secthY;
+
+  double arcLen = m_G4PropTool->getStepArcLen(0);
+  bool isFirstPlane = true;
+
+  for(int istep = 1; istep < numSteps; ++istep) { 
+    volId = m_G4PropTool->getStepVolumeId(istep);
+    volId.prepend(prefix);
+    Point x_step       = m_G4PropTool->getStepPosition(istep);
+    arcLen += m_G4PropTool->getStepArcLen(istep);
+
+    bool forward = false;
+    const Event::TkrTrackParams newParams = 
+      m_G4PropTool->getTrackParams(arcLen, ConEne, forward);
+
+    //std::cout << "pos " << x_step << ", step " << istep << ", arcLen " << arcLen << std::endl;
+    //std::cout << "err " << sqrt(newParams(xPosIdx,xPosIdx)) << " "
+    //        << sqrt(newParams(yPosIdx,yPosIdx)) << std::endl;
+    // we're outside the LAT
+    
+    if(x_step.z() > topOfTkr || !m_tkrGeom->isInActiveLAT(x_step) ) break; 
+
+    // check that it's really a TKR hit (probably overkill)
+    if(volId.size() != 9) continue; 
+    if(!(volId[0]==0 && volId[3]==1)) continue; // !(LAT && TKR)
+    if(volId[6]> 1) continue;  //It's a converter or some other tray element!
+    m_VetoPlaneCrossed++;
+
+    // now check if there's a hit near the extrapolated track!
+    // if there is, reset the veto counter... we want leading non-hits
+    //std::cout << "Tkr1SSDVeto volId " << volId.name() << std::endl;
+    
+    //int tower = idents::TowerId(volId[2], volId[1]).id();
+    int tray = volId[4];
+    int view = volId[5];
+    int face = volId[6];
+    int layer = m_tkrGeom->trayToBiLayer(tray, face);
+    int plane = m_tkrGeom->trayToPlane(tray, face);
+
+    int firstPlane = -1;
+    if(isFirstPlane) {
+      isFirstPlane = false;
+      firstPlane = plane;
+    }
+
+    // I think we want to do this, most likely this is missed for
+    //   some good reason.
+    // on the other hand, it is a missed hit, so remove test for the new code
+    
+
+    m_VetoTrials = abs(plane-firstPlane) + 1;
+
+    //if(!m_useNew&&layer==firstLayer) continue;
+
+    double vetoRgn = (view==0 ? xVetoRgn : yVetoRgn);
+
+    int nVetoHits = pQueryClusters->numberOfHitsNear(view, layer, 
+                                                     vetoRgn, x_step, t1);
+
+    if (nVetoHits>0) {
+      // found a hit, reset the SSDVeto
+      m_SSDVeto = 0.0;
+      if(m_enableVetoDiagnostics) { m_VetoHitFound++; }
+
+    } else { 
+      // no hit
+      idents::TkrId tkrId(volId);
+      Event::TkrTrackParams outParams;
+
+      unsigned int status_bits = 0;
+      int stage = -1;
+      
+      stage = pFlagHits->flagHits(tkrId, newParams, x_step.z(),
+                                  m_minVetoError, m_maxVetoError, m_vetoNSigma, 
+                                  outParams, status_bits);
+
+      if((stage==-1)) { 
+        m_SSDVeto += 1.0; 
+      }
+
+      if(m_enableVetoDiagnostics) {
+        switch (stage) 
+          {
+          case -1:
+            m_VetoUnknown++;
+            break;
+          case 1: 
+            m_VetoDeadPlane++;
+            break;
+          case 2:
+            m_VetoTruncated++;
+            break;
+          case 3:
+            m_VetoTower++;
+            break;
+          case 4:
+            m_VetoGapCorner++;
+            break;
+          case 5:
+            m_VetoGapEdge++;
+            break;
+          case 6:
+            m_VetoBadCluster++;
+            break;
+          default:
+            std::cout << "shouldn't get here, stage = " 
+                      << stage << std::endl;
+          } // end switch
+      } // end diagnostics
+    } // end no hit 
+  } // end loop over steps
+
+
+  return m_SSDVeto;
 }
