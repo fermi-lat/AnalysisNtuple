@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.125 2012/09/07 16:57:19 carmelo Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.126 2012/09/11 14:31:17 carmelo Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -2614,17 +2614,29 @@ float CalValsTool::CalSSDEvaluation(const Event::CalCluster* cluster)
 {// Method to compute the number of SSD Vetoes for the given cal direction
   MsgStream log(msgSvc(), name());
 
-  Point  xc = cluster->getMomParams().getCentroid(); // let start from cal centroid
-  Vector t1 = -1*cluster->getMomParams().getAxis();  // different convention for Tkr and Cal
+  // init to bad
+  m_VetoPlaneCrossed = _badFloat; 
+  m_VetoTrials = _badFloat;
+  m_SSDVeto = _badFloat;
+  m_SSDVetoNoHitFlag = _badFloat;
+  m_VetoUnknown = _badFloat;
+  m_VetoDeadPlane = _badFloat;
+  m_VetoTruncated = _badFloat; 
+  m_VetoTower = -1.;   
+  m_VetoGapCorner = _badFloat;
+  m_VetoGapEdge = _badFloat;   
+  m_VetoBadCluster = _badFloat;
+  m_VetoHitFound = _badFloat;
 
-  //std::cout << "CALValsTool ------ Starting from xc " << xc << ", t1 " << t1 << std::endl;
+  Point  xc = cluster->getMomParams().getCentroid(); // let start from cal centroid
+  Vector t1 = -1*cluster->getMomParams().getAxis();  // notice -1: different convention for Tkr and Cal
+
   // START from above the CAL (NO MCS in CsI)
   // Cov matrix should be propagated accordingly... TBD
   double zRefAboveCal = 0.;
   Point  x1((zRefAboveCal-xc.z())*(t1.x()/t1.z()) + xc.x(), 
             (zRefAboveCal-xc.z())*(t1.y()/t1.z()) + xc.y(), 
             zRefAboveCal);
-  //std::cout << "CALValsTool ------ Moving to from x1 " << x1 << std::endl;
 
   // Check we start in side the LAT
   if(!m_tkrGeom->isInActiveLAT(x1) ) {return _badFloat;}
@@ -2652,8 +2664,6 @@ float CalValsTool::CalSSDEvaluation(const Event::CalCluster* cluster)
   xSlpxSlp = dtheta*dtheta*t1.x()*t1.x()*CommonFactor;
   ySlpySlp = dtheta*dtheta*t1.y()*t1.y()*CommonFactor;
   xSlpySlp = dtheta*dtheta*t1.x()*t1.y()*CommonFactor;
-  
-  //std::cout << "CALValsTool -- CommonFactor " << CommonFactor << ", xSlpxSlp " << xSlpxSlp << ", ySlpySlp " << ySlpySlp<< std::endl;
   } 
 
   const Event::TkrTrackParams params(x1.x(), t1.x()/t1.z(), x1.y(), t1.y()/t1.z(),
@@ -2661,36 +2671,9 @@ float CalValsTool::CalSSDEvaluation(const Event::CalCluster* cluster)
                                                 xSlpxSlp,  0.,     xSlpySlp,
                                                         yPosyPos,    0.,
                                                                    ySlpySlp);
-  /*
-    Notice the Tkr representation as (x0 , sx , y0 , sy) with sx = vx/vz and sy = vy/vz
-
-    /// Direct construction from all the elements (the old fashioned way)
-    TkrTrackParams(double xPosition, double xSlope, double yPosition, double ySlope,
-                   double xPosxPos, double xPosxSlp, double xPosyPos, double xPosySlp,
-                   double xSlpxSlp, double xSlpyPos, double xSlpySlp,
-                   double yPosyPos, double yPosySlp,
-                   double ySlpySlp);
-    /// Track parameters
-    m_xPosition  = xPosition;
-    m_xSlope     = xSlope;
-    m_yPosition  = yPosition;
-    m_ySlope     = ySlope;
-
-    /// Track parameter error matrix elements
-    m_xPos_xPos  = xPosxPos;     // Cov(1,1) = xPositionErr * xPositionErr
-    m_xPos_xSlp  = xPosxSlp;     // Cov(1,2) = Cov(2,1) = xPositionErr * xSlopeErr
-    m_xPos_yPos  = xPosyPos;     // Cov(1,3) = Cov(3,1) = xPositionErr * yPositionErr
-    m_xPos_ySlp  = xPosySlp;     // Cov(1,4) = Cov(4,1) = xPositionERr * ySlopeErr
-    m_xSlp_xSlp  = xSlpxSlp;     // Cov(2,2) = xSlopeErr * xSlopeErr
-    m_xSlp_yPos  = xSlpyPos;     // Cov(2,3) = Cov(3,2) = xSlopeErr * yPositionErr
-    m_xSlp_ySlp  = xSlpySlp;     // Cov(2,4) = Cov(4,2) = xSlopeErr * ySlopeErr
-    m_yPos_yPos  = yPosyPos;     // Cov(3,3) = yPositionErr * yPositionErr
-    m_yPos_ySlp  = yPosySlp;     // Cov(3,4) = Cov(4,3) = yPositionErr * ySlopeErr
-    m_ySlp_ySlp  = ySlpySlp;     // Cov(4,4) = ySlopeErr * ySlopeErr
-  */
 
 
-  // No idea how this one matters, let's start with Sum of Raw Energy
+  // Let's start with Sum of Raw Energy - check other possibilities
   float ConEne  = cluster->getXtalsParams().getXtalRawEneSum();
   
   int topPlane = m_tkrGeom->numPlanes()-1; 
@@ -2699,19 +2682,6 @@ float CalValsTool::CalSSDEvaluation(const Event::CalCluster* cluster)
   arc_min = std::min( arc_min, maxPath);
 
   bool upwards = true;
-
-  m_VetoPlaneCrossed = _badFloat; 
-  m_VetoTrials = _badFloat;
-  m_SSDVeto = _badFloat;
-  m_SSDVetoNoHitFlag = _badFloat;
-  m_VetoUnknown = _badFloat;
-  m_VetoDeadPlane = _badFloat;
-  m_VetoTruncated = _badFloat; 
-  m_VetoTower = -1.;   
-  m_VetoGapCorner = _badFloat;
-  m_VetoGapEdge = _badFloat;   
-  m_VetoBadCluster = _badFloat;
-  m_VetoHitFound = _badFloat;
 
   try {
     m_G4PropTool->setStepStart(params, x1.z(), upwards);
@@ -2750,13 +2720,6 @@ float CalValsTool::CalSSDEvaluation(const Event::CalCluster* cluster)
 
   idents::VolumeIdentifier volId;
   idents::VolumeIdentifier prefix = m_detSvc->getIDPrefix();
-
-  //int firstPlane = m_tkrGeom->getPlane(track->front()->getTkrId()); 
-  //int firstLayer = m_tkrGeom->getLayer(firstPlane);
-  //double zFirstLayer = m_tkrGeom->getLayerZ(firstLayer);
-  
-  //double costh = fabs(t1.z());
-  //double secth = 1./costh;
   
   // for the footprints
   double secthX = 1./sqrt(1.0 - t1.x()*t1.x());
@@ -2767,6 +2730,7 @@ float CalValsTool::CalSSDEvaluation(const Event::CalCluster* cluster)
 
   double arcLen = m_G4PropTool->getStepArcLen(0);
   bool isFirstPlane = true;
+  int  previousplane = -1;
 
   for(int istep = 1; istep < numSteps; ++istep) { 
     volId = m_G4PropTool->getStepVolumeId(istep);
@@ -2778,48 +2742,27 @@ float CalValsTool::CalSSDEvaluation(const Event::CalCluster* cluster)
     const Event::TkrTrackParams newParams = 
       m_G4PropTool->getTrackParams(arcLen, ConEne, forward);
 
-    //std::cout << "CALValsTool pos " << x_step << ", step " << istep << ", arcLen " << arcLen << std::endl;
-    //std::cout << "err " << sqrt(newParams(xPosIdx,xPosIdx)) << " "
-    //       << sqrt(newParams(yPosIdx,yPosIdx)) << std::endl;
-
     // we're outside the LAT
     if(x_step.z() > topOfTkr || !m_tkrGeom->isInActiveLAT(x_step) ) break; 
 
-    // check that it's really a TKR hit (probably overkill)
+    // check that it's really a TKR hit
     if(volId.size() != 9) continue; 
     if(!(volId[0]==0 && volId[3]==1)) continue; // !(LAT && TKR)
     if(volId[6]> 1) continue;  //It's a converter or some other tray element!
-    m_VetoPlaneCrossed++;
-
-    // now check if there's a hit near the extrapolated track!
-    // if there is, reset the veto counter... we want leading non-hits
-    
+   
     //int tower = idents::TowerId(volId[2], volId[1]).id();
     int tray = volId[4];
     int view = volId[5];
     int face = volId[6];
     int layer = m_tkrGeom->trayToBiLayer(tray, face);
     int plane = m_tkrGeom->trayToPlane(tray, face);
-    //std::cout << "CALValsTool pos " << x_step << ", step " << istep << ", arcLen " << arcLen << std::endl;
-    //std::cout << "CALValsTool Vol found for SSDVeto: volId " << volId.name() 
-    //          << " layer " << layer << " plane " << plane << " view " << view << std::endl;
+    
+    if(previousplane==plane) continue; // check we are not in the same plane as previous step
+    previousplane = plane;
+    m_VetoPlaneCrossed++;
 
-    /* // THIS WAS FOR DEBUG ONLY
-    // cs: eval projection by hand...
-    double z_delta = x_step.z() - x1.z();
-    //double x_new   = z_delta*(t1.x()/t1.z()) + x1.x(); // just to check the formula
-    //double y_new   = z_delta*(t1.y()/t1.z()) + x1.y();
-    //std::cout << "CALValsTool NewPos  " << " x: " << x_new << " y: " << y_new <<" z(fixed) " << x_step.z() << std::endl;
-    // cs: error propagation of propagated x,y is trivial with our simplified cov matrix
-    double x_new_err = sqrt(z_delta*z_delta*xSlpxSlp + xPosxPos + (t1.x()/t1.z())*(t1.x()/t1.z())*dz*dz);// ? tbc
-    double y_new_err = sqrt(z_delta*z_delta*ySlpySlp + yPosyPos + (t1.y()/t1.z())*(t1.y()/t1.z())*dz*dz);// ? tbc
-    std::cout << "CALValsTool Veto Region for z_delta = " <<  z_delta << " Old x,y " << xVetoRgn <<", "<< yVetoRgn << 
-      " New x,y " << x_new_err <<", "<< y_new_err << std::endl;
-    std::cout << "CS CALValsTool     Params" << " xError " << sqrt(params(1,1))    << " yError " << sqrt(params(3,3))<<std::endl;
-    std::cout << "CS CALValsTool: newParams" << " xError " << sqrt(newParams(1,1)) << " yError " << sqrt(newParams(3,3))<<std::endl;
-    std::cout << "CS CALValsTool     Params" << params  <<std::endl;
-    std::cout << "CS CALValsTool: newParams" << newParams <<std::endl;
-    */
+   // now check if there's a hit near the extrapolated track!
+   // if there is, reset the veto counter... we want leading non-hits
 
     int firstPlane = -1;
     if(isFirstPlane) {
@@ -2827,9 +2770,7 @@ float CalValsTool::CalSSDEvaluation(const Event::CalCluster* cluster)
       firstPlane = plane;
     }
 
-    // I think we want to do this, most likely this is missed for
-    //   some good reason.
-    // on the other hand, it is a missed hit, so remove test for the new code
+    // from tkr code:
     
     m_VetoTrials = abs(plane-firstPlane) + 1;
 
@@ -2838,7 +2779,6 @@ float CalValsTool::CalSSDEvaluation(const Event::CalCluster* cluster)
 
     int nVetoHits = pQueryClusters->numberOfHitsNear(view, layer, 
                                                      vetoRgn, x_step, t1);
-    //std::cout << "CALValsTool nVetoHits " << nVetoHits << " inVetoRgn " << vetoRgn << std::endl;
 
     if (nVetoHits>0) {
       // found a hit, reset the SSDVeto
@@ -2852,12 +2792,11 @@ float CalValsTool::CalSSDEvaluation(const Event::CalCluster* cluster)
 
       unsigned int status_bits = 0;
       int stage = -1;
-      //std::cout << "CALValsTool FLAG HIT STAGE:  " << std::endl;
+
       // look for reasons of mesing hists, gaps, bad hits, etc...
       stage = pFlagHits->flagHits(tkrId, newParams, x_step.z(),
                                   m_minVetoError, m_maxVetoError, m_vetoNSigma, 
                                   outParams, status_bits);
-      //std::cout << "CALValsTool stage (-1?) " << stage << std::endl;
 
       m_SSDVetoNoHitFlag += 1.0;
       if(stage==-1) { 
