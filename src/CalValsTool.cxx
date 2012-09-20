@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.126 2012/09/11 14:31:17 carmelo Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.127 2012/09/13 16:24:38 carmelo Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -10,8 +10,6 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.126
 
 
 #include "ValBase.h"
-
-#include "UBinterpolate.h"
 
 #include "GaudiKernel/MsgStream.h"
 #include "GaudiKernel/IDataProviderSvc.h"
@@ -40,6 +38,8 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.126
 #include "TkrUtil/ITkrGeometrySvc.h"
 #include "TkrUtil/ITkrQueryClustersTool.h"
 #include "TkrUtil/ITkrFlagHitsTool.h"
+
+#include "UBinterpolate.h"
 
 #include "idents/TowerId.h" 
 #include "idents/VolumeIdentifier.h"
@@ -98,7 +98,7 @@ private:
     ITkrQueryClustersTool* pQueryClusters;
     /// pointer to flagHitsTool
     ITkrFlagHitsTool* pFlagHits;
-  
+
     /// some Geometry
     double m_towerPitch;
     int    m_xNum;
@@ -432,6 +432,7 @@ private:
   float CAL_newcfp_v2;
 
   float CAL_newcfp_calfit_energy;      // Energy from Full Profile tool
+  float CAL_newcfp_calfit_energyub;    // Energy ub version for cal-only
   float CAL_newcfp_calfit_energy_err;
   float CAL_newcfp_calfit_totChiSq;    // Total ChiSquare of fit divided by 11
   float CAL_newcfp_calfit_seltotChiSq;    // Total ChiSquare of fit divided by 11
@@ -530,6 +531,8 @@ private:
     double TSgetinterpolationTS(double efrac);
 
     UBinterpolate* m_ubInterpolate;
+    UBinterpolate* m_ubInterpolate_calfit;
+ 
 };
 
 namespace {
@@ -824,6 +827,7 @@ StatusCode CalValsTool::initialize()
             return sc;
         }
 
+ 
         if (getCalInfo().isFailure()) {
             log << MSG::ERROR << "Couldn't initialize the CAL constants" << endreq;
             return StatusCode::FAILURE;
@@ -1147,6 +1151,7 @@ StatusCode CalValsTool::initialize()
     addItem("CalNewCfpVy",  &CAL_newcfp_v1);
     addItem("CalNewCfpVz",  &CAL_newcfp_v2);
     addItem("CalNewCfpCalEnergy",  &CAL_newcfp_calfit_energy);
+    addItem("CalNewCfpCalEnergyUB",  &CAL_newcfp_calfit_energyub);
     addItem("CalNewCfpCalEnergyErr",  &CAL_newcfp_calfit_energy_err);
     addItem("CalNewCfpCalChiSq",   &CAL_newcfp_calfit_totChiSq);
     addItem("CalNewCfpCalSelChiSq",   &CAL_newcfp_calfit_seltotChiSq);
@@ -1215,8 +1220,9 @@ StatusCode CalValsTool::initialize()
     zeroVals();
 
     //m_ubInterpolate = new UBinterpolate("$(ANALYSISNTUPLEROOT)/calib/BiasMapCalCfpEnergy.txt");
-    m_ubInterpolate = new UBinterpolate("$(ANALYSISNTUPLEDATAPATH)/BiasMapCalCfpEnergy.txt");
-
+    m_ubInterpolate        = new UBinterpolate("$(ANALYSISNTUPLEDATAPATH)/BiasMapCalCfpEnergy.txt");
+    m_ubInterpolate_calfit = new UBinterpolate("$(ANALYSISNTUPLEDATAPATH)/BiasMapCalNewCfpCalEnergy_max20.txt");
+ 
     return sc;
 }
 
@@ -1319,6 +1325,7 @@ StatusCode CalValsTool::calculate()
                             tkr1ZDir = -1;
                     }
                     const float bias = m_ubInterpolate->interpolate(log10(CAL_cfp_energy), tkr1ZDir);
+                  
                     CAL_cfp_energyUB = bias == 0 ? -1 : CAL_cfp_energy / bias;
                     //   std::cout << "EvtValsTool CAL_cfp_energy " << CAL_cfp_energy << " ( " << log10(CAL_cfp_energy) << " ) " << CAL_cfp_energyUB << " ( " << log10(CAL_cfp_energyUB) << " ) " << tkr1ZDir << std::endl;
                 }
@@ -1374,6 +1381,21 @@ StatusCode CalValsTool::calculate()
                 }
                 else {
                   CAL_newcfp_energyUB = CAL_newcfp_energy;
+                }
+                // UB for full profile with cal-fit, for Cal Only
+                if ( CAL_newcfp_calfit_energy  == 0 ) {
+                    CAL_newcfp_calfit_energyub = 0;
+                }
+                else {
+                    float tkr1ZDir = -1;
+                    if ( m_pTkrTool->getVal("Tkr1ZDir", tkr1ZDir).isSuccess() ) {
+                        if ( tkr1ZDir == 0 )
+                            tkr1ZDir = -1;
+                    }
+                    const float bias = m_ubInterpolate_calfit->interpolate(log10(CAL_newcfp_calfit_energy), tkr1ZDir);
+                    CAL_newcfp_calfit_energyub = bias == 0 ? -1 : CAL_newcfp_calfit_energy / bias;
+                    //std::cout << "CalValsTool CAL_newcfp_calfit_energy " << CAL_newcfp_calfit_energy << " ( " << log10(CAL_newcfp_calfit_energy) << " ) " 
+                    //          << tkr1ZDir <<" -> "<< CAL_newcfp_calfit_energyub << " ( bias: " << bias << " ) "  std::endl;
                 }
               }
             // Removed 5/5/09 LSR
