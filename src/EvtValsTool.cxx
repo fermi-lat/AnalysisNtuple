@@ -3,12 +3,10 @@
 @brief Calculates the "Event" analysis variables from the other ntuple variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.48t 2012/05/11 19:51:56 kadrlica Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.49 2012/05/17 17:48:29 lsrea Exp $
 */
 
 #include "ValBase.h"
-
-#include "UBinterpolate.h"
 
 #include "GaudiKernel/MsgStream.h"
 #include "GaudiKernel/IDataProviderSvc.h"
@@ -21,6 +19,8 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.48t
 #include "Event/TopLevel/Event.h"
 
 #include "TkrUtil/ITkrGeometrySvc.h"
+
+#include "CalUtil/IUBinterpolateTool.h"
 
 #include <algorithm>
 /** @class EvtValsTool
@@ -113,7 +113,8 @@ private:
 
 // EvtVtxEAngle        continuous        VtxAngle*sqrt(EvtEnergySumOpt)/(4.24 -1.98*EvtLogEnergy + .269*EvtLogEnergy^2)/(1.95+2.36*Tkr1ZDir+1.3*Tkr1ZDir^2)
 
-    UBinterpolate* m_ubInterpolate;
+  IUBinterpolateTool* m_ubInterpolateTool;
+
 };
 
 
@@ -277,6 +278,13 @@ StatusCode EvtValsTool::initialize()
         log << MSG::ERROR << "Unable to find tool: " "CalValsTool" << endreq;
         return sc;
     }
+    
+    m_ubInterpolateTool = 0;
+    sc = pToolSvc->retrieveTool("UBinterpolateTool", m_ubInterpolateTool);
+    if(sc.isFailure() ) {
+      log << MSG::ERROR << "Couldn't retrieve UBinterpolateTool" << endreq;
+      return StatusCode::FAILURE;
+    }
 
     /*
     m_pAcdTool = 0;
@@ -329,8 +337,7 @@ StatusCode EvtValsTool::initialize()
  
     zeroVals();
 
-    //m_ubInterpolate = new UBinterpolate("$(ANALYSISNTUPLEROOT)/calib/BiasMapEvtEnergyCorr.txt");
-    m_ubInterpolate = new UBinterpolate("$(ANALYSISNTUPLEDATAPATH)/BiasMapEvtEnergyCorr.txt");
+    m_ubInterpolateTool->addBiasMap("Param","$(ANALYSISNTUPLEDATAPATH)/BiasMapEvtEnergyCorr.txt");
 
     return sc;
 }
@@ -413,7 +420,8 @@ StatusCode EvtValsTool::calculate()
         if ( EvtEnergyCorr == 0 )
             EvtEnergyCorrUB = 0;
         else {
-            const float bias = m_ubInterpolate->interpolate(log10(EvtEnergyCorr), tkr1ZDir);
+            float bias = m_ubInterpolateTool->interpolate("Param", log10(EvtEnergyCorr), tkr1ZDir);
+          
             EvtEnergyCorrUB = bias == 0 ? -1 : EvtEnergyCorr / bias;
             //            std::cout << "EvtValsTool EvtEnergyCorr " << EvtEnergyCorr << " ( " << log10(EvtEnergyCorr) << " ) " << EvtEnergyCorrUB << " ( " << log10(EvtEnergyCorrUB) << " ) " << tkr1ZDir << std::endl;
         }

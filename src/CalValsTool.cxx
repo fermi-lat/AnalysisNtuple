@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.127 2012/09/13 16:24:38 carmelo Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.128 2012/09/20 17:26:45 carmelo Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -39,7 +39,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.127
 #include "TkrUtil/ITkrQueryClustersTool.h"
 #include "TkrUtil/ITkrFlagHitsTool.h"
 
-#include "UBinterpolate.h"
+#include "CalUtil/IUBinterpolateTool.h"
 
 #include "idents/TowerId.h" 
 #include "idents/VolumeIdentifier.h"
@@ -530,9 +530,8 @@ private:
     int TSfillTS(int optts);
     double TSgetinterpolationTS(double efrac);
 
-    UBinterpolate* m_ubInterpolate;
-    UBinterpolate* m_ubInterpolate_calfit;
- 
+    IUBinterpolateTool* m_ubInterpolateTool;
+
 };
 
 namespace {
@@ -806,6 +805,11 @@ StatusCode CalValsTool::initialize()
         
         if(!toolSvc->retrieveTool("TkrFlagHitsTool", pFlagHits)) {
           log << MSG::ERROR << "Couldn't retrieve TkrFlagHitsTool" << endreq;
+          return StatusCode::FAILURE;
+        }
+
+        if(!toolSvc->retrieveTool("UBinterpolateTool", m_ubInterpolateTool)) {
+          log << MSG::ERROR << "Couldn't retrieve UBinterpolateTool" << endreq;
           return StatusCode::FAILURE;
         }
 
@@ -1219,10 +1223,10 @@ StatusCode CalValsTool::initialize()
 
     zeroVals();
 
-    //m_ubInterpolate = new UBinterpolate("$(ANALYSISNTUPLEROOT)/calib/BiasMapCalCfpEnergy.txt");
-    m_ubInterpolate        = new UBinterpolate("$(ANALYSISNTUPLEDATAPATH)/BiasMapCalCfpEnergy.txt");
-    m_ubInterpolate_calfit = new UBinterpolate("$(ANALYSISNTUPLEDATAPATH)/BiasMapCalNewCfpCalEnergy_max20.txt");
- 
+    // adding bias maps
+    m_ubInterpolateTool->addBiasMap("Prof",           "$(ANALYSISNTUPLEDATAPATH)/BiasMapCalCfpEnergy.txt");
+    m_ubInterpolateTool->addBiasMap("NewProfCalOnly", "$(ANALYSISNTUPLEDATAPATH)/BiasMapCalNewCfpCalEnergy_max20.txt");
+
     return sc;
 }
 
@@ -1324,8 +1328,8 @@ StatusCode CalValsTool::calculate()
                         if ( tkr1ZDir == 0 )
                             tkr1ZDir = -1;
                     }
-                    const float bias = m_ubInterpolate->interpolate(log10(CAL_cfp_energy), tkr1ZDir);
-                  
+
+                    float bias = m_ubInterpolateTool->interpolate("Prof",log10(CAL_cfp_energy), tkr1ZDir);                  
                     CAL_cfp_energyUB = bias == 0 ? -1 : CAL_cfp_energy / bias;
                     //   std::cout << "EvtValsTool CAL_cfp_energy " << CAL_cfp_energy << " ( " << log10(CAL_cfp_energy) << " ) " << CAL_cfp_energyUB << " ( " << log10(CAL_cfp_energyUB) << " ) " << tkr1ZDir << std::endl;
                 }
@@ -1392,7 +1396,7 @@ StatusCode CalValsTool::calculate()
                         if ( tkr1ZDir == 0 )
                             tkr1ZDir = -1;
                     }
-                    const float bias = m_ubInterpolate_calfit->interpolate(log10(CAL_newcfp_calfit_energy), tkr1ZDir);
+                    float bias = m_ubInterpolateTool->interpolate("NewProfCalOnly", log10(CAL_newcfp_calfit_energy), tkr1ZDir);
                     CAL_newcfp_calfit_energyub = bias == 0 ? -1 : CAL_newcfp_calfit_energy / bias;
                     //std::cout << "CalValsTool CAL_newcfp_calfit_energy " << CAL_newcfp_calfit_energy << " ( " << log10(CAL_newcfp_calfit_energy) << " ) " 
                     //          << tkr1ZDir <<" -> "<< CAL_newcfp_calfit_energyub << " ( bias: " << bias << " ) "  std::endl;
