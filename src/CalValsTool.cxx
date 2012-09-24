@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.128 2012/09/20 17:26:45 carmelo Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.129 2012/09/21 12:48:30 carmelo Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -1391,15 +1391,17 @@ StatusCode CalValsTool::calculate()
                     CAL_newcfp_calfit_energyub = 0;
                 }
                 else {
-                    float tkr1ZDir = -1;
-                    if ( m_pTkrTool->getVal("Tkr1ZDir", tkr1ZDir).isSuccess() ) {
-                        if ( tkr1ZDir == 0 )
-                            tkr1ZDir = -1;
-                    }
-                    float bias = m_ubInterpolateTool->interpolate("NewProfCalOnly", log10(CAL_newcfp_calfit_energy), tkr1ZDir);
-                    CAL_newcfp_calfit_energyub = bias == 0 ? -1 : CAL_newcfp_calfit_energy / bias;
-                    //std::cout << "CalValsTool CAL_newcfp_calfit_energy " << CAL_newcfp_calfit_energy << " ( " << log10(CAL_newcfp_calfit_energy) << " ) " 
-                    //          << tkr1ZDir <<" -> "<< CAL_newcfp_calfit_energyub << " ( bias: " << bias << " ) "  std::endl;
+
+                  // cs: we need Z Dir of first/best cluster.
+                  // not sure why we fill Energy before clusters params, 
+                  // is all this energy stuff referred to the first cluster? I hope so...
+                  Event::CalCluster* cal1 = pCals->front();
+                  float cal1ZDir = -1*cal1->getMomParams().getAxis().z();
+                    
+                  float bias = m_ubInterpolateTool->interpolate("NewProfCalOnly", log10(CAL_newcfp_calfit_energy),   cal1ZDir );
+                  CAL_newcfp_calfit_energyub = bias == 0 ? -1 : CAL_newcfp_calfit_energy / bias;
+                  //std::cout << "CalValsTool CAL_newcfp_calfit_energy " << CAL_newcfp_calfit_energy << " ( " << log10(CAL_newcfp_calfit_energy) << " ) " 
+                  //          << tkr1ZDir <<" -> "<< CAL_newcfp_calfit_energyub << " ( bias: " << bias << " ) "  std::endl;
                 }
               }
             // Removed 5/5/09 LSR
