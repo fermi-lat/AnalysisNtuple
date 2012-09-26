@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.129 2012/09/21 12:48:30 carmelo Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.130 2012/09/24 16:04:45 carmelo Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -1224,9 +1224,11 @@ StatusCode CalValsTool::initialize()
     zeroVals();
 
     // adding bias maps
-    m_ubInterpolateTool->addBiasMap("Prof",           "$(ANALYSISNTUPLEDATAPATH)/BiasMapCalCfpEnergy.txt");
-    m_ubInterpolateTool->addBiasMap("NewProfCalOnly", "$(ANALYSISNTUPLEDATAPATH)/BiasMapCalNewCfpCalEnergy_max20.txt");
+    //m_ubInterpolateTool->addBiasMap("Prof",           "$(ANALYSISNTUPLEDATAPATH)/BiasMapCalCfpEnergy.txt");
+    //m_ubInterpolateTool->addBiasMap("NewProfalOnly", "$(ANALYSISNTUPLEDATAPATH)/BiasMapCalNewCfpCalEnergy_max20.txt");
 
+    m_ubInterpolateTool->addBiasMap("Prof",           "$(CALUTILXMLPATH)/BiasMapCalCfpEnergy.txt"); 
+    m_ubInterpolateTool->addBiasMap("NewProfCalOnly", "$(CALUTILXMLPATH)/BiasMapCalNewCfpCalEnergy_max20.txt");
     return sc;
 }
 
@@ -1331,7 +1333,7 @@ StatusCode CalValsTool::calculate()
 
                     float bias = m_ubInterpolateTool->interpolate("Prof",log10(CAL_cfp_energy), tkr1ZDir);                  
                     CAL_cfp_energyUB = bias == 0 ? -1 : CAL_cfp_energy / bias;
-                    //   std::cout << "EvtValsTool CAL_cfp_energy " << CAL_cfp_energy << " ( " << log10(CAL_cfp_energy) << " ) " << CAL_cfp_energyUB << " ( " << log10(CAL_cfp_energyUB) << " ) " << tkr1ZDir << std::endl;
+                    // std::cout << "CalValsTool CAL_cfp_energy " << CAL_cfp_energy << " ( " << log10(CAL_cfp_energy) << " ) " << CAL_cfp_energyUB << " ( " << log10(CAL_cfp_energyUB) << " ) " << tkr1ZDir << std::endl;
                 }
             }
             else if (corResult.getCorrectionName() == "NewCalFullProfileTool")
