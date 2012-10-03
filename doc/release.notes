@@ -3,6 +3,7 @@
   @verbatim
    * EOH *
 
+ AnalysisNtuple-02-64-02 02-Oct-2012  lsrea fixes to code which removes Mc* variables from the ntuples for real data
  AnalysisNtuple-02-64-01 26-Sep-2012 carmelo Add CalSSDVeto and use ub alg in CalUtil
  AnalysisNtuple-02-64-00 20-Aug-2012    jrb for Windows no-install-headers
  AnalysisNtuple-02-63-02 09-Aug-2012 TU Fix UBinterpolate to respect array boundaries
