@@ -2,7 +2,7 @@
 @brief Calculates the Mc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.65 2012/05/17 17:48:29 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.66 2012/10/03 13:04:47 bruel Exp $
 */
 // Include files
 
@@ -644,10 +644,10 @@ StatusCode McValsTool::calculate()
             }
 
             // Now do the same thing trying to find the "best" cluster in the cal cluster collection
-	    // Recover pointers to CalClusters and Xtals
-	    SmartDataPtr<Event::CalClusterMap> pCalClusterMap(m_pEventSvc,EventModel::CalRecon::CalClusterMap); 
-	    Event::CalClusterVec rawClusterVec;
-	    if(pCalClusterMap) rawClusterVec = (*pCalClusterMap).get(EventModel::CalRecon::CalRawClusterVec);
+            // Recover pointers to CalClusters and Xtals
+            SmartDataPtr<Event::CalClusterMap> pCalClusterMap(m_pEventSvc,EventModel::CalRecon::CalClusterMap); 
+            Event::CalClusterVec rawClusterVec;
+            if(pCalClusterMap) rawClusterVec = (*pCalClusterMap).get(EventModel::CalRecon::CalRawClusterVec);
 
             if (rawClusterVec.size()>0)
             {
@@ -669,12 +669,12 @@ StatusCode McValsTool::calculate()
                     int clusCounter = 0;
 
                     // Set start and stop iterators 
-		    Event::CalClusterVec::iterator calClusIter = rawClusterVec.begin();
+                    Event::CalClusterVec::iterator calClusIter = rawClusterVec.begin();
 
                     // Ok, we are going to loop on clusters and search for the cluster which 
                     // has the best distance of closest approach of the MC axis to the centroid
-		    while(calClusIter != rawClusterVec.end())
-		      {
+                    while(calClusIter != rawClusterVec.end())
+                      {
                         Event::CalCluster* cluster = *calClusIter;
 
                         // First get the point on the MC axis at the plane of the cluster centroid
@@ -698,9 +698,9 @@ StatusCode McValsTool::calculate()
                             bestDoca    = doca;
                             bestId      = clusCounter;
                         }
-			//
-			calClusIter++;
-		      }
+                        //
+                        calClusIter++;
+                      }
                 }
 
                 if (bestCluster)

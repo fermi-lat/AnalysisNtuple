@@ -2,7 +2,7 @@
 @brief Calculates the Tracker Tree variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TreeValsTool.cxx,v 1.15 2012/04/25 04:58:15 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TreeValsTool.cxx,v 1.16 2012/06/18 20:52:42 usher Exp $
 */
 
 // Include files
@@ -107,13 +107,13 @@ private:
     float Tkr_tree1_nLeaves;
 
     float Tkr_tree1_nNodes;
-	float Tkr_tree1_Thin_nNodes;
-	float Tkr_tree1_Thick_nNodes;
-	float Tkr_tree1_Thin_Leaves;
-	float Tkr_tree1_Thick_Leaves;
-	float Tkr_tree1_Blank_nNodes;
-	float Tkr_tree1_ThinNodes_RLn;
-	float Tkr_tree1_ThickNodes_RLn;
+        float Tkr_tree1_Thin_nNodes;
+        float Tkr_tree1_Thick_nNodes;
+        float Tkr_tree1_Thin_Leaves;
+        float Tkr_tree1_Thick_Leaves;
+        float Tkr_tree1_Blank_nNodes;
+        float Tkr_tree1_ThinNodes_RLn;
+        float Tkr_tree1_ThickNodes_RLn;
 
     float Tkr_tree1_bestBranchAngToAxis;
     float Tkr_tree1_axisSeededAngToAxis;
@@ -240,15 +240,15 @@ DieEdge, KalThetaMs, [X/Y/Z]Dir, Phi, Theta, [X/Y/Z]0.
 
 @subsection general General variables
 <table>
-<tr><th> Variable <th> Type  <th> Description				                 
-<tr><td> TkrNumTracks 	
+<tr><th> Variable <th> Type  <th> Description                                                 
+<tr><td> TkrNumTracks         
 <td>F<td>   Number of tracks found (Maximum is set by TkrRecon, currently 10) 
 </table>
 
 @subsection both Variables that exist for both best and second tracks
 
 <table>
-<tr><th> Variable <th> Type  <th> Description				                 
+<tr><th> Variable <th> Type  <th> Description                                                 
 <tr><td> Tkr[1/2]Chisq 
 <td>F<td>   Track chisquared 
 <tr><td> Tkr[1/2]FirstChisq  
@@ -329,14 +329,14 @@ StatusCode TreeValsTool::initialize()
     addItem("TkrTree1Leaves",              &Tkr_tree1_nLeaves);
                                      
     addItem("TkrTree1Nodes",               &Tkr_tree1_nNodes);
-	addItem("TkrTree1ThinNodes",           &Tkr_tree1_Thin_nNodes);
-	addItem("TkrTree1ThickNodes",          &Tkr_tree1_Thick_nNodes);
-	addItem("TkrTree1ThinLeaves",          &Tkr_tree1_Thin_Leaves);
-	addItem("TkrTree1ThickLeaves",         &Tkr_tree1_Thick_Leaves);
+        addItem("TkrTree1ThinNodes",           &Tkr_tree1_Thin_nNodes);
+        addItem("TkrTree1ThickNodes",          &Tkr_tree1_Thick_nNodes);
+        addItem("TkrTree1ThinLeaves",          &Tkr_tree1_Thin_Leaves);
+        addItem("TkrTree1ThickLeaves",         &Tkr_tree1_Thick_Leaves);
                                      
     addItem("TkrTree1BlankNodes",          &Tkr_tree1_Blank_nNodes);
-	addItem("TkrTree1ThinRLnNodes",        &Tkr_tree1_ThinNodes_RLn);
-	addItem("TkrTree1ThickRLnNodes",       &Tkr_tree1_ThickNodes_RLn);
+        addItem("TkrTree1ThinRLnNodes",        &Tkr_tree1_ThinNodes_RLn);
+        addItem("TkrTree1ThickRLnNodes",       &Tkr_tree1_ThickNodes_RLn);
 
     addItem("TkrTree1BestBranchAngToAxis", &Tkr_tree1_bestBranchAngToAxis);
     addItem("TkrTree1AxisSeededAngToAxis", &Tkr_tree1_axisSeededAngToAxis);
@@ -487,17 +487,17 @@ StatusCode TreeValsTool::calculate()
             Tkr_tree1_nLeaves                 = headNode->getNumLeaves();
 
             Tkr_tree1_nNodes                  = headNode->getNumNodesInTree();
-			Tkr_tree1_Thin_nNodes             = headNode->getNumThinNodesInTree();
-			Tkr_tree1_Thick_nNodes            = headNode->getNumThickNodesInTree();
-			Tkr_tree1_Thin_Leaves             = headNode->getNumThinLeavesInTree();
-			Tkr_tree1_Thick_Leaves            = headNode->getNumThickLeavesInTree();
-			Tkr_tree1_Blank_nNodes            = headNode->getNumBlankNodesInTree();
-			Tkr_tree1_ThinNodes_RLn           = headNode->getNumThinRLnInTree();
-			Tkr_tree1_ThickNodes_RLn          = headNode->getNumThickRLnInTree();
+                        Tkr_tree1_Thin_nNodes             = headNode->getNumThinNodesInTree();
+                        Tkr_tree1_Thick_nNodes            = headNode->getNumThickNodesInTree();
+                        Tkr_tree1_Thin_Leaves             = headNode->getNumThinLeavesInTree();
+                        Tkr_tree1_Thick_Leaves            = headNode->getNumThickLeavesInTree();
+                        Tkr_tree1_Blank_nNodes            = headNode->getNumBlankNodesInTree();
+                        Tkr_tree1_ThinNodes_RLn           = headNode->getNumThinRLnInTree();
+                        Tkr_tree1_ThickNodes_RLn          = headNode->getNumThickRLnInTree();
 
             Tkr_tree1_bestBranchAngToAxis     = tree->getBestBranchAngleToAxis();
             Tkr_tree1_axisSeededAngToAxis     = tree->getAxisSeededAngleToAxis();
-			
+                        
             Tkr_tree1_nBranches               = headNode->getNumBranches();
             Tkr_tree1_bestRms                 = headNode->getBestRmsAngle();
             Tkr_tree1_bestBiLayers            = headNode->getBestNumBiLayers();

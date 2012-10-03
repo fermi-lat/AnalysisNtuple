@@ -3,7 +3,7 @@
 @brief Calculates the "Event" analysis variables from the other ntuple variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.50 2012/09/21 12:48:30 carmelo Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.51 2012/09/26 15:50:16 carmelo Exp $
 */
 
 #include "ValBase.h"
@@ -338,7 +338,8 @@ StatusCode EvtValsTool::initialize()
     zeroVals();
 
     //m_ubInterpolateTool->addBiasMap("Param","$(ANALYSISNTUPLEDATAPATH)/BiasMapEvtEnergyCorr.txt");
-    m_ubInterpolateTool->addBiasMap("Param","$(CALUTILXMLPATH)/BiasMapEvtEnergyCorr.txt");
+    m_ubInterpolateTool->addBiasMap("ParamFront","$(CALUTILXMLPATH)/BiasMapEvtEnergyCorr_Front.txt");
+    m_ubInterpolateTool->addBiasMap("ParamBack","$(CALUTILXMLPATH)/BiasMapEvtEnergyCorr_Back.txt"); 
 
     return sc;
 }
@@ -421,7 +422,12 @@ StatusCode EvtValsTool::calculate()
         if ( EvtEnergyCorr == 0 )
             EvtEnergyCorrUB = 0;
         else {
-            float bias = m_ubInterpolateTool->interpolate("Param", log10(EvtEnergyCorr), tkr1ZDir);
+            float Tkr1FirstLayer, bias;
+            if (m_pTkrTool->getVal("Tkr1FirstLayer", Tkr1FirstLayer, nextCheck).isSuccess()) {
+              if (Tkr1FirstLayer>5)  bias = m_ubInterpolateTool->interpolate("ParamFront", log10(EvtEnergyCorr), tkr1ZDir);
+              else bias = m_ubInterpolateTool->interpolate("ParamBack", log10(EvtEnergyCorr), tkr1ZDir);
+            }
+            else {bias=0;} 
           
             EvtEnergyCorrUB = bias == 0 ? -1 : EvtEnergyCorr / bias;
             //            std::cout << "EvtValsTool EvtEnergyCorr " << EvtEnergyCorr << " ( " << log10(EvtEnergyCorr) << " ) " << EvtEnergyCorrUB << " ( " << log10(EvtEnergyCorrUB) << " ) " << tkr1ZDir << std::endl;

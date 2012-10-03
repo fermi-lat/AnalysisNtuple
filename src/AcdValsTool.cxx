@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.59 2011/12/12 20:36:35 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.60 2012/10/03 13:04:47 bruel Exp $
 */
 
 #include "ValBase.h"
@@ -516,7 +516,7 @@ StatusCode AcdValsTool::calculate()
 
         //Make sure we have valid cluster data and some energy
         double CAL_EnergyRaw = 10.; //Default min. Event Energy
-	if(firstCluster) CAL_EnergyRaw  = firstCluster->getXtalsParams().getXtalCorrEneSum();
+        if(firstCluster) CAL_EnergyRaw  = firstCluster->getXtalsParams().getXtalCorrEneSum();
 
         // Find *Safe* Active Distance for this event given the energy
         double min_ActiveDistance = -300./sqrt(CAL_EnergyRaw/100); //-300mm @ 100 MeV

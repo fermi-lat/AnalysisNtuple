@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.110 2012/05/11 19:51:56 kadrlica Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.111 2012/09/26 15:50:16 carmelo Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -228,7 +228,7 @@ private:
     float Tkr_2_FirstLayer; 
     float Tkr_2_LastLayer; 
 
-	float Tkr_2_1stHitRes;
+        float Tkr_2_1stHitRes;
     float Tkr_2_1stHitSChi;
     float Tkr_2_2ndHitRes;
     float Tkr_2_2ndHitSChi;
@@ -839,7 +839,7 @@ StatusCode TkrValsTool::initialize()
     addItem("Tkr2FirstLayer", &Tkr_2_FirstLayer);
     addItem("Tkr2LastLayer",  &Tkr_2_LastLayer);
     //   addItem("Tkr2DifHits",    &Tkr_2_DifHits);
-	addItem("Tkr21stHitRes",  &Tkr_2_1stHitRes);
+        addItem("Tkr21stHitRes",  &Tkr_2_1stHitRes);
     addItem("Tkr21stHitSChi", &Tkr_2_1stHitSChi);
     addItem("Tkr22ndHitRes",  &Tkr_2_2ndHitRes);
     addItem("Tkr22ndHitSChi", &Tkr_2_2ndHitSChi);
@@ -1530,10 +1530,10 @@ StatusCode TkrValsTool::calculate()
             Tkr_2_ydir       = t2.y();
             Tkr_2_zdir       = t2.z();
 
-			const Event::TkrTrackParams& Tkr_2_Cov 
+                        const Event::TkrTrackParams& Tkr_2_Cov 
             = track_2->front()->getTrackParams(Event::TkrTrackHit::SMOOTHED);
 
-			float Tkr_2_Sxx         = Tkr_2_Cov.getxSlpxSlp();
+                        float Tkr_2_Sxx         = Tkr_2_Cov.getxSlpxSlp();
             float Tkr_2_Sxy         = Tkr_2_Cov.getxSlpySlp();
             float Tkr_2_Syy         = Tkr_2_Cov.getySlpySlp();
        
@@ -1541,9 +1541,9 @@ StatusCode TkrValsTool::calculate()
             sqrt(std::max(0.0f,Tkr_2_Sxx*Tkr_2_Syy-Tkr_2_Sxy*Tkr_2_Sxy))*
             Tkr_2_zdir*Tkr_2_zdir;
 
-	
+        
 
-			 if (track_2->front()->validCluster())
+                         if (track_2->front()->validCluster())
         {
             Tkr_1_1stHitRes  = (*track_2)[0]->getMeasuredPosition(Event::TkrTrackHit::MEASURED)
                              - (*track_2)[0]->getMeasuredPosition(Event::TkrTrackHit::SMOOTHED);
