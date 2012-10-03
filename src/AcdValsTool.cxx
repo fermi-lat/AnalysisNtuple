@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/src/AcdValsTool.cxx,v 1.58 2011/02/27 20:06:53 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AcdValsTool.cxx,v 1.59 2011/12/12 20:36:35 heather Exp $
 */
 
 #include "ValBase.h"
@@ -22,6 +22,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/src/AcdV
 #include "Event/Recon/TkrRecon/TkrVertex.h"
 #include "Event/Recon/AcdRecon/AcdRecon.h"
 #include "Event/Recon/CalRecon/CalCluster.h"
+#include "Event/Recon/CalRecon/CalClusterMap.h"
 #include "Event/Recon/CalRecon/CalEventEnergy.h"
 #include "Event/Digi/AcdDigi.h"
 
@@ -431,8 +432,12 @@ StatusCode AcdValsTool::calculate()
     SmartDataPtr<Event::AcdRecon> pACD(m_pEventSvc,EventModel::AcdRecon::Event);
     // Recover pointers to CalClusters and Xtals
 
-    SmartDataPtr<Event::CalClusterCol>     
-        pCals(m_pEventSvc,EventModel::CalRecon::CalClusterCol);
+    // Recover pointers to CalClusters and Xtals
+    SmartDataPtr<Event::CalClusterMap>
+      pCalClusterMap(m_pEventSvc,EventModel::CalRecon::CalClusterMap); 
+    Event::CalCluster* firstCluster = NULL;
+    if(pCalClusterMap)
+      firstCluster = ((*pCalClusterMap).get(EventModel::CalRecon::CalRawClusterVec)).front();
 
     // assemble the list of all tracks for now 
     // later, deal separately with Standard and CR   LSR
@@ -511,12 +516,8 @@ StatusCode AcdValsTool::calculate()
 
         //Make sure we have valid cluster data and some energy
         double CAL_EnergyRaw = 10.; //Default min. Event Energy
-        if (pCals) {
-            if (!pCals->empty()) {
-                Event::CalCluster* calCluster = pCals->front();
-                CAL_EnergyRaw  = calCluster->getMomParams().getEnergy();
-            }
-        }
+	if(firstCluster) CAL_EnergyRaw  = firstCluster->getXtalsParams().getXtalCorrEneSum();
+
         // Find *Safe* Active Distance for this event given the energy
         double min_ActiveDistance = -300./sqrt(CAL_EnergyRaw/100); //-300mm @ 100 MeV
 

@@ -1,7 +1,7 @@
 /** @file OverlayValsTool.cxx
 @brief declaration and definition of the class OverlayValsTool
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/OverlayValsTool.cxx,v 1.8 2012/05/17 17:48:29 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/OverlayValsTool.cxx,v 1.9 2012/05/26 16:52:54 bruel Exp $
 
 */
 
@@ -30,6 +30,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/OverlayValsTool.cxx,v 1
 #include "Event/TopLevel/EventModel.h"
 #include "Event/Recon/CalRecon/CalCluster.h"
 #include "Event/Recon/CalRecon/CalXtalRecData.h"
+#include "Event/Recon/CalRecon/CalClusterMap.h"
 #include "idents/TowerId.h" 
 #include "idents/VolumeIdentifier.h"
 
@@ -40,6 +41,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/OverlayValsTool.cxx,v 1
 // to write a Tree with pointing info
 #include "ntupleWriterSvc/INTupleWriterSvc.h"
 
+#include "CalUtil/ICalClusterHitTool.h"
 
 #include "facilities/Util.h"
 #include "facilities/Timestamp.h"
@@ -88,6 +90,8 @@ private:
 
     astro::PointingHistory* m_history;
     bool                    m_horizontal;
+
+  ICalClusterHitTool*       m_pCalClusterHitTool;
 
     // Run and event number from overlay event
     unsigned int            m_evtRun;
@@ -221,6 +225,20 @@ StatusCode OverlayValsTool::initialize()
     if (sc.isFailure() ) {
         log << MSG::WARNING<< "  No OverlayDataSvc available, NOT setting up Overlay tuple vars " << endreq;
         return StatusCode::SUCCESS;
+    }
+
+    IToolSvc* pToolSvc = 0; 
+    sc = service("ToolSvc", pToolSvc, true);
+    if ( !sc.isSuccess() ) {
+      log << MSG::ERROR << "Can't find ToolSvc, will quit now" << endreq;
+      return StatusCode::FAILURE;
+    }
+
+    m_pCalClusterHitTool = 0;
+    sc = pToolSvc->retrieveTool("CalClusterHitTool", m_pCalClusterHitTool);
+    if( sc.isFailure() ) {
+      log << MSG::ERROR << "Unable to find tool: " "CalClusterHitTool" << endreq;
+      return sc;
     }
 
     // Caste back to the "correct" pointer
@@ -393,14 +411,16 @@ StatusCode OverlayValsTool::calculate()
         SmartDataPtr<Event::GemOverlay> gemOverlay(m_dataSvc, m_dataSvc->rootName() + OverlayEventModel::Overlay::GemOverlay);
         if (gemOverlay) m_triggerBits = gemOverlay->getConditionSummary();
 
+	// Recover pointers to CalClusters and Xtals
+	SmartDataPtr<Event::CalClusterMap> pCalClusterMap(m_pEventSvc,EventModel::CalRecon::CalClusterMap); 
+	  	
+	Event::CalClusterVec rawClusterVec;
+	if(pCalClusterMap) rawClusterVec = (*pCalClusterMap).get(EventModel::CalRecon::CalRawClusterVec);
+
         //
         // Fill overlay energy of clusters
         //
-        Event::CalClusterCol* clusters = SmartDataPtr<Event::CalClusterCol>(m_pEventSvc,EventModel::CalRecon::CalClusterCol);
-        Event::CalClusterHitTabList* xTal2ClusTabList = SmartDataPtr<Event::CalClusterHitTabList>(m_pEventSvc,EventModel::CalRecon::CalClusterHitTab);
-        Event::CalClusterHitTab* xTal2ClusTab = 0;
-        if (xTal2ClusTabList) xTal2ClusTab = new Event::CalClusterHitTab(xTal2ClusTabList);
-        if(calOverlayCol  && clusters!=0 && xTal2ClusTab)
+        if(calOverlayCol  && rawClusterVec.size()!=0)
           {
             // Get overlay energy in xtals
             int i,j,k;
@@ -419,35 +439,28 @@ StatusCode OverlayValsTool::calculate()
                 xtalovrenergy[(int)id.getTower()][(int)id.getLayer()][(int)id.getColumn()] += calOverlay->getEnergy();
               }
 
-            int numClusters = clusters->size();
+            int numClusters = rawClusterVec.size();
             double eTotovr   = 0.0;
-            int iclu = -1;
-            Event::CalClusterCol::iterator clusIter = clusters->begin();
-            while(clusIter != clusters->end())
-              {
-                ++iclu;
-                Event::CalCluster* cl = *clusIter++;
-                if(iclu>0 && iclu==numClusters-1) break; // stopping before the uber cluster
-                //
-                std::vector<Event::CalClusterHitRel*> xTalRelVec = xTal2ClusTab->getRelBySecond(cl);
-                //
+	    int iclu = 0;
+	    Event::CalClusterVec::iterator calClusIter = rawClusterVec.begin();
+	    while(calClusIter != rawClusterVec.end())
+	      {
+		Event::CalCluster* cluster = *calClusIter;
+		//
+		m_pCalClusterHitTool->fillRecDataVec(cluster);
+		std::vector<Event::CalXtalRecData*> xtallist = m_pCalClusterHitTool->getRecDataVec();
                 eTotovr   = 0.0;
-                if(!xTalRelVec.empty())
-                  {
-                    eTotovr   = 0.0;                    
-                    std::vector<Event::CalClusterHitRel*>::const_iterator it = xTalRelVec.begin();
-                    for (; it != xTalRelVec.end(); it++)
-                      {
-                        // get poiner to the reconstructed data for individual crystal
-                        Event::CalXtalRecData* recData = (*it)->getFirst();
-                        //
-                        int itow=recData->getPackedId().getTower();
-                        int ilay=recData->getPackedId().getLayer();
-                        int icol=recData->getPackedId().getColumn();
-                        eTotovr += xtalovrenergy[itow][ilay][icol];
-                      }
-                  }
-                //
+		//
+		std::vector<Event::CalXtalRecData*>::iterator jlog;
+		for( jlog=xtallist.begin(); jlog != xtallist.end(); ++jlog)
+		  {
+		    Event::CalXtalRecData* recData = *jlog;
+		    int itow=recData->getPackedId().getTower();
+		    int ilay=recData->getPackedId().getLayer();
+		    int icol=recData->getPackedId().getColumn();
+		    eTotovr += xtalovrenergy[itow][ilay][icol];
+		  }
+		//
                 if(iclu==0)
                   {
                     CAL_Clu1_OverlayEnergy = eTotovr;
@@ -468,8 +481,10 @@ StatusCode OverlayValsTool::calculate()
                   {
                     CAL_Clu5_OverlayEnergy = eTotovr;
                   }     
-              }
-            delete xTal2ClusTab;
+		//
+		calClusIter++;
+		++iclu;
+	      }
           }
     }
     

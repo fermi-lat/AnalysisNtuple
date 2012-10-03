@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.130 2012/09/24 16:04:45 carmelo Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.131 2012/09/26 15:50:16 carmelo Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -28,6 +28,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.130
 #include "Event/Recon/CalRecon/CalEventEnergy.h"
 #include "Event/Recon/CalRecon/CalParams.h"
 #include "Event/Recon/CalRecon/CalXtalRecData.h"
+#include "Event/Recon/CalRecon/CalClusterMap.h"
 
 #include "GaudiKernel/IToolSvc.h"
 //#include "GlastSvc/Reco/IPropagatorTool.h"
@@ -40,6 +41,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.130
 #include "TkrUtil/ITkrFlagHitsTool.h"
 
 #include "CalUtil/IUBinterpolateTool.h"
+#include "CalUtil/ICalClusterHitTool.h"
 
 #include "idents/TowerId.h" 
 #include "idents/VolumeIdentifier.h"
@@ -98,6 +100,8 @@ private:
     ITkrQueryClustersTool* pQueryClusters;
     /// pointer to flagHitsTool
     ITkrFlagHitsTool* pFlagHits;
+
+  ICalClusterHitTool*       m_pCalClusterHitTool;
 
     /// some Geometry
     double m_towerPitch;
@@ -203,6 +207,8 @@ private:
 
     
     // Stuff to study clustering
+    float CAL_NumXtals_uber;
+    float CAL_NumTruncXtals_uber;
     float CAL_energy_uber;
     float CAL_xEcntr_uber;
     float CAL_yEcntr_uber;
@@ -526,7 +532,12 @@ private:
     float CAL_TS_TKR_T_99;
     float CAL_TS_TKR_T_100;
 
-    int TSfillTSdist(Event::CalXtalRecCol *pxtalrecs);
+    float CAL_uber_TS_TKR_T_100;
+    float CAL_uber_TS_TKR_TL_100;
+    float CAL_uber2_TS_TKR_T_100;
+    float CAL_uber2_TS_TKR_TL_100;
+
+    int TSfillTSdist(std::vector<Event::CalXtalRecData*> xtallist);
     int TSfillTS(int optts);
     double TSgetinterpolationTS(double efrac);
 
@@ -831,6 +842,12 @@ StatusCode CalValsTool::initialize()
             return sc;
         }
 
+	m_pCalClusterHitTool = 0;
+	sc = pToolSvc->retrieveTool("CalClusterHitTool", m_pCalClusterHitTool);
+        if( sc.isFailure() ) {
+	  log << MSG::ERROR << "Unable to find tool: " "CalClusterHitTool" << endreq;
+	  return sc;
+        }
  
         if (getCalInfo().isFailure()) {
             log << MSG::ERROR << "Couldn't initialize the CAL constants" << endreq;
@@ -925,6 +942,8 @@ StatusCode CalValsTool::initialize()
     addItem("CalPosDirNLayers",       &CAL_posdir_nlayers);
     addItem("CalNSaturated",       &CAL_nsaturated, true);
 
+    addItem("CalUberNumXtals",  &CAL_NumXtals_uber);
+    addItem("CalUberNumTruncXtals",  &CAL_NumTruncXtals_uber);
     addItem("CalUberEnergy",     &CAL_energy_uber);
     addItem("CalUberXEcntr",     &CAL_xEcntr_uber);
     addItem("CalUberYEcntr",     &CAL_yEcntr_uber);
@@ -1221,6 +1240,11 @@ StatusCode CalValsTool::initialize()
     addItem("CalTrSizeTkrTL99",&CAL_TS_TKR_TL_99);
     addItem("CalTrSizeTkrTL100",&CAL_TS_TKR_TL_100);
 
+    addItem("CalUberTrSizeTkrT100",&CAL_uber_TS_TKR_T_100);
+    addItem("CalUberTrSizeTkrTL100",&CAL_uber_TS_TKR_TL_100);
+    addItem("CalUber2TrSizeTkrT100",&CAL_uber2_TS_TKR_T_100);
+    addItem("CalUber2TrSizeTkrTL100",&CAL_uber2_TS_TKR_TL_100);
+
     zeroVals();
 
     // adding bias maps
@@ -1243,10 +1267,23 @@ StatusCode CalValsTool::calculate()
         pVerts(m_pEventSvc,EventModel::TkrRecon::TkrVertexCol);
 
     // Recover pointers to CalClusters and Xtals
-    SmartDataPtr<Event::CalClusterCol>     
-        pCals(m_pEventSvc,EventModel::CalRecon::CalClusterCol);
-    SmartDataPtr<Event::CalXtalRecCol> 
-        pxtalrecs(m_pEventSvc,EventModel::CalRecon::CalXtalRecCol);
+    SmartDataPtr<Event::CalClusterMap>
+      pCalClusterMap(m_pEventSvc,EventModel::CalRecon::CalClusterMap); 
+
+    if(!pCalClusterMap) return sc;
+
+    Event::CalCluster* uberCluster = (*pCalClusterMap).getUberCluster();
+    Event::CalCluster* uber2Cluster = (*pCalClusterMap).getUber2Cluster();
+    Event::CalClusterVec rawClusterVec = (*pCalClusterMap).get(EventModel::CalRecon::CalRawClusterVec);
+    Event::CalCluster* firstCluster = rawClusterVec.front();
+
+    CAL_num_clusters  = rawClusterVec.size();
+
+    if(uberCluster==NULL) return sc;
+    if(firstCluster==NULL) return sc;
+
+    m_pCalClusterHitTool->fillRecDataVec(firstCluster);
+    std::vector<Event::CalXtalRecData*> firstClusterXtalList = m_pCalClusterHitTool->getRecDataVec();
 
     // Recover pointer to CalEventEnergy info  
 #ifdef PRE_CALMOD
@@ -1259,7 +1296,7 @@ StatusCode CalValsTool::calculate()
 
     if (calEventEnergyMap && !calEventEnergyMap->empty())
     {
-        Event::CalEventEnergyMap::iterator calEnergyItr = calEventEnergyMap->find(pCals->front());
+        Event::CalEventEnergyMap::iterator calEnergyItr = calEventEnergyMap->find(firstCluster);
 
         if (calEnergyItr != calEventEnergyMap->end()) calEventEnergy = calEnergyItr->second.front();
     }
@@ -1397,7 +1434,7 @@ StatusCode CalValsTool::calculate()
                   // cs: we need Z Dir of first/best cluster.
                   // not sure why we fill Energy before clusters params, 
                   // is all this energy stuff referred to the first cluster? I hope so...
-                  Event::CalCluster* cal1 = pCals->front();
+                  Event::CalCluster* cal1 = firstCluster;
                   float cal1ZDir = -1*cal1->getMomParams().getAxis().z();
                     
                   float bias = m_ubInterpolateTool->interpolate("NewProfCalOnly", log10(CAL_newcfp_calfit_energy),   cal1ZDir );
@@ -1427,157 +1464,138 @@ StatusCode CalValsTool::calculate()
         }
     }
 
-    //Make sure we have valid cluster data and some energy
-    if (!pCals) return sc;
-    if (pCals->empty()) return sc;
+    // //Make sure we have valid cluster data and some energy
+    // if (!pCals) return sc;
+    // if (pCals->empty()) return sc;
 
-    // Extract the uber information which is located at the end of the list
-    Event::CalCluster* calCluster = pCals->back();
+    // // Extract the uber information which is located at the end of the list
+    // Event::CalCluster* calCluster = pCals->back();
 
-    CAL_energy_uber = calCluster->getMomParams().getEnergy();
+    CAL_NumXtals_uber = uberCluster->getXtalsParams().getNumXtals();
+    CAL_NumTruncXtals_uber = uberCluster->getXtalsParams().getNumTruncXtals();
 
-    CAL_xEcntr_uber   = calCluster->getPosition().x();
-    CAL_yEcntr_uber   = calCluster->getPosition().y();
-    CAL_zEcntr_uber   = calCluster->getPosition().z();
-    CAL_xdir_uber     = calCluster->getDirection().x();
-    CAL_ydir_uber     = calCluster->getDirection().y();
-    CAL_zdir_uber     = calCluster->getDirection().z();
+    CAL_energy_uber = uberCluster->getMomParams().getEnergy();
+
+    CAL_xEcntr_uber   = uberCluster->getPosition().x();
+    CAL_yEcntr_uber   = uberCluster->getPosition().y();
+    CAL_zEcntr_uber   = uberCluster->getPosition().z();
+    CAL_xdir_uber     = uberCluster->getDirection().x();
+    CAL_ydir_uber     = uberCluster->getDirection().y();
+    CAL_zdir_uber     = uberCluster->getDirection().z();
 
     // Get pos and dir determined using only the transverse position information
-    CAL_xEcntr2_uber  = calCluster->getFitParams().getCentroid().x();
-    CAL_yEcntr2_uber  = calCluster->getFitParams().getCentroid().y();
-    CAL_zEcntr2_uber  = calCluster->getFitParams().getCentroid().z();
-    CAL_nsaturated    = calCluster->getNumSaturatedXtals();
-    CAL_xdir2_uber    = calCluster->getFitParams().getAxis().x();
-    CAL_ydir2_uber    = calCluster->getFitParams().getAxis().y();
-    CAL_zdir2_uber    = calCluster->getFitParams().getAxis().z();
+    CAL_xEcntr2_uber  = uberCluster->getFitParams().getCentroid().x();
+    CAL_yEcntr2_uber  = uberCluster->getFitParams().getCentroid().y();
+    CAL_zEcntr2_uber  = uberCluster->getFitParams().getCentroid().z();
+    CAL_nsaturated    = uberCluster->getNumSaturatedXtals();
+    CAL_xdir2_uber    = uberCluster->getFitParams().getAxis().x();
+    CAL_ydir2_uber    = uberCluster->getFitParams().getAxis().y();
+    CAL_zdir2_uber    = uberCluster->getFitParams().getAxis().z();
     
     // Add CalTransRms for Uber cluster for development
-    CAL_MomTransRms_uber = calCluster->getMomParams().getTransRms();
-    CAL_MomLongRms_uber  = calCluster->getMomParams().getLongRms();
-    CAL_ClassGamProb_uber = calCluster->getClassParams().getProb("gam");
-    CAL_ClassHadProb_uber = calCluster->getClassParams().getProb("had");
-    CAL_ClassGhostProb_uber = calCluster->getClassParams().getProb("ghost");
-    CAL_ClassMipProb_uber = calCluster->getClassParams().getProb("mip");
+    CAL_MomTransRms_uber = uberCluster->getMomParams().getTransRms();
+    CAL_MomLongRms_uber  = uberCluster->getMomParams().getLongRms();
+    CAL_ClassGamProb_uber = uberCluster->getClassParams().getProb("gam");
+    CAL_ClassHadProb_uber = uberCluster->getClassParams().getProb("had");
+    CAL_ClassGhostProb_uber = uberCluster->getClassParams().getProb("ghost");
+    CAL_ClassMipProb_uber = uberCluster->getClassParams().getProb("mip");
 
     // Fill Uber2 (=Uber without second cluster): by default it is the same as Uber
-    CAL_Uber2_NumXtals = calCluster->getXtalsParams().getNumXtals();
-    CAL_Uber2_RawEnergySum = calCluster->getXtalsParams().getXtalRawEneSum();
-    CAL_Uber2_XtalEneMax = calCluster->getXtalsParams().getXtalEneMax();
-    CAL_Uber2_MomXCntr = calCluster->getMomParams().getCentroid().x();
-    CAL_Uber2_MomYCntr = calCluster->getMomParams().getCentroid().y();
-    CAL_Uber2_MomZCntr = calCluster->getMomParams().getCentroid().z();
-    CAL_Uber2_MomXDir = calCluster->getMomParams().getAxis().x();
-    CAL_Uber2_MomYDir = calCluster->getMomParams().getAxis().y();
-    CAL_Uber2_MomZDir = calCluster->getMomParams().getAxis().z();
-    CAL_Uber2_MomNumCoreXtals = calCluster->getMomParams().getNumCoreXtals();
-    CAL_Uber2_MomTransRms = calCluster->getMomParams().getTransRms();
-    CAL_Uber2_MomLongRms = calCluster->getMomParams().getLongRms();
+    CAL_Uber2_NumXtals = uber2Cluster->getXtalsParams().getNumXtals();
+    CAL_Uber2_RawEnergySum = uber2Cluster->getXtalsParams().getXtalRawEneSum();
+    CAL_Uber2_XtalEneMax = uber2Cluster->getXtalsParams().getXtalEneMax();
+    CAL_Uber2_MomXCntr = uber2Cluster->getMomParams().getCentroid().x();
+    CAL_Uber2_MomYCntr = uber2Cluster->getMomParams().getCentroid().y();
+    CAL_Uber2_MomZCntr = uber2Cluster->getMomParams().getCentroid().z();
+    CAL_Uber2_MomXDir = uber2Cluster->getMomParams().getAxis().x();
+    CAL_Uber2_MomYDir = uber2Cluster->getMomParams().getAxis().y();
+    CAL_Uber2_MomZDir = uber2Cluster->getMomParams().getAxis().z();
+    CAL_Uber2_MomNumCoreXtals = uber2Cluster->getMomParams().getNumCoreXtals();
+    CAL_Uber2_MomTransRms = uber2Cluster->getMomParams().getTransRms();
+    CAL_Uber2_MomLongRms = uber2Cluster->getMomParams().getLongRms();
 
-    CAL_num_clusters  = pCals->size();
     CAL_rest_energy   = 0.;
     CAL_rest_numXtals = 0.;
 
-    // If the collection contains more than one entry then we have multiple
-    // clusters. If we don't then our current pointer points to the lone cluster
-    if (pCals->size() > 1)
-    {
-        Event::CalClusterCol::iterator calClusIter = pCals->begin();
-        calCluster = *calClusIter++;
+    Event::CalClusterVec::iterator calClusIter = rawClusterVec.begin();
+    calClusIter++; // skip 1st cluster
+    while(calClusIter != rawClusterVec.end())
+      {
+	Event::CalCluster* cluster = *calClusIter;
+	CAL_rest_energy += cluster->getXtalsParams().getXtalCorrEneSum();
+	CAL_rest_numXtals += cluster->getXtalsParams().getNumXtals();
+	calClusIter++;
+      }
 
-        // Loop through remaining crystals and add up the energy
-        while(calClusIter != pCals->end())
-        {
-            Event::CalCluster* cluster = *calClusIter++;
-
-            CAL_rest_energy += cluster->getMomParams().getEnergy();
-        }
-
-        // Remove the uber cluster energy
-        CAL_rest_energy -= CAL_energy_uber;
-    }
-
-    CAL_EnergyRaw  = calCluster->getMomParams().getEnergy();
+    CAL_EnergyRaw  = firstCluster->getXtalsParams().getXtalCorrEneSum();
     if(CAL_EnergyRaw<1.0) return sc;
 
-    for(int i = 0; i<m_nLayers; i++) CAL_eLayer[i] = (*calCluster)[i].getEnergy();
+    for(int i = 0; i<m_nLayers; i++) CAL_eLayer[i] = (*firstCluster)[i].getEnergy();
 
-    CAL_Trans_Rms = calCluster->getMomParams().getTransRms();
-    // For backward compatibility, change the normalization to the old
-    // (corrected) sum of weight).
-    // CalTransRms will be obsolete, at some point, in favour of Cal1TransRms?
-    CAL_Trans_Rms *= sqrt(calCluster->getXtalsParams().getXtalRawEneSum());
-    CAL_Trans_Rms /= sqrt(CAL_EnergyRaw);
-    // End of hack.
+    CAL_Trans_Rms = firstCluster->getMomParams().getTransRms();
 
     float logRLn = 0; 
     if ((CAL_LAT_RLn - CAL_Cntr_RLn) > 0.0) {
         logRLn = log(CAL_LAT_RLn - CAL_Cntr_RLn);
     }
     if (logRLn > 0.0) {
-      CAL_Long_Rms  = calCluster->getMomParams().getLongRms() / logRLn;
-      // For backward compatibility, change the normalization to the old
-      // (corrected) sum of weight.
-      // CalLongRms will be obsolete, at some point, in favour of Cal1LongRms?
-      CAL_Long_Rms *= sqrt(calCluster->getXtalsParams().getXtalRawEneSum());
-      CAL_Long_Rms /= sqrt(CAL_EnergyRaw);
-      // End of hack.
+      CAL_Long_Rms  = firstCluster->getMomParams().getLongRms() / logRLn;
     }
-    CAL_LRms_Asym = calCluster->getMomParams().getLongRmsAsym();
+    CAL_LRms_Asym = firstCluster->getMomParams().getLongRmsAsym();
 
     // Variables referring to the first cluster---added after the restructuring
     // of the CAL moments analysis (Luca Baldini, Dec. 26, 2010).
     // Basic variables.
-    CAL_Clu1_NumXtals = calCluster->getXtalsParams().getNumXtals();
-    CAL_Clu1_NumTruncXtals = calCluster->getXtalsParams().getNumTruncXtals();
-    CAL_Clu1_NumSaturatedXtals = calCluster->getXtalsParams().getNumSaturatedXtals();
-    CAL_Clu1_RawEnergySum = calCluster->getXtalsParams().getXtalRawEneSum();
-    CAL_Clu1_CorrEnergySum = calCluster->getXtalsParams().getXtalCorrEneSum();
-    CAL_Clu1_XtalEneMax = calCluster->getXtalsParams().getXtalEneMax();
-    CAL_Clu1_XtalEneRms = calCluster->getXtalsParams().getXtalEneRms();
-    CAL_Clu1_XtalEneSkewness = calCluster->getXtalsParams().getXtalEneSkewness();
+    CAL_Clu1_NumXtals = firstCluster->getXtalsParams().getNumXtals();
+    CAL_Clu1_NumTruncXtals = firstCluster->getXtalsParams().getNumTruncXtals();
+    CAL_Clu1_NumSaturatedXtals = firstCluster->getXtalsParams().getNumSaturatedXtals();
+    CAL_Clu1_RawEnergySum = firstCluster->getXtalsParams().getXtalRawEneSum();
+    CAL_Clu1_CorrEnergySum = firstCluster->getXtalsParams().getXtalCorrEneSum();
+    CAL_Clu1_XtalEneMax = firstCluster->getXtalsParams().getXtalEneMax();
+    CAL_Clu1_XtalEneRms = firstCluster->getXtalsParams().getXtalEneRms();
+    CAL_Clu1_XtalEneSkewness = firstCluster->getXtalsParams().getXtalEneSkewness();
     // Variables from the moments analysis.
-    CAL_Clu1_MomXCntr = calCluster->getMomParams().getCentroid().x();
-    CAL_Clu1_MomYCntr = calCluster->getMomParams().getCentroid().y();
-    CAL_Clu1_MomZCntr = calCluster->getMomParams().getCentroid().z();
-    CAL_Clu1_MomXDir = calCluster->getMomParams().getAxis().x();
-    CAL_Clu1_MomYDir = calCluster->getMomParams().getAxis().y();
-    CAL_Clu1_MomZDir = calCluster->getMomParams().getAxis().z();
-    CAL_Clu1_MomNumIterations = calCluster->getMomParams().getNumIterations();
-    CAL_Clu1_MomNumCoreXtals = calCluster->getMomParams().getNumCoreXtals();
-    CAL_Clu1_MomTransRms = calCluster->getMomParams().getTransRms();
-    CAL_Clu1_MomLongRms = calCluster->getMomParams().getLongRms();
-    CAL_Clu1_MomLongRmsAysm = calCluster->getMomParams().getLongRmsAsym();
-    CAL_Clu1_MomLongSkewness = calCluster->getMomParams().getLongSkewness();
-    CAL_Clu1_MomCoreEneFrac = calCluster->getMomParams().getCoreEnergyFrac();
-    CAL_Clu1_MomFullLenght = calCluster->getMomParams().getFullLength();
-    CAL_Clu1_MomdEdxAve = calCluster->getMomParams().getdEdxAverage();
+    CAL_Clu1_MomXCntr = firstCluster->getMomParams().getCentroid().x();
+    CAL_Clu1_MomYCntr = firstCluster->getMomParams().getCentroid().y();
+    CAL_Clu1_MomZCntr = firstCluster->getMomParams().getCentroid().z();
+    CAL_Clu1_MomXDir = firstCluster->getMomParams().getAxis().x();
+    CAL_Clu1_MomYDir = firstCluster->getMomParams().getAxis().y();
+    CAL_Clu1_MomZDir = firstCluster->getMomParams().getAxis().z();
+    CAL_Clu1_MomNumIterations = firstCluster->getMomParams().getNumIterations();
+    CAL_Clu1_MomNumCoreXtals = firstCluster->getMomParams().getNumCoreXtals();
+    CAL_Clu1_MomTransRms = firstCluster->getMomParams().getTransRms();
+    CAL_Clu1_MomLongRms = firstCluster->getMomParams().getLongRms();
+    CAL_Clu1_MomLongRmsAysm = firstCluster->getMomParams().getLongRmsAsym();
+    CAL_Clu1_MomLongSkewness = firstCluster->getMomParams().getLongSkewness();
+    CAL_Clu1_MomCoreEneFrac = firstCluster->getMomParams().getCoreEnergyFrac();
+    CAL_Clu1_MomFullLenght = firstCluster->getMomParams().getFullLength();
+    CAL_Clu1_MomdEdxAve = firstCluster->getMomParams().getdEdxAverage();
     // Variables from Philippe's fit.
-    CAL_Clu1_FitXCntr = calCluster->getFitParams().getCentroid().x();
-    CAL_Clu1_FitYCntr = calCluster->getFitParams().getCentroid().y();
-    CAL_Clu1_FitZCntr = calCluster->getFitParams().getCentroid().z();
-    CAL_Clu1_FitXDir = calCluster->getFitParams().getAxis().x();
-    CAL_Clu1_FitYDir = calCluster->getFitParams().getAxis().y();
-    CAL_Clu1_FitZDir = calCluster->getFitParams().getAxis().z();
-    CAL_Clu1_FitNumLayers = calCluster->getFitParams().getFitLayers();
-    CAL_Clu1_FitChiSquare = calCluster->getFitParams().getChiSquare();
+    CAL_Clu1_FitXCntr = firstCluster->getFitParams().getCentroid().x();
+    CAL_Clu1_FitYCntr = firstCluster->getFitParams().getCentroid().y();
+    CAL_Clu1_FitZCntr = firstCluster->getFitParams().getCentroid().z();
+    CAL_Clu1_FitXDir = firstCluster->getFitParams().getAxis().x();
+    CAL_Clu1_FitYDir = firstCluster->getFitParams().getAxis().y();
+    CAL_Clu1_FitZDir = firstCluster->getFitParams().getAxis().z();
+    CAL_Clu1_FitNumLayers = firstCluster->getFitParams().getFitLayers();
+    CAL_Clu1_FitChiSquare = firstCluster->getFitParams().getChiSquare();
     // Variables from the Minimum Spanning Tree clustering.
-    CAL_Clu1_MstMinEdgeLen = calCluster->getMSTreeParams().getMinEdgeLength();
-    CAL_Clu1_MstMaxEdgeLen = calCluster->getMSTreeParams().getMaxEdgeLength();
-    CAL_Clu1_MstAveEdgeLen = calCluster->getMSTreeParams().getMeanEdgeLength();
-    CAL_Clu1_MstRmsEdgeLen = calCluster->getMSTreeParams().getRmsEdgeLength();
-    CAL_Clu1_MstAveTruncEdgeLen = calCluster->getMSTreeParams().getMeanEdgeLengthTrunc();
-    CAL_Clu1_MstRmsTruncEdgeLen = calCluster->getMSTreeParams().getRmsEdgeLengthTrunc();
+    CAL_Clu1_MstMinEdgeLen = firstCluster->getMSTreeParams().getMinEdgeLength();
+    CAL_Clu1_MstMaxEdgeLen = firstCluster->getMSTreeParams().getMaxEdgeLength();
+    CAL_Clu1_MstAveEdgeLen = firstCluster->getMSTreeParams().getMeanEdgeLength();
+    CAL_Clu1_MstRmsEdgeLen = firstCluster->getMSTreeParams().getRmsEdgeLength();
+    CAL_Clu1_MstAveTruncEdgeLen = firstCluster->getMSTreeParams().getMeanEdgeLengthTrunc();
+    CAL_Clu1_MstRmsTruncEdgeLen = firstCluster->getMSTreeParams().getRmsEdgeLengthTrunc();
     // Variables from the cluster classification.
-    CAL_Clu1_ClassGamProb = calCluster->getClassParams().getProb("gam");
-    CAL_Clu1_ClassHadProb = calCluster->getClassParams().getProb("had");
-    CAL_Clu1_ClassGhostProb = calCluster->getClassParams().getProb("ghost");
-    CAL_Clu1_ClassMipProb = calCluster->getClassParams().getProb("mip");
+    CAL_Clu1_ClassGamProb = firstCluster->getClassParams().getProb("gam");
+    CAL_Clu1_ClassHadProb = firstCluster->getClassParams().getProb("had");
+    CAL_Clu1_ClassGhostProb = firstCluster->getClassParams().getProb("ghost");
+    CAL_Clu1_ClassMipProb = firstCluster->getClassParams().getProb("mip");
 
 
     // SSD Veto stuff here:
-    if(calCluster->getMomParams().getNumIterations()>0){
-      CAL_Clu1_SSDVeto = CalSSDEvaluation(calCluster); // cs: first cluster
+    if(firstCluster->getMomParams().getNumIterations()>0){
+      CAL_Clu1_SSDVeto = CalSSDEvaluation(firstCluster); // cs: first cluster
       CAL_Clu1_SSDVetoNoHitFlag = (int)floor(m_SSDVetoNoHitFlag + 0.5);;
       CAL_Clu1_VetoPlaneCrossed = (int)floor(m_VetoPlaneCrossed + 0.5); 
       CAL_Clu1_VetoHitFound     = (int)floor(m_VetoHitFound+ 0.5);
@@ -1624,11 +1642,11 @@ StatusCode CalValsTool::calculate()
     std::vector<double> logX0(m_nLayers,0.);
     std::vector<double> logY0(m_nLayers, 0.);
 
-    Event::CalXtalRecCol::const_iterator jlog;
-    if (pxtalrecs) {
+    std::vector<Event::CalXtalRecData*>::iterator jlog;
+    {
         // Find Xtal with max. energy
-        CAL_Num_Xtals = (float)pxtalrecs->size();
-        for( jlog=pxtalrecs->begin(); jlog != pxtalrecs->end(); ++jlog) {
+        CAL_Num_Xtals = (float)firstClusterXtalList.size();
+        for( jlog=firstClusterXtalList.begin(); jlog != firstClusterXtalList.end(); ++jlog) {
             const Event::CalXtalRecData& recLog = **jlog;    
             double eneLog = recLog.getEnergy();
             double enePos = recLog.getEnergy(0, idents::CalXtalId::POS);
@@ -1660,9 +1678,9 @@ StatusCode CalValsTool::calculate()
         CAL_Max_Num_Xtals_In_Layer = *itC;
 
         // Number of Xtals
-        no_xtals=pxtalrecs->size();
+        no_xtals=firstClusterXtalList.size();
     }
-    int no_xtals_trunc=calCluster->getNumTruncXtals();
+    int no_xtals_trunc=firstCluster->getNumTruncXtals();
     CAL_Xtal_Ratio= (no_xtals>0) ? float(no_xtals_trunc)/no_xtals : 0;
     CAL_Num_Xtals_Trunc = float(no_xtals_trunc); 
 
@@ -1670,8 +1688,8 @@ StatusCode CalValsTool::calculate()
     //if(CAL_EnergyRaw < 5.) return sc;
     // See JIRA LPATE-48
 
-    Point  cal_pos  = calCluster->getPosition();
-    Vector cal_dir  = calCluster->getDirection();
+    Point  cal_pos  = firstCluster->getPosition();
+    Vector cal_dir  = firstCluster->getDirection();
 
     CAL_xEcntr      = cal_pos.x();
     CAL_yEcntr      = cal_pos.y();
@@ -1681,15 +1699,15 @@ StatusCode CalValsTool::calculate()
     CAL_zdir        = cal_dir.z();
 
     // Get pos and dir determined using only the transverse position information
-    CAL_xEcntr2        = calCluster->getFitParams().getCentroid().x();
-    CAL_yEcntr2        = calCluster->getFitParams().getCentroid().y();
-    CAL_zEcntr2        = calCluster->getFitParams().getCentroid().z();
-    CAL_posdir_chisq   = calCluster->getFitParams().getChiSquare();
-    CAL_posdir_nlayers = calCluster->getFitParams().getFitLayers();
-    CAL_nsaturated     = calCluster->getNumSaturatedXtals();
-    CAL_xdir2          = calCluster->getFitParams().getAxis().x();
-    CAL_ydir2          = calCluster->getFitParams().getAxis().y();
-    CAL_zdir2          = calCluster->getFitParams().getAxis().z();
+    CAL_xEcntr2        = firstCluster->getFitParams().getCentroid().x();
+    CAL_yEcntr2        = firstCluster->getFitParams().getCentroid().y();
+    CAL_zEcntr2        = firstCluster->getFitParams().getCentroid().z();
+    CAL_posdir_chisq   = firstCluster->getFitParams().getChiSquare();
+    CAL_posdir_nlayers = firstCluster->getFitParams().getFitLayers();
+    CAL_nsaturated     = firstCluster->getNumSaturatedXtals();
+    CAL_xdir2          = firstCluster->getFitParams().getAxis().x();
+    CAL_ydir2          = firstCluster->getFitParams().getAxis().y();
+    CAL_zdir2          = firstCluster->getFitParams().getAxis().z();
 
     // Get the lower and upper limits for the CAL in the installed towers
     double deltaX = 0.5*(m_xNum*m_towerPitch - m_calXWidth);
@@ -1707,8 +1725,7 @@ StatusCode CalValsTool::calculate()
     // collect the CAL edge energy
     // the edge is larger of the width and length of the layer
     // we can do better if this is at all useful.
-    if (pxtalrecs) {
-
+    {
         // do the Cal[X/Y]PosRmsLL here
         double eRmsLL = 0;
         double xLL = 0;
@@ -1718,7 +1735,8 @@ StatusCode CalValsTool::calculate()
         int    nRmsLL = 0;
         bool   doLL = (m_nLayers>1 && m_nCsI>1); // true for Glast, false for EGRET
 
-        for( jlog=pxtalrecs->begin(); jlog != pxtalrecs->end(); ++jlog) {
+	std::vector<Event::CalXtalRecData*>::iterator jlog;
+        for( jlog=firstClusterXtalList.begin(); jlog != firstClusterXtalList.end(); ++jlog) {
             const Event::CalXtalRecData& recLog = **jlog;    
             Point pos = recLog.getPosition();
             double eneLog = recLog.getEnergy();
@@ -1772,7 +1790,7 @@ StatusCode CalValsTool::calculate()
     // Compare Track (or vertex) to Cal soltion
     Point x0  =  cal_pos;
     Vector t0 = -cal_dir;
-    if(calCluster->getRmsLong() < .1 ) { // Trap no-calc. condition
+    if(firstCluster->getRmsLong() < .1 ) { // Trap no-calc. condition
         x0 = Point(0., 0., 0.);
         t0 = Vector(0., 0., -1.);
     }
@@ -1813,7 +1831,7 @@ StatusCode CalValsTool::calculate()
         Doca track1(x1, t1);
         CAL_Track_DOCA = (float)track1.docaOfPoint(cal_pos);
 
-	Point cor_cal_pos = calCluster->getCorPosition(t1);
+	Point cor_cal_pos = firstCluster->getCorPosition(t1);
         CAL_Track_DOCA_cor = (float)track1.docaOfPoint(cor_cal_pos);
 	CAL_Clu1_MomXCntrcor = cor_cal_pos.x();
 	CAL_Clu1_MomYCntrcor = cor_cal_pos.y();
@@ -1880,13 +1898,14 @@ StatusCode CalValsTool::calculate()
         }
 
         // try Bill's new vars... 
-        if (pxtalrecs) {
+	{
             //make a map of xtal energy by doca
             // we need this so that we can drop the largest entries for the truncated calc.
             std::multimap<double, double> docaMap;
             std::multimap<double, double>::iterator mapIter;
 
-            for( jlog=pxtalrecs->begin(); jlog != pxtalrecs->end(); ++jlog) {
+	    std::vector<Event::CalXtalRecData*>::iterator jlog;
+            for( jlog=firstClusterXtalList.begin(); jlog != firstClusterXtalList.end(); ++jlog) {
                 const Event::CalXtalRecData& recLog = **jlog;    
                 Point pos = recLog.getPosition();
                 double doca = track1.docaOfPoint(pos);
@@ -1936,7 +1955,7 @@ StatusCode CalValsTool::calculate()
     // Note: the direction in Cal is opposite to tracking!
     
     if(num_tracks>0 && fabs(cal_dir.x()) < 1. &&
-       calCluster->checkStatusBit(Event::CalCluster::MOMENTS) ) {
+       firstCluster->checkStatusBit(Event::CalCluster::MOMENTS) ) {
         double cosCalt0 = std::min(1., -t0*cal_dir); 
         cosCalt0 = std::max(cosCalt0, -1.);  // just in case...
         CAL_Track_Angle = acos(cosCalt0);
@@ -2079,13 +2098,13 @@ StatusCode CalValsTool::calculate()
     //
     // Perform the estimation with main axis = cal axis
     //
-    TSaxisP = calCluster->getPosition();
-    Vector TSaxisVin = calCluster->getDirection();
+    TSaxisP = firstCluster->getPosition();
+    Vector TSaxisVin = firstCluster->getDirection();
     TSaxisV = TSaxisVin.unit();
     //
     // Filling TSdist...
     //
-    TSfillTSdist(pxtalrecs);
+    TSfillTSdist(firstClusterXtalList);
 
     //int i;
 
@@ -2122,7 +2141,7 @@ StatusCode CalValsTool::calculate()
         //
         // Filling TSdist...
         //
-        TSfillTSdist(pxtalrecs);
+        TSfillTSdist(firstClusterXtalList);
 
         if(TSnlog>0)
         {
@@ -2164,7 +2183,7 @@ StatusCode CalValsTool::calculate()
         //
         // Filling TSdist...
         //
-        TSfillTSdist(pxtalrecs);
+        TSfillTSdist(firstClusterXtalList);
 
         if(TSnlog>0)
         {
@@ -2186,6 +2205,72 @@ StatusCode CalValsTool::calculate()
             CAL_TS_TKR_TL_95 = (float)TSgetinterpolationTS(0.95);
             CAL_TS_TKR_TL_99 = (float)TSgetinterpolationTS(0.99);
             CAL_TS_TKR_TL_100 = (float)TSTS[TSnlog-1];
+        }
+    }
+
+    // for uber cluster
+    if(mynumtracks>0 && uberCluster)
+      { 
+	m_pCalClusterHitTool->fillRecDataVec(uberCluster);
+	std::vector<Event::CalXtalRecData*> uberClusterXtalList = m_pCalClusterHitTool->getRecDataVec();
+
+        // Get the first track
+        pTrack1 = pTracks->begin();
+        track_1 = *pTrack1;
+        // Get the start and direction 
+        TSaxisP = track_1->getInitialPosition();
+        TSaxisVin = track_1->getInitialDirection();
+        TSaxisV = TSaxisVin.unit();
+        //
+        // Filling TSdist...
+        //
+        TSfillTSdist(uberClusterXtalList);
+	
+        if(TSnlog>0)
+	  {
+            //
+            // fill CAL_TS_TKR_T_
+            //
+            TSfillTS(0);
+            CAL_uber_TS_TKR_T_100 = (float)TSTS[TSnlog-1];
+            //
+            // fill CAL_TS_TKR_TL_
+            //
+            TSfillTS(1);
+            CAL_uber_TS_TKR_TL_100 = (float)TSTS[TSnlog-1];
+        }
+    }
+
+    // for uber2 cluster
+    if(mynumtracks>0 && uber2Cluster)
+      { 
+	m_pCalClusterHitTool->fillRecDataVec(uber2Cluster);
+	std::vector<Event::CalXtalRecData*> uber2ClusterXtalList = m_pCalClusterHitTool->getRecDataVec();
+
+        // Get the first track
+        pTrack1 = pTracks->begin();
+        track_1 = *pTrack1;
+        // Get the start and direction 
+        TSaxisP = track_1->getInitialPosition();
+        TSaxisVin = track_1->getInitialDirection();
+        TSaxisV = TSaxisVin.unit();
+        //
+        // Filling TSdist...
+        //
+        TSfillTSdist(uber2ClusterXtalList);
+	
+        if(TSnlog>0)
+	  {
+            //
+            // fill CAL_TS_TKR_T_
+            //
+            TSfillTS(0);
+            CAL_uber2_TS_TKR_T_100 = (float)TSTS[TSnlog-1];
+            //
+            // fill CAL_TS_TKR_TL_
+            //
+            TSfillTS(1);
+            CAL_uber2_TS_TKR_TL_100 = (float)TSTS[TSnlog-1];
         }
     }
 
@@ -2267,164 +2352,132 @@ StatusCode CalValsTool::calculate()
   CAL_Clu5_Dist = 0;
   CAL_Clu5_Doca = 0;
 
-  // Fill the info for the first 5 clusters and the Uber2 cluster
-  Event::CalClusterCol* clusters = SmartDataPtr<Event::CalClusterCol>(m_pEventSvc,EventModel::CalRecon::CalClusterCol);
-
   int iclu = -1;
   int numClusters = 0;
+  double lambda;
 
-    double lambda;
-    // if pointer is not zero, start drawing
-    if(clusters)
-      {
-        numClusters = clusters->size();
+  calClusIter = rawClusterVec.begin();
+  while(calClusIter != rawClusterVec.end())
+    {
+      Event::CalCluster* cluster = *calClusIter;
+      calClusIter++;
+      iclu++;
+      //
+      if(iclu==1)
+	{
+	  CAL_Clu2_NumXtals = cluster->getXtalsParams().getNumXtals();
+	  CAL_Clu2_RawEnergySum = cluster->getXtalsParams().getXtalRawEneSum();
+	  CAL_Clu2_XtalEneMax = cluster->getXtalsParams().getXtalEneMax();
+	  CAL_Clu2_MomXCntr = cluster->getMomParams().getCentroid().x();
+	  CAL_Clu2_MomYCntr = cluster->getMomParams().getCentroid().y();
+	  CAL_Clu2_MomZCntr = cluster->getMomParams().getCentroid().z();
+	  CAL_Clu2_MomXDir = cluster->getMomParams().getAxis().x();
+	  CAL_Clu2_MomYDir = cluster->getMomParams().getAxis().y();
+	  CAL_Clu2_MomZDir = cluster->getMomParams().getAxis().z();
+	  CAL_Clu2_MomNumCoreXtals = cluster->getMomParams().getNumCoreXtals();
+	  CAL_Clu2_MomTransRms = cluster->getMomParams().getTransRms();
+	  CAL_Clu2_MomLongRms = cluster->getMomParams().getLongRms();
+	  CAL_Clu2_ClassGamProb = cluster->getClassParams().getProb("gam");
+	  CAL_Clu2_ClassHadProb = cluster->getClassParams().getProb("had");
+	  CAL_Clu2_ClassGhostProb = cluster->getClassParams().getProb("ghost");
+	  CAL_Clu2_ClassMipProb = cluster->getClassParams().getProb("mip");
+	  CAL_Clu2_Dist = sqrt((cluster->getMomParams().getCentroid().x()-CAL_Clu1_MomXCntr)*(cluster->getMomParams().getCentroid().x()-CAL_Clu1_MomXCntr)+
+			       (cluster->getMomParams().getCentroid().y()-CAL_Clu1_MomYCntr)*(cluster->getMomParams().getCentroid().y()-CAL_Clu1_MomYCntr)+
+			       (cluster->getMomParams().getCentroid().z()-CAL_Clu1_MomZCntr)*(cluster->getMomParams().getCentroid().z()-CAL_Clu1_MomZCntr));
+	  lambda = ((cluster->getMomParams().getCentroid().x()-CAL_Clu1_MomXCntr)*CAL_Clu1_MomXDir+
+		    (cluster->getMomParams().getCentroid().y()-CAL_Clu1_MomYCntr)*CAL_Clu1_MomYDir+
+		    (cluster->getMomParams().getCentroid().z()-CAL_Clu1_MomZCntr)*CAL_Clu1_MomZDir);
+	  CAL_Clu2_Doca = sqrt((cluster->getMomParams().getCentroid().x()-(CAL_Clu1_MomXCntr+lambda*CAL_Clu1_MomXDir))*(cluster->getMomParams().getCentroid().x()-(CAL_Clu1_MomXCntr+lambda*CAL_Clu1_MomXDir))+
+			       (cluster->getMomParams().getCentroid().y()-(CAL_Clu1_MomYCntr+lambda*CAL_Clu1_MomYDir))*(cluster->getMomParams().getCentroid().y()-(CAL_Clu1_MomYCntr+lambda*CAL_Clu1_MomYDir))+
+			       (cluster->getMomParams().getCentroid().z()-(CAL_Clu1_MomZCntr+lambda*CAL_Clu1_MomZDir))*(cluster->getMomParams().getCentroid().z()-(CAL_Clu1_MomZCntr+lambda*CAL_Clu1_MomZDir)));
+	}
+      else if(iclu==2)
+	{
+	  CAL_Clu3_NumXtals = cluster->getXtalsParams().getNumXtals();
+	  CAL_Clu3_RawEnergySum = cluster->getXtalsParams().getXtalRawEneSum();
+	  CAL_Clu3_XtalEneMax = cluster->getXtalsParams().getXtalEneMax();
+	  CAL_Clu3_MomXCntr = cluster->getMomParams().getCentroid().x();
+	  CAL_Clu3_MomYCntr = cluster->getMomParams().getCentroid().y();
+	  CAL_Clu3_MomZCntr = cluster->getMomParams().getCentroid().z();
+	  CAL_Clu3_MomXDir = cluster->getMomParams().getAxis().x();
+	  CAL_Clu3_MomYDir = cluster->getMomParams().getAxis().y();
+	  CAL_Clu3_MomZDir = cluster->getMomParams().getAxis().z();
+	  CAL_Clu3_MomNumCoreXtals = cluster->getMomParams().getNumCoreXtals();
+	  CAL_Clu3_MomTransRms = cluster->getMomParams().getTransRms();
+	  CAL_Clu3_MomLongRms = cluster->getMomParams().getLongRms();
+	  CAL_Clu3_ClassGamProb = cluster->getClassParams().getProb("gam");
+	  CAL_Clu3_ClassHadProb = cluster->getClassParams().getProb("had");
+	  CAL_Clu3_ClassGhostProb = cluster->getClassParams().getProb("ghost");
+	  CAL_Clu3_ClassMipProb = cluster->getClassParams().getProb("mip");
+	  CAL_Clu3_Dist = sqrt((cluster->getMomParams().getCentroid().x()-CAL_Clu1_MomXCntr)*(cluster->getMomParams().getCentroid().x()-CAL_Clu1_MomXCntr)+
+			       (cluster->getMomParams().getCentroid().y()-CAL_Clu1_MomYCntr)*(cluster->getMomParams().getCentroid().y()-CAL_Clu1_MomYCntr)+
+			       (cluster->getMomParams().getCentroid().z()-CAL_Clu1_MomZCntr)*(cluster->getMomParams().getCentroid().z()-CAL_Clu1_MomZCntr));
+	  lambda = ((cluster->getMomParams().getCentroid().x()-CAL_Clu1_MomXCntr)*CAL_Clu1_MomXDir+
+		    (cluster->getMomParams().getCentroid().y()-CAL_Clu1_MomYCntr)*CAL_Clu1_MomYDir+
+		    (cluster->getMomParams().getCentroid().z()-CAL_Clu1_MomZCntr)*CAL_Clu1_MomZDir);
+	  CAL_Clu3_Doca = sqrt((cluster->getMomParams().getCentroid().x()-(CAL_Clu1_MomXCntr+lambda*CAL_Clu1_MomXDir))*(cluster->getMomParams().getCentroid().x()-(CAL_Clu1_MomXCntr+lambda*CAL_Clu1_MomXDir))+
+			       (cluster->getMomParams().getCentroid().y()-(CAL_Clu1_MomYCntr+lambda*CAL_Clu1_MomYDir))*(cluster->getMomParams().getCentroid().y()-(CAL_Clu1_MomYCntr+lambda*CAL_Clu1_MomYDir))+
+			       (cluster->getMomParams().getCentroid().z()-(CAL_Clu1_MomZCntr+lambda*CAL_Clu1_MomZDir))*(cluster->getMomParams().getCentroid().z()-(CAL_Clu1_MomZCntr+lambda*CAL_Clu1_MomZDir)));
+	}
+      else if(iclu==3)
+	{
+	  CAL_Clu4_NumXtals = cluster->getXtalsParams().getNumXtals();
+	  CAL_Clu4_RawEnergySum = cluster->getXtalsParams().getXtalRawEneSum();
+	  CAL_Clu4_XtalEneMax = cluster->getXtalsParams().getXtalEneMax();
+	  CAL_Clu4_MomXCntr = cluster->getMomParams().getCentroid().x();
+	  CAL_Clu4_MomYCntr = cluster->getMomParams().getCentroid().y();
+	  CAL_Clu4_MomZCntr = cluster->getMomParams().getCentroid().z();
+	  CAL_Clu4_MomXDir = cluster->getMomParams().getAxis().x();
+	  CAL_Clu4_MomYDir = cluster->getMomParams().getAxis().y();
+	  CAL_Clu4_MomZDir = cluster->getMomParams().getAxis().z();
+	  CAL_Clu4_MomNumCoreXtals = cluster->getMomParams().getNumCoreXtals();
+	  CAL_Clu4_MomTransRms = cluster->getMomParams().getTransRms();
+	  CAL_Clu4_MomLongRms = cluster->getMomParams().getLongRms();
+	  CAL_Clu4_ClassGamProb = cluster->getClassParams().getProb("gam");
+	  CAL_Clu4_ClassHadProb = cluster->getClassParams().getProb("had");
+	  CAL_Clu4_ClassGhostProb = cluster->getClassParams().getProb("ghost");
+	  CAL_Clu4_ClassMipProb = cluster->getClassParams().getProb("mip");
+	  CAL_Clu4_Dist = sqrt((cluster->getMomParams().getCentroid().x()-CAL_Clu1_MomXCntr)*(cluster->getMomParams().getCentroid().x()-CAL_Clu1_MomXCntr)+
+			       (cluster->getMomParams().getCentroid().y()-CAL_Clu1_MomYCntr)*(cluster->getMomParams().getCentroid().y()-CAL_Clu1_MomYCntr)+
+			       (cluster->getMomParams().getCentroid().z()-CAL_Clu1_MomZCntr)*(cluster->getMomParams().getCentroid().z()-CAL_Clu1_MomZCntr));
+	  lambda = ((cluster->getMomParams().getCentroid().x()-CAL_Clu1_MomXCntr)*CAL_Clu1_MomXDir+
+		    (cluster->getMomParams().getCentroid().y()-CAL_Clu1_MomYCntr)*CAL_Clu1_MomYDir+
+		    (cluster->getMomParams().getCentroid().z()-CAL_Clu1_MomZCntr)*CAL_Clu1_MomZDir);
+	  CAL_Clu4_Doca = sqrt((cluster->getMomParams().getCentroid().x()-(CAL_Clu1_MomXCntr+lambda*CAL_Clu1_MomXDir))*(cluster->getMomParams().getCentroid().x()-(CAL_Clu1_MomXCntr+lambda*CAL_Clu1_MomXDir))+
+			       (cluster->getMomParams().getCentroid().y()-(CAL_Clu1_MomYCntr+lambda*CAL_Clu1_MomYDir))*(cluster->getMomParams().getCentroid().y()-(CAL_Clu1_MomYCntr+lambda*CAL_Clu1_MomYDir))+
+			       (cluster->getMomParams().getCentroid().z()-(CAL_Clu1_MomZCntr+lambda*CAL_Clu1_MomZDir))*(cluster->getMomParams().getCentroid().z()-(CAL_Clu1_MomZCntr+lambda*CAL_Clu1_MomZDir)));
+	}
+      else if(iclu==4)
+	{
+	  CAL_Clu5_NumXtals = cluster->getXtalsParams().getNumXtals();
+	  CAL_Clu5_RawEnergySum = cluster->getXtalsParams().getXtalRawEneSum();
+	  CAL_Clu5_XtalEneMax = cluster->getXtalsParams().getXtalEneMax();
+	  CAL_Clu5_MomXCntr = cluster->getMomParams().getCentroid().x();
+	  CAL_Clu5_MomYCntr = cluster->getMomParams().getCentroid().y();
+	  CAL_Clu5_MomZCntr = cluster->getMomParams().getCentroid().z();
+	  CAL_Clu5_MomXDir = cluster->getMomParams().getAxis().x();
+	  CAL_Clu5_MomYDir = cluster->getMomParams().getAxis().y();
+	  CAL_Clu5_MomZDir = cluster->getMomParams().getAxis().z();
+	  CAL_Clu5_MomNumCoreXtals = cluster->getMomParams().getNumCoreXtals();
+	  CAL_Clu5_MomTransRms = cluster->getMomParams().getTransRms();
+	  CAL_Clu5_MomLongRms = cluster->getMomParams().getLongRms();
+	  CAL_Clu5_ClassGamProb = cluster->getClassParams().getProb("gam");
+	  CAL_Clu5_ClassHadProb = cluster->getClassParams().getProb("had");
+	  CAL_Clu5_ClassGhostProb = cluster->getClassParams().getProb("ghost");
+	  CAL_Clu5_ClassMipProb = cluster->getClassParams().getProb("mip");
+	  CAL_Clu5_Dist = sqrt((cluster->getMomParams().getCentroid().x()-CAL_Clu1_MomXCntr)*(cluster->getMomParams().getCentroid().x()-CAL_Clu1_MomXCntr)+
+			       (cluster->getMomParams().getCentroid().y()-CAL_Clu1_MomYCntr)*(cluster->getMomParams().getCentroid().y()-CAL_Clu1_MomYCntr)+
+			       (cluster->getMomParams().getCentroid().z()-CAL_Clu1_MomZCntr)*(cluster->getMomParams().getCentroid().z()-CAL_Clu1_MomZCntr));
+	  lambda = ((cluster->getMomParams().getCentroid().x()-CAL_Clu1_MomXCntr)*CAL_Clu1_MomXDir+
+		    (cluster->getMomParams().getCentroid().y()-CAL_Clu1_MomYCntr)*CAL_Clu1_MomYDir+
+		    (cluster->getMomParams().getCentroid().z()-CAL_Clu1_MomZCntr)*CAL_Clu1_MomZDir);
+	  CAL_Clu5_Doca = sqrt((cluster->getMomParams().getCentroid().x()-(CAL_Clu1_MomXCntr+lambda*CAL_Clu1_MomXDir))*(cluster->getMomParams().getCentroid().x()-(CAL_Clu1_MomXCntr+lambda*CAL_Clu1_MomXDir))+
+			       (cluster->getMomParams().getCentroid().y()-(CAL_Clu1_MomYCntr+lambda*CAL_Clu1_MomYDir))*(cluster->getMomParams().getCentroid().y()-(CAL_Clu1_MomYCntr+lambda*CAL_Clu1_MomYDir))+
+			       (cluster->getMomParams().getCentroid().z()-(CAL_Clu1_MomZCntr+lambda*CAL_Clu1_MomZDir))*(cluster->getMomParams().getCentroid().z()-(CAL_Clu1_MomZCntr+lambda*CAL_Clu1_MomZDir)));
+	}     
+    }
 
-        iclu = -1;
-        Event::CalClusterCol::iterator clusIter = clusters->begin();
-        while(clusIter != clusters->end())
-          {
-            ++iclu;
-            Event::CalCluster* cl = *clusIter++;
-            if(iclu>0 && iclu==numClusters-2) break; // stopping before the uber2 cluster
-            //
-            if(iclu==1)
-              {
-                CAL_Clu2_NumXtals = cl->getXtalsParams().getNumXtals();
-                CAL_Clu2_RawEnergySum = cl->getXtalsParams().getXtalRawEneSum();
-                CAL_Clu2_XtalEneMax = cl->getXtalsParams().getXtalEneMax();
-                CAL_Clu2_MomXCntr = cl->getMomParams().getCentroid().x();
-                CAL_Clu2_MomYCntr = cl->getMomParams().getCentroid().y();
-                CAL_Clu2_MomZCntr = cl->getMomParams().getCentroid().z();
-                CAL_Clu2_MomXDir = cl->getMomParams().getAxis().x();
-                CAL_Clu2_MomYDir = cl->getMomParams().getAxis().y();
-                CAL_Clu2_MomZDir = cl->getMomParams().getAxis().z();
-                CAL_Clu2_MomNumCoreXtals = cl->getMomParams().getNumCoreXtals();
-                CAL_Clu2_MomTransRms = cl->getMomParams().getTransRms();
-                CAL_Clu2_MomLongRms = cl->getMomParams().getLongRms();
-                CAL_Clu2_ClassGamProb = cl->getClassParams().getProb("gam");
-                CAL_Clu2_ClassHadProb = cl->getClassParams().getProb("had");
-                CAL_Clu2_ClassGhostProb = cl->getClassParams().getProb("ghost");
-                CAL_Clu2_ClassMipProb = cl->getClassParams().getProb("mip");
-                CAL_Clu2_Dist = sqrt((cl->getMomParams().getCentroid().x()-CAL_Clu1_MomXCntr)*(cl->getMomParams().getCentroid().x()-CAL_Clu1_MomXCntr)+
-                                     (cl->getMomParams().getCentroid().y()-CAL_Clu1_MomYCntr)*(cl->getMomParams().getCentroid().y()-CAL_Clu1_MomYCntr)+
-                                     (cl->getMomParams().getCentroid().z()-CAL_Clu1_MomZCntr)*(cl->getMomParams().getCentroid().z()-CAL_Clu1_MomZCntr));
-                lambda = ((cl->getMomParams().getCentroid().x()-CAL_Clu1_MomXCntr)*CAL_Clu1_MomXDir+
-                          (cl->getMomParams().getCentroid().y()-CAL_Clu1_MomYCntr)*CAL_Clu1_MomYDir+
-                          (cl->getMomParams().getCentroid().z()-CAL_Clu1_MomZCntr)*CAL_Clu1_MomZDir);
-                CAL_Clu2_Doca = sqrt((cl->getMomParams().getCentroid().x()-(CAL_Clu1_MomXCntr+lambda*CAL_Clu1_MomXDir))*(cl->getMomParams().getCentroid().x()-(CAL_Clu1_MomXCntr+lambda*CAL_Clu1_MomXDir))+
-                                     (cl->getMomParams().getCentroid().y()-(CAL_Clu1_MomYCntr+lambda*CAL_Clu1_MomYDir))*(cl->getMomParams().getCentroid().y()-(CAL_Clu1_MomYCntr+lambda*CAL_Clu1_MomYDir))+
-                                     (cl->getMomParams().getCentroid().z()-(CAL_Clu1_MomZCntr+lambda*CAL_Clu1_MomZDir))*(cl->getMomParams().getCentroid().z()-(CAL_Clu1_MomZCntr+lambda*CAL_Clu1_MomZDir)));
-              }
-            else if(iclu==2)
-              {
-                CAL_Clu3_NumXtals = cl->getXtalsParams().getNumXtals();
-                CAL_Clu3_RawEnergySum = cl->getXtalsParams().getXtalRawEneSum();
-                CAL_Clu3_XtalEneMax = cl->getXtalsParams().getXtalEneMax();
-                CAL_Clu3_MomXCntr = cl->getMomParams().getCentroid().x();
-                CAL_Clu3_MomYCntr = cl->getMomParams().getCentroid().y();
-                CAL_Clu3_MomZCntr = cl->getMomParams().getCentroid().z();
-                CAL_Clu3_MomXDir = cl->getMomParams().getAxis().x();
-                CAL_Clu3_MomYDir = cl->getMomParams().getAxis().y();
-                CAL_Clu3_MomZDir = cl->getMomParams().getAxis().z();
-                CAL_Clu3_MomNumCoreXtals = cl->getMomParams().getNumCoreXtals();
-                CAL_Clu3_MomTransRms = cl->getMomParams().getTransRms();
-                CAL_Clu3_MomLongRms = cl->getMomParams().getLongRms();
-                CAL_Clu3_ClassGamProb = cl->getClassParams().getProb("gam");
-                CAL_Clu3_ClassHadProb = cl->getClassParams().getProb("had");
-                CAL_Clu3_ClassGhostProb = cl->getClassParams().getProb("ghost");
-                CAL_Clu3_ClassMipProb = cl->getClassParams().getProb("mip");
-                CAL_Clu3_Dist = sqrt((cl->getMomParams().getCentroid().x()-CAL_Clu1_MomXCntr)*(cl->getMomParams().getCentroid().x()-CAL_Clu1_MomXCntr)+
-                                     (cl->getMomParams().getCentroid().y()-CAL_Clu1_MomYCntr)*(cl->getMomParams().getCentroid().y()-CAL_Clu1_MomYCntr)+
-                                     (cl->getMomParams().getCentroid().z()-CAL_Clu1_MomZCntr)*(cl->getMomParams().getCentroid().z()-CAL_Clu1_MomZCntr));
-                lambda = ((cl->getMomParams().getCentroid().x()-CAL_Clu1_MomXCntr)*CAL_Clu1_MomXDir+
-                          (cl->getMomParams().getCentroid().y()-CAL_Clu1_MomYCntr)*CAL_Clu1_MomYDir+
-                          (cl->getMomParams().getCentroid().z()-CAL_Clu1_MomZCntr)*CAL_Clu1_MomZDir);
-                CAL_Clu3_Doca = sqrt((cl->getMomParams().getCentroid().x()-(CAL_Clu1_MomXCntr+lambda*CAL_Clu1_MomXDir))*(cl->getMomParams().getCentroid().x()-(CAL_Clu1_MomXCntr+lambda*CAL_Clu1_MomXDir))+
-                                     (cl->getMomParams().getCentroid().y()-(CAL_Clu1_MomYCntr+lambda*CAL_Clu1_MomYDir))*(cl->getMomParams().getCentroid().y()-(CAL_Clu1_MomYCntr+lambda*CAL_Clu1_MomYDir))+
-                                     (cl->getMomParams().getCentroid().z()-(CAL_Clu1_MomZCntr+lambda*CAL_Clu1_MomZDir))*(cl->getMomParams().getCentroid().z()-(CAL_Clu1_MomZCntr+lambda*CAL_Clu1_MomZDir)));
-              }
-            else if(iclu==3)
-              {
-                CAL_Clu4_NumXtals = cl->getXtalsParams().getNumXtals();
-                CAL_Clu4_RawEnergySum = cl->getXtalsParams().getXtalRawEneSum();
-                CAL_Clu4_XtalEneMax = cl->getXtalsParams().getXtalEneMax();
-                CAL_Clu4_MomXCntr = cl->getMomParams().getCentroid().x();
-                CAL_Clu4_MomYCntr = cl->getMomParams().getCentroid().y();
-                CAL_Clu4_MomZCntr = cl->getMomParams().getCentroid().z();
-                CAL_Clu4_MomXDir = cl->getMomParams().getAxis().x();
-                CAL_Clu4_MomYDir = cl->getMomParams().getAxis().y();
-                CAL_Clu4_MomZDir = cl->getMomParams().getAxis().z();
-                CAL_Clu4_MomNumCoreXtals = cl->getMomParams().getNumCoreXtals();
-                CAL_Clu4_MomTransRms = cl->getMomParams().getTransRms();
-                CAL_Clu4_MomLongRms = cl->getMomParams().getLongRms();
-                CAL_Clu4_ClassGamProb = cl->getClassParams().getProb("gam");
-                CAL_Clu4_ClassHadProb = cl->getClassParams().getProb("had");
-                CAL_Clu4_ClassGhostProb = cl->getClassParams().getProb("ghost");
-                CAL_Clu4_ClassMipProb = cl->getClassParams().getProb("mip");
-                CAL_Clu4_Dist = sqrt((cl->getMomParams().getCentroid().x()-CAL_Clu1_MomXCntr)*(cl->getMomParams().getCentroid().x()-CAL_Clu1_MomXCntr)+
-                                     (cl->getMomParams().getCentroid().y()-CAL_Clu1_MomYCntr)*(cl->getMomParams().getCentroid().y()-CAL_Clu1_MomYCntr)+
-                                     (cl->getMomParams().getCentroid().z()-CAL_Clu1_MomZCntr)*(cl->getMomParams().getCentroid().z()-CAL_Clu1_MomZCntr));
-                lambda = ((cl->getMomParams().getCentroid().x()-CAL_Clu1_MomXCntr)*CAL_Clu1_MomXDir+
-                          (cl->getMomParams().getCentroid().y()-CAL_Clu1_MomYCntr)*CAL_Clu1_MomYDir+
-                          (cl->getMomParams().getCentroid().z()-CAL_Clu1_MomZCntr)*CAL_Clu1_MomZDir);
-                CAL_Clu4_Doca = sqrt((cl->getMomParams().getCentroid().x()-(CAL_Clu1_MomXCntr+lambda*CAL_Clu1_MomXDir))*(cl->getMomParams().getCentroid().x()-(CAL_Clu1_MomXCntr+lambda*CAL_Clu1_MomXDir))+
-                                     (cl->getMomParams().getCentroid().y()-(CAL_Clu1_MomYCntr+lambda*CAL_Clu1_MomYDir))*(cl->getMomParams().getCentroid().y()-(CAL_Clu1_MomYCntr+lambda*CAL_Clu1_MomYDir))+
-                                     (cl->getMomParams().getCentroid().z()-(CAL_Clu1_MomZCntr+lambda*CAL_Clu1_MomZDir))*(cl->getMomParams().getCentroid().z()-(CAL_Clu1_MomZCntr+lambda*CAL_Clu1_MomZDir)));
-              }
-            else if(iclu==4)
-              {
-                CAL_Clu5_NumXtals = cl->getXtalsParams().getNumXtals();
-                CAL_Clu5_RawEnergySum = cl->getXtalsParams().getXtalRawEneSum();
-                CAL_Clu5_XtalEneMax = cl->getXtalsParams().getXtalEneMax();
-                CAL_Clu5_MomXCntr = cl->getMomParams().getCentroid().x();
-                CAL_Clu5_MomYCntr = cl->getMomParams().getCentroid().y();
-                CAL_Clu5_MomZCntr = cl->getMomParams().getCentroid().z();
-                CAL_Clu5_MomXDir = cl->getMomParams().getAxis().x();
-                CAL_Clu5_MomYDir = cl->getMomParams().getAxis().y();
-                CAL_Clu5_MomZDir = cl->getMomParams().getAxis().z();
-                CAL_Clu5_MomNumCoreXtals = cl->getMomParams().getNumCoreXtals();
-                CAL_Clu5_MomTransRms = cl->getMomParams().getTransRms();
-                CAL_Clu5_MomLongRms = cl->getMomParams().getLongRms();
-                CAL_Clu5_ClassGamProb = cl->getClassParams().getProb("gam");
-                CAL_Clu5_ClassHadProb = cl->getClassParams().getProb("had");
-                CAL_Clu5_ClassGhostProb = cl->getClassParams().getProb("ghost");
-                CAL_Clu5_ClassMipProb = cl->getClassParams().getProb("mip");
-                CAL_Clu5_Dist = sqrt((cl->getMomParams().getCentroid().x()-CAL_Clu1_MomXCntr)*(cl->getMomParams().getCentroid().x()-CAL_Clu1_MomXCntr)+
-                                     (cl->getMomParams().getCentroid().y()-CAL_Clu1_MomYCntr)*(cl->getMomParams().getCentroid().y()-CAL_Clu1_MomYCntr)+
-                                     (cl->getMomParams().getCentroid().z()-CAL_Clu1_MomZCntr)*(cl->getMomParams().getCentroid().z()-CAL_Clu1_MomZCntr));
-                lambda = ((cl->getMomParams().getCentroid().x()-CAL_Clu1_MomXCntr)*CAL_Clu1_MomXDir+
-                          (cl->getMomParams().getCentroid().y()-CAL_Clu1_MomYCntr)*CAL_Clu1_MomYDir+
-                          (cl->getMomParams().getCentroid().z()-CAL_Clu1_MomZCntr)*CAL_Clu1_MomZDir);
-                CAL_Clu5_Doca = sqrt((cl->getMomParams().getCentroid().x()-(CAL_Clu1_MomXCntr+lambda*CAL_Clu1_MomXDir))*(cl->getMomParams().getCentroid().x()-(CAL_Clu1_MomXCntr+lambda*CAL_Clu1_MomXDir))+
-                                     (cl->getMomParams().getCentroid().y()-(CAL_Clu1_MomYCntr+lambda*CAL_Clu1_MomYDir))*(cl->getMomParams().getCentroid().y()-(CAL_Clu1_MomYCntr+lambda*CAL_Clu1_MomYDir))+
-                                     (cl->getMomParams().getCentroid().z()-(CAL_Clu1_MomZCntr+lambda*CAL_Clu1_MomZDir))*(cl->getMomParams().getCentroid().z()-(CAL_Clu1_MomZCntr+lambda*CAL_Clu1_MomZDir)));
-              }     
-          }
-        //
-        iclu = -1;
-        clusIter = clusters->begin();
-        while(clusIter != clusters->end())
-          {
-            ++iclu;
-            Event::CalCluster* cl = *clusIter++;
-            if(iclu!=numClusters-2) continue;
-            //
-            CAL_Uber2_NumXtals = cl->getXtalsParams().getNumXtals();
-            CAL_Uber2_RawEnergySum = cl->getXtalsParams().getXtalRawEneSum();
-            CAL_Uber2_XtalEneMax = cl->getXtalsParams().getXtalEneMax();
-            CAL_Uber2_MomXCntr = cl->getMomParams().getCentroid().x();
-            CAL_Uber2_MomYCntr = cl->getMomParams().getCentroid().y();
-            CAL_Uber2_MomZCntr = cl->getMomParams().getCentroid().z();
-            CAL_Uber2_MomXDir = cl->getMomParams().getAxis().x();
-            CAL_Uber2_MomYDir = cl->getMomParams().getAxis().y();
-            CAL_Uber2_MomZDir = cl->getMomParams().getAxis().z();
-            CAL_Uber2_MomNumCoreXtals = cl->getMomParams().getNumCoreXtals();
-            CAL_Uber2_MomTransRms = cl->getMomParams().getTransRms();
-            CAL_Uber2_MomLongRms = cl->getMomParams().getLongRms();
-          }
-      }
-
-    return sc;
+  return sc;
 }
 
 StatusCode CalValsTool::getCalInfo()
@@ -2462,7 +2515,7 @@ double CalValsTool::activeDist(Point pos, int &view) const
     return edge;
 }
 
-int CalValsTool::TSfillTSdist(Event::CalXtalRecCol *pxtalrecs)
+int CalValsTool::TSfillTSdist(std::vector<Event::CalXtalRecData*> xtallist)
 {
     int i;
     TSnlog = 0;
@@ -2473,8 +2526,6 @@ int CalValsTool::TSfillTSdist(Event::CalXtalRecCol *pxtalrecs)
         TSenergy[i] = 0;
     }
 
-    if(pxtalrecs==NULL) return 1;
-
     int itow,ilay,icol,itowx,itowy;
     double lambda;
     Point TSxtalP;
@@ -2483,11 +2534,10 @@ int CalValsTool::TSfillTSdist(Event::CalXtalRecCol *pxtalrecs)
     Vector TSTC;
     double lambdamax = 326./2;
 
-    Event::CalXtalRecCol::const_iterator jlog;
-
-    for( jlog=pxtalrecs->begin(); jlog != pxtalrecs->end(); ++jlog)
+    std::vector<Event::CalXtalRecData*>::iterator jlog;
+    for( jlog=xtallist.begin(); jlog != xtallist.end(); ++jlog)
     {
-        const Event::CalXtalRecData& recLog = **jlog;    
+        const Event::CalXtalRecData& recLog = **jlog;
         TSxtalP = recLog.getPosition();
         TSenergy[TSnlog] = recLog.getEnergy();
         //
@@ -2630,13 +2680,15 @@ void CalValsTool::zeroVals()
     ValBase::zeroVals();
 
     // This is so zeroing the Cal vals will keep CalEnergyRaw
-    SmartDataPtr<Event::CalClusterCol>     
-        pCals(m_pEventSvc,EventModel::CalRecon::CalClusterCol);
-    if(pCals) {
-        if (pCals->empty()) return;
-        Event::CalCluster* calCluster = pCals->front();
-        CAL_EnergyRaw  = calCluster->getMomParams().getEnergy();
-    }
+    SmartDataPtr<Event::CalClusterMap>
+      pCalClusterMap(m_pEventSvc,EventModel::CalRecon::CalClusterMap); 
+    if(pCalClusterMap)
+      {
+	Event::CalClusterVec rawClusterVec = (*pCalClusterMap).get(EventModel::CalRecon::CalRawClusterVec);
+	Event::CalCluster* firstCluster = rawClusterVec.front();
+	if(firstCluster)
+	  CAL_EnergyRaw  = firstCluster->getXtalsParams().getXtalCorrEneSum();
+      }
 }
 
 

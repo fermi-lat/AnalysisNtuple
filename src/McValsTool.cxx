@@ -2,7 +2,7 @@
 @brief Calculates the Mc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.64 2011/12/12 20:36:35 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.65 2012/05/17 17:48:29 lsrea Exp $
 */
 // Include files
 
@@ -33,6 +33,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.64 2
 #include "Event/Recon/TkrRecon/TkrTree.h"
 
 #include "Event/Recon/CalRecon/CalCluster.h"
+#include "Event/Recon/CalRecon/CalClusterMap.h"
 
 #include "Event/Recon/AcdRecon/AcdTkrHitPoca.h"
 #include "Event/Recon/AcdRecon/AcdTkrPoint.h"
@@ -643,12 +644,14 @@ StatusCode McValsTool::calculate()
             }
 
             // Now do the same thing trying to find the "best" cluster in the cal cluster collection
-            // Recover pointers to CalClusters and Xtals
-            SmartDataPtr<Event::CalClusterCol> calClusterCol(m_pEventSvc,EventModel::CalRecon::CalClusterCol);
+	    // Recover pointers to CalClusters and Xtals
+	    SmartDataPtr<Event::CalClusterMap> pCalClusterMap(m_pEventSvc,EventModel::CalRecon::CalClusterMap); 
+	    Event::CalClusterVec rawClusterVec;
+	    if(pCalClusterMap) rawClusterVec = (*pCalClusterMap).get(EventModel::CalRecon::CalRawClusterVec);
 
-            if (calClusterCol)
+            if (rawClusterVec.size()>0)
             {
-                Event::CalCluster* bestCluster = calClusterCol->front();
+                Event::CalCluster* bestCluster = rawClusterVec.front();
                 int                bestId      = 1;
                 double             bestDoca    = 100000.;
 
@@ -666,16 +669,13 @@ StatusCode McValsTool::calculate()
                     int clusCounter = 0;
 
                     // Set start and stop iterators 
-                    Event::CalClusterCol::iterator startItr = calClusterCol->begin();
-                    Event::CalClusterCol::iterator endItr   = calClusterCol->end();
-
-                    if (calClusterCol->size() > 1) endItr = calClusterCol->end() - 1;
+		    Event::CalClusterVec::iterator calClusIter = rawClusterVec.begin();
 
                     // Ok, we are going to loop on clusters and search for the cluster which 
                     // has the best distance of closest approach of the MC axis to the centroid
-                    for(Event::CalClusterCol::iterator clusItr  = startItr; clusItr != endItr; clusItr++)
-                    {
-                        Event::CalCluster* cluster = *clusItr;
+		    while(calClusIter != rawClusterVec.end())
+		      {
+                        Event::CalCluster* cluster = *calClusIter;
 
                         // First get the point on the MC axis at the plane of the cluster centroid
                         double arcLenToCalZ = (cluster->getMomParams().getCentroid().z() - Mc_x0.z()) / Mc_t0.z();
@@ -698,7 +698,9 @@ StatusCode McValsTool::calculate()
                             bestDoca    = doca;
                             bestId      = clusCounter;
                         }
-                    }
+			//
+			calClusIter++;
+		      }
                 }
 
                 if (bestCluster)
