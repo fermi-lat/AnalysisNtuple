@@ -1,4 +1,4 @@
-# $Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/AnalysisNtupleLib.py,v 1.4 2009/11/13 23:19:54 jrb Exp $
+# $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/AnalysisNtupleLib.py,v 1.5 2012/08/18 00:16:17 jrb Exp $
 def generate(env, **kw):
      if not kw.get('depsOnly', 0):
         env.Tool('addLibrary', library = ['AnalysisNtuple'])
@@ -10,6 +10,7 @@ def generate(env, **kw):
      env.Tool('ntupleWriterSvcLib')
      env.Tool('OnboardFilterTdsLib')
      env.Tool('CalibDataLib')
+     env.Tool('CalUtilLib')
      #env.Tool('RootIoLib')
      env.Tool('GlastSvcLib')
      env.Tool('AcdUtilLib')
