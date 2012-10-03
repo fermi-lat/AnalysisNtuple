@@ -3,6 +3,27 @@
   @verbatim
    * EOH *
 
+ AnalysisNtuple-02-65-00 03-Oct-2012 bruel
+  provide pointers to the uber cluster, uber2 cluster and first cluster.
+  explicitely use these pointers when filling variables in order to know easily
+      what cluster is used when filling a variable.
+  CalNumClusters is now the number of the MST clusters.
+  change the loops over all xtals to loops over the xtals of the first cluster.
+  As a consequence some variables are now related to the first cluster 
+  (which is what we want), like:
+  -- CalLghtAsym0,1,2...
+  -- CalLyr0X0,CalLyr0Y0
+  -- CalTrkXtalRms,CalTrkXtalRmsE,CalTrkXtalRmsTrunc,CalTrkXtalRmsETrunc
+  -- CalXtalMaxEne,CalEdgeEnergy
+  -- CalXPosRmsLL,CalYPosRmsLL
+  -- all CalTrSize... variables
+  - add some variables related to the uber and uber2 clusters 
+   (CalUberNumXtals,CalUberNumTruncXtals,CalUberTrSizeTkrT100,
+    CalUberTrSizeTkrTL100,CalUber2TrSizeTkrT100,CalUber2TrSizeTkrTL100)
+  In EvtValsTool: Carmelo has updated the unbiasing of EvtEnergyCorr 
+  (separating front/back) after the removal of the leakage correction 
+  (introduced in a previous release)
+  Heather fixed end of line use in AnalysisNtupleAlg.cxx and McCoordsAlg.cxx
  AnalysisNtuple-02-64-02 02-Oct-2012  lsrea fixes to code which removes Mc* variables from the ntuples for real data
  AnalysisNtuple-02-64-01 26-Sep-2012 carmelo Add CalSSDVeto and use ub alg in CalUtil
  AnalysisNtuple-02-64-00 20-Aug-2012    jrb for Windows no-install-headers
