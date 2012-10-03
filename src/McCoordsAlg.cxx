@@ -1,7 +1,7 @@
 /** @file McCoordsAlg.cxx
 @brief Declaration and implementation of Gaudi algorithm McCoordsAlg
 
-$Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/src/McCoordsAlg.cxx,v 1.9.112.1 2011/04/19 18:10:24 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/src/McCoordsAlg.cxx,v 1.11 2011/12/12 20:36:35 heather Exp $
 */
 // Include files
 
@@ -15,6 +15,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/src/McCo
 
 #include <cassert>
 #include <map>
+#include <stdexcept>
 
 // forward declatation of the worker
 class McCworker;
@@ -44,6 +45,9 @@ private:
     McCworker * m_worker;
     //counter
     int m_count;
+    // flag for no MC data, skip this alg
+    bool m_noMC;
+
 };
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -72,6 +76,7 @@ private:
     //McCoords entries to create
     float m_mcRa,m_mcDec,m_mcL,m_mcB;
     float m_mcZen,m_mcAzim;
+
 };
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -90,12 +95,21 @@ StatusCode McCoordsAlg::initialize()
     // Use the Job options service to get the Algorithm's parameters
     setProperties();
 
+	m_noMC = false;
+
     // get a pointer to RootTupleSvc 
     if( (sc = service("RootTupleSvc", rootTupleSvc, true) ). isFailure() ) {
         log << MSG::ERROR << " failed to get the RootTupleSvc" << endreq;
         return sc;
     }
-    m_worker = new McCworker();
+	try {
+        m_worker = new McCworker();
+	}
+	catch(std::exception ex) {
+		m_noMC = true;
+                log << MSG::INFO << "There are no Mc[X/Y/Z]Dir variables, so McCoordsAlg will be skipped" << endreq;
+		return sc;
+	}
 
     // get the GPS instance
     gps = astro::GPS::instance();
@@ -112,6 +126,8 @@ StatusCode McCoordsAlg::execute()
     MsgStream log(msgSvc(), name());
 
     m_count++;
+
+	if(m_noMC) return sc;
 
     // now have the worker do it
     m_worker->evaluate();
