@@ -2,7 +2,7 @@
 @brief Calculates the Tkr hit analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrHitValsTool.cxx,v 1.27 2011/12/12 20:36:35 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrHitValsTool.cxx,v 1.28 2012/01/25 05:17:27 lsrea Exp $
 */
 
 // Include files
@@ -19,6 +19,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrHitValsTool.cxx,v 1.
 
 #include "Event/TopLevel/EventModel.h"
 #include "Event/TopLevel/Event.h"
+#include "Event/Digi/TkrDigi.h"
 
 #include "TkrUtil/ITkrQueryClustersTool.h"
 #include "Event/Recon/TkrRecon/TkrTruncationInfo.h"
@@ -80,6 +81,8 @@ private:
     int Tkr_HitsPerLyr[_nLayers];
     int Tkr_numRCTruncs;
     int Tkr_numCCTruncs;
+
+  int Tkr_numdigihits;
 
     ITkrQueryClustersTool* m_clusTool;
 
@@ -210,6 +213,8 @@ StatusCode TkrHitValsTool::initialize()
     addItem("TkrNumWideGhostsOnTracks",  &Tkr_numWideGhostClustersOnTracks);
     addItem("TkrNumWiderGhostsOnTracks", &Tkr_numWiderGhostClustersOnTracks);
 
+    addItem("TkrNumDigiHits", &Tkr_numdigihits);
+
     int i;
     char buffer[20];
     for(i=0;i<_nLayers;++i) {
@@ -231,6 +236,18 @@ StatusCode TkrHitValsTool::initialize()
 StatusCode TkrHitValsTool::calculate()
 {
     StatusCode sc = StatusCode::SUCCESS;
+
+    Tkr_numdigihits = 0;
+    SmartDataPtr<Event::TkrDigiCol> tkrDigiCol(m_pEventSvc, EventModel::Digi::TkrDigiCol);
+    if(tkrDigiCol)
+      {
+        // Loop over available TkrDigis
+        for(Event::TkrDigiCol::iterator tkrIter = tkrDigiCol->begin(); tkrIter != tkrDigiCol->end(); tkrIter++)
+          {
+            Event::TkrDigi* tkrDigi = *tkrIter;
+            Tkr_numdigihits += tkrDigi->getNumHits();
+          }
+      }
 
     // Recover Track associated info. 
     SmartDataPtr<Event::TkrClusterCol>   
