@@ -3,6 +3,7 @@
   @verbatim
    * EOH *
 
+ AnalysisNtuple-02-66-00 04-Oct-2012 bruel add TkrNumDigiHits variable
  AnalysisNtuple-02-65-00 03-Oct-2012 bruel
   provide pointers to the uber cluster, uber2 cluster and first cluster.
   explicitely use these pointers when filling variables in order to know easily
