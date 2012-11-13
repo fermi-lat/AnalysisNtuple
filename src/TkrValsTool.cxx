@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.111 2012/09/26 15:50:16 carmelo Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.112 2012/10/03 14:12:56 bruel Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -264,14 +264,9 @@ private:
     float Tkr_2TkrHDoca;
 
     float Tkr_Veto_SSDVeto;
-    float CR_SSDVeto, CR1_SSDVeto;  //  RJ
     float Tkr_Veto_Chisq;
-    float CR_VetoChisq, CR1_VetoChisq;  // RJ
-    int CR_NumTks;   // RJ
-    float CR_Chisq;  // RJ
 
     float Tkr_Veto_Hits;
-    float CR_VetoHits, CR1_VetoHits;   // RJ
     float Tkr_Veto_FirstLayer;
 
     float Tkr_Veto_KalEne; 
@@ -888,31 +883,6 @@ StatusCode TkrValsTool::initialize()
     addItem("TkrVKalEne",     &Tkr_Veto_KalEne); 
     addItem("TkrVConEne",     &Tkr_Veto_ConEne); 
 
-    // RJ: add some Merit variables for the cosmic-ray veto tracks
-    addItem("TkrCRSSDVeto", &CR_SSDVeto);
-    addItem("TkrCR1SSDVeto", &CR1_SSDVeto);
-    addItem("TkrCRNumTks", &CR_NumTks);
-    addItem("TkrCRChisq", &CR_Chisq);
-    if(m_enableVetoDiagnostics) {
-        addItem("TkrCRVetoHits", &CR_VetoHits);
-        addItem("TkrCRVetoChisq", &CR_VetoChisq);
-        addItem("TkrCR1VetoHits", &CR1_VetoHits);
-        addItem("TkrCR1VetoChisq", &CR1_VetoChisq);
-    }
-
-    // for test, uncomment these statements:
-    /*
-    addItem("TkrFloat", &Tkr_float);
-    addItem("TkrInt",   &Tkr_int);
-    //try just aliasing it to the first of the three items
-    //  is it guaranteed to work?
-    addItem("Tkr1Pos[3]",        &Tkr_1_x0);
-    addItem("TkrIntArray[5]",    Tkr_ints);
-    addItem("TkrDoubleArray[2]", Tkr_doubles);
-    addItem("TkrUIntArray[7]",   Tkr_uInts);
-    addItem("TkrString",           Tkr_string);
-    */
-
     zeroVals();
 
     return sc;
@@ -1011,18 +981,9 @@ StatusCode TkrValsTool::calculate()
         Event::TkrTrackColConPtr pTrack = pTracks->begin();
         const Event::TkrTrack* track_1 = *pTrack;
         
-        CR_NumTks= 0;
         // Count the number of non-CR tracks
-        bool firstCR=true;
         for (; pTrack != pTracks->end(); pTrack++) {
-            if ((*pTrack)->getStatusBits() & Event::TkrTrack::COSMICRAY) {
-                CR_NumTks++;
-                if (firstCR) {
-                    CR_Chisq= (*pTrack)->getChiSquareSmooth();
-                    firstCR=false;
-                }
-            }
-            else nTracks++;
+            if (!((*pTrack)->getStatusBits()& Event::TkrTrack::COSMICRAY)) nTracks++;
         }
         Tkr_Num_Tracks   = nTracks;
         if(nTracks < 1) return sc;
@@ -1407,15 +1368,7 @@ StatusCode TkrValsTool::calculate()
         Tkr_1_VetoBadCluster   = (int)floor(m_VetoBadCluster + 0.5);
 
         int veto_track_num = -1;
-        int CR_veto_track_num = -1;
-        int CR1_veto_track_num = -1;
-        CR_SSDVeto=0.;
-        CR1_SSDVeto=0.;
-        CR_VetoHits=0.;
-        CR_Chisq=999.;
-        CR1_VetoHits=0.;
-        CR_VetoChisq=999.;
-        CR1_VetoChisq=999.;
+
         // Most likely track from AcdValsTool
         if(m_pAcdTool) {
             // check that Acd executes before Tkr
@@ -1448,23 +1401,6 @@ StatusCode TkrValsTool::calculate()
 
                             Tkr_Veto_KalEne     = veto_track->getKalEnergy(); 
                             Tkr_Veto_ConEne     = veto_track->getInitialEnergy(); 
-                        }
-                    }
-                    // RJ: Handle CR tracks here
-                    if (m_pAcdTool->getVal("AcdCRActDistTrackNum", CR_veto_track_num, firstCheck).isSuccess()) {
-                        if (CR_veto_track_num > 0) {
-                            const Event::TkrTrack* CR_veto_track = *(pTracks->begin()+CR_veto_track_num);
-                            CR_SSDVeto = SSDEvaluation(CR_veto_track); 
-                            CR_VetoHits= CR_veto_track->getNumFitHits();
-                            CR_VetoChisq= CR_veto_track->getChiSquareSmooth();
-                        }
-                    }
-                    if (m_pAcdTool->getVal("AcdCR1ActDistTrackNum", CR1_veto_track_num, firstCheck).isSuccess()) {
-                        if (CR1_veto_track_num > 0) {
-                            const Event::TkrTrack* CR1_veto_track = *(pTracks->begin()+CR1_veto_track_num);
-                            CR1_SSDVeto = SSDEvaluation(CR1_veto_track);
-                            CR1_VetoHits= CR1_veto_track->getNumFitHits();
-                            CR1_VetoChisq= CR1_veto_track->getChiSquareSmooth();
                         }
                     }
             }
@@ -1545,17 +1481,17 @@ StatusCode TkrValsTool::calculate()
 
                          if (track_2->front()->validCluster())
         {
-            Tkr_1_1stHitRes  = (*track_2)[0]->getMeasuredPosition(Event::TkrTrackHit::MEASURED)
+            Tkr_2_1stHitRes  = (*track_2)[0]->getMeasuredPosition(Event::TkrTrackHit::MEASURED)
                              - (*track_2)[0]->getMeasuredPosition(Event::TkrTrackHit::SMOOTHED);
-            Tkr_1_1stHitSChi = (*track_2)[0]->getChiSquareSmooth();
+            Tkr_2_1stHitSChi = (*track_2)[0]->getChiSquareSmooth();
         }
         else Tkr_2_1stHitRes  = -999.;
 
         if ((*track_2)[1]->validCluster())
         {
-            Tkr_1_2ndHitRes  = (*track_2)[1]->getMeasuredPosition(Event::TkrTrackHit::MEASURED)
+            Tkr_2_2ndHitRes  = (*track_2)[1]->getMeasuredPosition(Event::TkrTrackHit::MEASURED)
                              - (*track_2)[1]->getMeasuredPosition(Event::TkrTrackHit::SMOOTHED);
-            Tkr_1_2ndHitSChi = (*track_2)[1]->getChiSquareSmooth();
+            Tkr_2_2ndHitSChi = (*track_2)[1]->getChiSquareSmooth();
         }
         else Tkr_2_2ndHitRes = -999.;
 

@@ -3,7 +3,7 @@
  @brief This is needed for forcing the linker to load all components
  of the library.
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/Dll/AnalysisNtuple_load.cxx,v 1.23 2010/11/03 20:36:11 usher Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/src/Dll/AnalysisNtuple_load.cxx,v 1.24 2012/05/16 05:41:10 lsrea Exp $
 */
 
 #include "GaudiKernel/DeclareFactoryEntries.h"
@@ -41,6 +41,7 @@ DECLARE_FACTORY_ENTRIES(AnalysisNtuple) {
     //DECLARE_TOOL(      GcrReconValsTool   );
     // Kludge for OktoberTest LSR 2-Oct-07
     //DECLARE_TOOL(      McKludgeValsTool ); // removed 05/15/2012
+    DECLARE_TOOL(      TkrCRValsTool    );
     
 
 } 

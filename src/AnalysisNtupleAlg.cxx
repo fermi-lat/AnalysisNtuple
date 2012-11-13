@@ -6,7 +6,7 @@
 
 
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.53 2012/10/03 14:12:56 bruel Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/AnalysisNtupleAlg.cxx,v 1.54 2012/10/03 14:44:56 heather Exp $
 
 */
 
@@ -436,7 +436,7 @@ StatusCode AnalysisNtupleAlg::initialize(){
 
     // default set: Mc is now called after Evt
 
-    std::string toolnames [] = {"Glt", "Acd", "Acd2", "TkrHit", "Tkr", "Tree", "Vtx",  "Cal",  "Evt", "Obf", "Mc", "McTkrHit", ""};
+    std::string toolnames [] = {"Glt", "Acd", "Acd2", "TkrHit", "Tkr", "TkrCR", "Tree", "Vtx",  "Cal",  "Evt", "Obf", "Mc", "McTkrHit", ""};
 
     unsigned int i;
 
