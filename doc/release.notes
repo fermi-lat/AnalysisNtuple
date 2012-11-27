@@ -3,6 +3,9 @@
   @verbatim
    * EOH *
 
+  Added a stripped-down version of FT1Alg (FT1CalOnlyAlg) that can be
+  used for reprocessing data only running the CAL portion of the
+  reconstruction. (This won't be used in standard jobs.)  
  AnalysisNtuple-02-66-01 07-Oct-2012 heather patch for CMT only to use CalUtil
  AnalysisNtuple-02-66-00 04-Oct-2012 bruel add TkrNumDigiHits variable
  AnalysisNtuple-02-65-00 03-Oct-2012 bruel
