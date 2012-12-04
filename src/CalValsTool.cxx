@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.132 2012/10/03 13:04:47 bruel Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.133 2012/10/03 14:12:56 bruel Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -264,7 +264,13 @@ private:
     float CAL_Clu1_MomCoreEneFrac;
     float CAL_Clu1_MomFullLenght;
     float CAL_Clu1_MomdEdxAve;
-    // Variables from Philippe's fit.
+    float CAL_Clu1_Mom_Cov_Cxx;
+    float CAL_Clu1_Mom_Cov_Cyy;
+    float CAL_Clu1_Mom_Cov_Czz;
+    float CAL_Clu1_Mom_Cov_Sxx;
+    float CAL_Clu1_Mom_Cov_Syy;
+    float CAL_Clu1_Mom_Cov_Sxy;  
+  // Variables from Philippe's fit.
     float CAL_Clu1_FitXCntr;
     float CAL_Clu1_FitYCntr;
     float CAL_Clu1_FitZCntr;
@@ -1005,6 +1011,13 @@ StatusCode CalValsTool::initialize()
     addItem("Cal1CoreEneFrac",  &CAL_Clu1_MomCoreEneFrac);
     addItem("Cal1FullLength",  &CAL_Clu1_MomFullLenght);
     addItem("Cal1dEdxAve",  &CAL_Clu1_MomdEdxAve);
+    // From Cov Matrix - cntr + slope
+    addItem("Cal1MomCovCXX",  &CAL_Clu1_Mom_Cov_Cxx);
+    addItem("Cal1MomCovCYY",  &CAL_Clu1_Mom_Cov_Cyy);
+    addItem("Cal1MomCovCZZ",  &CAL_Clu1_Mom_Cov_Czz);
+    addItem("Cal1MomCovSXX",  &CAL_Clu1_Mom_Cov_Sxx);
+    addItem("Cal1MomCovSYY",  &CAL_Clu1_Mom_Cov_Syy);
+    addItem("Cal1MomCovSXY",  &CAL_Clu1_Mom_Cov_Sxy);
     // Variables from Philippe's fit.
     addItem("Cal1FitXCntr",  &CAL_Clu1_FitXCntr);
     addItem("Cal1FitYCntr",  &CAL_Clu1_FitYCntr);
@@ -1570,6 +1583,18 @@ StatusCode CalValsTool::calculate()
     CAL_Clu1_MomCoreEneFrac = firstCluster->getMomParams().getCoreEnergyFrac();
     CAL_Clu1_MomFullLenght = firstCluster->getMomParams().getFullLength();
     CAL_Clu1_MomdEdxAve = firstCluster->getMomParams().getdEdxAverage();
+    CAL_Clu1_Mom_Cov_Cxx = firstCluster->getMomParams().getxPosxPos();
+    CAL_Clu1_Mom_Cov_Cyy = firstCluster->getMomParams().getyPosyPos();
+    CAL_Clu1_Mom_Cov_Czz = firstCluster->getMomParams().getzPoszPos();
+    CAL_Clu1_Mom_Cov_Sxx = 0.;
+    CAL_Clu1_Mom_Cov_Syy = 0.;
+    CAL_Clu1_Mom_Cov_Sxy = 0.;
+    if (firstCluster->checkStatusBit(Event::CalCluster::MOMENTS) && CAL_Clu1_MomZDir>0.001){ // exclude horizontal directions
+      CLHEP::HepMatrix CalCov = firstCluster->getMomParams().getMomErrsTkrRep();  
+      CAL_Clu1_Mom_Cov_Sxx = CalCov(2,2);
+      CAL_Clu1_Mom_Cov_Syy = CalCov(4,4);
+      CAL_Clu1_Mom_Cov_Sxy = CalCov(2,4);
+    }
     // Variables from Philippe's fit.
     CAL_Clu1_FitXCntr = firstCluster->getFitParams().getCentroid().x();
     CAL_Clu1_FitYCntr = firstCluster->getFitParams().getCentroid().y();
@@ -1594,6 +1619,7 @@ StatusCode CalValsTool::calculate()
 
 
     // SSD Veto stuff here:
+    //if (firstCluster->checkStatusBit(Event::CalCluster::MOMENTS)){ // not sure what is the best condition to check
     if(firstCluster->getMomParams().getNumIterations()>0){
       CAL_Clu1_SSDVeto = CalSSDEvaluation(firstCluster); // cs: first cluster
       CAL_Clu1_SSDVetoNoHitFlag = (int)floor(m_SSDVetoNoHitFlag + 0.5);;
@@ -2712,17 +2738,32 @@ float CalValsTool::CalSSDEvaluation(const Event::CalCluster* cluster)
 
   Point  xc = cluster->getMomParams().getCentroid(); // let start from cal centroid
   Vector t1 = -1*cluster->getMomParams().getAxis();  // notice -1: different convention for Tkr and Cal
+  CLHEP::HepMatrix CalCov = cluster->getMomParams().getMomErrsTkrRep();
+  // check on validity of the mom analysis calc on num core xtals:
+  // if it is less than 3 it is not a valid fit and errors are meaningless
+  if( cluster->getMomParams().getNumCoreXtals()<3 ) {return _badFloat;}
 
   // START from above the CAL (NO MCS in CsI)
-  // Cov matrix should be propagated accordingly... TBD
+  // Cov matrix should be propagated accordingly...
   double zRefAboveCal = 0.;
   Point  x1((zRefAboveCal-xc.z())*(t1.x()/t1.z()) + xc.x(), 
             (zRefAboveCal-xc.z())*(t1.y()/t1.z()) + xc.y(), 
             zRefAboveCal);
 
+
   // Check we start in side the LAT
   if(!m_tkrGeom->isInActiveLAT(x1) ) {return _badFloat;}
 
+  // fill 4x4 representation of error matrix, these are the only non-zero elements.
+  // Tkr rep. is (xPos, xSlp, yPos, ySlp)
+  // Propagated to x1 - I hope this is right!
+  double xPosxPos = (zRefAboveCal-xc.z())*CalCov(2,2) + CalCov(1,1);
+  double yPosyPos = (zRefAboveCal-xc.z())*CalCov(4,4) + CalCov(3,3);
+  double xSlpxSlp = CalCov(2,2);
+  double ySlpySlp = CalCov(4,4);
+  double xSlpySlp = CalCov(2,4);
+
+  /*
   // Need to fake the Track Params object that will be used by the propagator
   // Eventually this will be the cal covariance matrix
 
@@ -2747,6 +2788,8 @@ float CalValsTool::CalSSDEvaluation(const Event::CalCluster* cluster)
   ySlpySlp = dtheta*dtheta*t1.y()*t1.y()*CommonFactor;
   xSlpySlp = dtheta*dtheta*t1.x()*t1.y()*CommonFactor;
   } 
+  */
+
 
   const Event::TkrTrackParams params(x1.x(), t1.x()/t1.z(), x1.y(), t1.y()/t1.z(),
                                      xPosxPos,     0.,     0.,       0,
