@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.112 2012/10/03 14:12:56 bruel Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.113 2012/11/13 05:40:15 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -75,6 +75,8 @@ private:
 
     // some local constants
     double m_towerPitch;
+    double m_towerHalfPitch;
+    double m_2towerPitch;
     int    m_xNum;
     int    m_yNum;
     double m_activeWidth;
@@ -111,6 +113,7 @@ private:
     IPropagator* m_G4PropTool; 
     /// AcdValsTool for Veto Track Number
     IValsTool* m_pAcdTool;
+  IValsTool* m_pTkrHitTool;
 
     // properties
     double m_minVetoError;
@@ -271,6 +274,17 @@ private:
 
     float Tkr_Veto_KalEne; 
     float Tkr_Veto_ConEne; 
+
+  float Tkr1XCntr;
+  float Tkr1YCntr;
+  float Tkr1ZCntr;
+  float Tkr1CntrDistTwrCntr;
+  float Tkr1XCntrTwrCntr;
+  float Tkr1XCntrTwrEdge;
+  float Tkr1XCntrTwrEdgeSigned;
+  float Tkr1YCntrTwrCntr;
+  float Tkr1YCntrTwrEdge;
+  float Tkr1YCntrTwrEdgeSigned;
 
     // here's some test stuff... if it works for a couple it will work for all
 
@@ -683,6 +697,8 @@ StatusCode TkrValsTool::initialize()
         }
 
         m_towerPitch = m_tkrGeom->towerPitch();
+        m_towerHalfPitch = m_towerPitch/2;
+        m_2towerPitch = 2*m_towerPitch;
         m_xNum       = m_tkrGeom->numXTowers();
         m_yNum       = m_tkrGeom->numYTowers();
         m_activeWidth = m_tkrGeom->nWaferAcross()*m_tkrGeom->waferPitch() + 
@@ -702,6 +718,12 @@ StatusCode TkrValsTool::initialize()
         if(!toolSvc->retrieveTool("G4PropagationTool", m_G4PropTool)) {
             log << MSG::ERROR << "Couldn't find the ToolSvc!" << endreq;
             return StatusCode::FAILURE;
+        }
+        m_pTkrHitTool = 0;
+        sc = toolSvc->retrieveTool("TkrHitValsTool", m_pTkrHitTool);
+        if( sc.isFailure() ) {
+          log << MSG::ERROR << "Unable to find tool: " "TkrHitValsTool" << endreq;
+          return sc;
         }
         m_pAcdTool = 0;
         sc = toolSvc->retrieveTool("AcdValsTool", m_pAcdTool);
@@ -882,6 +904,17 @@ StatusCode TkrValsTool::initialize()
     addItem("TkrVFirstLayer", &Tkr_Veto_FirstLayer); 
     addItem("TkrVKalEne",     &Tkr_Veto_KalEne); 
     addItem("TkrVConEne",     &Tkr_Veto_ConEne); 
+
+    addItem("Tkr1XCntr",&Tkr1XCntr);
+    addItem("Tkr1YCntr",&Tkr1YCntr);
+    addItem("Tkr1ZCntr",&Tkr1ZCntr);
+    addItem("Tkr1CntrDistTwrCntr",&Tkr1CntrDistTwrCntr);
+//     addItem("Tkr1XCntrTwrCntr",&Tkr1XCntrTwrCntr);
+//     addItem("Tkr1XCntrTwrEdge",&Tkr1XCntrTwrEdge);
+//     addItem("Tkr1XCntrTwrEdgeSigned",&Tkr1XCntrTwrEdgeSigned);
+//     addItem("Tkr1YCntrTwrCntr",&Tkr1YCntrTwrCntr);
+//     addItem("Tkr1YCntrTwrEdge",&Tkr1YCntrTwrEdge);
+//     addItem("Tkr1YCntrTwrEdgeSigned",&Tkr1YCntrTwrEdgeSigned);
 
     zeroVals();
 
@@ -1953,6 +1986,35 @@ StatusCode TkrValsTool::calculate()
         Tkr_Blank_Hits = blank_hits; 
 
     }
+
+    int nextCheck;
+    Tkr1ZCntr = 0;
+    if(!(m_pTkrHitTool->getVal("TkrStripsZCntr",Tkr1ZCntr,nextCheck).isSuccess())) Tkr1ZCntr = 0;
+
+    double x,xtow,lambda;
+    int itow;
+    if(Tkr_1_zdir!=0)
+      {
+        lambda = (Tkr1ZCntr-Tkr_1_z0)/Tkr_1_zdir;
+        Tkr1XCntr = Tkr_1_x0+lambda*Tkr_1_xdir;
+        Tkr1YCntr = Tkr_1_y0+lambda*Tkr_1_ydir;
+        //
+        x = Tkr1XCntr;
+        itow = (int)floor((x+m_2towerPitch)/m_towerPitch); xtow = x+m_2towerPitch-m_towerPitch*(double)itow;
+        Tkr1XCntrTwrCntr = xtow-m_towerHalfPitch;
+        Tkr1XCntrTwrEdge = m_towerHalfPitch-fabs(Tkr1XCntrTwrCntr);
+        Tkr1XCntrTwrEdgeSigned = Tkr1XCntrTwrEdge;
+        if((xtow-m_towerHalfPitch)*Tkr_1_xdir<0) Tkr1XCntrTwrEdgeSigned = -Tkr1XCntrTwrEdge;
+        //
+        x = Tkr1YCntr;
+        itow = (int)floor((x+m_2towerPitch)/m_towerPitch); xtow = x+m_2towerPitch-m_towerPitch*(double)itow;
+        Tkr1YCntrTwrCntr = xtow-m_towerHalfPitch;
+        Tkr1YCntrTwrEdge = m_towerHalfPitch-fabs(Tkr1YCntrTwrCntr);
+        Tkr1YCntrTwrEdgeSigned = Tkr1YCntrTwrEdge;
+        if((xtow-m_towerHalfPitch)*Tkr_1_ydir<0) Tkr1YCntrTwrEdgeSigned = -Tkr1YCntrTwrEdge;
+        //
+        Tkr1CntrDistTwrCntr = sqrt(Tkr1XCntrTwrCntr*Tkr1XCntrTwrCntr+Tkr1YCntrTwrCntr*Tkr1YCntrTwrCntr);
+      }
 
     if(m_testExceptions) {
 
