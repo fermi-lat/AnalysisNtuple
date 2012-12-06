@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.133 2012/10/03 14:12:56 bruel Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.134 2012/12/04 15:32:45 carmelo Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -256,6 +256,7 @@ private:
     float CAL_Clu1_MomYDir;
     float CAL_Clu1_MomZDir;
     float CAL_Clu1_MomNumIterations;
+  float CAL_Clu1_MomRunFlag; // FOR DEBUG ONLY!!!!
     float CAL_Clu1_MomNumCoreXtals;
     float CAL_Clu1_MomTransRms;
     float CAL_Clu1_MomLongRms;
@@ -264,10 +265,16 @@ private:
     float CAL_Clu1_MomCoreEneFrac;
     float CAL_Clu1_MomFullLenght;
     float CAL_Clu1_MomdEdxAve;
-    float CAL_Clu1_Mom_Cov_Cxx;
+    float CAL_Clu1_Mom_Cov_Cxx; // centroid
     float CAL_Clu1_Mom_Cov_Cyy;
     float CAL_Clu1_Mom_Cov_Czz;
-    float CAL_Clu1_Mom_Cov_Sxx;
+    float CAL_Clu1_Mom_Cov_Dxx; // direction
+    float CAL_Clu1_Mom_Cov_Dyy;
+    float CAL_Clu1_Mom_Cov_Dzz;
+    float CAL_Clu1_Mom_Cov_Dxy; 
+    float CAL_Clu1_Mom_Cov_Dxz;
+    float CAL_Clu1_Mom_Cov_Dyz;
+    float CAL_Clu1_Mom_Cov_Sxx; // slope
     float CAL_Clu1_Mom_Cov_Syy;
     float CAL_Clu1_Mom_Cov_Sxy;  
   // Variables from Philippe's fit.
@@ -772,6 +779,8 @@ Y across the length.
 <tr><td> Cal1SSDVetoPlaneCrossed
 <td>I<td>   Number of planes contributiong to the SSD Veto. This doesn't count the points
 where a track crosses in a gap.
+<tr><td> Cal1MomCov[CXX,CYY,CZZ, DXX,DYY,DZZ, DXY,DXZ,DYZ, SXX,SYY,SXY ] 
+<td>F<td> Non-zero element of Cal covariance matrix : C = is for centroid elements, D for direction (6 elements), S for slope (3 elements)
 </table>
 
 */
@@ -1003,6 +1012,7 @@ StatusCode CalValsTool::initialize()
     addItem("Cal1MomYDir",  &CAL_Clu1_MomYDir);
     addItem("Cal1MomZDir",  &CAL_Clu1_MomZDir);
     addItem("Cal1MomNumIterations",  &CAL_Clu1_MomNumIterations);
+    addItem("Cal1MomRunFlag",  &CAL_Clu1_MomRunFlag); // FOR DEBUG ONLY!!!!
     addItem("Cal1MomNumCoreXtals",  &CAL_Clu1_MomNumCoreXtals);
     addItem("Cal1TransRms",  &CAL_Clu1_MomTransRms);
     addItem("Cal1LongRms",  &CAL_Clu1_MomLongRms);
@@ -1012,10 +1022,16 @@ StatusCode CalValsTool::initialize()
     addItem("Cal1FullLength",  &CAL_Clu1_MomFullLenght);
     addItem("Cal1dEdxAve",  &CAL_Clu1_MomdEdxAve);
     // From Cov Matrix - cntr + slope
-    addItem("Cal1MomCovCXX",  &CAL_Clu1_Mom_Cov_Cxx);
+    addItem("Cal1MomCovCXX",  &CAL_Clu1_Mom_Cov_Cxx);// centroid
     addItem("Cal1MomCovCYY",  &CAL_Clu1_Mom_Cov_Cyy);
     addItem("Cal1MomCovCZZ",  &CAL_Clu1_Mom_Cov_Czz);
-    addItem("Cal1MomCovSXX",  &CAL_Clu1_Mom_Cov_Sxx);
+    addItem("Cal1MomCovDXX",  &CAL_Clu1_Mom_Cov_Dxx);// direction
+    addItem("Cal1MomCovDYY",  &CAL_Clu1_Mom_Cov_Dyy);
+    addItem("Cal1MomCovDZZ",  &CAL_Clu1_Mom_Cov_Dzz);
+    addItem("Cal1MomCovDXY",  &CAL_Clu1_Mom_Cov_Dxy);
+    addItem("Cal1MomCovDXZ",  &CAL_Clu1_Mom_Cov_Dxz);
+    addItem("Cal1MomCovDYZ",  &CAL_Clu1_Mom_Cov_Dyz);
+    addItem("Cal1MomCovSXX",  &CAL_Clu1_Mom_Cov_Sxx);// slope
     addItem("Cal1MomCovSYY",  &CAL_Clu1_Mom_Cov_Syy);
     addItem("Cal1MomCovSXY",  &CAL_Clu1_Mom_Cov_Sxy);
     // Variables from Philippe's fit.
@@ -1575,6 +1591,8 @@ StatusCode CalValsTool::calculate()
     CAL_Clu1_MomYDir = firstCluster->getMomParams().getAxis().y();
     CAL_Clu1_MomZDir = firstCluster->getMomParams().getAxis().z();
     CAL_Clu1_MomNumIterations = firstCluster->getMomParams().getNumIterations();
+    CAL_Clu1_MomRunFlag = 0.;
+    if (firstCluster->checkStatusBit(Event::CalCluster::MOMENTS)) { CAL_Clu1_MomRunFlag = 1.; }
     CAL_Clu1_MomNumCoreXtals = firstCluster->getMomParams().getNumCoreXtals();
     CAL_Clu1_MomTransRms = firstCluster->getMomParams().getTransRms();
     CAL_Clu1_MomLongRms = firstCluster->getMomParams().getLongRms();
@@ -1586,14 +1604,29 @@ StatusCode CalValsTool::calculate()
     CAL_Clu1_Mom_Cov_Cxx = firstCluster->getMomParams().getxPosxPos();
     CAL_Clu1_Mom_Cov_Cyy = firstCluster->getMomParams().getyPosyPos();
     CAL_Clu1_Mom_Cov_Czz = firstCluster->getMomParams().getzPoszPos();
+    CAL_Clu1_Mom_Cov_Dxx = 0.;
+    CAL_Clu1_Mom_Cov_Dyy = 0.;
+    CAL_Clu1_Mom_Cov_Dzz = 0.;
+    CAL_Clu1_Mom_Cov_Dxy = 0.;
+    CAL_Clu1_Mom_Cov_Dxz = 0.;
+    CAL_Clu1_Mom_Cov_Dyz = 0.;
     CAL_Clu1_Mom_Cov_Sxx = 0.;
     CAL_Clu1_Mom_Cov_Syy = 0.;
     CAL_Clu1_Mom_Cov_Sxy = 0.;
-    if (firstCluster->checkStatusBit(Event::CalCluster::MOMENTS) && CAL_Clu1_MomZDir>0.001){ // exclude horizontal directions
-      CLHEP::HepMatrix CalCov = firstCluster->getMomParams().getMomErrsTkrRep();  
-      CAL_Clu1_Mom_Cov_Sxx = CalCov(2,2);
-      CAL_Clu1_Mom_Cov_Syy = CalCov(4,4);
-      CAL_Clu1_Mom_Cov_Sxy = CalCov(2,4);
+    if (firstCluster->checkStatusBit(Event::CalCluster::MOMENTS)) {
+      if (CAL_Clu1_MomZDir>0.001){ // exclude horizontal directions
+        CLHEP::HepMatrix CalCov = firstCluster->getMomParams().getMomErrsTkrRep();  
+        CAL_Clu1_Mom_Cov_Sxx = CalCov(2,2);
+        CAL_Clu1_Mom_Cov_Syy = CalCov(4,4);
+        CAL_Clu1_Mom_Cov_Sxy = CalCov(2,4);
+      }
+      CLHEP::HepMatrix AxisCov = firstCluster->getMomParams().getAxisErrs();
+      CAL_Clu1_Mom_Cov_Dxx = AxisCov(1,1);
+      CAL_Clu1_Mom_Cov_Dyy = AxisCov(2,2);
+      CAL_Clu1_Mom_Cov_Dzz = AxisCov(3,3);
+      CAL_Clu1_Mom_Cov_Dxy = AxisCov(1,2);
+      CAL_Clu1_Mom_Cov_Dxz = AxisCov(1,3);
+      CAL_Clu1_Mom_Cov_Dyz = AxisCov(2,3);
     }
     // Variables from Philippe's fit.
     CAL_Clu1_FitXCntr = firstCluster->getFitParams().getCentroid().x();
