@@ -3,6 +3,7 @@
   @verbatim
    * EOH *
 
+ AnalysisNtuple-02-67-00 bruel
   Added a stripped-down version of FT1Alg (FT1CalOnlyAlg) that can be
   used for reprocessing data only running the CAL portion of the
   reconstruction. (This won't be used in standard jobs.)  
