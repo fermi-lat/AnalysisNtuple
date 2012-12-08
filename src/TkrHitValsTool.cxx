@@ -2,7 +2,7 @@
 @brief Calculates the Tkr hit analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrHitValsTool.cxx,v 1.29 2012/10/04 17:09:08 bruel Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrHitValsTool.cxx,v 1.30 2012/12/04 13:44:37 bruel Exp $
 */
 
 // Include files
@@ -272,26 +272,27 @@ StatusCode TkrHitValsTool::calculate()
     Tkr_numstrips = 0;
     int i;
     for(i=0;i<_nLayers;++i) Tkr_StripsPerLyr[i] = 0;
-    
-    SmartDataPtr<Event::TkrDigiCol> tkrDigiCol(m_pEventSvc, EventModel::Digi::TkrDigiCol);
-    if(tkrDigiCol)
-      {
-        // Loop over available TkrDigis
-        for(Event::TkrDigiCol::iterator tkrIter = tkrDigiCol->begin(); tkrIter != tkrDigiCol->end(); tkrIter++)
-          {
-            Event::TkrDigi* tkrDigi = *tkrIter;
-            Tkr_numstrips += tkrDigi->getNumHits();
-            Tkr_StripsPerLyr[tkrDigi->getBilayer()] += tkrDigi->getNumHits();
-          }
-      }
-    Tkr_numstrips_blank = Tkr_StripsPerLyr[0]+Tkr_StripsPerLyr[1];
-    Tkr_numstrips_thick = Tkr_StripsPerLyr[2]+Tkr_StripsPerLyr[3]+Tkr_StripsPerLyr[4]+Tkr_StripsPerLyr[5];
-    Tkr_numstrips_thin = Tkr_numstrips-Tkr_numstrips_blank-Tkr_numstrips_thick;
-    Tkr_numstrips_thickblankave = (Tkr_StripsPerLyr[0]+Tkr_StripsPerLyr[1]+Tkr_StripsPerLyr[2])/3.0+Tkr_StripsPerLyr[3]+Tkr_StripsPerLyr[4]+Tkr_StripsPerLyr[5];
 
-    Tkr_StripsZCntr = 0;
-    for(i=2;i<_nLayers;++i) Tkr_StripsZCntr += m_zplane[i]*Tkr_StripsPerLyr[i];
-    if(Tkr_numstrips_thin+Tkr_numstrips_thick>0) Tkr_StripsZCntr /= (double)(Tkr_numstrips_thin+Tkr_numstrips_thick);
+    // The code below has been commented because we have to perform the strips counting in the cluster loop in order to avoind counting the ghosts strips
+//     SmartDataPtr<Event::TkrDigiCol> tkrDigiCol(m_pEventSvc, EventModel::Digi::TkrDigiCol);
+//     if(tkrDigiCol)
+//       {
+//         // Loop over available TkrDigis
+//         for(Event::TkrDigiCol::iterator tkrIter = tkrDigiCol->begin(); tkrIter != tkrDigiCol->end(); tkrIter++)
+//           {
+//             Event::TkrDigi* tkrDigi = *tkrIter;
+//             Tkr_numstrips += tkrDigi->getNumHits();
+//             Tkr_StripsPerLyr[tkrDigi->getBilayer()] += tkrDigi->getNumHits();
+//           }
+//       }
+//     Tkr_numstrips_blank = Tkr_StripsPerLyr[0]+Tkr_StripsPerLyr[1];
+//     Tkr_numstrips_thick = Tkr_StripsPerLyr[2]+Tkr_StripsPerLyr[3]+Tkr_StripsPerLyr[4]+Tkr_StripsPerLyr[5];
+//     Tkr_numstrips_thin = Tkr_numstrips-Tkr_numstrips_blank-Tkr_numstrips_thick;
+//     Tkr_numstrips_thickblankave = (Tkr_StripsPerLyr[0]+Tkr_StripsPerLyr[1]+Tkr_StripsPerLyr[2])/3.0+Tkr_StripsPerLyr[3]+Tkr_StripsPerLyr[4]+Tkr_StripsPerLyr[5];
+
+//     Tkr_StripsZCntr = 0;
+//     for(i=2;i<_nLayers;++i) Tkr_StripsZCntr += m_zplane[i]*Tkr_StripsPerLyr[i];
+//     if(Tkr_numstrips_thin+Tkr_numstrips_thick>0) Tkr_StripsZCntr /= (double)(Tkr_numstrips_thin+Tkr_numstrips_thick);
 
     // Recover Track associated info. 
     SmartDataPtr<Event::TkrClusterCol>   
@@ -328,6 +329,12 @@ StatusCode TkrHitValsTool::calculate()
         isSaturated = (clust->getRawToT()==250);
         isMarked    = clust->isSet(Event::TkrCluster::maskZAPGHOSTS);
 
+        if(!isMarked)
+          {
+            Tkr_numstrips += (int)clust->size();
+            Tkr_StripsPerLyr[clust->getLayer()] += (int)clust->size();
+          }
+
         if(isMarked) {
             Tkr_numGhosts++;
             if(isSaturated) Tkr_numSaturatedGhosts++;
@@ -354,6 +361,15 @@ StatusCode TkrHitValsTool::calculate()
             }
         }
     }
+
+    Tkr_numstrips_blank = Tkr_StripsPerLyr[0]+Tkr_StripsPerLyr[1];
+    Tkr_numstrips_thick = Tkr_StripsPerLyr[2]+Tkr_StripsPerLyr[3]+Tkr_StripsPerLyr[4]+Tkr_StripsPerLyr[5];
+    Tkr_numstrips_thin = Tkr_numstrips-Tkr_numstrips_blank-Tkr_numstrips_thick;
+    Tkr_numstrips_thickblankave = (Tkr_StripsPerLyr[0]+Tkr_StripsPerLyr[1]+Tkr_StripsPerLyr[2])/3.0+Tkr_StripsPerLyr[3]+Tkr_StripsPerLyr[4]+Tkr_StripsPerLyr[5];
+
+    Tkr_StripsZCntr = 0;
+    for(i=2;i<_nLayers;++i) Tkr_StripsZCntr += m_zplane[i]*Tkr_StripsPerLyr[i];
+    if(Tkr_numstrips_thin+Tkr_numstrips_thick>0) Tkr_StripsZCntr /= (double)(Tkr_numstrips_thin+Tkr_numstrips_thick);
 
     // truncation info
     SmartDataPtr<Event::TkrTruncationInfo>   

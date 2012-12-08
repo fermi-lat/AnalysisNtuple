@@ -123,6 +123,11 @@ private:
     int    m_minWide;
     int    m_minWider;
 
+  double energyWeightThin[18];
+  double energyWeightThick[18];
+  
+  double gaplossparam0[18];
+  double gaplossparam1[18];
 
     //Global Track Tuple Items
     float Tkr_Num_Tracks;
@@ -285,6 +290,10 @@ private:
   float Tkr1YCntrTwrCntr;
   float Tkr1YCntrTwrEdge;
   float Tkr1YCntrTwrEdgeSigned;
+
+  float Tkr1StripsGapLossPar;
+  float Tkr1StripsGapCorr;
+  float Tkr1StripsEnergyCorr;
 
     // here's some test stuff... if it works for a couple it will work for all
 
@@ -746,6 +755,35 @@ StatusCode TkrValsTool::initialize()
         return fail;
     }
 
+    double myparam0_2 = 1.75e-6;
+    double myparam0_5 = -4.0e-6;
+    double myparam0_15 = 4.6e-6;
+    double myparam1_2 = 1.75e-6;
+    double myparam1_5 = -0.5e-6;
+    double myparam1_15 = 11.3e-6;
+
+    int i;
+    double myx;
+    for(i=2;i<18;++i)
+      {
+        myx = (double)i;
+        if(myx<=5)
+          {
+            gaplossparam0[i] = myparam0_2+(myparam0_5-myparam0_2)/(5.-2.)*(myx-2.);
+            gaplossparam1[i] = myparam1_2+(myparam1_5-myparam1_2)/(5.-2.)*(myx-2.);
+          }
+        else if(myx<=15)
+          {
+            gaplossparam0[i] = myparam0_5+(myparam0_15-myparam0_5)/(15.-5.)*(myx-5.);
+            gaplossparam1[i] = myparam1_5+(myparam1_15-myparam1_5)/(15.-5.)*(myx-5.);
+          }
+        else
+          {
+            gaplossparam0[i] = myparam0_15;
+            gaplossparam1[i] = myparam1_15;
+          }
+      }
+
     // load up the map
 
     addItem("TkrNumTracks",   &Tkr_Num_Tracks);
@@ -915,6 +953,10 @@ StatusCode TkrValsTool::initialize()
 //     addItem("Tkr1YCntrTwrCntr",&Tkr1YCntrTwrCntr);
 //     addItem("Tkr1YCntrTwrEdge",&Tkr1YCntrTwrEdge);
 //     addItem("Tkr1YCntrTwrEdgeSigned",&Tkr1YCntrTwrEdgeSigned);
+
+    addItem("Tkr1StripsGapLossPar",&Tkr1StripsGapLossPar);
+    addItem("Tkr1StripsGapCorr",&Tkr1StripsGapCorr);
+    addItem("Tkr1StripsEnergyCorr",&Tkr1StripsEnergyCorr);
 
     zeroVals();
 
@@ -1991,8 +2033,23 @@ StatusCode TkrValsTool::calculate()
     Tkr1ZCntr = 0;
     if(!(m_pTkrHitTool->getVal("TkrStripsZCntr",Tkr1ZCntr,nextCheck).isSuccess())) Tkr1ZCntr = 0;
 
+    Tkr1XCntr = 0;
+    Tkr1YCntr = 0;
+    Tkr1XCntrTwrCntr = 0;
+    Tkr1XCntrTwrEdge = 0;
+    Tkr1XCntrTwrEdgeSigned = 0;
+    Tkr1YCntrTwrCntr = 0;
+    Tkr1YCntrTwrEdge = 0;
+    Tkr1YCntrTwrEdgeSigned = 0;
+    Tkr1CntrDistTwrCntr = 0;
+    
+    Tkr1StripsGapLossPar = 0.0;
+    Tkr1StripsGapCorr = 1.0;
+
     double x,xtow,lambda;
     int itow;
+    double mytkr1zdir,gaplossparam;
+    int ifirstlayer;
     if(Tkr_1_zdir!=0)
       {
         lambda = (Tkr1ZCntr-Tkr_1_z0)/Tkr_1_zdir;
@@ -2014,7 +2071,24 @@ StatusCode TkrValsTool::calculate()
         if((xtow-m_towerHalfPitch)*Tkr_1_ydir<0) Tkr1YCntrTwrEdgeSigned = -Tkr1YCntrTwrEdge;
         //
         Tkr1CntrDistTwrCntr = sqrt(Tkr1XCntrTwrCntr*Tkr1XCntrTwrCntr+Tkr1YCntrTwrCntr*Tkr1YCntrTwrCntr);
+        //
+        mytkr1zdir = Tkr_1_zdir;
+        if(mytkr1zdir>-0.5) mytkr1zdir = -0.5;
+        ifirstlayer = (int)Tkr_1_FirstLayer;
+        if(ifirstlayer>=2 && ifirstlayer<18)
+          {
+            Tkr1StripsGapLossPar = gaplossparam0[ifirstlayer]+gaplossparam1[ifirstlayer]*mytkr1zdir;
+            Tkr1StripsGapCorr = 1+Tkr1StripsGapLossPar*Tkr1CntrDistTwrCntr*Tkr1CntrDistTwrCntr;
+            if(Tkr1StripsGapCorr<0.2) Tkr1StripsGapCorr = 0.2;
+          }
       }
+
+    int iTkrNumStripsThin = 0;
+    if(!(m_pTkrHitTool->getVal("TkrNumStripsThin",iTkrNumStripsThin,nextCheck).isSuccess())) iTkrNumStripsThin = 0;
+    float TkrNumStripsThin = (float)iTkrNumStripsThin;
+    float TkrNumStripsThickBlankAve = 0;
+    if(!(m_pTkrHitTool->getVal("TkrNumStripsThickBlankAve",TkrNumStripsThickBlankAve,nextCheck).isSuccess())) TkrNumStripsThickBlankAve = 0;
+    Tkr1StripsEnergyCorr = (0.65*TkrNumStripsThin+1.05*TkrNumStripsThickBlankAve)/Tkr1StripsGapCorr;
 
     if(m_testExceptions) {
 
@@ -2239,4 +2313,5 @@ float TkrValsTool::SSDEvaluation(const Event::TkrTrack* track)
     } // end loop over steps
 
     return m_SSDVeto;
+
 }
