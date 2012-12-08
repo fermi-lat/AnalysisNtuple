@@ -79,9 +79,6 @@ private:
     float MC_EFrac;
     float MC_OpenAngle; 
     float MC_TkrExitEne;
-    char  MC_process[80];
-    char  MC_materialName[80];
-    int   MC_materialId;
 
     unsigned int   MC_StatusWord;
     
@@ -200,12 +197,6 @@ McValsTool::McValsTool(const std::string& type,
             these will ordinarily be the electron and positron.) 
 <tr><td> McTkrExitEne 
 <td>F<td>   Attempt to calculate the total energy <strong>leaving</strong> the tracker volume 
-<tr><td> McProcess
-<td>S<td>   c-string containing the name of the particle reaction process
-<tr><td> McMaterialId
-<td>I<td>   Unique index of the material in which the primary particle stops
-<tr><td> McMaterialName
-<td>S<td>   c-string containing the name of the material in which the primary particle stops
 <tr><td> McStatusWord
 <td>U<td>   Status bits from G4Generator
 <tr><td> Mc[X/Y/Z]0 
@@ -279,9 +270,6 @@ StatusCode McValsTool::initialize()
     addItem("McEFrac",        &MC_EFrac,       true);
     addItem("McOpenAngle",    &MC_OpenAngle,   true);
     addItem("McTkrExitEne",   &MC_TkrExitEne,  true);
-    addItem("McProcess",      MC_process,      true);
-    addItem("McMaterialId",   &MC_materialId,  true);
-    addItem("McMaterialName", MC_materialName, true);
 
     // added 5/5/09 LSR
     addItem("McStatusWord",   &MC_StatusWord,  true);
@@ -349,7 +337,6 @@ StatusCode McValsTool::initialize()
 
 StatusCode McValsTool::calculate()
 {
-    MsgStream log(msgSvc(), name());  
     StatusCode sc = StatusCode::SUCCESS;
     
     // Recover Track associated info. 
@@ -442,12 +429,6 @@ StatusCode McValsTool::calculate()
         MC_TkrExitEne = getEnergyExitingTkr(*pMCPrimary);
         
         MC_StatusWord = (*pMCPrimary)->statusFlags();
-        log << MSG::DEBUG;
-        if ( log.isActive() ) {
-            log << "mother particle" << std::endl << "    ";
-            (*pMCPrimary)->fillStream(log.stream());
-        }
-        log << endreq;
 
         // If no daughters then nothing happened, e.g. gamma traversed LAT without interacting
         if((*pMCPrimary)->daughterList().size() > 0) 
@@ -455,20 +436,6 @@ StatusCode McValsTool::calculate()
             SmartRefVector<Event::McParticle> daughters   = (*pMCPrimary)->daughterList();
             SmartRef<Event::McParticle>       pp1         = daughters[0]; 
             std::string                       interaction = pp1->getProcess();
-            for ( int i=0; i<(*pMCPrimary)->daughterList().size(); ++i ) {
-                if ( i < 1 || interaction == "conv" && i < 2 )
-                    log << MSG::DEBUG;
-                else
-                    log << MSG::VERBOSE;
-                if ( log.isActive() ) {
-                    log << "daughter particle " << i << ":" << std::endl << "    ";
-                    daughters[i]->fillStream(log.stream());
-                }
-                log << endreq;
-            }
-            strncpy(MC_process, pp1->getProcess().c_str(), 80);
-            MC_materialId = pp1->getInitialMaterialId();
-            strncpy(MC_materialName, pp1->getInitialMaterialName().c_str(), 80);
 
             if(interaction == "conv")  // Its a photon conversion; For comptons "compt" or brems "brem"  
             {
