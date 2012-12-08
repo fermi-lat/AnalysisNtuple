@@ -2,7 +2,7 @@
 @brief Calculates the Tracker Tree variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TreeValsTool.cxx,v 1.16 2012/06/18 20:52:42 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TreeValsTool.cxx,v 1.17 2012/10/03 14:12:56 bruel Exp $
 */
 
 // Include files
@@ -623,8 +623,8 @@ StatusCode TreeValsTool::calculate()
                     std::sort(docaVec.begin(), docaVec.end());
 
                     // Extract the 68%, 95% and final elements
-                    int idx68 = 0.68 * docaVec.size();
-                    int idx95 = 0.95 * docaVec.size();
+                    int idx68 = (int) 0.68 * docaVec.size();
+                    int idx95 = (int) 0.95 * docaVec.size();
 
                     Tkr_tree1_numLinks   = docaVec.size();
                     Tkr_tree1_calPosDoca = relationItr->second.front()->getTreeClusDoca();

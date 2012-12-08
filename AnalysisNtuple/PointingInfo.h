@@ -1,5 +1,5 @@
 /** @file PointingInfo.h
-// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/AnalysisNtuple/PointingInfo.h,v 1.4 2008/02/28 21:42:51 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/AnalysisNtuple/PointingInfo.h,v 1.5 2009/02/06 20:57:10 lsrea Exp $
 */
 
 #ifndef PointingInfo_h
@@ -10,7 +10,10 @@
 class INTupleWriterSvc;
 class MsgStream;
 
-namespace astro { class GPS;}
+namespace astro { 
+    class GPS;
+    class PointingHistory;
+}
 
 /** @class PointingInfo
 @brief Manage the data in the FT2 definition
@@ -28,6 +31,7 @@ public:
     //! fill the pointing info for the current orbital status
     void execute( const astro::GPS& gps);
 
+    void setHistoryFile( const std::string filename);
 
 private:
     double start, stop;
@@ -50,6 +54,16 @@ private:
     float bNorth;
     float bUp;
 
+    int   lat_mode;
+    int   lat_config;
+    int   data_qual;
+    float rock_angle;
+    float livetime_frac;
+    float ft2_start;
+    float ft2_stop;
+    //int in_saa  // already have this?
+    //astro::PointingHistory  m_history;
+    std::string             m_filename;
 };
 
 }

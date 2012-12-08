@@ -1,7 +1,7 @@
 /** @file OverlayValsTool.cxx
 @brief declaration and definition of the class OverlayValsTool
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/OverlayValsTool.cxx,v 1.10 2012/10/03 13:04:47 bruel Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/OverlayValsTool.cxx,v 1.11 2012/10/03 14:12:56 bruel Exp $
 
 */
 
@@ -132,6 +132,12 @@ private:
     float                   m_bNorth;
     float                   m_bUp;
 
+    int                     m_lat_config;
+    int                     m_lat_mode;
+    int                     m_data_qual;
+    int                     m_rock_angle;
+    float                   m_livetime_frac;
+
   // Overlay energy in cal clusters
   float CAL_Clu1_OverlayEnergy;
   float CAL_Clu2_OverlayEnergy;
@@ -206,6 +212,11 @@ These items are added to the merit tuple  to give the current instrument orienta
 <tr><td> OvrPtBEast      <td>F<td> East component of the magnetic field
 <tr><td> OvrPtBNorth     <td>F<td> North component of the magnetic field
 <tr><td> OvrPtBUp        <td>F<td> Upward component of the magnetic field
+<tr><td> OvrLatMode      <td>I<td> LAT mode from FT2 file
+<tr><td> OvrLatConfig    <td>I<td> LAT configuration from FT2 file
+<tr><td> OvrDataQual     <td>I<td> LAT data quality word from FT2 file
+<tr><td> OvrRockAngle    <td>F<td> Rocking angle from FT2 file
+<tr><td> OvrLivetimeFrac <td>F<td> livetime fraction from FT2 file: Livetime/(Stop-Start)
 </table>
 */
 
@@ -333,6 +344,13 @@ StatusCode OverlayValsTool::initialize()
     addItem("OvrCal3Energy",  &CAL_Clu3_OverlayEnergy);
     addItem("OvrCal4Energy",  &CAL_Clu4_OverlayEnergy);
     addItem("OvrCal5Energy",  &CAL_Clu5_OverlayEnergy);
+
+    addItem("OvrLATMode",      &m_lat_mode);
+    addItem("OvrLATConfig",    &m_lat_config);
+    addItem("OvrDataQual",     &m_data_qual);
+    addItem("OvrRockAngle",    &m_rock_angle);
+    addItem("OvrLivetimeFrac", &m_livetime_frac);
+
 
     zeroVals();
 
@@ -513,6 +531,12 @@ void OverlayValsTool::fillPtFromPtOverlay(Event::PtOverlay*  ptOverlay)
     m_bEast          = ptOverlay->getBEast();
     m_bNorth         = ptOverlay->getBNorth();
     m_bUp            = ptOverlay->getBUp();
+
+    m_lat_mode       = ptOverlay->getLATMode();
+    m_lat_config     = ptOverlay->getLATConfig();
+    m_data_qual      = ptOverlay->getDataQual();
+    m_rock_angle     = ptOverlay->getRockAngle(); 
+    m_livetime_frac  = ptOverlay->getLivetimeFrac();
 
     return;
 }

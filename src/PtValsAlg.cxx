@@ -1,7 +1,7 @@
 /** @file PtValsAlg.cxx
 @brief declaration and definition of the class PtValsAlg
 
-$Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/src/PtValsAlg.cxx,v 1.12.42.1 2011/04/19 18:10:25 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/PtValsAlg.cxx,v 1.13 2011/12/12 20:36:35 heather Exp $
 
 */
 
@@ -30,6 +30,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/src/PtVa
 
 #include "astro/JulianDate.h"
 #include "astro/GPS.h"
+#include "astro/PointingHistory.h"
 
 //
 #include "AnalysisNtuple/PointingInfo.h"
@@ -70,6 +71,7 @@ private:
     astro::PointingHistory* m_history;
     bool m_horizontal;
     bool m_fillNtuple;
+    std::string m_filename;
 
 };
 //------------------------------------------------------------------------
@@ -82,7 +84,7 @@ DECLARE_ALGORITHM_FACTORY(PtValsAlg);
 //------------------------------------------------------------------------
 //! ctor
 PtValsAlg::PtValsAlg(const std::string& name, ISvcLocator* pSvcLocator)
-:Algorithm(name, pSvcLocator) , m_horizontal(false)
+:Algorithm(name, pSvcLocator) , m_horizontal(false), m_history(0), m_filename("")
 {
     // declare properties with setProperties calls
 
@@ -95,7 +97,8 @@ PtValsAlg::PtValsAlg(const std::string& name, ISvcLocator* pSvcLocator)
 //------------------------------------------------------------------------
 //! set parameters and attach to various perhaps useful services.
 StatusCode PtValsAlg::initialize(){
-    StatusCode  sc = StatusCode::SUCCESS;
+
+	StatusCode  sc = StatusCode::SUCCESS;
     MsgStream log(msgSvc(), name());
     // Use the Job options service to set the Algorithm's parameters
     setProperties();
@@ -121,6 +124,7 @@ StatusCode PtValsAlg::initialize(){
     }else{
         std::string filename(m_pointingHistory.value()[0]);
         facilities::Util::expandEnvVar(&filename);
+        m_filename = filename;
         double offset = 0;
         std::string jStr;
         if( m_pointingHistory.value().size()>1){
@@ -163,6 +167,8 @@ StatusCode PtValsAlg::initialize(){
         return sc;
     }
     m_pEventSvc = eventsvc;
+
+    m_pointingInfo.setHistoryFile(m_filename);
    
     return sc;
 }
@@ -193,7 +199,7 @@ StatusCode PtValsAlg::execute()
     gps->time(etime);
 
     // and create the tuple
-    if (m_fillNtuple) m_pointingInfo.execute( *gps );
+    if (m_fillNtuple) m_pointingInfo.execute( *gps);
     
     return StatusCode::SUCCESS;
 }

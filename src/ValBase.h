@@ -2,7 +2,7 @@
 @brief header file for ValBase.cxx
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.h,v 1.40 2011/02/27 20:06:53 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/ValBase.h,v 1.41 2011/05/30 09:16:59 kadrlica Exp $
 */
 
 #ifndef ValBase_h
@@ -28,7 +28,7 @@ class IDataProviderSvc;
 @author Leon Rochester
 
 */
-namespace {
+//namespace {
 
 // LSR 14-Jul-08 code for ntuple types
 
@@ -62,7 +62,7 @@ namespace {
         void*   m_pointer;
         int     m_dim;
     };
-}
+//}
 
 class ValBase : public IValsTool,  public AlgTool,  virtual public IIncidentListener
 {

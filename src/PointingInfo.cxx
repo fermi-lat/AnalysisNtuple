@@ -2,7 +2,7 @@
 @brief declaration and definition of the class PointingInfo
 
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/PointingInfo.cxx,v 1.6 2009/02/07 21:36:27 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/PointingInfo.cxx,v 1.7 2009/02/15 05:47:25 lsrea Exp $
 
 */
 class MsgStream;
@@ -12,6 +12,7 @@ class MsgStream;
 
 #include "astro/SkyDir.h"
 #include "astro/GPS.h"
+#include "astro/PointingHistory.h"
 #include "astro/JulianDate.h"
 #include "astro/EarthCoordinate.h"
 
@@ -21,6 +22,12 @@ using namespace AnalysisNtuple;
 
 namespace {
     const double R2D = 180./M_PI;
+}
+
+void PointingInfo::setHistoryFile( const std::string filename)
+{
+    m_filename = filename;
+    //m_history(filename);
 }
 
 void PointingInfo::execute( const astro::GPS& gps)
@@ -69,7 +76,30 @@ void PointingInfo::execute( const astro::GPS& gps)
     double temp = pos_km[2]/pos_km.mag();
     if(dec_scz < temp) zenith_scz *= -1.0;
     zenith_scz *= R2D; // and convert to degrees
-}
+
+    if(m_filename!="") {
+        astro::PointingHistory history(m_filename);
+        lat_mode   = history(start).latProperties().lat_mode();
+        lat_config = history(start).latProperties().lat_config();
+        data_qual  = history(start).latProperties().data_qual();
+        rock_angle = history(start).latProperties().rock_angle();
+         
+        ft2_start = history(start).latProperties().interval_start();
+        ft2_stop =  history(start).latProperties().interval_stop();
+
+        livetime_frac = history(start).latProperties().livetime_frac();
+	} else {
+        lat_mode   = 0;
+        lat_config = 0;
+        data_qual  = 0;
+        rock_angle = 0.;
+         
+        ft2_start = 0.;
+        ft2_stop =  0.;
+
+        livetime_frac = 0.;
+	}
+}        
 
 /** @page anatup_vars 
     @section Pt  Pt Variables
@@ -96,6 +126,11 @@ void PointingInfo::execute( const astro::GPS& gps)
 <tr><td> PtBEast      <td>F<td> East component of the magnetic field
 <tr><td> PtBNorth     <td>F<td> North component of the magnetic field
 <tr><td> PtBUp        <td>F<td> Upward component of the magnetic field
+<tr><td> PtLatMode    <td>I<td> LAT mode from FT2 file
+<tr><td> PtLatConfig  <td>I<td> LAT configuration from FT2 file
+<tr><td> PtDataQual   <td>I<td> LAT data quality word from FT2 file
+<tr><td> PtRockAngle  <td>F<td> Rocking angle from FT2 file
+<tr><td> PtLivetimeFrac <td>F<td> livetime fraction from FT2 file: Livetime/(Stop-Start)
 </table>
 */
 
@@ -122,4 +157,13 @@ void PointingInfo::setPtTuple(INTupleWriterSvc* tuple, const std::string& tname)
     tuple->addItem(tname, "PtBEast",  &bEast);
     tuple->addItem(tname, "PtBNorth", &bNorth);
     tuple->addItem(tname, "PtBUp",    &bUp);
+
+    tuple->addItem(tname, "PtLATMode",      &lat_mode);
+    tuple->addItem(tname, "PtLATConfig",    &lat_config);
+    tuple->addItem(tname, "PtDataQual",     &data_qual);
+    tuple->addItem(tname, "PtRockAngle",    &rock_angle);
+    tuple->addItem(tname, "PtLivetimeFrac", &livetime_frac);
+
+    //tuple->addItem(tname, "PtInSAA",        &in_saa);
+
 }
