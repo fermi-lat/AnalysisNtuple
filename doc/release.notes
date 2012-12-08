@@ -3,7 +3,7 @@
   @verbatim
    * EOH *
 
-  08-Dec-2012 Ph.Bruel Implementation of NewEvtEnergyCorr and EvtJointEnergy (TkrHitVals, TkrVals, EvtVals)
+ AnalysisNtuple-02-69-00  08-Dec-2012 bruel Implementation of NewEvtEnergyCorr and EvtJointEnergy (TkrHitVals, TkrVals, EvtVals)
  AnalysisNtuple-02-68-00 07-Dec-2012  lsrea add 'ft2' variables
  AnalysisNtuple-02-67-00 bruel
   Added a stripped-down version of FT1Alg (FT1CalOnlyAlg) that can be
