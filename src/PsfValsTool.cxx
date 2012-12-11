@@ -2,7 +2,7 @@
 @brief Calculates an expected PSF containment radius for each evt, based on a given psf version
 @author Johann Cohen-Tanugi
 
-$Header: $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/PsfValsTool.cxx,v 1.1 2012/12/11 15:24:54 cohen Exp $
 */
 #include <sstream>
 #include <stdexcept>
@@ -11,6 +11,8 @@ $Header: $
 
 #include "tip/IFileSvc.h"
 #include "tip/Table.h"
+
+#include "facilities/Util.h"                // for expandEnvVar
 
 #include "st_facilities/Bilinear.h"
 #include "st_facilities/GaussianQuadrature.h"
@@ -41,7 +43,7 @@ class PsfObject{
 
 public:
 
-  PsfObject(const std::string & fitsfile, bool isFront=true,
+  PsfObject(std::string & fitsfile, bool isFront=true,
 	    const std::string & extname="RPSF", size_t nrow=0);
   PsfObject(){;}
   virtual ~PsfObject() {;}
@@ -111,7 +113,7 @@ private:
   double scaleFactor(double energy) const;
   double value(double separation, double energy, double theta,
 	       double phi, double time) const;
-  double Psf2_psf_base_function(double u, double gamma);
+  double Psf2_psf_base_function(double u, double gamma) const;
 };
 
 ////////////////////////////////////////////////////////////
@@ -121,8 +123,9 @@ double PsfObject::s_phi(0);
 double PsfObject::s_time(0);
 const PsfObject * PsfObject::s_self(0);
 
-PsfObject::PsfObject(const std::string & fitsfile, bool isFront,
+PsfObject::PsfObject(std::string & fitsfile, bool isFront,
 		     const std::string & extname, size_t nrow) {
+  facilities::Util::expandEnvVar(&fitsfile);
   readScaling(fitsfile, isFront);
   readFits(fitsfile, extname, nrow);
   normalize_pars();
@@ -450,7 +453,7 @@ public:
   virtual ~PsfValsTool() { ; }
   /// @brief Initialization of the tool.
   StatusCode initialize();
-  void loadPsf(const std::string psfType);
+  StatusCode loadPsf(const std::string psfType);
   double computePsf(const double cl_level, const double energy,
 		    const double theta, const bool isFront);
   
@@ -483,15 +486,20 @@ StatusCode PsfValsTool::initialize()
   return sc;
 }
 
-void PsfValsTool::loadPsf(const std::string psfName) {
+StatusCode PsfValsTool::loadPsf(const std::string psfName) {
+  StatusCode sc = StatusCode::SUCCESS;
+  MsgStream log(msgSvc(), name());
   if(psfName=="P7SOURCE_V6MC"){
-    std::stringstream f_front;
-    f_front<<"$(ANALYSISNTUPLEDATAPATH)/psf_"<<psfName<<"_front.fits";
-    std::stringstream f_back;
-    f_back<<"$(ANALYSISNTUPLEDATAPATH)/psf_"<<psfName<<"_back.fits";
-    m_psf_front = PsfObject(f_front.str(),true);
-    m_psf_back = PsfObject(f_back.str(),false);
+    std::string psfFile_front="$(ANALYSISNTUPLEDATAPATH)/psf_P7SOURCE_V6MC_front.fits";
+    m_psf_front = PsfObject(psfFile_front,true);
+    std::string psfFile_back="$(ANALYSISNTUPLEDATAPATH)/psf_P7SOURCE_V6MC_back.fits";
+    m_psf_back = PsfObject(psfFile_back,false);
   }
+  else{
+    log<<MSG::FATAL<<"Could not initialize PsfValTools, psf "<<psfName<<" not supported."<<endreq;
+    return StatusCode::FAILURE;
+  }
+  return sc;
 }
 
 //compute containment level defined by cl_level
@@ -546,7 +554,7 @@ double PsfObject::evaluate(double energy, double sep, const double * pars) const
            ntail*ncore*Psf2_psf_base_function(ut, gtail));
 }
 
-double PsfObject::Psf2_psf_base_function(double u, double gamma) {
+double PsfObject::Psf2_psf_base_function(double u, double gamma) const {
    // ugly kluge because of sloppy programming in handoff_response
    // when setting boundaries of fit parameters for the PSF.
    if (gamma == 1) {

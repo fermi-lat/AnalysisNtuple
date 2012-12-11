@@ -3,7 +3,7 @@
 @brief Calculates the "Event" analysis variables from the other ntuple variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.53 2012/12/08 10:38:22 bruel Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.54 2012/12/11 15:24:54 cohen Exp $
 */
 
 #include "ValBase.h"
@@ -323,7 +323,8 @@ StatusCode EvtValsTool::initialize()
         log << MSG::ERROR << "Unable to find tool: " "PsfValsTool" << endreq;
         return sc;
     } else {
-      m_pPsfTool->loadPsf("P7SOURCE_V6MC");
+      sc = m_pPsfTool->loadPsf("P7SOURCE_V6MC");
+      if(sc.isFailure()) return sc;
     }
 
 
