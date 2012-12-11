@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.134 2012/12/04 15:32:45 carmelo Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.135 2012/12/06 13:37:27 carmelo Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -1613,6 +1613,7 @@ StatusCode CalValsTool::calculate()
     CAL_Clu1_Mom_Cov_Sxx = 0.;
     CAL_Clu1_Mom_Cov_Syy = 0.;
     CAL_Clu1_Mom_Cov_Sxy = 0.;
+
     if (firstCluster->checkStatusBit(Event::CalCluster::MOMENTS)) {
       if (CAL_Clu1_MomZDir>0.001){ // exclude horizontal directions
         CLHEP::HepMatrix CalCov = firstCluster->getMomParams().getMomErrsTkrRep();  
@@ -2771,6 +2772,7 @@ float CalValsTool::CalSSDEvaluation(const Event::CalCluster* cluster)
 
   Point  xc = cluster->getMomParams().getCentroid(); // let start from cal centroid
   Vector t1 = -1*cluster->getMomParams().getAxis();  // notice -1: different convention for Tkr and Cal
+
   CLHEP::HepMatrix CalCov = cluster->getMomParams().getMomErrsTkrRep();
   // check on validity of the mom analysis calc on num core xtals:
   // if it is less than 3 it is not a valid fit and errors are meaningless
@@ -2790,6 +2792,7 @@ float CalValsTool::CalSSDEvaluation(const Event::CalCluster* cluster)
   // fill 4x4 representation of error matrix, these are the only non-zero elements.
   // Tkr rep. is (xPos, xSlp, yPos, ySlp)
   // Propagated to x1 - I hope this is right!
+  
   double xPosxPos = (zRefAboveCal-xc.z())*CalCov(2,2) + CalCov(1,1);
   double yPosyPos = (zRefAboveCal-xc.z())*CalCov(4,4) + CalCov(3,3);
   double xSlpxSlp = CalCov(2,2);

@@ -1,5 +1,5 @@
 /** @file PointingInfo.h
-// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/AnalysisNtuple/PointingInfo.h,v 1.5 2009/02/06 20:57:10 lsrea Exp $
+// $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/AnalysisNtuple/PointingInfo.h,v 1.6 2012/12/08 01:53:15 lsrea Exp $
 */
 
 #ifndef PointingInfo_h
@@ -59,11 +59,11 @@ private:
     int   data_qual;
     float rock_angle;
     float livetime_frac;
-    float ft2_start;
-    float ft2_stop;
+    double ft2_start;
+    double ft2_stop;
     //int in_saa  // already have this?
-    //astro::PointingHistory  m_history;
-    std::string             m_filename;
+    astro::PointingHistory*  m_history;
+    std::string              m_filename;
 };
 
 }

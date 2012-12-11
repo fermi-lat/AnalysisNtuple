@@ -2,7 +2,7 @@
 @brief declaration and definition of the class PointingInfo
 
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/PointingInfo.cxx,v 1.7 2009/02/15 05:47:25 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/PointingInfo.cxx,v 1.8 2012/12/08 01:53:16 lsrea Exp $
 
 */
 class MsgStream;
@@ -18,16 +18,20 @@ class MsgStream;
 
 #include "ntupleWriterSvc/INTupleWriterSvc.h"
 
+#include <iomanip>
+
 using namespace AnalysisNtuple;
 
 namespace {
     const double R2D = 180./M_PI;
+	double ft2_start0 = -1.;
+	double ft2_stop0  = -1.;
 }
 
 void PointingInfo::setHistoryFile( const std::string filename)
 {
     m_filename = filename;
-    //m_history(filename);
+	m_history = new astro::PointingHistory(m_filename);
 }
 
 void PointingInfo::execute( const astro::GPS& gps)
@@ -77,17 +81,29 @@ void PointingInfo::execute( const astro::GPS& gps)
     if(dec_scz < temp) zenith_scz *= -1.0;
     zenith_scz *= R2D; // and convert to degrees
 
-    if(m_filename!="") {
-        astro::PointingHistory history(m_filename);
-        lat_mode   = history(start).latProperties().lat_mode();
-        lat_config = history(start).latProperties().lat_config();
-        data_qual  = history(start).latProperties().data_qual();
-        rock_angle = history(start).latProperties().rock_angle();
-         
-        ft2_start = history(start).latProperties().interval_start();
-        ft2_stop =  history(start).latProperties().interval_stop();
+	if(m_filename!="") {
+		astro::PointingHistory& history = *m_history;
+		const astro::LatProperties& latProp = history(start).latProperties();
+        ft2_start = latProp.interval_start();
+        ft2_stop =  latProp.interval_stop();
+		// no need to replace latProperties if we're in the same interval
+		if(ft2_start!=ft2_start0 || ft2_stop!=ft2_stop0) {
+			lat_mode   = latProp.lat_mode();
+			lat_config = latProp.lat_config();
+			data_qual  = latProp.data_qual();
+			rock_angle = latProp.rock_angle();
+	         
+			livetime_frac = latProp.livetime_frac();
+			ft2_start0 = ft2_start;
+			ft2_stop0  = ft2_stop;
 
-        livetime_frac = history(start).latProperties().livetime_frac();
+			//std::cout << "Anatup::PointingInfo - LatProperties " 
+			//	<< " diff " << ft2_stop - ft2_start << " ft2 start "   
+			//	<< std::setiosflags(std::ios::fixed) << std::setprecision(2) << std::setw(17) << ft2_start << " " 
+			//	<< std::endl;
+
+
+		}
 	} else {
         lat_mode   = 0;
         lat_config = 0;
@@ -99,6 +115,9 @@ void PointingInfo::execute( const astro::GPS& gps)
 
         livetime_frac = 0.;
 	}
+
+	//std::cout << "Anatup::PointingInfo - GPS" << std::setprecision(7) << "McIl-L " << L 
+	//	<< " livetime_frac " << livetime_frac  << std::endl;
 }        
 
 /** @page anatup_vars 
