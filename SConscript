@@ -1,5 +1,5 @@
 # -*-python-*-
-# $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/SConscript,v 1.103 2012/12/08 02:08:16 lsrea Exp $
+# $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/SConscript,v 1.104 2012/12/08 18:17:05 heather Exp $
 # Authors: Leon Rochester <lsrea@slac.stanford.edu>
 # Version: AnalysisNtuple-02-69-00
 
@@ -42,5 +42,5 @@ progEnv.Tool('registerTargets', package = 'AnalysisNtuple',
              libraryCxts = [[AnalysisNtuple,libEnv]],
 	     testAppCxts = [[test_AnalysisNtuple, progEnv]],
              includes = listFiles(['AnalysisNtuple/*.h']),
-	     data = listFiles(['data/*.txt']),
+	     data = listFiles(['data/*.txt','data/*.fits']),
 	     jo = listFiles(['src/test/*.txt']))
