@@ -2,7 +2,7 @@
 @brief Calculates an expected PSF containment radius for each evt, based on a given psf version
 @author Johann Cohen-Tanugi
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/PsfValsTool.cxx,v 1.1 2012/12/11 15:24:54 cohen Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/PsfValsTool.cxx,v 1.2 2012/12/11 22:26:58 cohen Exp $
 */
 #include <sstream>
 #include <stdexcept>
@@ -522,10 +522,10 @@ double PsfValsTool::computePsf(const double cl_level,
   double current_high=90;
   double current_rad=1;//degrees
   double current_val=10.;//initial value to start while loop
-  std::cout<<energy<<" "<<theta<<std::endl;
+  //std::cout<<energy<<" "<<theta<<std::endl;
   while(std::abs(current_val-cl_level)>eps){
     current_val = psf.angularIntegral(energy,theta,0.,current_rad,0.);
-    std::cout<<current_rad<<" "<<current_val<<" "<<current_low<<" "<<current_high<<std::endl;
+    //std::cout<<current_rad<<" "<<current_val<<" "<<current_low<<" "<<current_high<<std::endl;
     if(current_val>cl_level){
       current_high=current_rad;
     }
