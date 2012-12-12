@@ -1,7 +1,7 @@
 /** @file PtValsAlg.cxx
 @brief declaration and definition of the class PtValsAlg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/PtValsAlg.cxx,v 1.13 2011/12/12 20:36:35 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/PtValsAlg.cxx,v 1.14 2012/12/08 01:53:16 lsrea Exp $
 
 */
 
@@ -90,7 +90,7 @@ PtValsAlg::PtValsAlg(const std::string& name, ISvcLocator* pSvcLocator)
 
     declareProperty("pointing_info_tree_name",  m_root_tree="MeritTuple");
     // doublet, filename and launch date
-    declareProperty("PointingHistory",   m_pointingHistory); 
+	declareProperty("PointingHistory",   m_pointingHistory); 
     declareProperty("FillNtuple",        m_fillNtuple=true);
 
 }
@@ -125,6 +125,7 @@ StatusCode PtValsAlg::initialize(){
         std::string filename(m_pointingHistory.value()[0]);
         facilities::Util::expandEnvVar(&filename);
         m_filename = filename;
+		m_pointingInfo.setHistoryFile(m_filename);
         double offset = 0;
         std::string jStr;
         if( m_pointingHistory.value().size()>1){
@@ -167,8 +168,6 @@ StatusCode PtValsAlg::initialize(){
         return sc;
     }
     m_pEventSvc = eventsvc;
-
-    m_pointingInfo.setHistoryFile(m_filename);
    
     return sc;
 }

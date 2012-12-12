@@ -2,7 +2,7 @@
 @brief declaration and definition of the class PointingInfo
 
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/PointingInfo.cxx,v 1.8 2012/12/08 01:53:16 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/PointingInfo.cxx,v 1.9 2012/12/11 21:24:56 lsrea Exp $
 
 */
 class MsgStream;
@@ -31,7 +31,7 @@ namespace {
 void PointingInfo::setHistoryFile( const std::string filename)
 {
     m_filename = filename;
-	m_history = new astro::PointingHistory(m_filename);
+	if(filename!="") m_history = new astro::PointingHistory(m_filename);
 }
 
 void PointingInfo::execute( const astro::GPS& gps)
