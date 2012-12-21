@@ -3,7 +3,7 @@
 @brief Calculates the "Event" analysis variables from the other ntuple variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.56 2012/12/13 15:46:24 bruel Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.57 2012/12/13 20:53:24 cohen Exp $
 */
 
 #include "ValBase.h"
@@ -135,7 +135,7 @@ private:
   int UB2zdirn;
   double UB2zdir[9];
   double UB2zdirbinwidth;
-  double UB2val[6];
+  double UB2val[9];
   double UB2par[2][18][8][6];
 };
 
