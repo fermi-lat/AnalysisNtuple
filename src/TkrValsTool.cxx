@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.116 2013/01/10 03:56:55 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.117 2013/01/10 17:37:10 bruel Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -2052,9 +2052,9 @@ StatusCode TkrValsTool::calculate()
 
     }
 
-    int nextCheck;
+    int nextCheck = CHECK;
     Tkr1ZCntr = 0;
-    if(!(m_pTkrHitTool->getVal("TkrStripsZCntr",Tkr1ZCntr,nextCheck).isSuccess())) Tkr1ZCntr = 0;
+    if(m_pTkrHitTool->getVal("TkrStripsZCntr",Tkr1ZCntr,nextCheck).isFailure()) Tkr1ZCntr = 0;
 
     Tkr1XCntr = 0;
     Tkr1YCntr = 0;
