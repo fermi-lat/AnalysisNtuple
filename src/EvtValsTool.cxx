@@ -3,7 +3,7 @@
 @brief Calculates the "Event" analysis variables from the other ntuple variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.57 2012/12/13 20:53:24 cohen Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.59 2012/12/22 22:40:22 bruel Exp $
 */
 
 #include "ValBase.h"
@@ -18,15 +18,33 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.57 
 #include "Event/TopLevel/EventModel.h"
 #include "Event/TopLevel/Event.h"
 
+#include "GlastSvc/GlastDetSvc/IGlastDetSvc.h"
 #include "TkrUtil/ITkrGeometrySvc.h"
+#include "geometry/Ray.h"
 
 #include "CalUtil/IUBinterpolateTool.h"
 #include "IPsfTool.h"
+
+#include "CLHEP/Vector/Rotation.h"
 
 #include <algorithm>
 /** @class EvtValsTool
 @brief Calculates Event Values from the other ntuple variables
 */
+
+// copied from CalValsCorTool
+namespace {
+  /// A local erf function: alg. from Receipts in C
+  double cvct_erf_cal(double x) {
+    double t = 1./(1.+.47047*x);
+    double results = 1. -(.34802 - (.09587 -.74785*t)*t)*t*exp(-x*x);
+    return results;
+  }
+  double cvct_cal_trans(double x) {
+    if(x < 0) return (.5*(1. + cvct_erf_cal(-x)));
+    else      return (.5*(1. - cvct_erf_cal( x)));
+  }
+}
 
 class EvtValsTool : public ValBase
 {
@@ -50,7 +68,28 @@ public:
 
   void fillPsfInfo(double energy, double theta, bool isFront, double cl_level);
 
+  // Copied from CalValsCorTool
+  double aveRadLens(Point x0, Vector t0, double radius, int numSamples, double calcentroidposz);
+
 private:
+
+  // some local constants
+  double m_towerPitch;
+  double m_calZTop;
+  double m_calZBot;
+  double m_xLo;
+  double m_xHi;
+  double m_yLo;
+  double m_yHi;
+
+  // Internal Variables for aveRadLens calculation (as in CalValsCorTool)
+  double             m_radLen_CsI, m_rms_RL_CsI; //Rad. lengths along axis in CsI Xtals (and rms)
+  double             m_radLen_Stuff, m_rms_RL_Stuff; // Rad. lengths of other material along axis (and rms)
+  double             m_radLen_Cntr, m_rms_RL_Cntr; // Rad. lengths along axis to centroid (and rms)
+  double             m_radLen_CntrStuff, m_rms_RL_CntrStuff; // Rad. length of other material (not CsI) to centroid
+  double             m_arcLen_CsI;      // Path length along shower axis in CsI Xtals
+  double             m_arcLen_Stuff;    // Path length along shower axis for material other then CsI
+  double             m_arcLen_Cntr;     // Path length along shower axis to energy centroid
 
     //Global Items
     unsigned int EvtRun;
@@ -99,6 +138,8 @@ private:
   float EvtJointEnergy;
   float EvtJointLogEnergy;
   float EvtJointWeight;
+  
+  float EvtCalCsIRLn;
 
     //test
     //char  EvtEvtNum[20];
@@ -112,6 +153,8 @@ private:
     IValsTool* m_pAcdTool;
 
     ITkrGeometrySvc* m_tkrGeom;
+    IGlastDetSvc* m_detSvc; 
+  IPropagator* m_G4PropTool; 
 
         // These are copies of the new DC2 vars from IM.   Left here for reference
 // EvtECalXtalRatio        continuous        CalXtalRatio/(2.99-1.19*LogEnergyOpt  + .122*LogEnergyOpt^2)/(.749-.355*Tkr1ZDir)
@@ -253,11 +296,32 @@ StatusCode EvtValsTool::initialize()
         return fail;
     }
 
+    m_towerPitch = m_tkrGeom->towerPitch();
+    m_calZTop = m_tkrGeom->calZTop();
+    m_calZBot = m_tkrGeom->calZBot();
+    m_xLo = m_tkrGeom->getLATLimit(0, LOW);
+    m_xHi = m_tkrGeom->getLATLimit(0, HIGH);
+    m_yLo = m_tkrGeom->getLATLimit(1, LOW);
+    m_yHi = m_tkrGeom->getLATLimit(1, HIGH);
+    // Ph. Bruel : hardcoded modification in order to take into account the CU geometry (tower 1 without tracker)
+    if(m_xLo==0) m_xLo = -m_towerPitch;
+
+    // find GlastDevSvc service
+    if (service("GlastDetSvc", m_detSvc, true).isFailure()){
+      log << MSG::ERROR << "Couldn't find the GlastDetSvc!" << endreq;
+      return StatusCode::FAILURE;
+    }
+
     IToolSvc* pToolSvc = 0; 
     sc = service("ToolSvc", pToolSvc, true);
     if (!sc.isSuccess ()){
         log << MSG::ERROR << "Can't find ToolSvc, will quit now" << endreq;
         return StatusCode::FAILURE;
+    }
+
+    if(!pToolSvc->retrieveTool("G4PropagationTool", m_G4PropTool)) {
+      log << MSG::ERROR << "Couldn't find the ToolSvc!" << endreq;
+      return StatusCode::FAILURE;
     }
 
     //m_pMcTool = 0;
@@ -800,6 +864,8 @@ StatusCode EvtValsTool::initialize()
     addItem("EvtJointLogEnergy",&EvtJointLogEnergy);
     addItem("EvtJointWeight",&EvtJointWeight);
 
+    addItem("EvtCalCsIRLn",&EvtCalCsIRLn);
+
     zeroVals();
 
     //m_ubInterpolateTool->addBiasMap("Param","$(ANALYSISNTUPLEDATAPATH)/BiasMapEvtEnergyCorr.txt");
@@ -1035,12 +1101,18 @@ StatusCode EvtValsTool::calculate()
   float myfTkr1FirstLayer = 0;
   if(!(m_pTkrTool->getVal("Tkr1FirstLayer",myfTkr1FirstLayer,nextCheck).isSuccess())) myfTkr1FirstLayer = 0;
   int myTkr1FirstLayer = (int)myfTkr1FirstLayer;
-//   float myTkr1XDir = 0;
-//   if(!(m_pTkrTool->getVal("Tkr1XDir",myTkr1XDir,nextCheck).isSuccess())) myTkr1XDir = 0;
-//   float myTkr1YDir = 0;
-//   if(!(m_pTkrTool->getVal("Tkr1YDir",myTkr1YDir,nextCheck).isSuccess())) myTkr1YDir = 0;
+  float myTkr1XDir = 0;
+  if(!(m_pTkrTool->getVal("Tkr1XDir",myTkr1XDir,nextCheck).isSuccess())) myTkr1XDir = 0;
+  float myTkr1YDir = 0;
+  if(!(m_pTkrTool->getVal("Tkr1YDir",myTkr1YDir,nextCheck).isSuccess())) myTkr1YDir = 0;
   float myTkr1ZDir = 0;
   if(!(m_pTkrTool->getVal("Tkr1ZDir",myTkr1ZDir,nextCheck).isSuccess())) myTkr1ZDir = 0;
+  float myTkr1X0 = 0;
+  if(!(m_pTkrTool->getVal("Tkr1X0",myTkr1X0,nextCheck).isSuccess())) myTkr1X0 = 0;
+  float myTkr1Y0 = 0;
+  if(!(m_pTkrTool->getVal("Tkr1Y0",myTkr1Y0,nextCheck).isSuccess())) myTkr1Y0 = 0;
+  float myTkr1Z0 = 0;
+  if(!(m_pTkrTool->getVal("Tkr1Z0",myTkr1Z0,nextCheck).isSuccess())) myTkr1Z0 = 0;
   float myTkr1StripsEnergyCorr = 0;
   if(!(m_pTkrTool->getVal("Tkr1StripsEnergyCorr",myTkr1StripsEnergyCorr,nextCheck).isSuccess())) myTkr1StripsEnergyCorr = 0;
 
@@ -1056,6 +1128,10 @@ StatusCode EvtValsTool::calculate()
   if(!(m_pCalTool->getVal("CalNewCfpCalEnergy",myCalNewCfpCalEnergy, nextCheck).isSuccess())) myCalNewCfpCalEnergy = 0;
   float myCalNewCfpCalEnergyUB = 0;
   if(!(m_pCalTool->getVal("CalNewCfpCalEnergyUB",myCalNewCfpCalEnergyUB, nextCheck).isSuccess())) myCalNewCfpCalEnergyUB = 0;
+  float myCal1MomZCntr = 0;
+  if(!(m_pCalTool->getVal("Cal1MomZCntr",myCal1MomZCntr, nextCheck).isSuccess())) myCal1MomZCntr = 0;
+  float myCalCsIRLn = 0;
+  if(!(m_pCalTool->getVal("CalCsIRLn",myCalCsIRLn, nextCheck).isSuccess())) myCalCsIRLn = 0;
 
   // Switch to non unbiased energies in case the unbiased energies = 0
   if(myCalNewCfpEnergyUB==0 && myCalNewCfpEnergy>0) myCalNewCfpEnergyUB = myCalNewCfpEnergy;
@@ -1122,6 +1198,20 @@ StatusCode EvtValsTool::calculate()
   EvtJointLogEnergy = 0;
   if(EvtJointEnergy>0) EvtJointLogEnergy = log10(EvtJointEnergy);
   EvtJointWeight = weight;
+
+  // Compute CalCsIRLn based on Tkr1
+  EvtCalCsIRLn = 0;
+  if(myTkr1ZDir<0)
+    {
+      Point x0(myTkr1X0,myTkr1Y0,myTkr1Z0);
+      Vector t0(-myTkr1XDir,-myTkr1YDir,-myTkr1ZDir);
+      // Construct Event Axis along which the shower will be evaluated 
+      Ray axis(x0, t0); 
+      double arc_len = (x0.z()- m_calZTop)/t0.z(); 
+      Point cal_top = axis.position(-arc_len);   // Event axis entry point to top of Cal Stack 
+      double rm_hard   = 40. + 36.*cvct_cal_trans((myCalEnergyRaw-250)/200.)* arc_len/500.;
+      EvtCalCsIRLn = EvtValsTool::aveRadLens(cal_top,-t0,rm_hard/4.,6,myCal1MomZCntr);
+    }
 
   //Compute the expected Psf68, based on Tkr1Theta, Tkr1FirstLayer, and EvtJointEnergy
   EvtPsf68=0.;
@@ -1207,4 +1297,186 @@ void EvtValsTool::fillPsfInfo(double energy, double theta, bool isFront,  double
   MsgStream log(msgSvc(), name());
   EvtPsf68 = m_pPsfTool->computePsf(cl_level, energy, theta, isFront);
   log<<MSG::DEBUG<<"energy:"<<" "<< energy<<"Theta(deg):"<< theta<<" Front? "<< isFront<<" PSF68: "<<EvtPsf68<<endreq;
+}
+
+double EvtValsTool::aveRadLens(Point cal_top, Vector t0, double radius, int numSamples, double calcentroidposz)
+{ // This method finds the averages and rms for a cylinder of rays passing through 
+  // the calorimeter of the radiation lengths in CsI and other material. 
+  // The radius of the cylinder is "radius" and the number of rays = numSample (plus the 
+  //       the central ray).  
+  // Note: this method as to called in sequence.  It depends on various internal variables 
+  //       having already been calculated and dumps most of its output to internal vars.
+  
+  // Initialize the internal transfer variables
+  m_radLen_CsI   = 0.;
+  m_rms_RL_CsI   = 0.;
+  m_radLen_Stuff = 0.;
+  m_rms_RL_Stuff = 0.;
+  m_radLen_Cntr  = 0.;
+  m_rms_RL_Cntr  = 0.; 
+  m_radLen_CntrStuff = 0.;
+  m_rms_RL_CntrStuff = 0.;
+  
+  m_arcLen_CsI   = 0.; 
+  m_arcLen_Stuff = 0.; 
+  m_arcLen_Cntr  = 0.; 
+  
+  double weights = 0.; 
+  
+  double xLo = m_xLo;
+  double xHi = m_xHi;
+  double yLo = m_yLo;
+  double yHi = m_yHi;
+
+  // Only do leakage correction for tracks which "hit" the Calorimeter
+  if (cal_top.x()<xLo || cal_top.x()>xHi || cal_top.y()<yLo || cal_top.y()>yHi) 
+    return 0;
+  
+  // Make a unit vector perpendicular to Event Axis (t0)
+  // Need to protect against t0 = (0. , 0., -1.) case
+  double costheta = t0.z();
+  double sintheta = sqrt(1.-costheta*costheta);
+  double cosphi  = 1.; 
+  if(fabs(sintheta) > .0001) cosphi   = t0.x()/sintheta;
+  Vector p(costheta/cosphi, 0., -sintheta);
+  p  = p.unit();
+  
+  // Set the number of inner samples 
+  int numInner = (int)(numSamples/2.) ; 
+  
+  // Loop over samples
+  int is = 0;
+  for(is = 0; is < numSamples+numInner; is++)
+    {
+      // Set starting point from this sample trajectory
+      Point x0 = cal_top;
+      // Note: the inner samples are done at radius/4. and the inner and outer 
+      //       samples are rotated by  M_PI/numSamples w.r.t. each other
+      if(is <numInner)
+        {
+          double rotAng = (is-1)*2.*M_PI/numInner; 
+          CLHEP::HepRotation rot(t0, rotAng);
+          Vector delta = rot*p;
+          Point xI = x0 + .25*radius*delta;
+          double s = (cal_top.z() - xI.z())/costheta;
+          Ray segmt( xI, t0); 
+          x0 = segmt.position(s);
+        }
+      else
+        {
+          double rotAng = (is-1)*2.*M_PI/numSamples + M_PI/numSamples; 
+          CLHEP::HepRotation rot(t0, rotAng);
+          Vector delta = rot*p;
+          Point xI = x0 + radius*delta;
+          double s = (cal_top.z() - xI.z())/costheta;
+          Ray segmt( xI, t0); 
+          x0 = segmt.position(s);
+        } 
+      // Check if the start is inside LAT
+      if (x0.x()<xLo || x0.x()>xHi || x0.y()<yLo || x0.y()>yHi) continue; 
+      
+      // Compute the arclength through the CAL
+      double s_xp   = (-xHi + x0.x())/t0.x();
+      double s_xm   = (-xLo + x0.x())/t0.x();
+      double s_minx = (s_xp > s_xm) ? s_xp:s_xm; // Choose soln > 0. 
+      
+      double s_yp   = (-yHi + x0.y())/t0.y();
+      double s_ym   = (-yLo + x0.y())/t0.y();
+      double s_miny = (s_yp > s_ym) ? s_yp:s_ym; // Choose soln > 0. 
+      
+      double s_minz = -(m_calZTop - m_calZBot)/t0.z();
+      // Now pick min. soln. of the x, y, and z sides 
+      double s_min  = (s_minx < s_miny) ? s_minx:s_miny;  
+      s_min         = (s_min  < s_minz) ? s_min :s_minz;
+      
+      // Set up a propagator to calc. rad. lens. 
+      m_G4PropTool->setStepStart(x0, t0);
+      m_G4PropTool->step(s_min);  
+      
+      // Loop over the propagator steps to extract the materials
+      int numSteps = m_G4PropTool->getNumberSteps();
+      double rl_CsI       = 0.;
+      double rl_CsICntr   = 0.; 
+      double rl_Stuff     = 0.;
+      double rl_StuffCntr = 0.;
+      idents::VolumeIdentifier volId;
+      idents::VolumeIdentifier prefix = m_detSvc->getIDPrefix();
+      int istep  = 0;
+      double last_step_z; 
+      bool centroid = true;
+      for(; istep < numSteps; ++istep)
+        {
+          volId = m_G4PropTool->getStepVolumeId(istep);
+          volId.prepend(prefix);
+          //std::cout << istep << " " << volId.name() << std::endl;
+          bool inXtal = ( volId.size()>7 && volId[0]==0 
+                          && volId[3]==0 && volId[7]==0 ? true : false );
+          double radLen_step = m_G4PropTool->getStepRadLength(istep);
+          double arcLen_step = m_G4PropTool->getStepArcLen(istep); 
+          Point x_step       = m_G4PropTool->getStepPosition(istep);
+          if(istep == 0) last_step_z = x_step.z(); 
+          if(inXtal)
+            {
+              //std::cout << "inXtal " << volId.name() << " " << arcLen_step << " " << radLen_step << std::endl;
+              rl_CsI  += radLen_step;
+              if(is < numInner) m_arcLen_CsI  += arcLen_step;
+            }
+          else
+            {
+              rl_Stuff += radLen_step;
+              if(is < numInner) m_arcLen_Stuff += arcLen_step;
+            }
+          if(x_step.z() >= calcentroidposz || centroid) 
+            {
+              double step_frac = 1.; 
+              if(x_step.z() <= calcentroidposz) 
+                {
+                  double denominator = last_step_z - x_step.z();
+                  
+                  centroid = false;
+                  
+                  // Protect against the case where last_step_z and x_step.z() are the same
+                  // (see above where the two are set equal for the first step, it can happen
+                  //  that this code is executed on the first step...)
+                  if (denominator < 0.001) step_frac = 0.;
+                  else                     step_frac = (last_step_z - calcentroidposz) / denominator;
+                }
+              if(is < numInner) m_arcLen_Cntr += step_frac*arcLen_step;
+              if(!inXtal) rl_StuffCntr  += step_frac*radLen_step;
+              else        rl_CsICntr    += step_frac*radLen_step;
+              last_step_z = x_step.z();
+            }
+        }
+      // Compute sample weighting factor - using Simpson's 1:4:1 Rule
+      double sample_factor = (is < numInner) ? 4.:1.; 
+      weights += sample_factor;
+      
+      // Increment accumlation variables
+      m_radLen_CsI   += rl_CsI*sample_factor;
+      m_rms_RL_CsI   += rl_CsI*rl_CsI*sample_factor;
+      m_radLen_Stuff += rl_Stuff*sample_factor;
+      m_rms_RL_Stuff += rl_Stuff*rl_Stuff*sample_factor;
+      m_radLen_Cntr  += (rl_CsICntr+rl_StuffCntr)*sample_factor;
+      m_rms_RL_Cntr  += (rl_CsICntr+rl_StuffCntr)*(rl_CsICntr+rl_StuffCntr)*sample_factor; 
+      m_radLen_CntrStuff += rl_StuffCntr*sample_factor;
+      m_rms_RL_CntrStuff += rl_StuffCntr*rl_StuffCntr*sample_factor;
+    }
+  
+  // Form the results
+  if(weights < 1.) return 0;
+  m_radLen_CsI   /= weights;
+//   m_rms_RL_CsI    = sqrt(m_rms_RL_CsI/weights -m_radLen_CsI*m_radLen_CsI);
+//   m_radLen_Stuff /= weights;
+//   m_rms_RL_Stuff  = sqrt(m_rms_RL_Stuff/weights - m_radLen_Stuff*m_radLen_Stuff);
+//   m_radLen_Cntr  /= weights;
+//   m_rms_RL_Cntr   = sqrt(m_rms_RL_Cntr/weights - m_radLen_Cntr*m_radLen_Cntr);
+//   m_radLen_CntrStuff  /= weights;
+//   m_rms_RL_CntrStuff   = sqrt(m_rms_RL_CntrStuff/weights - m_radLen_CntrStuff*m_radLen_CntrStuff);
+  
+//   double innerNo = std::max(1., 1.*numInner);
+//   m_arcLen_Stuff /= innerNo;
+//   m_arcLen_CsI   /= innerNo;
+//   m_arcLen_Cntr  /= innerNo;
+  
+  return m_radLen_CsI;
 }
