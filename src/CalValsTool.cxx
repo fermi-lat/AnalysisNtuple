@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.135 2012/12/06 13:37:27 carmelo Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/src/CalValsTool.cxx,v 1.136 2012/12/11 21:24:56 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -1392,7 +1392,7 @@ StatusCode CalValsTool::calculate()
                 }
                 else {
                     float tkr1ZDir = -1;
-                    if ( m_pTkrTool->getVal("Tkr1ZDir", tkr1ZDir).isSuccess() ) {
+                    if ( m_pTkrTool->getValCheck("Tkr1ZDir", tkr1ZDir).isSuccess() ) {
                         if ( tkr1ZDir == 0 )
                             tkr1ZDir = -1;
                     }
