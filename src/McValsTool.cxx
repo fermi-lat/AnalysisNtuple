@@ -2,7 +2,7 @@
 @brief Calculates the Mc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/src/McValsTool.cxx,v 1.67 2012/10/03 14:12:56 bruel Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.69 2012/12/08 00:43:24 usher Exp $
 */
 // Include files
 
@@ -59,6 +59,8 @@ public:
     StatusCode initialize();
     
     StatusCode calculate();
+
+  double GetLengthInBox(double *xbound, double *ybound, double *zbound, double *p, double *v);
     
 private:
 
@@ -145,6 +147,14 @@ private:
     float MC_AcdActiveDist3D;
     float MC_AcdActDistTileId;
     float MC_AcdActDistTileEnergy;
+
+    double pbound[3][2];
+  float MC_length_tkr;
+  float MC_length_tkrgap;
+  float MC_length_conv_tkr;
+  float MC_length_conv_tkrgap;
+  float MC_length_cal;
+  float MC_length_calgap;
 
     // to decode the particle charge
     IParticlePropertySvc* m_ppsvc; 
@@ -329,6 +339,13 @@ StatusCode McValsTool::initialize()
     addItem("McAcdActiveDist3D",      &MC_AcdActiveDist3D,       true);
     addItem("McAcdActDistTileId",     &MC_AcdActDistTileId,      true);
     addItem("McAcdActDistTileEnergy", &MC_AcdActDistTileEnergy,  true);
+
+  addItem("McLengthInTkr",   &MC_length_tkr);
+  addItem("McLengthInTkrGap",   &MC_length_tkrgap);
+  addItem("McLengthConvInTkr",   &MC_length_conv_tkr);
+  addItem("McLengthConvInTkrGap",   &MC_length_conv_tkrgap);
+  addItem("McLengthInCal",   &MC_length_cal);
+  addItem("McLengthInCalGap",   &MC_length_calgap);
     
     zeroVals();
     
@@ -722,6 +739,105 @@ StatusCode McValsTool::calculate()
         } 
     }
 
+    int i,j;
+    double Xbound[2];
+    double Ybound[2];
+    double Zbound[2];
+
+    double towerpitch = 374.5;
+    double tkrbottom = 25;
+    double tkrtop = 625;
+    double calbottom = -47.395-8*21.35;
+    double caltop = -47.395;
+    
+    double tkr_gap = 8;
+    double cal_gap = 30;
+    double p[3];
+    p[0] = MC_x0;
+    p[1] = MC_y0;
+    p[2] = MC_z0;
+    double v[3];
+    v[0] = MC_xdir;
+    v[1] = MC_ydir;
+    v[2] = MC_zdir;
+    
+    double xcenter,ycenter;
+    
+    Zbound[0] = tkrbottom;
+    Zbound[1] = tkrtop;
+    double towerhalfwidth = towerpitch/2-tkr_gap;
+    MC_length_tkr = 0;
+    for(i=0;i<4;++i)
+      {
+        xcenter = -1.5*towerpitch+towerpitch*i;
+        Xbound[0] = xcenter-towerhalfwidth;
+        Xbound[1] = xcenter+towerhalfwidth;
+        for(j=0;j<4;++j)
+          {
+            ycenter = -1.5*towerpitch+towerpitch*j;
+            Ybound[0] = ycenter-towerhalfwidth;
+            Ybound[1] = ycenter+towerhalfwidth;
+            MC_length_tkr += GetLengthInBox(Xbound,Ybound,Zbound,p,v);
+          }
+      }
+    Xbound[0] = -2*towerpitch+tkr_gap;
+    Xbound[1] = 2*towerpitch-tkr_gap;
+    Ybound[0] = -2*towerpitch+tkr_gap;
+    Ybound[1] = 2*towerpitch-tkr_gap;
+    MC_length_tkrgap = GetLengthInBox(Xbound,Ybound,Zbound,p,v)-MC_length_tkr;
+    //
+    MC_length_conv_tkr = 0;
+    MC_length_conv_tkrgap = 0;
+    if(MC_z0>tkrbottom)
+      {
+        Zbound[0] = tkrbottom;
+        Zbound[1] = MC_z0;
+        towerhalfwidth = towerpitch/2-tkr_gap;
+        MC_length_conv_tkr = 0;
+        for(i=0;i<4;++i)
+          {
+            xcenter = -1.5*towerpitch+towerpitch*i;
+            Xbound[0] = xcenter-towerhalfwidth;
+            Xbound[1] = xcenter+towerhalfwidth;
+            for(j=0;j<4;++j)
+              {
+                ycenter = -1.5*towerpitch+towerpitch*j;
+                Ybound[0] = ycenter-towerhalfwidth;
+                Ybound[1] = ycenter+towerhalfwidth;
+                MC_length_conv_tkr += GetLengthInBox(Xbound,Ybound,Zbound,p,v);
+              }
+          }
+        Xbound[0] = -2*towerpitch+tkr_gap;
+        Xbound[1] = 2*towerpitch-tkr_gap;
+        Ybound[0] = -2*towerpitch+tkr_gap;
+        Ybound[1] = 2*towerpitch-tkr_gap;
+        MC_length_conv_tkrgap = GetLengthInBox(Xbound,Ybound,Zbound,p,v)-MC_length_conv_tkr;
+      }
+    //
+    Zbound[0] = calbottom;
+    Zbound[1] = caltop;
+    towerhalfwidth = towerpitch/2-cal_gap;
+    MC_length_cal = 0;
+    for(i=0;i<4;++i)
+      {
+        xcenter = -1.5*towerpitch+towerpitch*i;
+        Xbound[0] = xcenter-towerhalfwidth;
+        Xbound[1] = xcenter+towerhalfwidth;
+        for(j=0;j<4;++j)
+          {
+            ycenter = -1.5*towerpitch+towerpitch*j;
+            Ybound[0] = ycenter-towerhalfwidth;
+            Ybound[1] = ycenter+towerhalfwidth;
+            MC_length_cal += GetLengthInBox(Xbound,Ybound,Zbound,p,v);
+          }
+      }
+    //
+    Xbound[0] = -2*towerpitch+cal_gap;
+    Xbound[1] = 2*towerpitch-cal_gap;
+    Ybound[0] = -2*towerpitch+cal_gap;
+    Ybound[1] = 2*towerpitch-cal_gap;
+    MC_length_calgap = GetLengthInBox(Xbound,Ybound,Zbound,p,v)-MC_length_cal;
+    
     return sc;
 }
 
@@ -851,4 +967,50 @@ void McValsTool::getAcdReconVars() {
     MC_AcdZEnter = thePoint.z(); 
   }
 
+}
+
+double McValsTool::GetLengthInBox(double *xbound, double *ybound, double *zbound, double *p, double *v)
+{
+  int i,j,k;
+  double pp[3];
+  double ppp[2][3];
+  double lambda;
+
+  pbound[0][0] = xbound[0];
+  pbound[0][1] = xbound[1];
+  pbound[1][0] = ybound[0];
+  pbound[1][1] = ybound[1];
+  pbound[2][0] = zbound[0];
+  pbound[2][1] = zbound[1];
+
+  int inside;
+  int ii = 0;
+
+  for(i=0;i<3;++i)
+    {
+      if(v[i]==0) continue;
+      //
+      for(j=0;j<2;++j)
+        {
+          lambda = (pbound[i][j]-p[i])/v[i];
+          inside = 0;
+          for(k=0;k<3;++k)
+            {
+              pp[k] = p[k]+lambda*v[k];
+              if(pp[k]>=pbound[k][0]-1e-6&&pp[k]<=pbound[k][1]+1e-6) ++inside;
+            }
+          if(inside<3) continue;
+          //
+          if(ii>0 && fabs(pp[0]-ppp[0][0])<1e-6 && fabs(pp[1]-ppp[0][1])<1e-6 && fabs(pp[2]-ppp[0][2])<1e-6) continue;
+          for(k=0;k<3;++k) ppp[ii][k] = pp[k];
+          ++ii;
+          if(ii==2) break;
+        }
+      if(ii==2) break;
+    }
+  if(ii<2) return 0;
+  double mylength = 0;
+  for(i=0;i<3;++i) mylength += (ppp[0][i]-ppp[1][i])*(ppp[0][i]-ppp[1][i]);
+
+  return sqrt(mylength);
 }
