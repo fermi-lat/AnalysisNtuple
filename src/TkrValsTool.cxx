@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.117 2013/01/10 17:37:10 bruel Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.118 2013/01/10 19:30:18 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -1045,14 +1045,58 @@ StatusCode TkrValsTool::calculate()
     // assemble the list of all tracks for now 
     // later, deal separately with Standard and CR
 	// **********************
+
+	// The above comments are preserved for historical purposes. As of the typing of this comment
+	// (circa GR 20-08-02) there are two collections of tracks in the TDS, one for cosmic ray tracks and
+	// one for gamma tracks. We would like to count the number of gamma tracks total in the event,
+	// we can easily do that by recovering the track collection and looking at its size. However,
+	// in the Tree Based pat rec we cannot assume the first track in the collection is the "best" 
+	// track and will need to recover those tracks from the TkrTree collection. 
+	SmartDataPtr<Event::TkrTrackCol> trackCol(m_pEventSvc, EventModel::TkrRecon::TkrTrackCol);
+
+	// Actually, if no tracks then we should simply exit right now
+	if (!trackCol || trackCol->empty()) return sc;
+
+	// Now set the number of tracks in the event
+	Tkr_Num_Tracks = trackCol->size();
+
+    //Recover EventHeader Pointer
+    //SmartDataPtr<Event::EventHeader> pEvent(m_pEventSvc, EventModel::EventHeader);
+
+    // replace code below with the vector of pointers to all tracks  LSR
+    // Recover Track associated info. 
+    // NOTE: If no tracks are found ALL TKR variables are zero!  
+    //SmartDataPtr<Event::TkrTrackCol>   
+    //    pTracks(m_pEventSvc,EventModel::TkrRecon::TkrTrackCol);
+
+    // assemble the list of all tracks for now 
+    // later, deal separately with Standard and CR
+	// **********************
 	// What should really happen here is that we extract the TkrTree collection from the TDS,
 	// take the first tree on that list and then get the tracks from there
 	SmartDataPtr<Event::TkrTreeCol> treeCol(m_pEventSvc, EventModel::TkrRecon::TkrTreeCol);
 
-	if (!treeCol || treeCol->empty()) return sc;
+	// Make a local track container in the event we have no trees
+	Event::TkrTrackVec trackVec;
+
+	// So, set the default to point at it
+	Event::TkrTrackVec* pTracks = &trackVec;
+
+	// If no trees then we will copy pointers from the TDS Track col to the local vector
+	if (!treeCol || treeCol->empty())
+	{
+		for(Event::TkrTrackCol::iterator trkItr = trackCol->begin(); trkItr != trackCol->end(); trkItr++)
+		{
+			trackVec.push_back(*trkItr);
+		}
+	}
+	// Otherwise we simply point to the Tree Track vector
+	else
+	{
 
 	Event::TkrTree*     bestTree = treeCol->front();
-	Event::TkrTrackVec* pTracks  = bestTree;
+		pTracks  = bestTree;
+	}
 
     SmartDataPtr<Event::TkrVertexCol>  
         pVerts(m_pEventSvc,EventModel::TkrRecon::TkrVertexCol);
@@ -1070,21 +1114,11 @@ StatusCode TkrValsTool::calculate()
         // Count number of tracks
 //        int nTracks = pTracks->size();    RJ: doesn't work any more, with CR tracks in the mix
 
-        int nTracks= 0;
-        if (pTracks->empty()) {
-            Tkr_Num_Tracks = nTracks;
-            return sc;
-        }
         // Get the first Track - it should be the "Best Track"
         Event::TkrTrackColConPtr pTrack = pTracks->begin();
         const Event::TkrTrack* track_1 = *pTrack;
         
         // Count the number of non-CR tracks
-        for (; pTrack != pTracks->end(); pTrack++) {
-            if (!((*pTrack)->getStatusBits()& Event::TkrTrack::COSMICRAY)) nTracks++;
-        }
-        Tkr_Num_Tracks   = nTracks;
-        if(nTracks < 1) return sc;
 
         Tkr_1_Chisq        = track_1->getChiSquareSmooth();
         Tkr_1_FirstChisq   = track_1->chiSquareSegment();
@@ -1518,7 +1552,7 @@ StatusCode TkrValsTool::calculate()
         Tkr_1_LATEdge = (float) std::min(xEdge, yEdge);
 
         pTrack = pTracks->begin();
-        if(nTracks > 1) {
+        if(pTracks->size() > 1) {
             pTrack++;
 
             // try Bill's dispersion variable here
@@ -1538,7 +1572,7 @@ StatusCode TkrValsTool::calculate()
                     TkrDispersion += (float) s*s;
                 }
             }
-            TkrDispersion = sqrt(TkrDispersion/(nTracks-1));
+            TkrDispersion = sqrt(TkrDispersion/(pTracks->size()-1));
 
 
             const Event::TkrTrack* track_2 = *pTrack;
@@ -2071,7 +2105,7 @@ StatusCode TkrValsTool::calculate()
 
     double x,xtow,lambda;
     int itow;
-    double mytkr1zdir,gaplossparam;
+    double mytkr1zdir;
     int ifirstlayer;
     if(Tkr_1_zdir!=0)
       {
