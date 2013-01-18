@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/src/TkrValsTool.cxx,v 1.120 2013/01/16 18:17:21 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/src/TkrValsTool.cxx,v 1.121 2013/01/17 23:46:21 cohen Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -1507,19 +1507,21 @@ StatusCode TkrValsTool::calculate()
 	// At this point we need access to the entire collection of tracks. 
 	// If the source is a pat rec other than Tree Based, then this will already exist
 	// If not, then we need to fill in the remaining tracks.
-	if(treeCol!=0x0 && !treeCol->empty() ){
-	  // Loop over the remaining trees in the collection
-	  for(Event::TkrTreeCol::iterator treeItr = treeCol->begin() + 1; treeItr != treeCol->end(); treeItr++)
-	    {
-	      Event::TkrTree* tree = *treeItr;
+	if(treeCol!=0x0) {
+          if (!treeCol->empty() ){
+            // Loop over the remaining trees in the collection
+            for(Event::TkrTreeCol::iterator treeItr = treeCol->begin() + 1; treeItr != treeCol->end(); treeItr++)
+	      {
+                Event::TkrTree* tree = *treeItr;
 	      
-	      // Add the tracks associated to these trees to our local track vec
-	      for (Event::TkrTrackVec::iterator trkItr = tree->begin(); trkItr != tree->end(); trkItr++)
-		{
-		  trackVec.push_back(*trkItr);
-		}
-	    }
-	}
+                // Add the tracks associated to these trees to our local track vec
+                for (Event::TkrTrackVec::iterator trkItr = tree->begin(); trkItr != tree->end(); trkItr++)
+		  {
+                    trackVec.push_back(*trkItr);
+                  }
+              }
+          }
+        }
 
         int veto_track_num = -1;
 
