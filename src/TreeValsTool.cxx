@@ -2,7 +2,7 @@
 @brief Calculates the Tracker Tree variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TreeValsTool.cxx,v 1.18 2012/12/08 01:53:16 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TreeValsTool.cxx,v 1.19 2013/01/18 19:35:14 usher Exp $
 */
 
 // Include files
@@ -172,6 +172,11 @@ private:
     float TFP_bestRmsTrans;
     float TFP_bestRmsLong;
     float TFP_bestRmsLongAsym;
+
+    float TFP_numLinks;
+    float TFP_calDoca68;
+    float TFP_calDoca95;
+    float TFP_calDocaMax;
 
     // For now, the timing info
     float Aud_treeBasedTool;
@@ -394,6 +399,11 @@ StatusCode TreeValsTool::initialize()
     addItem("TFPBestRmsTrans",             &TFP_bestRmsTrans);
     addItem("TFPBestRmsLong",              &TFP_bestRmsLong);
     addItem("TFPBestRmsLongAsym",          &TFP_bestRmsLongAsym);
+
+    addItem("TFPNumLinks",                 &TFP_numLinks);
+    addItem("TFPCalDoca68",                &TFP_calDoca68);
+    addItem("TFPCalDoca95",                &TFP_calDoca95);
+    addItem("TFPCalDocaMax",               &TFP_calDocaMax);
                                      
     addItem("AudTreeBasedTool",            &Aud_treeBasedTool);
     addItem("AudTreeBasedTool_link",       &Aud_treeBasedTool_link);
@@ -574,7 +584,8 @@ StatusCode TreeValsTool::calculate()
                     std::list<const Event::TkrVecNode*>::const_iterator nodeListItr = nodeList.begin();
 
                     // Create a vector to keep track of the docas we calculate
-                    std::vector<double> docaVec;
+                    std::vector<double> treeDocaVec;
+					std::vector<double> filterDocaVec;
 
                     // We loop until we exhaust the entries in the list
                     while(nodeListItr != nodeList.end())
@@ -615,24 +626,38 @@ StatusCode TreeValsTool::calculate()
                             // Get the doca
                             double doca      = clus2Doca.magnitude();
 
-                            docaVec.push_back(doca);
+                            treeDocaVec.push_back(doca);
+
+							// Was this link used by the filter?
+							if (link->getStatusBits() & 0x03000000) filterDocaVec.push_back(doca);
                         }
                     }
 
                     // Sort out vector of docas
-                    std::sort(docaVec.begin(), docaVec.end());
+                    std::sort(treeDocaVec.begin(), treeDocaVec.end());
 
                     // Extract the 68%, 95% and final elements
-                    int idx68 = int(0.68 * float(docaVec.size()));
-                    int idx95 = int(0.95 * float(docaVec.size()));
+                    int idx68 = int(0.68 * float(treeDocaVec.size()));
+                    int idx95 = int(0.95 * float(treeDocaVec.size()));
 
-                    Tkr_tree1_numLinks   = docaVec.size();
+                    Tkr_tree1_numLinks   = treeDocaVec.size();
                     Tkr_tree1_calPosDoca = relationItr->second.front()->getTreeClusDoca();
-                    Tkr_tree1_calDoca68  = docaVec[idx68];
-                    Tkr_tree1_calDoca95  = docaVec[idx95];
-                    Tkr_tree1_calDocaMax = docaVec.back();
+                    Tkr_tree1_calDoca68  = treeDocaVec[idx68];
+                    Tkr_tree1_calDoca95  = treeDocaVec[idx95];
+                    Tkr_tree1_calDocaMax = treeDocaVec.back();
 
-                    int check = 0;
+					// Since we are here, check the docas for the filter as well. 
+					std::sort(filterDocaVec.begin(), filterDocaVec.end());
+
+                    // Extract the 68%, 95% and final elements
+                    idx68 = int(0.68 * float(filterDocaVec.size()));
+                    idx95 = int(0.95 * float(filterDocaVec.size()));
+
+					// Fill the TFP variables
+					TFP_numLinks   = filterDocaVec.size();
+					TFP_calDoca68  = filterDocaVec[idx68];
+					TFP_calDoca95  = filterDocaVec[idx95];
+					TFP_calDocaMax = filterDocaVec.back();
                 }
             }
 
