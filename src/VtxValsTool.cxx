@@ -3,7 +3,7 @@
 @brief Calculates the Vtx analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/src/VtxValsTool.cxx,v 1.30.368.1 2011/04/19 18:10:25 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/src/VtxValsTool.cxx,v 1.32 2011/12/12 20:36:35 heather Exp $
 */
 
 // Include files
@@ -76,57 +76,59 @@ private:
     float VTX_ThetaErr;
     float VTX_PhiErr;
     //float VTX_ErrAsym;
+    float VTX_CovDet;
+    //float VTX_ErrAsym;
     //float VTX_CovDet;
-        float VTX_x0;
-        float VTX_y0;
-        float VTX_z0;
-        float VTX_Angle;
-        float VTX_DOCA;
-        float VTX_Head_Sep;
+    float VTX_x0;
+    float VTX_y0;
+    float VTX_z0;
+    float VTX_Angle;
+    float VTX_DOCA;
+    float VTX_Head_Sep;
 
-        float VTX_S1;
-        float VTX_S2;
+    float VTX_S1;
+    float VTX_S2;
 
-        float VTX_Quality; 
-        float VTX_Chisq; 
-        float VTX_AddedRL;
-        float VTX_Status;
+    float VTX_Quality; 
+    float VTX_Chisq; 
+    float VTX_AddedRL;
+    float VTX_Status;
 
     float VTX2_transDoca;
     float VTX2_longDoca;
 
     float VTX2_xdir;
-        float VTX2_ydir;
-        float VTX2_zdir;
-        float VTX2_Phi;
-        float VTX2_Theta;
-        float VTX2_x0;
-        float VTX2_y0;
-        float VTX2_z0;
-        float VTX2_Angle;
-        float VTX2_DOCA;
-        float VTX2_Head_Sep;
+    float VTX2_ydir;
+    float VTX2_zdir;
+    float VTX2_Phi;
+    float VTX2_Theta;
+    float VTX2_x0;
+    float VTX2_y0;
+    float VTX2_z0;
+    float VTX2_Angle;
+    float VTX2_DOCA;
+    float VTX2_Head_Sep;
     float VTX2_Status;
 
     float VTXN_xdir;
-        float VTXN_ydir;
-        float VTXN_zdir;
+    float VTXN_ydir;
+    float VTXN_zdir;
 
         float VTXN_Sxx;
     float VTXN_Sxy;
     float VTXN_Syy;
-        float VTXN_ChgWt;
-        float VTXN_NeutWt;
+    float VTXN_ChgWt;
+    float VTXN_NeutWt;
 
-        float VTXN1_xdir;
-        float VTXN1_ydir;
-        float VTXN1_zdir;
+    float VTXN1_xdir;
+    float VTXN1_ydir;
+    float VTXN1_zdir;
 
         float VTXN1_Sxx;
     float VTXN1_Sxy;
     float VTXN1_Syy;
     float VTXN1_ChgWt;
-        float VTXN1_NeutWt;
+    float VTXN1_NeutWt;
 };
 
 // Static factory for instantiation of algtool objects
@@ -253,11 +255,11 @@ StatusCode VtxValsTool::initialize()
 
         // Pair reconstruction
     addItem("VtxNumVertices", &VTX_numVertices);
-        addItem("VtxXDir",      &VTX_xdir);     
-        addItem("VtxYDir",      &VTX_ydir);     
-        addItem("VtxZDir",      &VTX_zdir);     
-        addItem("VtxPhi",       &VTX_Phi);  
-        addItem("VtxTheta",     &VTX_Theta);  
+    addItem("VtxXDir",      &VTX_xdir);     
+    addItem("VtxYDir",      &VTX_ydir);     
+    addItem("VtxZDir",      &VTX_zdir);     
+    addItem("VtxPhi",       &VTX_Phi);  
+    addItem("VtxTheta",     &VTX_Theta);  
 
     addItem("VtxThetaErr",   &VTX_ThetaErr);
     addItem("VtxPhiErr",     &VTX_PhiErr);
@@ -273,97 +275,107 @@ StatusCode VtxValsTool::initialize()
              but normalized to remove the dependence on cos(theta)
     */
     //addItem("VtxErrAsym",    &VTX_ErrAsym);
+    addItem("VtxCovDet",     &VTX_CovDet);
+
+    /* in case we want this later
+    <tr><td> VtxErrAsym  
+    <td>F<td>   Tkr1SXY/(Tkr1SXX + Tkr1SYY)  
+    <tr><td> VtxCovDet  
+    <td>F<td>   Determinant of the error matrix, 
+             but normalized to remove the dependence on cos(theta)
+    */
+    //addItem("VtxErrAsym",    &VTX_ErrAsym);
     //addItem("VtxCovDet",     &VTX_CovDet);
 
    
     addItem("VtxX0",        &VTX_x0);       
-        addItem("VtxY0",        &VTX_y0);       
-        addItem("VtxZ0",        &VTX_z0);
+    addItem("VtxY0",        &VTX_y0);       
+    addItem("VtxZ0",        &VTX_z0);
 
-        addItem("VtxAngle",     &VTX_Angle);    
-        addItem("VtxDOCA",      &VTX_DOCA);
-        addItem("VtxHeadSep",   &VTX_Head_Sep);
-        addItem("VtxStatus",    &VTX_Status); 
-        addItem("VtxQuality",   &VTX_Quality);
-        addItem("VtxChisq",     &VTX_Chisq);
+    addItem("VtxAngle",     &VTX_Angle);    
+    addItem("VtxDOCA",      &VTX_DOCA);
+    addItem("VtxHeadSep",   &VTX_Head_Sep);
+    addItem("VtxStatus",    &VTX_Status); 
+    addItem("VtxQuality",   &VTX_Quality);
+    addItem("VtxChisq",     &VTX_Chisq);
 
-        addItem("VtxS1",        &VTX_S1);       
-        addItem("VtxS2",        &VTX_S2);       
-        addItem("VtxAddedRL",   &VTX_AddedRL); 
+    addItem("VtxS1",        &VTX_S1);       
+    addItem("VtxS2",        &VTX_S2);       
+    addItem("VtxAddedRL",   &VTX_AddedRL); 
 
     addItem("Vtx2TransDoca", &VTX2_transDoca);
     addItem("Vtx2LongDoca",  &VTX2_longDoca);
 
-        addItem("Vtx2XDir",     &VTX2_xdir);     
-        addItem("Vtx2YDir",     &VTX2_ydir);     
-        addItem("Vtx2ZDir",     &VTX2_zdir);     
+    addItem("Vtx2XDir",     &VTX2_xdir);     
+    addItem("Vtx2YDir",     &VTX2_ydir);     
+    addItem("Vtx2ZDir",     &VTX2_zdir);     
     addItem("Vtx2X0",       &VTX2_x0);       
-        addItem("Vtx2Y0",       &VTX2_y0);       
-        addItem("Vtx2Z0",       &VTX2_z0);
+    addItem("Vtx2Y0",       &VTX2_y0);       
+    addItem("Vtx2Z0",       &VTX2_z0);
 
     addItem("Vtx2Angle",     &VTX2_Angle);    
-        addItem("Vtx2DOCA",      &VTX2_DOCA);
-        addItem("Vtx2HeadSep",   &VTX2_Head_Sep);
+    addItem("Vtx2DOCA",      &VTX2_DOCA);
+    addItem("Vtx2HeadSep",   &VTX2_Head_Sep);
     addItem("Vtx2Status",    &VTX2_Status);
 
-        addItem("VtxNeutXDir" , &VTXN_xdir);
-        addItem("VtxNeutYDir" , &VTXN_ydir);
-        addItem("VtxNeutZDir" , &VTXN_zdir);
-        addItem("VtxNeutSXX",   &VTXN_Sxx);
+    addItem("VtxNeutXDir" , &VTXN_xdir);
+    addItem("VtxNeutYDir" , &VTXN_ydir);
+    addItem("VtxNeutZDir" , &VTXN_zdir);
+    addItem("VtxNeutSXX",   &VTXN_Sxx);
     addItem("VtxNeutSXY",   &VTXN_Sxy);
     addItem("VtxNeutSYY",   &VTXN_Syy);
     addItem("VtxNeutChgWt",   &VTXN_ChgWt);
     addItem("VtxNeutNeutWt",   &VTXN_NeutWt);
 
-        addItem("VtxNeut1XDir" , &VTXN1_xdir);
-        addItem("VtxNeut1YDir" , &VTXN1_ydir);
-        addItem("VtxNeut1ZDir" , &VTXN1_zdir);
-        addItem("VtxNeut1SXX",   &VTXN1_Sxx);
+    addItem("VtxNeut1XDir" , &VTXN1_xdir);
+    addItem("VtxNeut1YDir" , &VTXN1_ydir);
+    addItem("VtxNeut1ZDir" , &VTXN1_zdir);
+    addItem("VtxNeut1SXX",   &VTXN1_Sxx);
     addItem("VtxNeut1SXY",   &VTXN1_Sxy);
     addItem("VtxNeut1SYY",   &VTXN1_Syy);
     addItem("VtxNeut1ChgWt",   &VTXN1_ChgWt);
     addItem("VtxNeut1NeutWt",   &VTXN1_NeutWt);
 
-        zeroVals();
+    zeroVals();
 
-        return sc;
+    return sc;
 }
 
 
 StatusCode VtxValsTool::calculate()
 {
-        StatusCode sc = StatusCode::SUCCESS;
+    StatusCode sc = StatusCode::SUCCESS;
 
-        // Recover Track associated info. 
-        SmartDataPtr<Event::TkrTrackCol>  
-                pTracks(m_pEventSvc,EventModel::TkrRecon::TkrTrackCol);
-        SmartDataPtr<Event::TkrVertexCol>     
-                pVerts(m_pEventSvc,EventModel::TkrRecon::TkrVertexCol);
+    // Recover Track associated info. 
+    SmartDataPtr<Event::TkrTrackCol>  
+            pTracks(m_pEventSvc,EventModel::TkrRecon::TkrTrackCol);
+    SmartDataPtr<Event::TkrVertexCol>     
+            pVerts(m_pEventSvc,EventModel::TkrRecon::TkrVertexCol);
 
-        if(!pVerts) return sc; 
+    if(!pVerts) return sc; 
 
     VTX_numVertices = (int) pVerts->size();
 
-        // Get the first Vertex - First track of first vertex = Best Track
-        Event::TkrVertexConPtr pVtxr = pVerts->begin(); 
-        if(pVtxr == pVerts->end()) return sc; 
+    // Get the first Vertex - First track of first vertex = Best Track
+    Event::TkrVertexConPtr pVtxr = pVerts->begin(); 
+    if(pVtxr == pVerts->end()) return sc; 
 
-        Event::TkrVertex*   gamma = *pVtxr++; 
-        SmartRefVector<Event::TkrTrack>::const_iterator pTrack1 = gamma->getTrackIterBegin(); 
-        const Event::TkrTrack* track_1 = *pTrack1;
+    Event::TkrVertex*   gamma = *pVtxr++; 
+    SmartRefVector<Event::TkrTrack>::const_iterator pTrack1 = gamma->getTrackIterBegin(); 
+    const Event::TkrTrack* track_1 = *pTrack1;
 
-        int nParticles = gamma->getNumTracks(); 
+    int nParticles = gamma->getNumTracks(); 
 
-        Point  x0 = gamma->getPosition();
-        Vector t0 = gamma->getDirection();
+    Point  x0 = gamma->getPosition();
+    Vector t0 = gamma->getDirection();
 
-        VTX_xdir      = t0.x();
-        VTX_ydir      = t0.y();
-        VTX_zdir      = t0.z();
+    VTX_xdir      = t0.x();
+    VTX_ydir      = t0.y();
+    VTX_zdir      = t0.z();
 
-        VTX_Phi       = (-t0).phi();
-        if (VTX_Phi<0.0f) VTX_Phi += static_cast<float>(2*M_PI);
-        VTX_Theta     = (-t0).theta();
+    VTX_Phi       = (-t0).phi();
+    if (VTX_Phi<0.0f) VTX_Phi += static_cast<float>(2*M_PI);
+    VTX_Theta     = (-t0).theta();
 
     const Event::TkrTrackParams& VTX_Cov = gamma->getVertexParams();
     VTX_Sxx         = VTX_Cov.getxSlpxSlp();
@@ -376,60 +388,67 @@ StatusCode VtxValsTool::calculate()
     VTX_PhiErr        = (-t0.z())*sqrt(std::max(0.0, sinPhi*sinPhi*VTX_Sxx - 
         2.*sinPhi*cosPhi*VTX_Sxy + cosPhi*cosPhi*VTX_Syy));
     //VTX_ErrAsym     = fabs(VTX_Sxy/(VTX_Sxx + VTX_Syy));
+
+    double xFactor = sqrt(cosPhi*cosPhi + sinPhi*sinPhi*VTX_zdir*VTX_zdir);
+    double yFactor = sqrt(sinPhi*sinPhi + cosPhi*cosPhi*VTX_zdir*VTX_zdir);
+    float VTX_SxxPrj = VTX_Sxx*xFactor*xFactor;
+    float VTX_SyyPrj = VTX_Syy*yFactor*yFactor;
+    float VTX_SxyPrj = VTX_Sxy*xFactor*yFactor;
+    VTX_CovDet = 
+        sqrt(std::max(0.0f, VTX_SxxPrj*VTX_SyyPrj-VTX_SxyPrj*VTX_SxyPrj));
+    //VTX_ErrAsym     = fabs(VTX_Sxy/(VTX_Sxx + VTX_Syy));
     //VTX_CovDet      = sqrt(std::max(0.0f,VTX_Sxx*VTX_Syy-VTX_Sxy*VTX_Sxy))*VTX_zdir*VTX_zdir;
-
-
-
-        VTX_x0        = x0.x();
-        VTX_y0        = x0.y();
-        VTX_z0        = x0.z();
+    VTX_x0        = x0.x();
+    VTX_y0        = x0.y();
+    VTX_z0        = x0.z();
 
     VTX_Status  = gamma->getStatusBits(); 
 
-        // Get the first track location and direction
-        Point  x1 = track_1->front()->getPoint(Event::TkrTrackHit::SMOOTHED);
-        Vector t1 = track_1->front()->getDirection(Event::TkrTrackHit::SMOOTHED);
+    // Get the first track location and direction
+    Point  x1 = track_1->front()->getPoint(Event::TkrTrackHit::SMOOTHED);
+    Vector t1 = track_1->front()->getDirection(Event::TkrTrackHit::SMOOTHED);
 
-        // Check if there is a second track in the event.  This track may not be 
-        // associated with the first track to form the first vertex.
-
+    // Check if there is a second track in the event.  This track may not be 
+    // associated with the first track to form the first vertex.
     double cost1t2, t1t2;
     Point x2H;
 
-        if(nParticles > 1) {
-                pTrack1++;
+    if(nParticles > 1) 
+    {
+        pTrack1++;
         const Event::TkrTrack* track_2 = *pTrack1;
 
-                Point  x2 = track_2->front()->getPoint(Event::TkrTrackHit::SMOOTHED);
-            Vector t2 = track_2->front()->getDirection(Event::TkrTrackHit::SMOOTHED);
+        Point  x2 = track_2->front()->getPoint(Event::TkrTrackHit::SMOOTHED);
+        Vector t2 = track_2->front()->getDirection(Event::TkrTrackHit::SMOOTHED);
 
-                x2H = x2 + ((x1.z()-x2.z())/t2.z()) * t2;
+        x2H = x2 + ((x1.z()-x2.z())/t2.z()) * t2;
 
-                VTX_Head_Sep = (x1-x2H).magnitude(); 
+        VTX_Head_Sep = (x1-x2H).magnitude(); 
 
-                double cost1t2 = t1*t2; 
-                double t1t2  = acos(cost1t2); 
-                VTX_Angle = t1t2;
-                VTX_DOCA  = gamma->getDOCA(); 
-                VTX_S1    = gamma->getTkr1ArcLen();
-                VTX_S2    = gamma->getTkr2ArcLen();
+        double cost1t2 = t1*t2; 
+        double t1t2  = acos(cost1t2); 
+        VTX_Angle = t1t2;
+        VTX_DOCA  = gamma->getDOCA(); 
+        VTX_S1    = gamma->getTkr1ArcLen();
+        VTX_S2    = gamma->getTkr2ArcLen();
 
-                // Set a rogue value here in case this is a single 
-                if(VTX_xdir == t1.x() && VTX_ydir == t1.y()) VTX_Angle = -.1f;
+        // Set a rogue value here in case this is a single 
+        if(VTX_xdir == t1.x() && VTX_ydir == t1.y()) VTX_Angle = -.1f;
 
-                VTX_Quality = gamma->getQuality(); 
-                VTX_Chisq   = gamma->getChiSquare(); 
-                VTX_AddedRL = gamma->getAddedRadLen();
-        }
+        VTX_Quality = gamma->getQuality(); 
+        VTX_Chisq   = gamma->getChiSquare(); 
+        VTX_AddedRL = gamma->getAddedRadLen();
+    }
 
-    if(pVerts->size()>1) {
+    if(pVerts->size()>1) 
+    {
         Event::TkrVertex*   vtx2 = *pVtxr++; 
 
-                if(!(vtx2->getStatusBits()& Event::TkrVertex::NEUTRALVTX)) {
-
+        if(!(vtx2->getStatusBits()& Event::TkrVertex::NEUTRALVTX)) 
+        {
             Point  x2 = vtx2->getPosition();
             Vector t2 = vtx2->getDirection();
-        VTX2_Status    = vtx2->getStatusBits();
+            VTX2_Status    = vtx2->getStatusBits();
 
             VTX2_xdir      = t2.x();
             VTX2_ydir      = t2.y();
@@ -439,81 +458,88 @@ StatusCode VtxValsTool::calculate()
             VTX2_y0        = x2.y();
             VTX2_z0        = x2.z();
 
-        Doca vtx0(x0, t0);
-        VTX2_transDoca = vtx0.docaOfPoint(x2);
-        VTX2_longDoca  = vtx0.arcLenRay1();
+            Doca vtx0(x0, t0);
+            VTX2_transDoca = vtx0.docaOfPoint(x2);
+            VTX2_longDoca  = vtx0.arcLenRay1();
 
-        pTrack1 = vtx2->getTrackIterBegin(); 
-        nParticles = vtx2->getNumTracks(); 
-        const Event::TkrTrack* track_1a = *pTrack1;
-        // Get the first track location and direction
-        Point  x1 = track_1a->front()->getPoint(Event::TkrTrackHit::SMOOTHED);
-        Vector t1 = track_1a->front()->getDirection(Event::TkrTrackHit::SMOOTHED);
-        if(nParticles > 1) {
-            pTrack1++;
-            const Event::TkrTrack* track_2a = *pTrack1;
+            pTrack1 = vtx2->getTrackIterBegin(); 
+            nParticles = vtx2->getNumTracks(); 
+            const Event::TkrTrack* track_1a = *pTrack1;
+            // Get the first track location and direction
+            Point  x1 = track_1a->front()->getPoint(Event::TkrTrackHit::SMOOTHED);
+            Vector t1 = track_1a->front()->getDirection(Event::TkrTrackHit::SMOOTHED);
+            if(nParticles > 1) 
+            {
+                pTrack1++;
+                const Event::TkrTrack* track_2a = *pTrack1;
 
-            x2 = track_2a->front()->getPoint(Event::TkrTrackHit::SMOOTHED);
-            t2 = track_2a->front()->getDirection(Event::TkrTrackHit::SMOOTHED);
+                x2 = track_2a->front()->getPoint(Event::TkrTrackHit::SMOOTHED);
+                t2 = track_2a->front()->getDirection(Event::TkrTrackHit::SMOOTHED);
 
-            x2H = x2 + ((x1.z()-x2.z())/t2.z()) * t2;
+                x2H = x2 + ((x1.z()-x2.z())/t2.z()) * t2;
 
-            VTX2_Head_Sep = (x1-x2H).magnitude(); 
+                VTX2_Head_Sep = (x1-x2H).magnitude(); 
 
-            cost1t2 = t1*t2; 
-            t1t2  = acos(cost1t2); 
-            VTX2_Angle = t1t2;
-            VTX2_DOCA  = vtx2->getDOCA();
+                cost1t2 = t1*t2; 
+                t1t2  = acos(cost1t2); 
+                VTX2_Angle = t1t2;
+                VTX2_DOCA  = vtx2->getDOCA();
 
-                     // Set a rogue value here in case this is a single 
-                    if(VTX2_xdir == t1.x() && VTX2_ydir == t1.y()) VTX2_Angle = -.1f;
-       }
-                }}
+                // Set a rogue value here in case this is a single 
+                if(VTX2_xdir == t1.x() && VTX2_ydir == t1.y()) VTX2_Angle = -.1f;
+            }
+        }
+    }
 
-        //Neutral Vertex section
-           Event::TkrVertexConPtr pVtxN = pVerts->begin(); 
-        Event::TkrVertex*   vtxN; 
-        bool VTX_Set = false; 
-        for(; pVtxN != pVerts->end(); pVtxN++)
+    //Neutral Vertex section
+    Event::TkrVertexConPtr pVtxN = pVerts->begin(); 
+    Event::TkrVertex*   vtxN; 
+    bool VTX_Set = false; 
+    for(; pVtxN != pVerts->end(); pVtxN++)
     {            
         vtxN = *pVtxN; 
-                const Event::TkrTrackParams& VTXN_Cov = vtxN->getVertexParams();
-                if(vtxN->getStatusBits()& Event::TkrVertex::NEUTRALVTX) {
-                        Vector tN = vtxN->getDirection();
-                        float chrg_wt = vtxN->getTkr1ArcLen();
-                        float neut_wt = vtxN->getTkr2ArcLen();
+        const Event::TkrTrackParams& VTXN_Cov = vtxN->getVertexParams();
+        if(vtxN->getStatusBits()& Event::TkrVertex::NEUTRALVTX) 
+        {
+            Vector tN = vtxN->getDirection();
+            float chrg_wt = vtxN->getTkr1ArcLen();
+            float neut_wt = vtxN->getTkr2ArcLen();
 
-                        if(vtxN->getStatusBits()& Event::TkrVertex::ONETKRVTX){
-                                if(!VTX_Set) {
-                                        VTXN_xdir      = tN.x();
-                                        VTXN_ydir      = tN.y();
-                                        VTXN_zdir      = tN.z();
-                                        VTXN_Sxx       = VTXN_Cov.getxSlpxSlp();
-                                        VTXN_Sxy       = VTXN_Cov.getxSlpySlp();
-                                        VTXN_Syy       = VTXN_Cov.getySlpySlp();
-                                        VTXN_ChgWt     = chrg_wt;
-                                        VTXN_NeutWt    = neut_wt;
-                                        VTX_Set = true;
-                                }
-                                VTXN1_xdir      = tN.x();
-                                VTXN1_ydir      = tN.y();
-                                VTXN1_zdir      = tN.z();
-                                VTXN1_Sxx       = VTXN_Cov.getxSlpxSlp();
-                                VTXN1_Sxy       = VTXN_Cov.getxSlpySlp();
-                                VTXN1_Syy       = VTXN_Cov.getySlpySlp();
-                                VTXN1_ChgWt     = chrg_wt;
-                                VTXN1_NeutWt    = neut_wt;
-                        } else {
-                                VTXN_xdir      = tN.x();
-                                VTXN_ydir      = tN.y();
-                                VTXN_zdir      = tN.z();
-                                VTXN_Sxx       = VTXN_Cov.getxSlpxSlp();
-                                VTXN_Sxy       = VTXN_Cov.getxSlpySlp();
-                                VTXN_Syy       = VTXN_Cov.getySlpySlp();
-                                VTXN_ChgWt     = chrg_wt;
-                                VTXN_NeutWt    = neut_wt;
-                                VTX_Set = true;
-        }   }        }
+            if(vtxN->getStatusBits()& Event::TkrVertex::ONETKRVTX)
+            {
+                if(!VTX_Set) 
+                {
+                    VTXN_xdir      = tN.x();
+                    VTXN_ydir      = tN.y();
+                    VTXN_zdir      = tN.z();
+                    VTXN_Sxx       = VTXN_Cov.getxSlpxSlp();
+                    VTXN_Sxy       = VTXN_Cov.getxSlpySlp();
+                    VTXN_Syy       = VTXN_Cov.getySlpySlp();
+                    VTXN_ChgWt     = chrg_wt;
+                    VTXN_NeutWt    = neut_wt;
+                    VTX_Set = true;
+                }
+                VTXN1_xdir      = tN.x();
+                VTXN1_ydir      = tN.y();
+                VTXN1_zdir      = tN.z();
+                VTXN1_Sxx       = VTXN_Cov.getxSlpxSlp();
+                VTXN1_Sxy       = VTXN_Cov.getxSlpySlp();
+                VTXN1_Syy       = VTXN_Cov.getySlpySlp();
+                VTXN1_ChgWt     = chrg_wt;
+                VTXN1_NeutWt    = neut_wt;
+            } else {
+                VTXN_xdir      = tN.x();
+                VTXN_ydir      = tN.y();
+                VTXN_zdir      = tN.z();
+                VTXN_Sxx       = VTXN_Cov.getxSlpxSlp();
+                VTXN_Sxy       = VTXN_Cov.getxSlpySlp();
+                VTXN_Syy       = VTXN_Cov.getySlpySlp();
+                VTXN_ChgWt     = chrg_wt;
+                VTXN_NeutWt    = neut_wt;
+                VTX_Set = true;
+            } 
+        }        
+    }
 
         return sc;
 }
