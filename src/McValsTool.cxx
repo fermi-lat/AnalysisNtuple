@@ -2,7 +2,7 @@
 @brief Calculates the Mc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.69 2012/12/08 00:43:24 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.70 2013/01/10 17:36:55 bruel Exp $
 */
 // Include files
 
@@ -31,6 +31,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.69 2
 #include "Event/Recon/TkrRecon/TkrTrack.h"
 #include "Event/Recon/TkrRecon/TkrVertex.h"
 #include "Event/Recon/TkrRecon/TkrTree.h"
+#include "Event/Recon/TkrRecon/TkrFilterParams.h"
 
 #include "Event/Recon/CalRecon/CalCluster.h"
 #include "Event/Recon/CalRecon/CalClusterMap.h"
@@ -115,6 +116,9 @@ private:
     float MC_EvtDeltaEoE;
 
     // Tree
+	float MC_Tree_dir_err;
+
+    // Tree
     float MC_Tree_match_PosX;
     float MC_Tree_match_PosY;
     float MC_Tree_match_PosZ;
@@ -125,6 +129,9 @@ private:
     float MC_Tree_match_track1_err;
     float MC_Tree_match_track2_err;
     float MC_Tree_match_id;
+
+	// Filter, if present
+	float MC_Filter_dir_err;
 
     // Best Cal cluster
     float MC_Cal_match_PosX;
@@ -309,6 +316,8 @@ StatusCode McValsTool::initialize()
     addItem("McDirErrN",              &MC_dir_errN,              true); 
     addItem("McDirErrN1",             &MC_dir_errN1,             true); 
 
+	addItem("McTreeDirErr",           &MC_Tree_dir_err,          true);
+
     addItem("McBestTreePosX",         &MC_Tree_match_PosX,       true);
     addItem("McBestTreePosY",         &MC_Tree_match_PosY,       true);
     addItem("McBestTreePosZ",         &MC_Tree_match_PosZ,       true);
@@ -319,6 +328,8 @@ StatusCode McValsTool::initialize()
     addItem("McBestTreeTrk1Err",      &MC_Tree_match_track1_err, true);
     addItem("McBestTreeTrk2Err",      &MC_Tree_match_track2_err, true);
     addItem("McBestTreeId",           &MC_Tree_match_id,         true);
+
+	addItem("McFilterDirErr",         &MC_Filter_dir_err,        true);
 
     addItem("McBestCalPosX",          &MC_Cal_match_PosX,        true);
     addItem("McBestCalPosY",          &MC_Cal_match_PosY,        true);
@@ -357,8 +368,12 @@ StatusCode McValsTool::calculate()
     StatusCode sc = StatusCode::SUCCESS;
     
     // Recover Track associated info. 
+	SmartDataPtr<Event::TkrTreeCol>         pTrees(m_pEventSvc, EventModel::TkrRecon::TkrTreeCol);
+    
+    // Recover Track associated info. 
     SmartDataPtr<Event::TkrTrackCol>   pTracks(m_pEventSvc,EventModel::TkrRecon::TkrTrackCol); 
     SmartDataPtr<Event::TkrVertexCol>  pVerts(m_pEventSvc,EventModel::TkrRecon::TkrVertexCol);
+	SmartDataPtr<Event::TkrFilterParamsCol> pFilterCol(m_pEventSvc, EventModel::TkrRecon::TkrFilterParamsCol);
     // Recover MC Pointer
     SmartDataPtr<Event::McParticleCol> pMcParticle(m_pEventSvc, EventModel::MC::McParticleCol);
     // this is avoid creating the object as a side effect!!
@@ -477,36 +492,53 @@ StatusCode McValsTool::calculate()
         }
 
         // This should really be a test on vertices, not tracks
-        if(!pTracks) return sc; 
-        int num_tracks = pTracks->size(); 
-        if(num_tracks <= 0 ) return sc;
-        
-        // Get track energies and event energy
-        double e1 = 0;
-        double e2 = 0;
-        Event::TkrTrackColConPtr pTrack1 = pTracks->begin();
-        const Event::TkrTrack*   track_1 = *pTrack1;
-        if (track_1->getStatusBits() & Event::TkrTrack::COSMICRAY) return sc; //RJ , LSR
-        
-        e1 = track_1->getInitialEnergy();
-        double gamEne = e1; 
-        e2 = 0.; 
-        Event::TkrTrack* track_2 = 0;
-        if(num_tracks > 1) {
-            pTrack1++;
-            track_2 = *pTrack1;
-            if (track_2->getStatusBits() & Event::TkrTrack::COSMICRAY) return sc; //RJ , LSR
-            e2 = track_2->getInitialEnergy();
-            gamEne += e2;
+		if (pTrees)
+		{
+			// Ok, need to have some trees to do anything
+			if (!pTrees->empty())
+			{
+				// Recover the "best" tree 
+				Event::TkrTree* tree = pTrees->front();
+
+                // Get the axis parameters
+                const Event::TkrFilterParams* treeAxis = tree->getAxisParams();
+
+                if (treeAxis)
+                {
+                    const Vector filterDir = -treeAxis->getEventAxis();
+
+                    MC_Tree_dir_err = acos(std::max(-1., std::min(1., filterDir * Mc_t0)));
+				}
+			}
+		}
+
+		// Try the same with the filter (if it exists)
+		if (pFilterCol)
+		{
+			// Ok, need to have some trees to do anything
+			if (!pFilterCol->empty())
+			{
+				// Recover the "best" tree 
+				const Event::TkrFilterParams* filter = pFilterCol->front();
+
+                if (filter)
+                {
+                    const Vector filterDir = -filter->getEventAxis();
+
+                    MC_Filter_dir_err = acos(std::max(-1., std::min(1., filterDir * Mc_t0)));
+				}
+			}
         }
         
         //Make sure we have valid reconstructed data
-        if (pVerts) {
+        if (pVerts) 
+		{
+            // Get the first Vertex - First track of first vertex = Best Track
+            if(pVerts->empty()) return sc;
             // Build a map between track and vertex for charged vertices only
             std::map<const Event::TkrTrack*, const Event::TkrVertex*> trackToVertexMap;
             
             // Get the first Vertex - First track of first vertex = Best Track
-            if(pVerts->size()<=0) return sc;
             Event::TkrVertexConPtr pVtxr = pVerts->begin(); 
             Event::TkrVertex*   gamma = *pVtxr++; 
             Point  x0 = gamma->getPosition();
@@ -515,10 +547,10 @@ StatusCode McValsTool::calculate()
             // Keep track of track to vertex map
             SmartRefVector<Event::TkrTrack>::const_iterator trackItr = gamma->getTrackIterBegin();
 
-            trackToVertexMap[*trackItr++] = gamma;
+            trackToVertexMap[*trackItr] = gamma;
 
             if (gamma->getStatusBits() & Event::TkrVertex::TWOTKRVTX) 
-                        trackToVertexMap[*trackItr] = gamma;
+                        trackToVertexMap[*(++trackItr)] = gamma;
 
             // removed 5/5/09
             // Reference position errors at the start of recon track(s)
@@ -534,12 +566,15 @@ StatusCode McValsTool::calculate()
             //MC_zdir_err = t0.z()-Mc_t0.z();
 
             bool VTX_set = false;
-            for(;pVtxr != pVerts->end(); pVtxr++) {
+            for(;pVtxr != pVerts->end(); pVtxr++) 
+			{
                 Event::TkrVertex* vtxN = *pVtxr; 
-                if(vtxN->getStatusBits()& Event::TkrVertex::NEUTRALVTX) {
+                if(vtxN->getStatusBits()& Event::TkrVertex::NEUTRALVTX) 
+				{
                     Vector tN = vtxN->getDirection();
                     double acostNtMC = acos(tN*Mc_t0);
-                    if(!(VTX_set)) {
+                    if(!(VTX_set)) 
+					{
                         MC_dir_errN  = acostNtMC;
                         VTX_set = true;
                     }
@@ -550,10 +585,10 @@ StatusCode McValsTool::calculate()
                 {
                     trackItr = vtxN->getTrackIterBegin();
 
-                    trackToVertexMap[*trackItr++] = vtxN;
+                    trackToVertexMap[*trackItr] = vtxN;
 
                     if (vtxN->getStatusBits() & Event::TkrVertex::TWOTKRVTX) 
-                        trackToVertexMap[*trackItr] = vtxN;
+                        trackToVertexMap[*(++trackItr)] = vtxN;
                 }
             }   
 
@@ -566,6 +601,7 @@ StatusCode McValsTool::calculate()
             
             SmartRefVector<Event::TkrTrack>::const_iterator pTrack1 = gamma->getTrackIterBegin();  
             const Event::TkrTrack* track_1 = *pTrack1;
+			const Event::TkrTrack* track_2 = 0;
             
             Point  x1 = track_1->front()->getPoint(Event::TkrTrackHit::SMOOTHED);
             Vector t1 = track_1->front()->getDirection(Event::TkrTrackHit::SMOOTHED);
@@ -577,7 +613,9 @@ StatusCode McValsTool::calculate()
             // we need a better way to find the 2nd track given trees
             // was the 2nd track in the 1st vertex before (not so good!)
             // track_2 already points the 2nd best track
-            if(num_tracks > 1 && track_2!=0) {
+            if(nParticles > 1) 
+			{
+				track_2   = *(pTrack1 + 1);
                 Point  x2 = track_2->front()->getPoint(Event::TkrTrackHit::SMOOTHED);
                 Vector t2 = track_2->front()->getDirection(Event::TkrTrackHit::SMOOTHED);
                 double cost2tMC = t2*Mc_t0;
