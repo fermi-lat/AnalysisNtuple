@@ -3,7 +3,7 @@
 @brief Calculates the "Event" analysis variables from the other ntuple variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.59 2012/12/22 22:40:22 bruel Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/src/EvtValsTool.cxx,v 1.60 2013/01/10 17:36:14 bruel Exp $
 */
 
 #include "ValBase.h"
@@ -981,7 +981,8 @@ StatusCode EvtValsTool::calculate()
   
   // Model simple for PSF(68%) 
   EvtPSFModel = sqrt(pow((.061/pow((std::max(EvtEnergyCorr*1.,1.)/100),.8)),2) + (.001745*.001745));
-  
+  m_pPsfTool->setEstimate(EvtPSFModel*180./M_PI);
+
   // Ph.Bruel: Increase maximum energy from 1TeV to 10TteV
   // Log(base 10) of measured energy - useful for parameterizing effects
   EvtLogEnergy = log10(std::min(std::max(EvtEnergyCorr,10.f),10000000.f));
