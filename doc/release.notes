@@ -3,6 +3,8 @@
   @verbatim
    * EOH *
 
+ AnalysisNtuple-02-71-00 23-Jan-2013 atwood Propagating hit errors to plane of
+  converter to get better covariance
  AnalysisNtuple-02-70-10 17-Jan-2013    jrb Fix test program segfault in GR 20-08-03
  AnalysisNtuple-02-70-09 17-Jan-2013  lsrea 'fix' for bug in TkrValsTool
  AnalysisNtuple-02-70-08 17-Jan-2013 TU Fix TkrValsTool to properly "see" all track information
