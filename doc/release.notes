@@ -3,6 +3,7 @@
   @verbatim
    * EOH *
 
+ AnalysisNtuple-02-71-01 07-Feb-2013  lsrea FT1Alg: Clean up refs to CTB vars, and remove calc. of FT1EventClass
  AnalysisNtuple-02-71-00 23-Jan-2013 atwood Propagating hit errors to plane of
   converter to get better covariance
  AnalysisNtuple-02-70-10 17-Jan-2013    jrb Fix test program segfault in GR 20-08-03
