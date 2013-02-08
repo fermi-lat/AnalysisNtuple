@@ -2,7 +2,7 @@
 @brief Calculates the Mc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.70 2013/01/10 17:36:55 bruel Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.71 2013/01/21 13:46:33 usher Exp $
 */
 // Include files
 
@@ -78,9 +78,15 @@ private:
     float MC_Id;
     float MC_Charge;
     float MC_Energy;
+	float MC_Energy_1;
+	float MC_Energy_2;
     float MC_LogEnergy;
     float MC_EFrac;
     float MC_OpenAngle; 
+	float MC_RCAngle;
+	float MC_AngleMaxE;
+	float MC_AngleMinE;
+	float MC_AngleAve;
     float MC_TkrExitEne;
 
     unsigned int   MC_StatusWord;
@@ -92,6 +98,14 @@ private:
     float MC_xdir;
     float MC_ydir;
     float MC_zdir;
+
+	float MC_xdir1;
+    float MC_ydir1;
+    float MC_zdir1;
+
+	float MC_xdir2;
+    float MC_ydir2;
+    float MC_zdir2;
   
     // celestial coordinates now set in McCoordsAlg
     
@@ -283,9 +297,15 @@ StatusCode McValsTool::initialize()
     addItem("McId",           &MC_Id,          true);  
     addItem("McCharge",       &MC_Charge,      true);
     addItem("McEnergy",       &MC_Energy,      true);  
+	addItem("McEnergy1",      &MC_Energy1,     true);  
+    addItem("McEnergy2",      &MC_Energy2,     true);  
     addItem("McLogEnergy",    &MC_LogEnergy,   true);
     addItem("McEFrac",        &MC_EFrac,       true);
     addItem("McOpenAngle",    &MC_OpenAngle,   true);
+	addItem("McReCoilAngle",  &MC_RCAngle,   true);
+	addItem("McAngleMaxEne",  &MC_AngleMaxE,   true);
+	addItem("McAngleMinEne",  &MC_AngleMinE,   true);
+	addItem("McAngleAve",     &MC_AngleAve,    true);
     addItem("McTkrExitEne",   &MC_TkrExitEne,  true);
 
     // added 5/5/09 LSR
@@ -300,7 +320,14 @@ StatusCode McValsTool::initialize()
     addItem("McXDir",         &MC_xdir,        true );         
     addItem("McYDir",         &MC_ydir,        true );         
     addItem("McZDir",         &MC_zdir,        true );         
-    
+  
+	addItem("McXDir1",         &MC_xdir1,        true );         
+    addItem("McYDir1",         &MC_ydir1,        true );         
+    addItem("McZDir1",         &MC_zdir1,        true );  
+
+	addItem("McXDir2",         &MC_xdir2,        true );         
+    addItem("McYDir2",         &MC_ydir2,        true );         
+    addItem("McZDir2",         &MC_zdir2,        true );         
     // removed 5/5/09 LSR
     //addItem("McXErr",         &MC_x_err);        
     //addItem("McYErr",         &MC_y_err);        
@@ -424,8 +451,10 @@ StatusCode McValsTool::calculate()
         HepPoint3D Mc_x0;
         CLHEP::HepLorentzVector Mc_p0;
         // launch point for charged particle; conversion point for neutral
-        Mc_x0 = (MC_Charge==0 ? (*pMCPrimary)->finalPosition() : (*pMCPrimary)->initialPosition());
-        Mc_p0 = (*pMCPrimary)->initialFourMomentum();
+		// Let's try changing this to be the first interaction point for all..
+       // Mc_x0 = (MC_Charge==0 ? (*pMCPrimary)->finalPosition() : (*pMCPrimary)->initialPosition());
+        Mc_x0 = (*pMCPrimary)->finalPosition(); 
+		Mc_p0 = (*pMCPrimary)->initialFourMomentum();
 
         // there's a method v.m(), but it does something tricky if m2<0
         double mass = sqrt(std::max(Mc_p0.m2(),0.0));
@@ -478,16 +507,50 @@ StatusCode McValsTool::calculate()
                 double e1 = Mc_p1.t();
                 double e2 = Mc_p2.t();
 
-                MC_EFrac = e1/MC_Energy; 
-                if(e1 < e2) MC_EFrac = e2/MC_Energy;
+				MC_Energy1 = e1;
+                MC_Energy2 = e2;
+
+               
                 
                 Vector Mc_t1 = Vector(Mc_p1.x(),Mc_p1.y(), Mc_p1.z()).unit();
                 Vector Mc_t2 = Vector(Mc_p2.x(),Mc_p2.y(), Mc_p2.z()).unit();
+				MC_xdir1 = t1.x();
+				MC_ydir1 = t1.y();
+				MC_zdir1 = t1.z();
+				MC_xdir2 = t2.x();
+				MC_ydir2 = t2.y();
+				MC_zdir2 = t2.z();
+				Vector Mc_t12= (Mc_t1 + Mc_t2).unit();
+				Vector Mc_Recoil = (e1*Mc_t1 + e2*Mc_t2).unit();
                 
                 double dot_prod = Mc_t1*Mc_t2;
-                
                 if(dot_prod > 1.) dot_prod = 1.;
                 MC_OpenAngle = acos(dot_prod);
+
+                dot_prod = Mc_t0*Mc_Recoil;
+                if(dot_prod > 1.) dot_prod = 1.;
+                MC_RCAngle = acos(dot_prod);
+
+			    dot_prod = Mc_t0*Mc_t12;
+				if(dot_prod > 1.) dot_prod = 1.;
+			    MC_AngleAve = acos(dot_prod);
+
+				dot_prod = Mc_t0*Mc_t1;
+				if(dot_prod > 1.) dot_prod = 1.; 
+				float angle1 = acos(dot_prod);
+				dot_prod = Mc_t0*Mc_t2;
+				if(dot_prod > 1.) dot_prod = 1.;
+				float angle2 = acos(dot_prod);
+
+				MC_EFrac = e1/MC_Energy; 
+				if(e1 < e2) {
+					MC_EFrac = e2/MC_Energy;
+					MC_AngleMaxE = angle2;
+					MC_AngleMinE = angle1;
+				} else {
+					MC_AngleMaxE = angle1;
+					MC_AngleMinE = angle2;
+				}
             }  
         }
 

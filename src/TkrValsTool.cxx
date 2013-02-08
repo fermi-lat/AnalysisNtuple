@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.122 2013/01/18 01:05:20 jrb Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.123 2013/01/23 17:07:29 atwood Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -204,6 +204,10 @@ private:
     float Tkr_1_PhiErr;
     float Tkr_1_ErrAsym;
     float Tkr_1_CovDet;
+	float Tkr_1_SxxC; 
+	float Tkr_1_SyyC;
+	float Tkr_1_SxyC;
+	float Tkr_1_CovDetC;
     float Tkr_1_ToTFirst;
     float Tkr_1_ToTAve;
     float Tkr_1_ToTTrAve;
@@ -269,7 +273,7 @@ private:
     float Tkr_2_x0;
     float Tkr_2_y0;
     float Tkr_2_z0;
-    float Tkr_2_CovDet;
+    float Tkr_2_CovDetC;
 
     float Tkr_2TkrAngle;
     float Tkr_2TkrHDoca;
@@ -871,6 +875,10 @@ StatusCode TkrValsTool::initialize()
     addItem("Tkr1SXX",        &Tkr_1_Sxx);
     addItem("Tkr1SXY",        &Tkr_1_Sxy);
     addItem("Tkr1SYY",        &Tkr_1_Syy);
+	addItem("Tkr1SXXC",       &Tkr_1_SxxC);
+	addItem("Tkr1SYYC",       &Tkr_1_SyyC);
+	addItem("Tkr1SXYC",       &Tkr_1_SxyC);
+	addItem("Tkr1CovDetC",    &Tkr_1_CovDetC);
 
     addItem("Tkr1ToTFirst",   &Tkr_1_ToTFirst);
     addItem("Tkr1ToTAve",     &Tkr_1_ToTAve);
@@ -941,7 +949,7 @@ StatusCode TkrValsTool::initialize()
       addItem("Tkr2X0",         &Tkr_2_x0);
       addItem("Tkr2Y0",         &Tkr_2_y0);
       addItem("Tkr2Z0",         &Tkr_2_z0);    
-    addItem("Tkr2CovDet",     &Tkr_2_CovDet);
+    addItem("Tkr2CovDetC",     &Tkr_2_CovDetC);
 
     addItem("Tkr2TkrAngle",   &Tkr_2TkrAngle); 
     addItem("Tkr2TkrHDoca",   &Tkr_2TkrHDoca); 
@@ -1157,31 +1165,13 @@ StatusCode TkrValsTool::calculate()
         if (Tkr_1_Phi<0.0f) Tkr_1_Phi += static_cast<float>(2*M_PI);
         Tkr_1_Theta       = (-t1).theta();
 
-		// We must propagate the track to the mid-point in the radiator above this layer
-		// This is to include the most important piece of the multiple scatterers
+         // First we capture the cov. information at the head of the track
 		 const Event::TkrTrackParams& Tkr_1_Cov 
             = track_1->front()->getTrackParams(Event::TkrTrackHit::SMOOTHED);
 
-	     int plane = m_tkrGeom->getPlane(track_1->front()->getTkrId());
-         int layer = m_tkrGeom->getLayer(plane);
-         float z_conv = m_tkrGeom->getConvZ(layer);
-		 float sv1 = (z_conv - x1.z())/ t1.z();
-		 if(layer < 6) sv1 -= .3;
-		 else          sv1 -= .05;
-
-		 Event::TkrTrackParams convParams = Tkr_1_Cov;
-
-		 if (m_tkrGeom->isTopPlaneInLayer(plane)) {
-         // Propagate the TkrParams to the vertex location
-             m_G4PropTool->setStepStart(Tkr_1_Cov, x1.z(), (sv1 < 0));
-             m_G4PropTool->step(fabs(sv1));
-             convParams = m_G4PropTool->getTrackParams(fabs(sv1), Tkr_1_ConEne, (sv1 < 0));
-             double extraRadLen = m_G4PropTool->getRadLength();
-		 }
-
-        Tkr_1_Sxx         = convParams.getxSlpxSlp();
-        Tkr_1_Sxy         = convParams.getxSlpySlp();
-        Tkr_1_Syy         = convParams.getySlpySlp();
+		Tkr_1_Sxx          = Tkr_1_Cov.getxSlpxSlp();
+        Tkr_1_Sxy          = Tkr_1_Cov.getxSlpySlp();
+        Tkr_1_Syy          = Tkr_1_Cov.getySlpySlp();
         double sinPhi     = sin(Tkr_1_Phi);
         double cosPhi     = cos(Tkr_1_Phi);
         Tkr_1_ThetaErr    = t1.z()*t1.z()*sqrt(std::max(0.0, cosPhi*cosPhi*Tkr_1_Sxx + 
@@ -1191,6 +1181,33 @@ StatusCode TkrValsTool::calculate()
         Tkr_1_ErrAsym     = fabs(Tkr_1_Sxy/(Tkr_1_Sxx + Tkr_1_Syy));
         Tkr_1_CovDet = 
             sqrt(std::max(0.0f,Tkr_1_Sxx*Tkr_1_Syy-Tkr_1_Sxy*Tkr_1_Sxy))*
+            Tkr_1_zdir*Tkr_1_zdir;
+
+		// We must propagate the track to the mid-point in the radiator above this layer
+		// This is to include the most important piece of the multiple scatterers
+	     int plane = m_tkrGeom->getPlane(track_1->front()->getTkrId());
+         int layer = m_tkrGeom->getLayer(plane);
+         float z_conv = m_tkrGeom->getConvZ(layer);
+		 float sv1 = (z_conv - x1.z())/ t1.z();
+		 if(layer < 6) sv1 += .3/t1.z();
+		 else          sv1 += .05/t1.z();
+
+		 Event::TkrTrackParams convParams = Tkr_1_Cov;
+
+		 if (m_tkrGeom->isTopPlaneInLayer(plane)) {
+         // Propagate the TkrParams to the middle of converter
+             m_G4PropTool->setStepStart(Tkr_1_Cov, x1.z(), (sv1 < 0));
+             m_G4PropTool->step(fabs(sv1));
+             convParams = m_G4PropTool->getTrackParams(fabs(sv1), Tkr_1_ConEne);
+             double extraRadLen = m_G4PropTool->getRadLength();
+		 }
+
+        Tkr_1_SxxC         = convParams.getxSlpxSlp();
+        Tkr_1_SxyC         = convParams.getxSlpySlp();
+        Tkr_1_SyyC         = convParams.getySlpySlp();
+ 
+        Tkr_1_CovDetC = 
+            sqrt(std::max(0.0f,Tkr_1_SxxC*Tkr_1_SyyC-Tkr_1_SxyC*Tkr_1_SxyC))*
             Tkr_1_zdir*Tkr_1_zdir;
 
         Tkr_TrackLength = -(Tkr_1_z0-z0)/Tkr_1_zdir;
@@ -1650,27 +1667,27 @@ StatusCode TkrValsTool::calculate()
 	     plane = m_tkrGeom->getPlane(track_2->front()->getTkrId());
          layer = m_tkrGeom->getLayer(plane);
          z_conv = m_tkrGeom->getConvZ(layer);
-		 sv1 = (z_conv - x2.z())/ t2.z();
-		 if(layer < 6) sv1 -= .3;
-		 else          sv1 -= .05;
+		 float sv2 = (z_conv - x2.z())/ t2.z();
+		 if(layer < 6) sv1 += .3/t2.z();
+		 else          sv1 += .05/t2.z();
 
 		 convParams = Tkr_2_Cov;
 
 		 if (m_tkrGeom->isTopPlaneInLayer(plane)) {
          // Propagate the TkrParams to the vertex location
-             m_G4PropTool->setStepStart(Tkr_2_Cov, x2.z(), (sv1 < 0));
+             m_G4PropTool->setStepStart(Tkr_2_Cov, x2.z(), (sv2 < 0));
              m_G4PropTool->step(fabs(sv1));
-             convParams = m_G4PropTool->getTrackParams(fabs(sv1), Tkr_2_ConEne, (sv1 < 0));
+             convParams = m_G4PropTool->getTrackParams(fabs(sv2), Tkr_2_ConEne, (sv1 < 0));
              double extraRadLen = m_G4PropTool->getRadLength();
 		 }
 
 
-            float Tkr_2_Sxx         = convParams.getxSlpxSlp();
-            float Tkr_2_Sxy         = convParams.getxSlpySlp();
-            float Tkr_2_Syy         = convParams.getySlpySlp();
+            float Tkr_2_SxxC         = convParams.getxSlpxSlp();
+            float Tkr_2_SxyC         = convParams.getxSlpySlp();
+            float Tkr_2_SyyC         = convParams.getySlpySlp();
        
-            Tkr_2_CovDet = 
-            sqrt(std::max(0.0f,Tkr_2_Sxx*Tkr_2_Syy-Tkr_2_Sxy*Tkr_2_Sxy))*
+            Tkr_2_CovDetC = 
+            sqrt(std::max(0.0f,Tkr_2_SxxC*Tkr_2_SyyC-Tkr_2_SxyC*Tkr_2_SxyC))*
             Tkr_2_zdir*Tkr_2_zdir;
 
         
