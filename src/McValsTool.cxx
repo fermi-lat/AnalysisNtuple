@@ -2,7 +2,7 @@
 @brief Calculates the Mc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.71 2013/01/21 13:46:33 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.72 2013/02/08 03:54:30 atwood Exp $
 */
 // Include files
 
@@ -78,15 +78,15 @@ private:
     float MC_Id;
     float MC_Charge;
     float MC_Energy;
-	float MC_Energy_1;
-	float MC_Energy_2;
+    float MC_Energy_1;
+    float MC_Energy_2;
     float MC_LogEnergy;
     float MC_EFrac;
     float MC_OpenAngle; 
-	float MC_RCAngle;
-	float MC_AngleMaxE;
-	float MC_AngleMinE;
-	float MC_AngleAve;
+    float MC_RCAngle;
+    float MC_AngleMaxE;
+    float MC_AngleMinE;
+    float MC_AngleAve;
     float MC_TkrExitEne;
 
     unsigned int   MC_StatusWord;
@@ -99,11 +99,11 @@ private:
     float MC_ydir;
     float MC_zdir;
 
-	float MC_xdir1;
+    float MC_xdir1;
     float MC_ydir1;
     float MC_zdir1;
 
-	float MC_xdir2;
+    float MC_xdir2;
     float MC_ydir2;
     float MC_zdir2;
   
@@ -130,7 +130,7 @@ private:
     float MC_EvtDeltaEoE;
 
     // Tree
-	float MC_Tree_dir_err;
+    float MC_Tree_dir_err;
 
     // Tree
     float MC_Tree_match_PosX;
@@ -144,8 +144,8 @@ private:
     float MC_Tree_match_track2_err;
     float MC_Tree_match_id;
 
-	// Filter, if present
-	float MC_Filter_dir_err;
+    // Filter, if present
+    float MC_Filter_dir_err;
 
     // Best Cal cluster
     float MC_Cal_match_PosX;
@@ -297,15 +297,15 @@ StatusCode McValsTool::initialize()
     addItem("McId",           &MC_Id,          true);  
     addItem("McCharge",       &MC_Charge,      true);
     addItem("McEnergy",       &MC_Energy,      true);  
-	addItem("McEnergy1",      &MC_Energy1,     true);  
-    addItem("McEnergy2",      &MC_Energy2,     true);  
+    addItem("McEnergy1",      &MC_Energy_1,    true);  
+    addItem("McEnergy2",      &MC_Energy_2,    true);  
     addItem("McLogEnergy",    &MC_LogEnergy,   true);
     addItem("McEFrac",        &MC_EFrac,       true);
     addItem("McOpenAngle",    &MC_OpenAngle,   true);
-	addItem("McReCoilAngle",  &MC_RCAngle,   true);
-	addItem("McAngleMaxEne",  &MC_AngleMaxE,   true);
-	addItem("McAngleMinEne",  &MC_AngleMinE,   true);
-	addItem("McAngleAve",     &MC_AngleAve,    true);
+    addItem("McReCoilAngle",  &MC_RCAngle,   true);
+    addItem("McAngleMaxEne",  &MC_AngleMaxE,   true);
+    addItem("McAngleMinEne",  &MC_AngleMinE,   true);
+    addItem("McAngleAve",     &MC_AngleAve,    true);
     addItem("McTkrExitEne",   &MC_TkrExitEne,  true);
 
     // added 5/5/09 LSR
@@ -321,11 +321,11 @@ StatusCode McValsTool::initialize()
     addItem("McYDir",         &MC_ydir,        true );         
     addItem("McZDir",         &MC_zdir,        true );         
   
-	addItem("McXDir1",         &MC_xdir1,        true );         
+    addItem("McXDir1",         &MC_xdir1,        true );         
     addItem("McYDir1",         &MC_ydir1,        true );         
     addItem("McZDir1",         &MC_zdir1,        true );  
 
-	addItem("McXDir2",         &MC_xdir2,        true );         
+    addItem("McXDir2",         &MC_xdir2,        true );         
     addItem("McYDir2",         &MC_ydir2,        true );         
     addItem("McZDir2",         &MC_zdir2,        true );         
     // removed 5/5/09 LSR
@@ -343,7 +343,7 @@ StatusCode McValsTool::initialize()
     addItem("McDirErrN",              &MC_dir_errN,              true); 
     addItem("McDirErrN1",             &MC_dir_errN1,             true); 
 
-	addItem("McTreeDirErr",           &MC_Tree_dir_err,          true);
+    addItem("McTreeDirErr",           &MC_Tree_dir_err,          true);
 
     addItem("McBestTreePosX",         &MC_Tree_match_PosX,       true);
     addItem("McBestTreePosY",         &MC_Tree_match_PosY,       true);
@@ -356,7 +356,7 @@ StatusCode McValsTool::initialize()
     addItem("McBestTreeTrk2Err",      &MC_Tree_match_track2_err, true);
     addItem("McBestTreeId",           &MC_Tree_match_id,         true);
 
-	addItem("McFilterDirErr",         &MC_Filter_dir_err,        true);
+    addItem("McFilterDirErr",         &MC_Filter_dir_err,        true);
 
     addItem("McBestCalPosX",          &MC_Cal_match_PosX,        true);
     addItem("McBestCalPosY",          &MC_Cal_match_PosY,        true);
@@ -395,12 +395,12 @@ StatusCode McValsTool::calculate()
     StatusCode sc = StatusCode::SUCCESS;
     
     // Recover Track associated info. 
-	SmartDataPtr<Event::TkrTreeCol>         pTrees(m_pEventSvc, EventModel::TkrRecon::TkrTreeCol);
+    SmartDataPtr<Event::TkrTreeCol>         pTrees(m_pEventSvc, EventModel::TkrRecon::TkrTreeCol);
     
     // Recover Track associated info. 
     SmartDataPtr<Event::TkrTrackCol>   pTracks(m_pEventSvc,EventModel::TkrRecon::TkrTrackCol); 
     SmartDataPtr<Event::TkrVertexCol>  pVerts(m_pEventSvc,EventModel::TkrRecon::TkrVertexCol);
-	SmartDataPtr<Event::TkrFilterParamsCol> pFilterCol(m_pEventSvc, EventModel::TkrRecon::TkrFilterParamsCol);
+    SmartDataPtr<Event::TkrFilterParamsCol> pFilterCol(m_pEventSvc, EventModel::TkrRecon::TkrFilterParamsCol);
     // Recover MC Pointer
     SmartDataPtr<Event::McParticleCol> pMcParticle(m_pEventSvc, EventModel::MC::McParticleCol);
     // this is avoid creating the object as a side effect!!
@@ -451,10 +451,10 @@ StatusCode McValsTool::calculate()
         HepPoint3D Mc_x0;
         CLHEP::HepLorentzVector Mc_p0;
         // launch point for charged particle; conversion point for neutral
-		// Let's try changing this to be the first interaction point for all..
+        // Let's try changing this to be the first interaction point for all..
        // Mc_x0 = (MC_Charge==0 ? (*pMCPrimary)->finalPosition() : (*pMCPrimary)->initialPosition());
         Mc_x0 = (*pMCPrimary)->finalPosition(); 
-		Mc_p0 = (*pMCPrimary)->initialFourMomentum();
+        Mc_p0 = (*pMCPrimary)->initialFourMomentum();
 
         // there's a method v.m(), but it does something tricky if m2<0
         double mass = sqrt(std::max(Mc_p0.m2(),0.0));
@@ -507,21 +507,21 @@ StatusCode McValsTool::calculate()
                 double e1 = Mc_p1.t();
                 double e2 = Mc_p2.t();
 
-				MC_Energy1 = e1;
-                MC_Energy2 = e2;
+                MC_Energy_1 = e1;
+                MC_Energy_2 = e2;
 
                
                 
                 Vector Mc_t1 = Vector(Mc_p1.x(),Mc_p1.y(), Mc_p1.z()).unit();
                 Vector Mc_t2 = Vector(Mc_p2.x(),Mc_p2.y(), Mc_p2.z()).unit();
-				MC_xdir1 = t1.x();
-				MC_ydir1 = t1.y();
-				MC_zdir1 = t1.z();
-				MC_xdir2 = t2.x();
-				MC_ydir2 = t2.y();
-				MC_zdir2 = t2.z();
-				Vector Mc_t12= (Mc_t1 + Mc_t2).unit();
-				Vector Mc_Recoil = (e1*Mc_t1 + e2*Mc_t2).unit();
+                MC_xdir1 = Mc_t1.x();
+                MC_ydir1 = Mc_t1.y();
+                MC_zdir1 = Mc_t1.z();
+                MC_xdir2 = Mc_t2.x();
+                MC_ydir2 = Mc_t2.y();
+                MC_zdir2 = Mc_t2.z();
+                Vector Mc_t12= (Mc_t1 + Mc_t2).unit();
+                Vector Mc_Recoil = (e1*Mc_t1 + e2*Mc_t2).unit();
                 
                 double dot_prod = Mc_t1*Mc_t2;
                 if(dot_prod > 1.) dot_prod = 1.;
@@ -531,37 +531,37 @@ StatusCode McValsTool::calculate()
                 if(dot_prod > 1.) dot_prod = 1.;
                 MC_RCAngle = acos(dot_prod);
 
-			    dot_prod = Mc_t0*Mc_t12;
-				if(dot_prod > 1.) dot_prod = 1.;
-			    MC_AngleAve = acos(dot_prod);
+                dot_prod = Mc_t0*Mc_t12;
+                if(dot_prod > 1.) dot_prod = 1.;
+                MC_AngleAve = acos(dot_prod);
 
-				dot_prod = Mc_t0*Mc_t1;
-				if(dot_prod > 1.) dot_prod = 1.; 
-				float angle1 = acos(dot_prod);
-				dot_prod = Mc_t0*Mc_t2;
-				if(dot_prod > 1.) dot_prod = 1.;
-				float angle2 = acos(dot_prod);
+                dot_prod = Mc_t0*Mc_t1;
+                if(dot_prod > 1.) dot_prod = 1.; 
+                float angle1 = acos(dot_prod);
+                dot_prod = Mc_t0*Mc_t2;
+                if(dot_prod > 1.) dot_prod = 1.;
+                float angle2 = acos(dot_prod);
 
-				MC_EFrac = e1/MC_Energy; 
-				if(e1 < e2) {
-					MC_EFrac = e2/MC_Energy;
-					MC_AngleMaxE = angle2;
-					MC_AngleMinE = angle1;
-				} else {
-					MC_AngleMaxE = angle1;
-					MC_AngleMinE = angle2;
-				}
+                MC_EFrac = e1/MC_Energy; 
+                if(e1 < e2) {
+                    MC_EFrac = e2/MC_Energy;
+                    MC_AngleMaxE = angle2;
+                    MC_AngleMinE = angle1;
+                } else {
+                    MC_AngleMaxE = angle1;
+                    MC_AngleMinE = angle2;
+                }
             }  
         }
 
         // This should really be a test on vertices, not tracks
-		if (pTrees)
-		{
-			// Ok, need to have some trees to do anything
-			if (!pTrees->empty())
-			{
-				// Recover the "best" tree 
-				Event::TkrTree* tree = pTrees->front();
+        if (pTrees)
+        {
+            // Ok, need to have some trees to do anything
+            if (!pTrees->empty())
+            {
+                // Recover the "best" tree 
+                Event::TkrTree* tree = pTrees->front();
 
                 // Get the axis parameters
                 const Event::TkrFilterParams* treeAxis = tree->getAxisParams();
@@ -571,31 +571,31 @@ StatusCode McValsTool::calculate()
                     const Vector filterDir = -treeAxis->getEventAxis();
 
                     MC_Tree_dir_err = acos(std::max(-1., std::min(1., filterDir * Mc_t0)));
-				}
-			}
-		}
+                }
+            }
+        }
 
-		// Try the same with the filter (if it exists)
-		if (pFilterCol)
-		{
-			// Ok, need to have some trees to do anything
-			if (!pFilterCol->empty())
-			{
-				// Recover the "best" tree 
-				const Event::TkrFilterParams* filter = pFilterCol->front();
+        // Try the same with the filter (if it exists)
+        if (pFilterCol)
+        {
+            // Ok, need to have some trees to do anything
+            if (!pFilterCol->empty())
+            {
+                // Recover the "best" tree 
+                const Event::TkrFilterParams* filter = pFilterCol->front();
 
                 if (filter)
                 {
                     const Vector filterDir = -filter->getEventAxis();
 
                     MC_Filter_dir_err = acos(std::max(-1., std::min(1., filterDir * Mc_t0)));
-				}
-			}
+                }
+            }
         }
         
         //Make sure we have valid reconstructed data
         if (pVerts) 
-		{
+        {
             // Get the first Vertex - First track of first vertex = Best Track
             if(pVerts->empty()) return sc;
             // Build a map between track and vertex for charged vertices only
@@ -630,14 +630,14 @@ StatusCode McValsTool::calculate()
 
             bool VTX_set = false;
             for(;pVtxr != pVerts->end(); pVtxr++) 
-			{
+            {
                 Event::TkrVertex* vtxN = *pVtxr; 
                 if(vtxN->getStatusBits()& Event::TkrVertex::NEUTRALVTX) 
-				{
+                {
                     Vector tN = vtxN->getDirection();
                     double acostNtMC = acos(tN*Mc_t0);
                     if(!(VTX_set)) 
-					{
+                    {
                         MC_dir_errN  = acostNtMC;
                         VTX_set = true;
                     }
@@ -664,7 +664,7 @@ StatusCode McValsTool::calculate()
             
             SmartRefVector<Event::TkrTrack>::const_iterator pTrack1 = gamma->getTrackIterBegin();  
             const Event::TkrTrack* track_1 = *pTrack1;
-			const Event::TkrTrack* track_2 = 0;
+            const Event::TkrTrack* track_2 = 0;
             
             Point  x1 = track_1->front()->getPoint(Event::TkrTrackHit::SMOOTHED);
             Vector t1 = track_1->front()->getDirection(Event::TkrTrackHit::SMOOTHED);
@@ -677,8 +677,8 @@ StatusCode McValsTool::calculate()
             // was the 2nd track in the 1st vertex before (not so good!)
             // track_2 already points the 2nd best track
             if(nParticles > 1) 
-			{
-				track_2   = *(pTrack1 + 1);
+            {
+                track_2   = *(pTrack1 + 1);
                 Point  x2 = track_2->front()->getPoint(Event::TkrTrackHit::SMOOTHED);
                 Vector t2 = track_2->front()->getDirection(Event::TkrTrackHit::SMOOTHED);
                 double cost2tMC = t2*Mc_t0;
