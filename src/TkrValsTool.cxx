@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.123 2013/01/23 17:07:29 atwood Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.124 2013/02/08 03:54:30 atwood Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -1194,21 +1194,44 @@ StatusCode TkrValsTool::calculate()
 
 		 Event::TkrTrackParams convParams = Tkr_1_Cov;
 
-		 if (m_tkrGeom->isTopPlaneInLayer(plane)) {
+		// if (m_tkrGeom->isTopPlaneInLayer(plane)){do this for all events regardless of top plane
          // Propagate the TkrParams to the middle of converter
              m_G4PropTool->setStepStart(Tkr_1_Cov, x1.z(), (sv1 < 0));
              m_G4PropTool->step(fabs(sv1));
              convParams = m_G4PropTool->getTrackParams(fabs(sv1), Tkr_1_ConEne);
              double extraRadLen = m_G4PropTool->getRadLength();
-		 }
+		// }
 
-        Tkr_1_SxxC         = convParams.getxSlpxSlp();
-        Tkr_1_SxyC         = convParams.getxSlpySlp();
-        Tkr_1_SyyC         = convParams.getySlpySlp();
- 
+	    // Energy correction term
+			 double eventEnergy = Tkr_1_ConEne > 5000. ? 10000. : Tkr_1_ConEne*2; 
+		 double eFactor = pow((eventEnergy / 100), .36); 
+
+        Tkr_1_SxxC         = convParams.getxSlpxSlp() * eFactor;
+        Tkr_1_SxyC         = convParams.getxSlpySlp() * eFactor;
+        Tkr_1_SyyC         = convParams.getySlpySlp() * eFactor;
+
+		// Add in the QED piece:  constant (3.0) taken from QED angle plots for 68% containment
+		double QED_angleSq = (3.0/(2.*Tkr_1_ConEne)) * (3.0/(2.*Tkr_1_ConEne));
+
+		double slopeX    = t1.x()/t1.z(); 
+        double slopeY    = t1.y()/t1.z();
+        double norm_term = 1. + slopeX*slopeX + slopeY*slopeY;
+
+    // The below taken from KalParticle (by Bill Atwood) in order to match results
+    // Calc, the matrix elements (see Data Analysis Tech. for HEP, Fruhwirth et al)
+       double p33 = (1.+slopeX*slopeX)*norm_term;
+       double p34 = slopeX*slopeY*norm_term;
+       double p44 = (1.+slopeY*slopeY)*norm_term; 
+
+
+       Tkr_1_SxxC += QED_angleSq*p33; 
+       Tkr_1_SyyC += QED_angleSq*p44;
+       Tkr_1_SxyC += QED_angleSq*p34;
+
+		// The factor of ZDir^3 takes us from slopes to angles (or at least approximately)
         Tkr_1_CovDetC = 
             sqrt(std::max(0.0f,Tkr_1_SxxC*Tkr_1_SyyC-Tkr_1_SxyC*Tkr_1_SxyC))*
-            Tkr_1_zdir*Tkr_1_zdir;
+            Tkr_1_zdir*Tkr_1_zdir*fabs(Tkr_1_zdir);
 
         Tkr_TrackLength = -(Tkr_1_z0-z0)/Tkr_1_zdir;
 
