@@ -3,6 +3,7 @@
   @verbatim
    * EOH *
 
+ AnalysisNtuple-02-71-04 20-Feb-2013  lsrea remove extra blank lines from AnaTupAlg source, no other change
  AnalysisNtuple-02-71-03 14-Feb-2013 TU Pick up Bill's updates to TkrValsTool and VtxValsTool to add QED piece to covariance
  AnalysisNtuple-02-71-02 09-Feb-2013 TU Pick up Bill's changes to McValsTool and TkrValsTool for covariance studies
  AnalysisNtuple-02-71-01 07-Feb-2013  lsrea FT1Alg: Clean up refs to CTB vars, and remove calc. of FT1EventClass
