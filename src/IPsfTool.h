@@ -13,7 +13,8 @@ class IPsfTool : virtual public IAlgTool
     static const InterfaceID& interfaceID() { return IID_IPsfTool; }
 
     /// load map
-    virtual StatusCode loadPsf(const std::string psfName) = 0;
+    virtual StatusCode loadPsf(const std::string psfVersion, 
+			 std::string psfPath) = 0;
     /// returns an interpolated value for zDir and LogE
     virtual  double computePsf(const double cl_level, 
 			     const double energy,
