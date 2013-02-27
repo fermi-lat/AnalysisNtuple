@@ -2,7 +2,7 @@
 @brief Calculates an expected PSF containment radius for each evt, based on a given psf version
 @author Johann Cohen-Tanugi
 
-$Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/src/PsfValsTool.cxx,v 1.3 2012/12/12 19:48:49 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/PsfValsTool.cxx,v 1.4 2013/01/23 11:10:35 cohen Exp $
 */
 #include <sstream>
 #include <stdexcept>
@@ -13,6 +13,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/src/PsfV
 #include "tip/Table.h"
 
 #include "facilities/Util.h"                // for expandEnvVar
+#include "facilities/commonUtilities.h"                // for expandEnvVar
 
 #include "st_facilities/Bilinear.h"
 #include "st_facilities/GaussianQuadrature.h"
@@ -453,7 +454,8 @@ public:
   virtual ~PsfValsTool() { ; }
   /// @brief Initialization of the tool.
   StatusCode initialize();
-  StatusCode loadPsf(const std::string psfType);
+  StatusCode loadPsf(const std::string psfVersion, 
+		     const std::string psfPath);
   double computePsf(const double cl_level, const double energy,
 		    const double theta, const bool isFront);
   
@@ -487,17 +489,19 @@ StatusCode PsfValsTool::initialize()
   return sc;
 }
 
-StatusCode PsfValsTool::loadPsf(const std::string psfName) {
+StatusCode PsfValsTool::loadPsf(const std::string psfVersion,
+				const std::string psfPath) {
   StatusCode sc = StatusCode::SUCCESS;
   MsgStream log(msgSvc(), name());
-  if(psfName=="P7SOURCE_V6MC"){
-    std::string psfFile_front="$(ANALYSISNTUPLEDATAPATH)/psf_P7SOURCE_V6MC_front.fits";
-    m_psf_front = PsfObject(psfFile_front,true);
-    std::string psfFile_back="$(ANALYSISNTUPLEDATAPATH)/psf_P7SOURCE_V6MC_back.fits";
-    m_psf_back = PsfObject(psfFile_back,false);
+  std::string frontName = facilities::commonUtilities::joinPath(psfPath,"psf_"+psfVersion+"_front.fits");
+  std::string backName  = facilities::commonUtilities::joinPath(psfPath,"psf_"+psfVersion+"_back.fits");
+  if(facilities::commonUtilities::pathFound(frontName)&&
+     facilities::commonUtilities::pathFound(backName)){
+    m_psf_front = PsfObject(frontName,true);
+    m_psf_back = PsfObject(backName,false);
   }
   else{
-    log<<MSG::FATAL<<"Could not initialize PsfValTools, psf "<<psfName<<" not supported."<<endreq;
+    log<<MSG::FATAL<<"Could not initialize PsfValTools, psf files "<<frontName<<" and/or "<<backName<<" not supported."<<endreq;
     return StatusCode::FAILURE;
   }
   return sc;

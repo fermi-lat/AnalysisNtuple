@@ -3,7 +3,7 @@
 @brief Calculates the "Event" analysis variables from the other ntuple variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/src/EvtValsTool.cxx,v 1.60 2013/01/10 17:36:14 bruel Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.61 2013/01/23 11:10:35 cohen Exp $
 */
 
 #include "ValBase.h"
@@ -25,6 +25,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/src/EvtV
 #include "CalUtil/IUBinterpolateTool.h"
 #include "IPsfTool.h"
 
+#include "facilities/Util.h"                // for expandEnvVar
 #include "CLHEP/Vector/Rotation.h"
 
 #include <algorithm>
@@ -174,6 +175,8 @@ private:
 
   IUBinterpolateTool* m_ubInterpolateTool;
   IPsfTool* m_pPsfTool;
+  std::string m_psfVersion;
+  std::string m_psfPath;
 
   double UB2logemin[3];
   double UB2logemax[3];
@@ -198,6 +201,9 @@ EvtValsTool::EvtValsTool(const std::string& type,
 {    
     // Declare additional interface
     declareInterface<IValsTool>(this);
+
+    declareProperty("psfVersion",m_psfVersion="P7SOURCE_V6MC");
+    declareProperty("psfPath",m_psfPath="$(ANALYSISNTUPLEDATAPATH)");
 }
 
 /** @page anatup_vars 
@@ -389,7 +395,8 @@ StatusCode EvtValsTool::initialize()
         log << MSG::ERROR << "Unable to find tool: " "PsfValsTool" << endreq;
         return sc;
     } else {
-      sc = m_pPsfTool->loadPsf("P7SOURCE_V6MC");
+      facilities::Util::expandEnvVar(&m_psfPath);
+      sc = m_pPsfTool->loadPsf(m_psfVersion, m_psfPath);
       if(sc.isFailure()) return sc;
     }
 
