@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/src/CalValsTool.cxx,v 1.136 2012/12/11 21:24:56 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.137 2013/01/10 03:56:55 usher Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -183,6 +183,7 @@ private:
 
     float CAL_Gap_Fraction;  
     float CAL_TwrEdgeCntr;
+    float CAL_TwrEdgeCntrCor;
     float CAL_TwrEdgeTop;
     float CAL_LATEdge; 
     float CAL_EdgeEnergy;
@@ -249,9 +250,9 @@ private:
     float CAL_Clu1_MomXCntr;
     float CAL_Clu1_MomYCntr;
     float CAL_Clu1_MomZCntr;
-    float CAL_Clu1_MomXCntrcor;
-    float CAL_Clu1_MomYCntrcor;
-    float CAL_Clu1_MomZCntrcor;
+    float CAL_Clu1_MomXCntrCor;
+    float CAL_Clu1_MomYCntrCor;
+    float CAL_Clu1_MomZCntrCor;
     float CAL_Clu1_MomXDir;
     float CAL_Clu1_MomYDir;
     float CAL_Clu1_MomZDir;
@@ -483,7 +484,7 @@ private:
 
     //Calimeter items with Recon - Tracks
     float CAL_Track_DOCA;
-    float CAL_Track_DOCA_cor;
+    float CAL_Track_DOCA_Cor;
     float CAL_Track_Angle;
     float CAL_Track_Sep;
     float CAL_track_rms;
@@ -640,6 +641,8 @@ the outside CAL modules.
 This is an attempt at a "anti-coincidence counter" for the CAL.
 <tr><td> CalTwrEdgeCntr 
 <td>F<td>   Distance of the energy centroid from the nearest tower boundary.  
+<tr><td> CalTwrEdgeCntrCor
+<td>F<td>   Distance of the energy centroid (corrected for the hodoscopic effect) from the nearest tower boundary.  
 <tr><td> CalGapFraction 
 <td>F<td>   Approximate fraction of the shower volumn which falls in inter-tower gaps. 
 <tr><td> CalTrackSep 
@@ -893,11 +896,13 @@ StatusCode CalValsTool::initialize()
 
     addItem("CalGapFraction",&CAL_Gap_Fraction);
     addItem("CalTwrEdgeCntr",&CAL_TwrEdgeCntr);
+    addItem("CalTwrEdgeCntrCor",&CAL_TwrEdgeCntrCor);
     addItem("CalTwrEdge",    &CAL_TwrEdgeTop);
     addItem("CalLATEdge",    &CAL_LATEdge);
     addItem("CalEdgeEnergy", &CAL_EdgeEnergy);
     addItem("CalTrackDoca",  &CAL_Track_DOCA);
-    addItem("CalTrackDocacor",  &CAL_Track_DOCA_cor);
+    addItem("CalTrackDocacor",  &CAL_Track_DOCA_Cor);
+    addItem("CalTrackDocaCor",  &CAL_Track_DOCA_Cor);
     addItem("CalTrackAngle", &CAL_Track_Angle);
     addItem("CalTrackSep",   &CAL_Track_Sep);
 
@@ -1005,9 +1010,12 @@ StatusCode CalValsTool::initialize()
     addItem("Cal1MomXCntr",  &CAL_Clu1_MomXCntr);
     addItem("Cal1MomYCntr",  &CAL_Clu1_MomYCntr);
     addItem("Cal1MomZCntr",  &CAL_Clu1_MomZCntr);
-    addItem("Cal1MomXCntrcor",  &CAL_Clu1_MomXCntrcor);
-    addItem("Cal1MomYCntrcor",  &CAL_Clu1_MomYCntrcor);
-    addItem("Cal1MomZCntrcor",  &CAL_Clu1_MomZCntrcor);
+    addItem("Cal1MomXCntrcor",  &CAL_Clu1_MomXCntrCor);
+    addItem("Cal1MomYCntrcor",  &CAL_Clu1_MomYCntrCor);
+    addItem("Cal1MomZCntrcor",  &CAL_Clu1_MomZCntrCor);
+    addItem("Cal1MomXCntrCor",  &CAL_Clu1_MomXCntrCor);
+    addItem("Cal1MomYCntrCor",  &CAL_Clu1_MomYCntrCor);
+    addItem("Cal1MomZCntrCor",  &CAL_Clu1_MomZCntrCor);
     addItem("Cal1MomXDir",  &CAL_Clu1_MomXDir);
     addItem("Cal1MomYDir",  &CAL_Clu1_MomYDir);
     addItem("Cal1MomZDir",  &CAL_Clu1_MomZDir);
@@ -1751,12 +1759,20 @@ StatusCode CalValsTool::calculate()
     Point  cal_pos  = firstCluster->getPosition();
     Vector cal_dir  = firstCluster->getDirection();
 
+    Point cor_cal_pos = cal_pos;
+    // Apply the centroid correction using the cal axis. If there is a track, the correction is applied after in the code using the track axis.
+    if(cal_dir.z()!=0) cor_cal_pos = firstCluster->getCorPosition(cal_dir);
+
     CAL_xEcntr      = cal_pos.x();
     CAL_yEcntr      = cal_pos.y();
     CAL_zEcntr      = cal_pos.z();
     CAL_xdir        = cal_dir.x();
     CAL_ydir        = cal_dir.y();
     CAL_zdir        = cal_dir.z();
+
+    CAL_Clu1_MomXCntrCor = cor_cal_pos.x();
+    CAL_Clu1_MomYCntrCor = cor_cal_pos.y();
+    CAL_Clu1_MomZCntrCor = cor_cal_pos.z();
 
     // Get pos and dir determined using only the transverse position information
     CAL_xEcntr2        = firstCluster->getFitParams().getCentroid().x();
@@ -1781,6 +1797,7 @@ StatusCode CalValsTool::calculate()
     // the second argument of activeDist (view) does not seem to be used
     int tmp_view;
     CAL_TwrEdgeCntr = activeDist(cal_pos, tmp_view);
+    CAL_TwrEdgeCntrCor = activeDist(cor_cal_pos, tmp_view);
     
     // collect the CAL edge energy
     // the edge is larger of the width and length of the layer
@@ -1891,11 +1908,12 @@ StatusCode CalValsTool::calculate()
         Doca track1(x1, t1);
         CAL_Track_DOCA = (float)track1.docaOfPoint(cal_pos);
 
-        Point cor_cal_pos = firstCluster->getCorPosition(t1);
-        CAL_Track_DOCA_cor = (float)track1.docaOfPoint(cor_cal_pos);
-        CAL_Clu1_MomXCntrcor = cor_cal_pos.x();
-        CAL_Clu1_MomYCntrcor = cor_cal_pos.y();
-        CAL_Clu1_MomZCntrcor = cor_cal_pos.z();
+        cor_cal_pos = firstCluster->getCorPosition(t1);
+        CAL_Track_DOCA_Cor = (float)track1.docaOfPoint(cor_cal_pos);
+        CAL_Clu1_MomXCntrCor = cor_cal_pos.x();
+        CAL_Clu1_MomYCntrCor = cor_cal_pos.y();
+        CAL_Clu1_MomZCntrCor = cor_cal_pos.z();
+        CAL_TwrEdgeCntrCor = activeDist(cor_cal_pos, tmp_view);
 
         // Image the top of the Calorimeter - use last hit FILTERED
         const Event::TkrTrackParams& tkr1_params = track_1->back()->getTrackParams(Event::TkrTrackHit::FILTERED);
