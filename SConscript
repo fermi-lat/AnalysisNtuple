@@ -1,7 +1,7 @@
 # -*-python-*-
-# $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/SConscript,v 1.33.8.10.2.1 2012/01/30 18:24:36 heather Exp $
+# $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/SConscript,v 1.33.8.10.2.2 2012/02/02 15:20:24 heather Exp $
 # Authors: Leon Rochester <lsrea@slac.stanford.edu>
-# Version: AnalysisNtuple-02-55-09-gr12
+# Version: AnalysisNtuple-02-55-09-gr13
 
 import platform
 
