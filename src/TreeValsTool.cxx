@@ -2,7 +2,7 @@
 @brief Calculates the Tracker Tree variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TreeValsTool.cxx,v 1.20 2013/01/18 22:15:04 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TreeValsTool.cxx,v 1.21 2013/01/18 22:38:26 usher Exp $
 */
 
 // Include files
@@ -572,7 +572,9 @@ StatusCode TreeValsTool::calculate()
                 // If an associated cluster then calculate the docas
                 if (calCluster)
                 {
-                    const Point& clusPos = calCluster->getPosition();
+                  // Ph.Bruel: switch to centroid postion corrected forthe hodoscopic effect
+                  //                  const Point& clusPos = calCluster->getPosition();
+                  Point clusPos = calCluster->getCorPosition(tree->getAxisParams()->getEventAxis());
 
                     // Now we need to visit EVERY link in the tree. To do so we use a list...
                     std::list<const Event::TkrVecNode*> nodeList;
