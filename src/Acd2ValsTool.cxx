@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/Acd2ValsTool.cxx,v 1.7 2012/05/11 19:51:55 kadrlica Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/Acd2ValsTool.cxx,v 1.8 2012/10/03 13:04:47 bruel Exp $
 */
 
 #include "ValBase.h"
@@ -184,6 +184,20 @@ private:
   float ACD_energyRow2;
   float ACD_energyRow3;
   
+  // variables for CR active distance
+  float ACD_CR_ActiveDist3D;
+  float ACD_CR_ActiveDist_Energy;
+  int ACD_CR_ActiveDist_TrackNum;
+  float ACD_CR_ribbon_ActiveDist;
+  float ACD_CR_ribbon_EnergyPmtA;
+  float ACD_CR_ribbon_EnergyPmtB;
+  float ACD_CR1_ActiveDist;
+  float ACD_CR1_ribbon_ActiveDist;
+  float ACD_CR1_ribbon_EnergyPmtA;
+  float ACD_CR1_ribbon_EnergyPmtB;
+  float ACD_CR1_ActiveDist_Energy;
+  int ACD_CR1_ActiveDist_TrackNum;
+
   // Services
   IGlastDetSvc *m_detSvc;
   
@@ -457,7 +471,7 @@ StatusCode Acd2ValsTool::initialize()
   } else {
     return StatusCode::FAILURE;
   }
-  
+
   // load up the map
   addItem(m_prefix + "TriggerVeto",    &ACD_Trigger_Veto);
   addItem(m_prefix + "TileCount",    &ACD_Tile_Count);
@@ -556,10 +570,26 @@ StatusCode Acd2ValsTool::initialize()
   addItem(m_prefix + "Cal1TriggerEnergy15", &ACD_Cal1TriggerEnergy15);
   addItem(m_prefix + "Cal1TriggerEnergy30", &ACD_Cal1TriggerEnergy30);
   addItem(m_prefix + "Cal1TriggerEnergy45", &ACD_Cal1TriggerEnergy45);
-  
+ 
+  addItem(m_prefix + "CRActiveDist3D",   &ACD_CR_ActiveDist3D);
+  addItem(m_prefix + "CRActDistTileEnergy",   &ACD_CR_ActiveDist_Energy);
+  addItem(m_prefix + "CRActDistTrackNum", &ACD_CR_ActiveDist_TrackNum);
+  addItem(m_prefix + "CRRibbonActiveDist", &ACD_CR_ribbon_ActiveDist);
+  addItem(m_prefix + "CRRibbonActEnergyPmtA", &ACD_CR_ribbon_EnergyPmtA);
+  addItem(m_prefix + "CRRibbonActEnergyPmtB", &ACD_CR_ribbon_EnergyPmtB);
+  addItem(m_prefix + "CR1ActiveDist",   &ACD_CR1_ActiveDist);
+  addItem(m_prefix + "CR1ActDistTileEnergy",   &ACD_CR1_ActiveDist_Energy);
+  addItem(m_prefix + "CR1ActDistTrackNum", &ACD_CR1_ActiveDist_TrackNum);
+  addItem(m_prefix + "CR1RibbonActiveDist", &ACD_CR1_ribbon_ActiveDist);
+  addItem(m_prefix + "CR1RibbonActEnergyPmtA", &ACD_CR1_ribbon_EnergyPmtA);
+  addItem(m_prefix + "CR1RibbonActEnergyPmtB", &ACD_CR1_ribbon_EnergyPmtB);
+
+ 
   zeroVals();
   ACD_ActiveDist_TrackNum = -1;
-  
+  ACD_CR_ActiveDist_TrackNum = -1; //RJ
+  ACD_CR1_ActiveDist_TrackNum = -1; //RJ
+
   return sc;
 }
 
@@ -626,6 +656,12 @@ StatusCode Acd2ValsTool::calculate()
   ACD_Corner_DOCA = ACD_TkrRibbon_Dist = ACD_TkrHole_Dist = negMaxDist;
   ACD_ribbon_ActiveLength = ACD_TkrRibbonLength = -10000.;
   
+  ACD_CR_ActiveDist3D = ACD_CR_ribbon_ActiveDist = -2000.;  //RJ
+  ACD_CR1_ActiveDist = ACD_CR1_ribbon_ActiveDist = -2000.;  //RJ
+  ACD_CR_ActiveDist_TrackNum = ACD_CR1_ActiveDist_TrackNum = -999; //RJ
+  ACD_CR_ActiveDist_Energy = ACD_CR_ribbon_EnergyPmtA = ACD_CR_ribbon_EnergyPmtB = 0.;  //RJ
+  ACD_CR1_ActiveDist_Energy = ACD_CR1_ribbon_EnergyPmtA = ACD_CR1_ribbon_EnergyPmtB = 0.;  //RJ
+
   // Reset variables for best track
   ACD_Tkr1ActiveDist = ACD_Tkr1_ribbon_ActiveDist = negMaxDist;
   ACD_Tkr1ActiveDist_Energy = ACD_Tkr1_ribbon_EnergyPmtA 
@@ -653,10 +689,28 @@ StatusCode Acd2ValsTool::calculate()
 
   ACD_Tkr_TriggerVeto = 0;
 
+  // RJ: Find the best CR track
+  std::vector<Event::TkrTrack*> trackVec = m_pTrackVec->getTrackVec();
+
+  int iCnt = 0;
+  int bestCRtkr = -9999;
+  int mxHts= 0, iCnt= 0, bestCRtkr= -9999;
+  for (int iCnt(0); iCnt < trackVec.size(); iCnt++ ) {
+    Event::TkrTrack* myTrack = trackVec[i];
+    if (myTrack->getStatusBits() & Event::TkrTrack::COSMICRAY) {
+      if (myTrack->getNumHits() > mxHts) {
+	mxHts= myTrack->getNumHits();
+	bestCRtkr= iCnt;
+      }
+    }
+  }
+
+
   // LOOP over AcdTkrHitPoca & get least distance stuff
   // Note that the Poca are sorted.  
   // Once we have filled all the variables we can split
   const Event::AcdTkrHitPoca* tile_vetoPoca = 0;
+  const Event::AcdTkrHitPoca* tile_CR_vetoPoca = 0;
   const Event::AcdTkrHitPoca* ribbon_vetoPoca = 0;
   const Event::AcdTkrGapPoca* gap_vetoPoca = 0;
 
@@ -673,9 +727,14 @@ StatusCode Acd2ValsTool::calculate()
     const Event::AcdAssoc* anAssoc = (*itrAssoc);
     int trackIndex = anAssoc->getTrackIndex();
     if ( trackIndex < 0 ) continue;
+    bool isCR = trackIndex >= 100;
+    if (isCR) {
+      trackIndex -= 100;
+    }
     bool isBestTrack = trackIndex == 0;
-    bool isUpGoing = anAssoc->getUpward();
-    
+    bool isBestCR = trackIndex == bestCRtkr;
+    bool isUpGoing = anAssoc->getUpward();    
+
     // These are the best veto values if the element is
     // a tile (not the best tile veto)
     float track_tileBestVetoSq(maxSigmaSq);
@@ -914,6 +973,7 @@ StatusCode Acd2ValsTool::calculate()
   // Note that the Poca are sorted.  
   // Once we have filled all the variables we can split
   tile_vetoPoca = 0;
+  tile_CR_vetoPoca = 0;
   ribbon_vetoPoca = 0;
 
   best_tileVetoSq = maxSigmaSq;
