@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/Acd2ValsTool.cxx,v 1.9 2013/04/18 19:16:35 echarles Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/Acd2ValsTool.cxx,v 1.10 2013/04/18 20:01:51 echarles Exp $
 */
 
 #include "ValBase.h"
@@ -694,9 +694,9 @@ StatusCode Acd2ValsTool::calculate()
 
   int iCnt = 0;
   int bestCRtkr = -9999;
-  int mxHts= 0, iCnt= 0, bestCRtkr= -9999;
+  int mxHts= 0;
   for (int iCnt(0); iCnt < trackVec.size(); iCnt++ ) {
-    Event::TkrTrack* myTrack = trackVec[i];
+    Event::TkrTrack* myTrack = trackVec[iCnt];
     if (myTrack->getStatusBits() & Event::TkrTrack::COSMICRAY) {
       if (myTrack->getNumHits() > mxHts) {
 	mxHts= myTrack->getNumHits();
@@ -905,12 +905,11 @@ StatusCode Acd2ValsTool::calculate()
     if ( isBestCR ) {
       if ( track_tileVetoPoca != 0 && isUpGoing ) {
         ACD_CR1_ActiveDist = track_tileVetoPoca->getDoca();
-        ACD_CR1_ActiveDist_Arc = track_tileVetoPoca->getArcLength();
+        ACD_CR1_ActiveDist_Energy = hitMap[track_tileVetoPoca->getId()]->tileEnergy();
       }
         
       if ( track_ribbonVetoPoca != 0 && isUpGoing ) {
         ACD_CR1_ribbon_ActiveDist =  track_ribbonVetoPoca->getDoca();
-        ACD_CR1_ribbon_ActiveLength = track_ribbonVetoPoca->getLocalY();
         ACD_CR1_ribbon_EnergyPmtA = hitMap[track_ribbonVetoPoca->getId()]->ribbonEnergy(Event::AcdHit::A);
         ACD_CR1_ribbon_EnergyPmtB = hitMap[track_ribbonVetoPoca->getId()]->ribbonEnergy(Event::AcdHit::B);
       }
