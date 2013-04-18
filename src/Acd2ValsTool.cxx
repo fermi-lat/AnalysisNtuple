@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/Acd2ValsTool.cxx,v 1.11 2013/04/18 20:18:40 echarles Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/Acd2ValsTool.cxx,v 1.12 2013/04/18 20:21:19 echarles Exp $
 */
 
 #include "ValBase.h"
@@ -974,7 +974,7 @@ StatusCode Acd2ValsTool::calculate()
   if ( ribbon_CR_vetoPoca != 0 ) {
     ACD_CR_ribbon_ActiveDist =  ribbon_CR_vetoPoca->getDoca();
     ACD_CR_ribbon_EnergyPmtA = hitMap[ribbon_CR_vetoPoca->getId()]->ribbonEnergy(Event::AcdHit::A);
-    ACD_CR_ibbon_EnergyPmtB = hitMap[ribbon_CR_vetoPoca->getId()]->ribbonEnergy(Event::AcdHit::B);
+    ACD_CR_ribbon_EnergyPmtB = hitMap[ribbon_CR_vetoPoca->getId()]->ribbonEnergy(Event::AcdHit::B);
   }
 
   if ( gap_vetoPoca != 0 ) {
