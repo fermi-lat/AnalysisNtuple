@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/Acd2ValsTool.cxx,v 1.8 2012/10/03 13:04:47 bruel Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/Acd2ValsTool.cxx,v 1.9 2013/04/18 19:16:35 echarles Exp $
 */
 
 #include "ValBase.h"
@@ -710,14 +710,20 @@ StatusCode Acd2ValsTool::calculate()
   // Note that the Poca are sorted.  
   // Once we have filled all the variables we can split
   const Event::AcdTkrHitPoca* tile_vetoPoca = 0;
-  const Event::AcdTkrHitPoca* tile_CR_vetoPoca = 0;
   const Event::AcdTkrHitPoca* ribbon_vetoPoca = 0;
   const Event::AcdTkrGapPoca* gap_vetoPoca = 0;
+
+  const Event::AcdTkrHitPoca* tile_CR_vetoPoca = 0;
+  const Event::AcdTkrHitPoca* ribbon_CR_vetoPoca = 0;
 
 
   float best_tileVetoSq(maxSigmaSq);
   float best_ribbonVetoSq(maxSigmaSq);
   float best_gapVetoSq(maxSigmaSq);
+
+  float best_CR_tileVetoSq(maxSigmaSq);
+  float best_CR_ribbonVetoSq(maxSigmaSq);
+
   float bestCornerGapMeasure(maxDist);
   
   const Event::AcdTkrAssocCol& assocs = pACD->getTkrAssocCol();
@@ -727,12 +733,13 @@ StatusCode Acd2ValsTool::calculate()
     const Event::AcdAssoc* anAssoc = (*itrAssoc);
     int trackIndex = anAssoc->getTrackIndex();
     if ( trackIndex < 0 ) continue;
+    bool isBestTrack = trackIndex == 0;
     bool isCR = trackIndex >= 100;
     if (isCR) {
       trackIndex -= 100;
     }
-    bool isBestTrack = trackIndex == 0;
     bool isBestCR = trackIndex == bestCRtkr;
+    ACD_CR1_ActiveDist_TrackNum = trackIndex;
     bool isUpGoing = anAssoc->getUpward();    
 
     // These are the best veto values if the element is
@@ -895,20 +902,45 @@ StatusCode Acd2ValsTool::calculate()
       }
     }
        
+    if ( isBestCR ) {
+      if ( track_tileVetoPoca != 0 && isUpGoing ) {
+        ACD_CR1_ActiveDist = track_tileVetoPoca->getDoca();
+        ACD_CR1_ActiveDist_Arc = track_tileVetoPoca->getArcLength();
+      }
+        
+      if ( track_ribbonVetoPoca != 0 && isUpGoing ) {
+        ACD_CR1_ribbon_ActiveDist =  track_ribbonVetoPoca->getDoca();
+        ACD_CR1_ribbon_ActiveLength = track_ribbonVetoPoca->getLocalY();
+        ACD_CR1_ribbon_EnergyPmtA = hitMap[track_ribbonVetoPoca->getId()]->ribbonEnergy(Event::AcdHit::A);
+        ACD_CR1_ribbon_EnergyPmtB = hitMap[track_ribbonVetoPoca->getId()]->ribbonEnergy(Event::AcdHit::B);
+      }
+    }
+
     // Latch vars for all tracks
     if ( isUpGoing ) {
-      if ( track_tileBestVetoSq < best_tileVetoSq  ) {
-        best_tileVetoSq = track_tileBestVetoSq;
-        tile_vetoPoca = track_tileVetoPoca;
+      if ( isCR ) {
+	if ( track_tileBestVetoSq < best_CR_tileVetoSq  ) {
+	  best_CR_tileVetoSq = track_tileBestVetoSq;
+	  tile_CR_vetoPoca = track_tileVetoPoca;
+	}
+	if (track_ribbonBestVetoSq < best_CR_ribbonVetoSq  ) {
+	  best_CR_ribbonVetoSq = track_ribbonBestVetoSq;
+	  ribbon_CR_vetoPoca = track_ribbonVetoPoca;
+	}
+      } else {
+	if ( track_tileBestVetoSq < best_tileVetoSq  ) {
+	  best_tileVetoSq = track_tileBestVetoSq;
+	  tile_vetoPoca = track_tileVetoPoca;
+	}
+	if (track_ribbonBestVetoSq < best_ribbonVetoSq  ) {
+	  best_ribbonVetoSq = track_ribbonBestVetoSq;
+	  ribbon_vetoPoca = track_ribbonVetoPoca;
+	}
+	if ( track_gapBestVetoSq < best_gapVetoSq ) {
+	  best_gapVetoSq = track_gapBestVetoSq;
+	  gap_vetoPoca = aGap;
+	}     
       }
-      if (track_ribbonBestVetoSq < best_ribbonVetoSq  ) {
-        best_ribbonVetoSq = track_ribbonBestVetoSq;
-        ribbon_vetoPoca = track_ribbonVetoPoca;
-      }
-      if ( track_gapBestVetoSq < best_gapVetoSq ) {
-        best_gapVetoSq = track_gapBestVetoSq;
-        gap_vetoPoca = aGap;
-      }     
     }
   }
 
@@ -928,6 +960,23 @@ StatusCode Acd2ValsTool::calculate()
     ACD_ribbon_ActiveLength = ribbon_vetoPoca->getLocalY();
     ACD_ribbon_EnergyPmtA = hitMap[ribbon_vetoPoca->getId()]->ribbonEnergy(Event::AcdHit::A);
     ACD_ribbon_EnergyPmtB = hitMap[ribbon_vetoPoca->getId()]->ribbonEnergy(Event::AcdHit::B);
+  }
+
+
+  // Now fill in the values for the most likely CR Track-Tile Veto Poca
+  if( tile_CR_vetoPoca != 0 ) {
+    ACD_CR_ActiveDist3D = tile_CR_vetoPoca->getDoca(); 
+    idents::AcdId theId = tile_CR_vetoPoca->getId();
+    ACD_CR_ActiveDist_Energy = hitMap[tile_CR_vetoPoca->getId()]->tileEnergy();
+    ACD_CR_ActiveDist_TrackNum = tile_CR_vetoPoca->trackIndex(); // Index starts from 0
+  }
+  
+  // Now fill in the values for the most likely CR Track-Ribbon Veto Poca
+  if ( ribbon_CR_vetoPoca != 0 ) {
+    ACD_CR_ribbon_ActiveDist =  ribbon_CR_vetoPoca->getDoca();
+    ACD_CR_ribbon_ActiveLength = ribbon_CR_vetoPoca->getLocalY();
+    ACD_CR_ribbon_EnergyPmtA = hitMap[ribbon_CR_vetoPoca->getId()]->ribbonEnergy(Event::AcdHit::A);
+    ACD_rCR_ibbon_EnergyPmtB = hitMap[ribbon_CR_vetoPoca->getId()]->ribbonEnergy(Event::AcdHit::B);
   }
 
   if ( gap_vetoPoca != 0 ) {
@@ -975,10 +1024,13 @@ StatusCode Acd2ValsTool::calculate()
   tile_vetoPoca = 0;
   tile_CR_vetoPoca = 0;
   ribbon_vetoPoca = 0;
+  ribbon_CR_vetoPoca = 0;
 
   best_tileVetoSq = maxSigmaSq;
   best_ribbonVetoSq = maxSigmaSq;
-  
+  best_CR_tileVetoSq = maxSigmaSq;
+  best_CR_ribbonVetoSq = maxSigmaSq;
+
   const Event::AcdCalAssocCol& calAssocs = pACD->getCalAssocCol();
   for (Event::AcdCalAssocCol::const_iterator itrAssoc = calAssocs.begin(); 
        itrAssoc != calAssocs.end(); itrAssoc++ ) {
