@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/Acd2ValsTool.cxx,v 1.12 2013/04/18 20:21:19 echarles Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/Acd2ValsTool.cxx,v 1.13 2013/04/18 20:44:57 echarles Exp $
 */
 
 #include "ValBase.h"
@@ -293,10 +293,8 @@ Track numbering starts at zero; best track number is zero; -1 means no track
 <tr><td> Acd2RibbonActLength
 <td>F<td>   Length along ribbon where point of closest approach occured. 
 0 is center of ribbon; + going towards +x or +y side of ACD
-<tr><td> Acd2RibbonActEnergyPmtA
-<td>F<td>   The deposited energy (not de-ghosted) in the A PMT of the corresponding hit ribbon
-<tr><td> Acd2RibbonActEnergyPmtB
-<td>F<td>   The deposited energy (not de-ghosted) in the B PMT of the corresponding hit ribbon
+<tr><td> Acd2RibbonActEnergyPmt[A/B]
+<td>F<td>   The deposited energy (not de-ghosted) in the [A/B] PMT of the corresponding hit ribbon
 <tr><td> Acd2CornerDoca 
 <td>F<td>   Minimum Distance of Closest Approach of a track to the corner side gaps
 This variable is signed to match the direction of the overlaps in the tiles. 
@@ -329,10 +327,8 @@ The gap appears larger for tracks coming from the + side than the - side.
 <tr><td> Acd2Tkr1RibbonActLength
 <td>F<td>   Length along ribbon where point of closest approach occured. 
 0 is center of ribbon + going towards +x or +y side of ACD
-<tr><td> Acd2Tkr1RibbonActDistEnergyPmtA   
-<td>F<td>   The deposited energy (not de-ghosted) in the A PMT of the corresponding hit ribbon
-<tr><td> Acd2Tkr1RibbonActDistEnergyPmtB   
-<td>F<td>   The deposited energy (not de-ghosted) in the A PMT of the corresponding hit ribbon
+<tr><td> Acd2Tkr1RibbonActDistEnergyPmt[A/B]   
+<td>F<td>   The deposited energy (not de-ghosted) in the [A/B] PMT of the corresponding hit ribbon
 
 <tr><td> Acd2Tkr1Energy15
 <td>F<td>   Energy (de-ghosted) in 15 deg. cone ahead of Track
@@ -412,6 +408,36 @@ number of sigmas track propagation is away from tile or ribbon most likely to ve
 <td>F<td>   Trigger energy in 30 deg. cone ahead of CAL cluster
 <tr><td> Acd2Cal1TriggerEnergy45
 <td>F<td>   Trigger energy in 45 deg. cone ahead of CAL cluster
+
+<tr><td> Acd2CRActiveDist3D
+<td>F<td>   Tile Active Distance most likely to give a veto for
+a cosmic-ray track.
+<tr><td> Acd2CRActDistTileEnergy
+<td>F<td>   The deposited energy (not de-ghosted) in the corresponding hit tile 
+for the cosmic-ray track.
+<tr><td> Acd2CRActDistTrackNum
+<td>F<td>   Track number of cosmic-ray track which was used for CRActiveDist3D. 
+<tr><td> Acd2CRRibbonActiveDist
+<td>F<td>   Ribbon Active Distance most likely to give a veto for
+a cosmic-ray track.
+<tr><td> Acd2CRRibbonActEnergyPmt[A/B]
+<td>F<td>   The deposited energy (not de-ghosted) in the [A/B] PMT of the 
+ribbon corresponding to the cosmic-ray track.
+<tr><td> Acd2CR1ActiveDist
+<td>F<td>   Tile Active Distance for the cosmic-ray track with the most hits.
+<tr><td> Acd2CR1ActDistTileEnergy
+<td>F<td>   The deposited energy (not de-ghosted) in the corresponding hit tile 
+for the cosmic-ray track with the most hits.
+<tr><td> Acd2CR1ActDistTrackNum
+<td>F<td>   Track number of the cosmic-ray track with the most hits.
+<tr><td> Acd2CR1RibbonActiveDist
+<td>F<td>   Ribbon Active Distance most likely to give a veto for
+the cosmic-ray track with the most hits.
+<tr><td> Acd2CR1RibbonActEnergyPmt[A/B]
+<td>F<td>   The deposited energy (not de-ghosted) in the [A/B] PMT of the 
+ribbon corresponding to the cosmic-ray track with the most hits.
+
+
 
 </table>
 */
@@ -967,7 +993,7 @@ StatusCode Acd2ValsTool::calculate()
     ACD_CR_ActiveDist3D = tile_CR_vetoPoca->getDoca(); 
     idents::AcdId theId = tile_CR_vetoPoca->getId();
     ACD_CR_ActiveDist_Energy = hitMap[tile_CR_vetoPoca->getId()]->tileEnergy();
-    ACD_CR_ActiveDist_TrackNum = tile_CR_vetoPoca->trackIndex(); // Index starts from 0
+    ACD_CR_ActiveDist_TrackNum = tile_CR_vetoPoca->trackIndex() - 100; // Index starts from 100
   }
   
   // Now fill in the values for the most likely CR Track-Ribbon Veto Poca
