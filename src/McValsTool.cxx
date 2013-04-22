@@ -2,7 +2,7 @@
 @brief Calculates the Mc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.72 2013/02/08 03:54:30 atwood Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.73 2013/02/09 16:10:07 usher Exp $
 */
 // Include files
 
@@ -450,11 +450,12 @@ StatusCode McValsTool::calculate()
         
         HepPoint3D Mc_x0;
         CLHEP::HepLorentzVector Mc_p0;
-        // launch point for charged particle; conversion point for neutral
-        // Let's try changing this to be the first interaction point for all..
-       // Mc_x0 = (MC_Charge==0 ? (*pMCPrimary)->finalPosition() : (*pMCPrimary)->initialPosition());
-        Mc_x0 = (*pMCPrimary)->finalPosition(); 
-        Mc_p0 = (*pMCPrimary)->initialFourMomentum();
+
+        // Conversion point for all particles except muons
+        // Launch point for muons... this seems more useful, 
+        //    since it's closer to the head of the track)
+
+        Mc_x0 = (fabs(MC_Id)==13 ? (*pMCPrimary)->initialPosition() : (*pMCPrimary)->finalPosition());
 
         // there's a method v.m(), but it does something tricky if m2<0
         double mass = sqrt(std::max(Mc_p0.m2(),0.0));
