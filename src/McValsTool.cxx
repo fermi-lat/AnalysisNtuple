@@ -2,7 +2,7 @@
 @brief Calculates the Mc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.73 2013/02/09 16:10:07 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.74 2013/04/22 18:14:01 lsrea Exp $
 */
 // Include files
 
@@ -456,6 +456,7 @@ StatusCode McValsTool::calculate()
         //    since it's closer to the head of the track)
 
         Mc_x0 = (fabs(MC_Id)==13 ? (*pMCPrimary)->initialPosition() : (*pMCPrimary)->finalPosition());
+        Mc_p0 = (*pMCPrimary)->initialFourMomentum();
 
         // there's a method v.m(), but it does something tricky if m2<0
         double mass = sqrt(std::max(Mc_p0.m2(),0.0));
