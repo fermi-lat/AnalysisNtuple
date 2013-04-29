@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.138 2013/03/25 14:26:33 bruel Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.139 2013/04/29 09:01:32 kadrlica Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -1180,9 +1180,9 @@ StatusCode CalValsTool::initialize()
     addItem("CalUber2TransRms",  &CAL_Uber2_MomTransRms);
     addItem("CalUber2LongRms",  &CAL_Uber2_MomLongRms);
 
-    addItem("CalCfpEnergy",  &CAL_cfp_energy, true);
+    addItem("CalCfpEnergy",  &CAL_cfp_energy);
     addItem("CalCfpChiSq",   &CAL_cfp_totChiSq);
-    addItem("CalCfpEnergyUB",&CAL_cfp_energyUB, true);
+    addItem("CalCfpEnergyUB",&CAL_cfp_energyUB);
     addItem("CalCfpEffRLn",  &CAL_cfp_calEffRLn);
     addItem("CalCfpTkrRLn",  &CAL_cfp_tkrRLn);
     addItem("CalCfpAlpha",  &CAL_cfp_alpha);
