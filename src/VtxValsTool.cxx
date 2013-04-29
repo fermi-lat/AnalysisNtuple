@@ -3,7 +3,7 @@
 @brief Calculates the Vtx analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/src/VtxValsTool.cxx,v 1.35 2013/02/15 00:20:17 atwood Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.36 2013/02/21 07:34:44 lsrea Exp $
 */
 
 // Include files
@@ -256,9 +256,9 @@ StatusCode VtxValsTool::initialize()
 
         // Pair reconstruction
     addItem("VtxNumVertices", &VTX_numVertices);
-    addItem("VtxXDir",      &VTX_xdir);     
-    addItem("VtxYDir",      &VTX_ydir);     
-    addItem("VtxZDir",      &VTX_zdir);     
+    addItem("VtxXDir",      &VTX_xdir, true);     
+    addItem("VtxYDir",      &VTX_ydir, true);     
+    addItem("VtxZDir",      &VTX_zdir, true);     
     addItem("VtxPhi",       &VTX_Phi);  
     addItem("VtxTheta",     &VTX_Theta);  
 

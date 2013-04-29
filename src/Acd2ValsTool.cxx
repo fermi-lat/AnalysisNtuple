@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/Acd2ValsTool.cxx,v 1.13 2013/04/18 20:44:57 echarles Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/Acd2ValsTool.cxx,v 1.14 2013/04/19 23:31:46 kadrlica Exp $
 */
 
 #include "ValBase.h"
@@ -330,18 +330,10 @@ The gap appears larger for tracks coming from the + side than the - side.
 <tr><td> Acd2Tkr1RibbonActDistEnergyPmt[A/B]   
 <td>F<td>   The deposited energy (not de-ghosted) in the [A/B] PMT of the corresponding hit ribbon
 
-<tr><td> Acd2Tkr1Energy15
-<td>F<td>   Energy (de-ghosted) in 15 deg. cone ahead of Track
-<tr><td> Acd2Tkr1Energy30
-<td>F<td>   Energy (de-ghosted) in 30 deg. cone ahead of Track
-<tr><td> Acd2Tkr1Energy45
-<td>F<td>   Energy (de-ghosted) in 45 deg. cone ahead of Track
-<tr><td> Acd2Tkr1TriggerEnergy15
-<td>F<td>   Trigger energy in 15 deg. cone ahead of Track
-<tr><td> Acd2Tkr1TriggerEnergy30
-<td>F<td>   Trigger energy in 30 deg. cone ahead of Track
-<tr><td> Acd2Tkr1TriggerEnergy45
-<td>F<td>   Trigger energy in 45 deg. cone ahead of Track
+<tr><td> Acd2Tkr1Energy[15/30/45]
+<td>F<td>   Energy (de-ghosted) in [15/30/45] deg. cone ahead of Track
+<tr><td> Acd2Tkr1TriggerEnergy[15/30/45]
+<td>F<td>   Trigger energy in [15/30/45] deg. cone ahead of Track
 
 <tr><td> Acd2Tkr1CornerDoca 
 <td>F<td>   Minimum Distance of Closest Approach of best track to the corner side gaps 
@@ -396,18 +388,10 @@ CAL cluster.
 <td>F<td>Number of sigmas less than an expected mip for signal combined with the
 number of sigmas track propagation is away from tile or ribbon most likely to veto the first CAL cluster.
 
-<tr><td> Acd2Cal1Energy15
-<td>F<td>   Energy (de-ghosted) in 15 deg. cone ahead of CAL cluster
-<tr><td> Acd2Cal1Energy30
-<td>F<td>   Energy (de-ghosted) in 30 deg. cone ahead of CAL cluster
-<tr><td> Acd2Cal1Energy45
-<td>F<td>   Energy (de-ghosted) in 45 deg. cone ahead of CAL cluster
-<tr><td> Acd2Cal1TriggerEnergy15
-<td>F<td>   Trigger energy in 15 deg. cone ahead of CAL cluster
-<tr><td> Acd2Cal1TriggerEnergy30
-<td>F<td>   Trigger energy in 30 deg. cone ahead of CAL cluster
-<tr><td> Acd2Cal1TriggerEnergy45
-<td>F<td>   Trigger energy in 45 deg. cone ahead of CAL cluster
+<tr><td> Acd2Cal1Energy[15/30/45]
+<td>F<td>   Energy (de-ghosted) in [15/30/45] deg. cone ahead of CAL cluster
+<tr><td> Acd2Cal1TriggerEnergy[15/30/45]
+<td>F<td>   Trigger energy in [15/30/45] deg. cone ahead of CAL cluster
 
 <tr><td> Acd2CRActiveDist3D
 <td>F<td>   Tile Active Distance most likely to give a veto for
@@ -503,7 +487,7 @@ StatusCode Acd2ValsTool::initialize()
   addItem(m_prefix + "TileCount",    &ACD_Tile_Count);
   addItem(m_prefix + "TriggerVeto",    &ACD_Trigger_Veto);
   addItem(m_prefix + "RibbonCount", &ACD_Ribbon_Count);
-  addItem(m_prefix + "VetoCount",    &ACD_Veto_Count);
+  addItem(m_prefix + "VetoCount",    &ACD_Veto_Count, true);
   addItem(m_prefix + "VetoFaces", &ACD_Veto_Faces);
 
   addItem(m_prefix + "NumTileVetoTop",        &ACD_tileTopCount);
@@ -522,12 +506,12 @@ StatusCode Acd2ValsTool::initialize()
   addItem(m_prefix + "TotalTileEnergyRow3",     & ACD_energyRow3);
 
 
-  addItem(m_prefix + "TileEnergy", &ACD_Tile_Energy);
-  addItem(m_prefix + "RibbonEnergy", &ACD_Ribbon_Energy);
+  addItem(m_prefix + "TileEnergy", &ACD_Tile_Energy, true);
+  addItem(m_prefix + "RibbonEnergy", &ACD_Ribbon_Energy, true);
   addItem(m_prefix + "GhostTileEnergy", &ACD_Ghost_Tile_Energy);
   addItem(m_prefix + "GhostRibbonEnergy", &ACD_Ghost_Ribbon_Energy);
   addItem(m_prefix + "TriggerTileEnergy", &ACD_Trigger_Tile_Energy, true);
-  addItem(m_prefix + "TriggerRibbonEnergy", &ACD_Trigger_Ribbon_Energy);
+  addItem(m_prefix + "TriggerRibbonEnergy", &ACD_Trigger_Ribbon_Energy, true);
   addItem(m_prefix + "TileIdRecon", &ACD_TileIdRecon);
   addItem(m_prefix + "RibbonIdRecon", &ACD_RibbonIdRecon);
   
@@ -559,12 +543,12 @@ StatusCode Acd2ValsTool::initialize()
   addItem(m_prefix + "Tkr1RibbonActEnergyPmtA", &ACD_Tkr1_ribbon_EnergyPmtA);
   addItem(m_prefix + "Tkr1RibbonActEnergyPmtB", &ACD_Tkr1_ribbon_EnergyPmtB);
   
-  addItem(m_prefix + "Tkr1Energy15",        &ACD_Tkr1Energy15);
+  addItem(m_prefix + "Tkr1Energy15",        &ACD_Tkr1Energy15, true);
   addItem(m_prefix + "Tkr1Energy30",        &ACD_Tkr1Energy30, true);
-  addItem(m_prefix + "Tkr1Energy45",        &ACD_Tkr1Energy45);
-  addItem(m_prefix + "Tkr1TriggerEnergy15", &ACD_Tkr1TriggerEnergy15);
-  addItem(m_prefix + "Tkr1TriggerEnergy30", &ACD_Tkr1TriggerEnergy30);
-  addItem(m_prefix + "Tkr1TriggerEnergy45", &ACD_Tkr1TriggerEnergy45);
+  addItem(m_prefix + "Tkr1Energy45",        &ACD_Tkr1Energy45, true);
+  addItem(m_prefix + "Tkr1TriggerEnergy15", &ACD_Tkr1TriggerEnergy15, true);
+  addItem(m_prefix + "Tkr1TriggerEnergy30", &ACD_Tkr1TriggerEnergy30, true);
+  addItem(m_prefix + "Tkr1TriggerEnergy45", &ACD_Tkr1TriggerEnergy45, true);
   
   addItem(m_prefix + "Tkr1CornerDoca",      &ACD_Tkr1Corner_DOCA, true);
   addItem(m_prefix + "Tkr1HoleDist",        &ACD_Tkr1Hole_Dist);
@@ -591,11 +575,11 @@ StatusCode Acd2ValsTool::initialize()
   addItem(m_prefix + "Cal1VetoSigmaProj", & ACD_Cal1_VetoSigmaProj);
 
   addItem(m_prefix + "Cal1Energy15", &ACD_Cal1Energy15, true);
-  addItem(m_prefix + "Cal1Energy30", &ACD_Cal1Energy30);
-  addItem(m_prefix + "Cal1Energy45", &ACD_Cal1Energy45);
-  addItem(m_prefix + "Cal1TriggerEnergy15", &ACD_Cal1TriggerEnergy15);
-  addItem(m_prefix + "Cal1TriggerEnergy30", &ACD_Cal1TriggerEnergy30);
-  addItem(m_prefix + "Cal1TriggerEnergy45", &ACD_Cal1TriggerEnergy45);
+  addItem(m_prefix + "Cal1Energy30", &ACD_Cal1Energy30, true);
+  addItem(m_prefix + "Cal1Energy45", &ACD_Cal1Energy45, true);
+  addItem(m_prefix + "Cal1TriggerEnergy15", &ACD_Cal1TriggerEnergy15, true);
+  addItem(m_prefix + "Cal1TriggerEnergy30", &ACD_Cal1TriggerEnergy30, true);
+  addItem(m_prefix + "Cal1TriggerEnergy45", &ACD_Cal1TriggerEnergy45, true);
  
   addItem(m_prefix + "CRActiveDist3D",   &ACD_CR_ActiveDist3D);
   addItem(m_prefix + "CRActDistTileEnergy",   &ACD_CR_ActiveDist_Energy);

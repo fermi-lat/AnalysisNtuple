@@ -2,7 +2,7 @@
 @brief Calculates the Tracker Tree variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TreeValsTool.cxx,v 1.21 2013/01/18 22:38:26 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TreeValsTool.cxx,v 1.22 2013/04/11 13:28:19 bruel Exp $
 */
 
 // Include files
@@ -330,7 +330,7 @@ StatusCode TreeValsTool::initialize()
     addItem("TkrNumVecLinks",              &Tkr_num_vecLinks);
     addItem("TkrNumTrees",                 &Tkr_num_trees);
     addItem("TkrTree1NTrks",               &Tkr_tree1_nTrks);
-    addItem("TkrTree1Depth",               &Tkr_tree1_depth);
+    addItem("TkrTree1Depth",               &Tkr_tree1_depth, true);
     addItem("TkrTree1Leaves",              &Tkr_tree1_nLeaves);
                                      
     addItem("TkrTree1Nodes",               &Tkr_tree1_nNodes);
@@ -361,19 +361,19 @@ StatusCode TreeValsTool::initialize()
     addItem("TkrTree1PosX",                &Tkr_tree1_PosX);
     addItem("TkrTree1PosY",                &Tkr_tree1_PosY);
     addItem("TkrTree1PosZ",                &Tkr_tree1_PosZ);
-    addItem("TkrTree1DirX",                &Tkr_tree1_DirX);
-    addItem("TkrTree1DirY",                &Tkr_tree1_DirY);
-    addItem("TkrTree1DirZ",                &Tkr_tree1_DirZ);
+    addItem("TkrTree1DirX",                &Tkr_tree1_DirX, true);
+    addItem("TkrTree1DirY",                &Tkr_tree1_DirY, true);
+    addItem("TkrTree1DirZ",                &Tkr_tree1_DirZ, true);
     addItem("TkrTree1NumBoxes",            &Tkr_tree1_NumBoxes);
-    addItem("TkrTree1ChiSquare",           &Tkr_tree1_ChiSquare);
-    addItem("TkrTree1RmsTrans",            &Tkr_tree1_RmsTrans);
-    addItem("TkrTree1RmsLong",             &Tkr_tree1_RmsLong);
+    addItem("TkrTree1ChiSquare",           &Tkr_tree1_ChiSquare, true);
+    addItem("TkrTree1RmsTrans",            &Tkr_tree1_RmsTrans, true);
+    addItem("TkrTree1RmsLong",             &Tkr_tree1_RmsLong, true);
 
     addItem("TkrTree1NumLinks",            &Tkr_tree1_numLinks);
-    addItem("TkrTree1CalPosDoca",          &Tkr_tree1_calPosDoca);
-    addItem("TkrTree1CalDoca68",           &Tkr_tree1_calDoca68);
+    addItem("TkrTree1CalPosDoca",          &Tkr_tree1_calPosDoca, true);
+    addItem("TkrTree1CalDoca68",           &Tkr_tree1_calDoca68, true);
     addItem("TkrTree1CalDoca95",           &Tkr_tree1_calDoca95);
-    addItem("TkrTree1CalDocaMax",          &Tkr_tree1_calDocaMax);
+    addItem("TkrTree1CalDocaMax",          &Tkr_tree1_calDocaMax, true);
                                      
     addItem("TkrTree2NTrks",               &Tkr_tree2_nTrks);
     addItem("TkrTree2Depth",               &Tkr_tree2_depth);
@@ -394,7 +394,7 @@ StatusCode TreeValsTool::initialize()
     addItem("TFPBestDirY",                 &TFP_bestDirY);
     addItem("TFPBestDirZ",                 &TFP_bestDirZ);
     addItem("TFPBestNumHits",              &TFP_bestNumHits);
-    addItem("TFPBestChiSquare",            &TFP_bestChiSquare);
+    addItem("TFPBestChiSquare",            &TFP_bestChiSquare, true);
     addItem("TFPBestAverageDist",          &TFP_bestAveDist);
     addItem("TFPBestRmsTrans",             &TFP_bestRmsTrans);
     addItem("TFPBestRmsLong",              &TFP_bestRmsLong);

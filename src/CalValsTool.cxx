@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.137 2013/01/10 03:56:55 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.138 2013/03/25 14:26:33 bruel Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -652,7 +652,7 @@ zero if only one track
 <td>F<td>   Distance between the projected vertex (or track if only one track) 
 and the energy centroid, evaluated at the z of the centroid. 
 <tr><td> CalTrackAngle 
-<td>F<td>   Angle between "gamma" direction in the tracker and direction of the CAL "track" 
+<td>F<td>   Angle between TKR track direction and CAL cluster direction
 <tr><td> CalELayerN, N=0,7 
 <td>F<td>   Energy deposited in layer N of the CAL 
 <tr><td> CalLyr0Ratio 
@@ -735,6 +735,8 @@ Y across the length.
 <td>F<td> energy reported by the full profile fit (using the tracker direction if there is one, the cal direction otherwise)
 <tr><td> CalCfpChiSq
 <td>F<td> chi squared reported by the full profile fit (using the tracker direction if there is one, the cal direction otherwise)
+<tr><td> CalCfpEnergyUB
+<td>F<td> unbiased CalCfpEnergy
 <tr><td> CalCfpEffRLn
 <td>F<td> effective amount of X0 reported by the full profile fit (using the tracker direction if there is one, the cal direction otherwise)
 <tr><td> CalCfpTkrRLn
@@ -784,6 +786,15 @@ Y across the length.
 where a track crosses in a gap.
 <tr><td> Cal1MomCov[CXX,CYY,CZZ, DXX,DYY,DZZ, DXY,DXZ,DYZ, SXX,SYY,SXY ] 
 <td>F<td> Non-zero element of Cal covariance matrix : C = is for centroid elements, D for direction (6 elements), S for slope (3 elements)
+
+<tr><td> CalNewCfpEnergy
+<td>F<td> DOCUMENTATION NEEDED
+<tr><td> CalNewCfpSelChiSq 
+<td>F<td> DOCUMENTATION NEEDED
+
+<tr><td> Cal1NumXtals
+<td>F<td> Number of xtals in the first CAL cluster
+
 </table>
 
 */
@@ -877,33 +888,33 @@ StatusCode CalValsTool::initialize()
 
     // load up the map
 
-    addItem("CalEnergyRaw",  &CAL_EnergyRaw);
+    addItem("CalEnergyRaw",  &CAL_EnergyRaw, true);
     addItem("CalEnergyCorr", &CAL_EnergyCorr);
 
     addItem("CalLeakCorr",   &CAL_Leak_Corr); 
-    addItem("CalEdgeCorr",   &CAL_Edge_Corr);
+    addItem("CalEdgeCorr",   &CAL_Edge_Corr, true);
     addItem("CalTotalCorr",  &CAL_Total_Corr);
 
-    addItem("CalCsIRLn",     &CAL_CsI_RLn);
+    addItem("CalCsIRLn",     &CAL_CsI_RLn, true);
     addItem("CalTotRLn",     &CAL_Tot_RLn);
     addItem("CalCntRLn",     &CAL_Cntr_RLn);
-    addItem("CalLATRLn",     &CAL_LAT_RLn);
+    addItem("CalLATRLn",     &CAL_LAT_RLn, true);
     addItem("CalDeadTotRat", &CAL_DeadTot_Rat);
     addItem("CalDeadCntRat", &CAL_DeadCnt_Rat);
 
     addItem("CalTPred",      &CAL_t_Pred);
     addItem("CalDeltaT",     &CAL_deltaT);
 
-    addItem("CalGapFraction",&CAL_Gap_Fraction);
-    addItem("CalTwrEdgeCntr",&CAL_TwrEdgeCntr);
+    addItem("CalGapFraction",&CAL_Gap_Fraction, true);
+    addItem("CalTwrEdgeCntr",&CAL_TwrEdgeCntr, true);
     addItem("CalTwrEdgeCntrCor",&CAL_TwrEdgeCntrCor);
-    addItem("CalTwrEdge",    &CAL_TwrEdgeTop);
-    addItem("CalLATEdge",    &CAL_LATEdge);
-    addItem("CalEdgeEnergy", &CAL_EdgeEnergy);
-    addItem("CalTrackDoca",  &CAL_Track_DOCA);
-    addItem("CalTrackDocacor",  &CAL_Track_DOCA_Cor);
+    addItem("CalTwrEdge",    &CAL_TwrEdgeTop, true);
+    addItem("CalLATEdge",    &CAL_LATEdge,    true);
+    addItem("CalEdgeEnergy", &CAL_EdgeEnergy, true);
+    addItem("CalTrackDoca",  &CAL_Track_DOCA, true);
+    addItem("CalTrackDocacor",  &CAL_Track_DOCA_Cor, true);
     addItem("CalTrackDocaCor",  &CAL_Track_DOCA_Cor);
-    addItem("CalTrackAngle", &CAL_Track_Angle);
+    addItem("CalTrackAngle", &CAL_Track_Angle, true);
     addItem("CalTrackSep",   &CAL_Track_Sep);
 
     addItem("CalELayer0",    &CAL_eLayer[0]);
@@ -924,17 +935,17 @@ StatusCode CalValsTool::initialize()
     addItem("CalLghtAsym7",  &CAL_LightAsym[7]);
     addItem("CalLyr0Ratio",  &CAL_Lyr0_Ratio);
     addItem("CalLyr7Ratio",  &CAL_Lyr7_Ratio);
-    addItem("CalBkHalfRatio",&CAL_BkHalf_Ratio);
+    addItem("CalBkHalfRatio",&CAL_BkHalf_Ratio, true);
 
     addItem("CalXtalsTrunc", &CAL_Num_Xtals_Trunc);
     addItem("CalNumXtals",   &CAL_Num_Xtals);
     addItem("CalXtalRatio",  &CAL_Xtal_Ratio);
-    addItem("CalXtalMaxEne", &CAL_Xtal_maxEne);
+    addItem("CalXtalMaxEne", &CAL_Xtal_maxEne, true);
     addItem("CalMaxNumXtalsInLayer", 
         &CAL_Max_Num_Xtals_In_Layer);
 
-    addItem("CalTransRms",    &CAL_Trans_Rms);
-    addItem("CalLongRms",     &CAL_Long_Rms);
+    addItem("CalTransRms",    &CAL_Trans_Rms, true);
+    addItem("CalLongRms",     &CAL_Long_Rms,  true);
     addItem("CalLRmsAsym",    &CAL_LRms_Asym);
 
     addItem("CalMIPDiff",   &CAL_MIP_Diff);
@@ -950,7 +961,7 @@ StatusCode CalValsTool::initialize()
     addItem("CalY0",         &CAL_y0);
     addItem("CalLyr0X0",      &CAL_X0_Lyr[0]);
     addItem("CalLyr0Y0",      &CAL_Y0_Lyr[0]);
-    addItem("CalTopGapDist", &CAL_Top_Gap_Dist);
+    addItem("CalTopGapDist", &CAL_Top_Gap_Dist, true);
 
     addItem("CalXEcntr2",     &CAL_xEcntr2);
     addItem("CalYEcntr2",     &CAL_yEcntr2);
@@ -990,21 +1001,21 @@ StatusCode CalValsTool::initialize()
     addItem("CalRestEnergy",      &CAL_rest_energy);
     addItem("CalRestNumXtals",    &CAL_rest_numXtals);
 
-    addItem("CalTrkXtalRms",       &CAL_track_rms);
-    addItem("CalTrkXtalRmsE",      &CAL_track_E_rms);
+    addItem("CalTrkXtalRms",       &CAL_track_rms, true);
+    addItem("CalTrkXtalRmsE",      &CAL_track_E_rms, true);
     addItem("CalTrkXtalRmsTrunc",  &CAL_track_rms_trunc);
-    addItem("CalTrkXtalRmsETrunc", &CAL_track_E_rms_trunc);
+    addItem("CalTrkXtalRmsETrunc", &CAL_track_E_rms_trunc, true);
 
     // Variables referring to the first cluster---added after the restructuring
     // of the CAL moments analysis (Luca Baldini, Dec. 26, 2010).
     // Basic variables.
-    addItem("Cal1NumXtals",  &CAL_Clu1_NumXtals);
-    addItem("Cal1NumTruncXtals",  &CAL_Clu1_NumTruncXtals);
-    addItem("Cal1NumSaturatedXtals",  &CAL_Clu1_NumSaturatedXtals);
+    addItem("Cal1NumXtals",  &CAL_Clu1_NumXtals, true);
+    addItem("Cal1NumTruncXtals",  &CAL_Clu1_NumTruncXtals, true);
+    addItem("Cal1NumSaturatedXtals",  &CAL_Clu1_NumSaturatedXtals, true);
     addItem("Cal1RawEnergySum",  &CAL_Clu1_RawEnergySum);
     addItem("Cal1CorrEnergySum",  &CAL_Clu1_CorrEnergySum);
-    addItem("Cal1XtalEneMax",  &CAL_Clu1_XtalEneMax);
-    addItem("Cal1XtalEneRms",  &CAL_Clu1_XtalEneRms);
+    addItem("Cal1XtalEneMax",  &CAL_Clu1_XtalEneMax, true);
+    addItem("Cal1XtalEneRms",  &CAL_Clu1_XtalEneRms, true);
     addItem("Cal1XtalEneSkewness",  &CAL_Clu1_XtalEneSkewness);
     // Variables from the moments analysis.
     addItem("Cal1MomXCntr",  &CAL_Clu1_MomXCntr);
@@ -1016,14 +1027,14 @@ StatusCode CalValsTool::initialize()
     addItem("Cal1MomXCntrCor",  &CAL_Clu1_MomXCntrCor);
     addItem("Cal1MomYCntrCor",  &CAL_Clu1_MomYCntrCor);
     addItem("Cal1MomZCntrCor",  &CAL_Clu1_MomZCntrCor);
-    addItem("Cal1MomXDir",  &CAL_Clu1_MomXDir);
-    addItem("Cal1MomYDir",  &CAL_Clu1_MomYDir);
-    addItem("Cal1MomZDir",  &CAL_Clu1_MomZDir);
+    addItem("Cal1MomXDir",  &CAL_Clu1_MomXDir, true);
+    addItem("Cal1MomYDir",  &CAL_Clu1_MomYDir, true);
+    addItem("Cal1MomZDir",  &CAL_Clu1_MomZDir, true);
     addItem("Cal1MomNumIterations",  &CAL_Clu1_MomNumIterations);
     addItem("Cal1MomRunFlag",  &CAL_Clu1_MomRunFlag); // FOR DEBUG ONLY!!!!
-    addItem("Cal1MomNumCoreXtals",  &CAL_Clu1_MomNumCoreXtals);
-    addItem("Cal1TransRms",  &CAL_Clu1_MomTransRms);
-    addItem("Cal1LongRms",  &CAL_Clu1_MomLongRms);
+    addItem("Cal1MomNumCoreXtals",  &CAL_Clu1_MomNumCoreXtals, true);
+    addItem("Cal1TransRms",  &CAL_Clu1_MomTransRms, true);
+    addItem("Cal1LongRms",  &CAL_Clu1_MomLongRms, true);
     addItem("Cal1LongRmsAsym",  &CAL_Clu1_MomLongRmsAysm);
     addItem("Cal1LongSkewness",  &CAL_Clu1_MomLongSkewness);
     addItem("Cal1CoreEneFrac",  &CAL_Clu1_MomCoreEneFrac);
@@ -1050,7 +1061,7 @@ StatusCode CalValsTool::initialize()
     addItem("Cal1FitYDir",  &CAL_Clu1_FitYDir);
     addItem("Cal1FitZDir",  &CAL_Clu1_FitZDir);
     addItem("Cal1FitNumLayers",  &CAL_Clu1_FitNumLayers);
-    addItem("Cal1FitChiSquare",  &CAL_Clu1_FitChiSquare);
+    addItem("Cal1FitChiSquare",  &CAL_Clu1_FitChiSquare, true);
     // Variables from the Minimum Spanning Tree clustering.
     addItem("Cal1MstMinEdgeLen",  &CAL_Clu1_MstMinEdgeLen);
     addItem("Cal1MstMaxEdgeLen",  &CAL_Clu1_MstMaxEdgeLen);
@@ -1184,13 +1195,13 @@ StatusCode CalValsTool::initialize()
     addItem("CalCfpCalTmax",  &CAL_cfp_calfit_tmax);
     addItem("CalCfpCalFitErrFlg",  &CAL_cfp_calfit_fiterrflg);
 
-    addItem("CalNewCfpEnergy",  &CAL_newcfp_energy);
+    addItem("CalNewCfpEnergy",  &CAL_newcfp_energy, true);
     addItem("CalNewCfpEnergyErr",  &CAL_newcfp_energy_err);
-    addItem("CalNewCfpChiSq",   &CAL_newcfp_totChiSq);
-    addItem("CalNewCfpSelChiSq",   &CAL_newcfp_seltotChiSq);
+    addItem("CalNewCfpChiSq",   &CAL_newcfp_totChiSq, true);
+    addItem("CalNewCfpSelChiSq",   &CAL_newcfp_seltotChiSq, true);
     addItem("CalNewCfpSelChiSqDist",   &CAL_newcfp_ChiSqdist);
     addItem("CalNewCfpSelChiDist",   &CAL_newcfp_Chidist);
-    addItem("CalNewCfpEnergyUB",&CAL_newcfp_energyUB);
+    addItem("CalNewCfpEnergyUB",&CAL_newcfp_energyUB, true);
     addItem("CalNewCfpEffRLn",  &CAL_newcfp_calEffRLn);
     addItem("CalNewCfpTkrRLn",  &CAL_newcfp_tkrRLn);
     addItem("CalNewCfpPar0",  &CAL_newcfp_par0);
@@ -1207,13 +1218,13 @@ StatusCode CalValsTool::initialize()
     addItem("CalNewCfpPx",  &CAL_newcfp_p0);
     addItem("CalNewCfpPy",  &CAL_newcfp_p1);
     addItem("CalNewCfpPz",  &CAL_newcfp_p2);
-    addItem("CalNewCfpVx",  &CAL_newcfp_v0);
-    addItem("CalNewCfpVy",  &CAL_newcfp_v1);
-    addItem("CalNewCfpVz",  &CAL_newcfp_v2);
-    addItem("CalNewCfpCalEnergy",  &CAL_newcfp_calfit_energy);
-    addItem("CalNewCfpCalEnergyUB",  &CAL_newcfp_calfit_energyub);
+    addItem("CalNewCfpVx",  &CAL_newcfp_v0, true);
+    addItem("CalNewCfpVy",  &CAL_newcfp_v1, true);
+    addItem("CalNewCfpVz",  &CAL_newcfp_v2, true);
+    addItem("CalNewCfpCalEnergy",  &CAL_newcfp_calfit_energy, true);
+    addItem("CalNewCfpCalEnergyUB",  &CAL_newcfp_calfit_energyub, true);
     addItem("CalNewCfpCalEnergyErr",  &CAL_newcfp_calfit_energy_err);
-    addItem("CalNewCfpCalChiSq",   &CAL_newcfp_calfit_totChiSq);
+    addItem("CalNewCfpCalChiSq",   &CAL_newcfp_calfit_totChiSq, true);
     addItem("CalNewCfpCalSelChiSq",   &CAL_newcfp_calfit_seltotChiSq);
     addItem("CalNewCfpCalSelChiSqDist",   &CAL_newcfp_calfit_ChiSqdist);
     addItem("CalNewCfpCalSelChiDist",   &CAL_newcfp_calfit_Chidist);
@@ -1224,7 +1235,7 @@ StatusCode CalValsTool::initialize()
     addItem("CalNewCfpCalXcor",  &CAL_newcfp_calfit_xcor);
     addItem("CalNewCfpCalYcor",  &CAL_newcfp_calfit_ycor);
     addItem("CalNewCfpCalAlpha",  &CAL_newcfp_calfit_alpha);
-    addItem("CalNewCfpCalTmax",  &CAL_newcfp_calfit_tmax);
+    addItem("CalNewCfpCalTmax",  &CAL_newcfp_calfit_tmax, true);
     addItem("CalNewCfpCalFitErrFlg",  &CAL_newcfp_calfit_fiterrflg);
     addItem("CalNewCfpCalNsel",  &CAL_newcfp_calfit_nxtalsel);
 
@@ -1236,19 +1247,19 @@ StatusCode CalValsTool::initialize()
     addItem("CalLkHdEneErr", &CAL_LkHd_energyErr);
     addItem("CalLkHdEnergyUB", &CAL_LkHd_energyUB);
 
-    addItem("CalRmsLayerE",  &CAL_rmsLayerE);
-    addItem("CalRmsLayerEBack",  &CAL_rmsLayerEBack);
+    addItem("CalRmsLayerE",  &CAL_rmsLayerE, true);
+    addItem("CalRmsLayerEBack",  &CAL_rmsLayerEBack, true);
     addItem("CalNLayersRmsBack", &CAL_nLayersRmsBack);
     addItem("CalEAveBack", &CAL_eAveBack);
-    addItem("CalLayer0Ratio", &CAL_layer0Ratio);
+    addItem("CalLayer0Ratio", &CAL_layer0Ratio, true);
     addItem("CalXPosRmsLL", &CAL_xPosRmsLastLayer);
     addItem("CalYPosRmsLL", &CAL_yPosRmsLastLayer);
 
     addItem("CalTrSizeCalT68",&CAL_TS_CAL_T_68);
     addItem("CalTrSizeCalT90",&CAL_TS_CAL_T_90);
-    addItem("CalTrSizeCalT95",&CAL_TS_CAL_T_95);
+    addItem("CalTrSizeCalT95",&CAL_TS_CAL_T_95, true);
     addItem("CalTrSizeCalT99",&CAL_TS_CAL_T_99);
-    addItem("CalTrSizeCalT100",&CAL_TS_CAL_T_100);
+    addItem("CalTrSizeCalT100",&CAL_TS_CAL_T_100, true);
     addItem("CalTrSizeCalTL68",&CAL_TS_CAL_TL_68);
     addItem("CalTrSizeCalTL90",&CAL_TS_CAL_TL_90);
     addItem("CalTrSizeCalTL95",&CAL_TS_CAL_TL_95);
@@ -1270,7 +1281,7 @@ StatusCode CalValsTool::initialize()
     addItem("CalTrSizeTkrT90",&CAL_TS_TKR_T_90);
     addItem("CalTrSizeTkrT95",&CAL_TS_TKR_T_95);
     addItem("CalTrSizeTkrT99",&CAL_TS_TKR_T_99);
-    addItem("CalTrSizeTkrT100",&CAL_TS_TKR_T_100);
+    addItem("CalTrSizeTkrT100",&CAL_TS_TKR_T_100, true);
     addItem("CalTrSizeTkrTL68",&CAL_TS_TKR_TL_68);
     addItem("CalTrSizeTkrTL90",&CAL_TS_TKR_TL_90);
     addItem("CalTrSizeTkrTL95",&CAL_TS_TKR_TL_95);

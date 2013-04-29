@@ -3,7 +3,7 @@
 @brief Calculates the "Event" analysis variables from the other ntuple variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.61 2013/01/23 11:10:35 cohen Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.62 2013/02/27 20:47:17 cohen Exp $
 */
 
 #include "ValBase.h"
@@ -281,6 +281,13 @@ NOTE
 <tr><td> EvtEventFlags
 <td>U<td> Gleam Event Flags, zero denotes no error bits.  see enums/EventFlags.h
           for a definition of the error bits
+
+<tr><td> EvtJointEnergy 
+<td>F<td>   DOCUMENTATION NEEDED
+<tr><td> EvtJointLogEnergy 
+<td>F<td>   DOCUMENTATION NEEDED
+<tr><td> EvtJointWeight 
+<td>F<td>   DOCUMENTATION NEEDED
 </table>
 */
 
@@ -835,7 +842,7 @@ StatusCode EvtValsTool::initialize()
     addItem("EvtCalEdgeAngle",  &EvtCalEdgeAngle);
     addItem("EvtTkrEdgeAngle",  &EvtTkrEdgeAngle);
     addItem("EvtLogEnergy",     &EvtLogEnergy);
-    addItem("EvtTkr1EFrac",     &EvtTkr1EFrac);
+    addItem("EvtTkr1EFrac",     &EvtTkr1EFrac, true);
     addItem("EvtVtxKin",        &EvtVtxKin);
     addItem("EvtVtxEAngle",     &EvtVtxEAngle);
     addItem("EvtTkrComptonRatio", &EvtTkrComptonRatio);
@@ -867,11 +874,11 @@ StatusCode EvtValsTool::initialize()
 
     addItem("CalNewCfpEnergyUB2",&CalNewCfpEnergyUB2);
  
-    addItem("EvtJointEnergy",&EvtJointEnergy);
-    addItem("EvtJointLogEnergy",&EvtJointLogEnergy);
-    addItem("EvtJointWeight",&EvtJointWeight);
+    addItem("EvtJointEnergy",&EvtJointEnergy, true);
+    addItem("EvtJointLogEnergy",&EvtJointLogEnergy, true);
+    addItem("EvtJointWeight",&EvtJointWeight, true);
 
-    addItem("EvtCalCsIRLn",&EvtCalCsIRLn);
+    addItem("EvtCalCsIRLn",&EvtCalCsIRLn, true);
 
     zeroVals();
 
