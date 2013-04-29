@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.127 2013/04/29 09:01:33 kadrlica Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.128 2013/04/29 16:20:43 kadrlica Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -809,7 +809,7 @@ StatusCode TkrValsTool::initialize()
 
     // load up the map
 
-    addItem("TkrNumTracks",   &Tkr_Num_Tracks);
+    addItem("TkrNumTracks",   &Tkr_Num_Tracks, true);
     addItem("TkrSumKalEne",   &Tkr_Sum_KalEne);
     addItem("TkrSumConEne",   &Tkr_Sum_ConEne);
     addItem("TkrEnergy",      &Tkr_Energy);
@@ -872,9 +872,9 @@ StatusCode TkrValsTool::initialize()
     addItem("Tkr1ZDir",       &Tkr_1_zdir, true);
     addItem("Tkr1Phi",        &Tkr_1_Phi,  true);
     addItem("Tkr1Theta",      &Tkr_1_Theta);
-    addItem("Tkr1X0",         &Tkr_1_x0);
-    addItem("Tkr1Y0",         &Tkr_1_y0);
-    addItem("Tkr1Z0",         &Tkr_1_z0);
+    addItem("Tkr1X0",         &Tkr_1_x0, true);
+    addItem("Tkr1Y0",         &Tkr_1_y0, true);
+    addItem("Tkr1Z0",         &Tkr_1_z0, true);
 
     addItem("Tkr1ThetaErr",   &Tkr_1_ThetaErr);
     addItem("Tkr1PhiErr",     &Tkr_1_PhiErr);

@@ -3,7 +3,7 @@
 @brief Calculates the "Event" analysis variables from the other ntuple variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.62 2013/02/27 20:47:17 cohen Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.63 2013/04/29 09:01:33 kadrlica Exp $
 */
 
 #include "ValBase.h"
@@ -829,11 +829,11 @@ StatusCode EvtValsTool::initialize()
     
     // load up the map
 
-    addItem("EvtRun",           &EvtRun);
-    addItem("EvtEventId",       &EvtEventId);
-    addItem("EvtEventId64",     &EvtEventId64);
-    addItem("EvtElapsedTime",   &EvtElapsedTime);
-    addItem("EvtLiveTime",      &EvtLiveTime);
+    addItem("EvtRun",           &EvtRun, true);
+    addItem("EvtEventId",       &EvtEventId, true);
+    addItem("EvtEventId64",     &EvtEventId64, true);
+    addItem("EvtElapsedTime",   &EvtElapsedTime, true);
+    addItem("EvtLiveTime",      &EvtLiveTime, true);
 
     addItem("EvtEnergyCorr",    &EvtEnergyCorr,   true);
     addItem("EvtEnergyCorrUB",  &EvtEnergyCorrUB, true);

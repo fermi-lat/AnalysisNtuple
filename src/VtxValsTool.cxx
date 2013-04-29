@@ -3,7 +3,7 @@
 @brief Calculates the Vtx analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.36 2013/02/21 07:34:44 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.37 2013/04/29 09:01:33 kadrlica Exp $
 */
 
 // Include files
@@ -289,9 +289,9 @@ StatusCode VtxValsTool::initialize()
     //addItem("VtxCovDet",     &VTX_CovDet);
 
    
-    addItem("VtxX0",        &VTX_x0);       
-    addItem("VtxY0",        &VTX_y0);       
-    addItem("VtxZ0",        &VTX_z0);
+    addItem("VtxX0",        &VTX_x0, true);       
+    addItem("VtxY0",        &VTX_y0, true);       
+    addItem("VtxZ0",        &VTX_z0, true);
 
     addItem("VtxAngle",     &VTX_Angle);    
     addItem("VtxDOCA",      &VTX_DOCA);
