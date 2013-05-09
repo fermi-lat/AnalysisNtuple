@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.128 2013/04/29 16:20:43 kadrlica Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.129 2013/04/29 17:03:42 kadrlica Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -30,6 +30,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.128
 #include "Event/Recon/TkrRecon/TkrTree.h"
 #include "Event/Recon/TkrRecon/TkrTrack.h"
 #include "Event/Recon/TkrRecon/TkrVertex.h"
+#include "Event/Recon/CalRecon/CalClusterMap.h"
 #include "Event/Recon/CalRecon/CalEventEnergy.h"
 #include "geometry/Ray.h" 
 
@@ -205,10 +206,10 @@ private:
     float Tkr_1_PhiErr;
     float Tkr_1_ErrAsym;
     float Tkr_1_CovDet;
-	float Tkr_1_SxxC; 
-	float Tkr_1_SyyC;
-	float Tkr_1_SxyC;
-	float Tkr_1_CovDetC;
+    float Tkr_1_SxxC; 
+    float Tkr_1_SyyC;
+    float Tkr_1_SxyC;
+    float Tkr_1_CovDetC;
     float Tkr_1_ToTFirst;
     float Tkr_1_ToTAve;
     float Tkr_1_ToTTrAve;
@@ -883,10 +884,10 @@ StatusCode TkrValsTool::initialize()
     addItem("Tkr1SXX",        &Tkr_1_Sxx);
     addItem("Tkr1SXY",        &Tkr_1_Sxy);
     addItem("Tkr1SYY",        &Tkr_1_Syy);
-	addItem("Tkr1SXXC",       &Tkr_1_SxxC, true);
-	addItem("Tkr1SYYC",       &Tkr_1_SyyC, true);
-	addItem("Tkr1SXYC",       &Tkr_1_SxyC, true);
-	addItem("Tkr1CovDetC",    &Tkr_1_CovDetC, true);
+    addItem("Tkr1SXXC",       &Tkr_1_SxxC, true);
+    addItem("Tkr1SYYC",       &Tkr_1_SyyC, true);
+    addItem("Tkr1SXYC",       &Tkr_1_SxyC, true);
+    addItem("Tkr1CovDetC",    &Tkr_1_CovDetC, true);
 
     addItem("Tkr1ToTFirst",   &Tkr_1_ToTFirst, true);
     addItem("Tkr1ToTAve",     &Tkr_1_ToTAve);
@@ -1060,21 +1061,21 @@ StatusCode TkrValsTool::calculate()
 
     // assemble the list of all tracks for now 
     // later, deal separately with Standard and CR
-	// **********************
+    // **********************
 
-	// The above comments are preserved for historical purposes. As of the typing of this comment
-	// (circa GR 20-08-02) there are two collections of tracks in the TDS, one for cosmic ray tracks and
-	// one for gamma tracks. We would like to count the number of gamma tracks total in the event,
-	// we can easily do that by recovering the track collection and looking at its size. However,
-	// in the Tree Based pat rec we cannot assume the first track in the collection is the "best" 
-	// track and will need to recover those tracks from the TkrTree collection. 
-	SmartDataPtr<Event::TkrTrackCol> trackCol(m_pEventSvc, EventModel::TkrRecon::TkrTrackCol);
+    // The above comments are preserved for historical purposes. As of the typing of this comment
+    // (circa GR 20-08-02) there are two collections of tracks in the TDS, one for cosmic ray tracks and
+    // one for gamma tracks. We would like to count the number of gamma tracks total in the event,
+    // we can easily do that by recovering the track collection and looking at its size. However,
+    // in the Tree Based pat rec we cannot assume the first track in the collection is the "best" 
+    // track and will need to recover those tracks from the TkrTree collection. 
+    SmartDataPtr<Event::TkrTrackCol> trackCol(m_pEventSvc, EventModel::TkrRecon::TkrTrackCol);
 
-	// Actually, if no tracks then we should simply exit right now
-	if (!trackCol || trackCol->empty()) return sc;
+    // Actually, if no tracks then we should simply exit right now
+    if (!trackCol || trackCol->empty()) return sc;
 
-	// Now set the number of tracks in the event
-	Tkr_Num_Tracks = trackCol->size();
+    // Now set the number of tracks in the event
+    Tkr_Num_Tracks = trackCol->size();
 
     //Recover EventHeader Pointer
     //SmartDataPtr<Event::EventHeader> pEvent(m_pEventSvc, EventModel::EventHeader);
@@ -1087,36 +1088,36 @@ StatusCode TkrValsTool::calculate()
 
     // assemble the list of all tracks for now 
     // later, deal separately with Standard and CR
-	// **********************
-	// What should really happen here is that we extract the TkrTree collection from the TDS,
-	// take the first tree on that list and then get the tracks from there
-	SmartDataPtr<Event::TkrTreeCol> treeCol(m_pEventSvc, EventModel::TkrRecon::TkrTreeCol);
+    // **********************
+    // What should really happen here is that we extract the TkrTree collection from the TDS,
+    // take the first tree on that list and then get the tracks from there
+    SmartDataPtr<Event::TkrTreeCol> treeCol(m_pEventSvc, EventModel::TkrRecon::TkrTreeCol);
 
-	// Make a local track container in the event we have no trees
-	Event::TkrTrackVec trackVec;
+    // Make a local track container in the event we have no trees
+    Event::TkrTrackVec trackVec;
 
-	// So, set the default to point at it
-	Event::TkrTrackVec* pTracks = &trackVec;
+    // So, set the default to point at it
+    Event::TkrTrackVec* pTracks = &trackVec;
 
-	// If no trees then we will copy pointers from the TDS Track col to the local vector
-	if (!treeCol || treeCol->empty())
-	{
-		for(Event::TkrTrackCol::iterator trkItr = trackCol->begin(); trkItr != trackCol->end(); trkItr++)
-		{
-			trackVec.push_back(*trkItr);
-		}
-	}
-	// Otherwise we simply point to the Tree Track vector
-	else
-	{
+    // If no trees then we will copy pointers from the TDS Track col to the local vector
+    if (!treeCol || treeCol->empty())
+    {
+        for(Event::TkrTrackCol::iterator trkItr = trackCol->begin(); trkItr != trackCol->end(); trkItr++)
+        {
+            trackVec.push_back(*trkItr);
+        }
+    }
+    // Otherwise we simply point to the Tree Track vector
+    else
+    {
 
-	Event::TkrTree*     bestTree = treeCol->front();
+    Event::TkrTree*     bestTree = treeCol->front();
 
-		for (Event::TkrTrackVec::iterator trkItr = bestTree->begin(); trkItr != bestTree->end(); trkItr++)
-		{
-		    trackVec.push_back(*trkItr);
-	}
-	}
+        for (Event::TkrTrackVec::iterator trkItr = bestTree->begin(); trkItr != bestTree->end(); trkItr++)
+        {
+            trackVec.push_back(*trkItr);
+    }
+    }
 
     SmartDataPtr<Event::TkrVertexCol>  
         pVerts(m_pEventSvc,EventModel::TkrRecon::TkrVertexCol);
@@ -1174,10 +1175,10 @@ StatusCode TkrValsTool::calculate()
         Tkr_1_Theta       = (-t1).theta();
 
          // First we capture the cov. information at the head of the track
-		 const Event::TkrTrackParams& Tkr_1_Cov 
+         const Event::TkrTrackParams& Tkr_1_Cov 
             = track_1->front()->getTrackParams(Event::TkrTrackHit::SMOOTHED);
 
-		Tkr_1_Sxx          = Tkr_1_Cov.getxSlpxSlp();
+        Tkr_1_Sxx          = Tkr_1_Cov.getxSlpxSlp();
         Tkr_1_Sxy          = Tkr_1_Cov.getxSlpySlp();
         Tkr_1_Syy          = Tkr_1_Cov.getySlpySlp();
         double sinPhi     = sin(Tkr_1_Phi);
@@ -1191,37 +1192,37 @@ StatusCode TkrValsTool::calculate()
             sqrt(std::max(0.0f,Tkr_1_Sxx*Tkr_1_Syy-Tkr_1_Sxy*Tkr_1_Sxy))*
             Tkr_1_zdir*Tkr_1_zdir;
 
-		// We must propagate the track to the mid-point in the radiator above this layer
-		// This is to include the most important piece of the multiple scatterers
-	     int plane = m_tkrGeom->getPlane(track_1->front()->getTkrId());
+        // We must propagate the track to the mid-point in the radiator above this layer
+        // This is to include the most important piece of the multiple scatterers
+         int plane = m_tkrGeom->getPlane(track_1->front()->getTkrId());
          int layer = m_tkrGeom->getLayer(plane);
          float z_conv = m_tkrGeom->getConvZ(layer);
-		 float sv1 = (z_conv - x1.z())/ t1.z();
-		 if(layer < 6) sv1 += .3/t1.z();
-		 else          sv1 += .05/t1.z();
+         float sv1 = (z_conv - x1.z())/ t1.z();
+         if(layer < 6) sv1 += .3/t1.z();
+         else          sv1 += .05/t1.z();
 
-		 Event::TkrTrackParams convParams = Tkr_1_Cov;
+         Event::TkrTrackParams convParams = Tkr_1_Cov;
 
-		// if (m_tkrGeom->isTopPlaneInLayer(plane)){do this for all events regardless of top plane
+        // if (m_tkrGeom->isTopPlaneInLayer(plane)){do this for all events regardless of top plane
          // Propagate the TkrParams to the middle of converter
              m_G4PropTool->setStepStart(Tkr_1_Cov, x1.z(), (sv1 < 0));
              m_G4PropTool->step(fabs(sv1));
              convParams = m_G4PropTool->getTrackParams(fabs(sv1), Tkr_1_ConEne);
              double extraRadLen = m_G4PropTool->getRadLength();
-		// }
+        // }
 
-	    // Energy correction term
-			 double eventEnergy = Tkr_1_ConEne > 5000. ? 10000. : Tkr_1_ConEne*2; 
-		 double eFactor = pow((eventEnergy / 100), .36); 
+        // Energy correction term
+             double eventEnergy = Tkr_1_ConEne > 5000. ? 10000. : Tkr_1_ConEne*2; 
+         double eFactor = pow((eventEnergy / 100), .36); 
 
         Tkr_1_SxxC         = convParams.getxSlpxSlp() * eFactor;
         Tkr_1_SxyC         = convParams.getxSlpySlp() * eFactor;
         Tkr_1_SyyC         = convParams.getySlpySlp() * eFactor;
 
-		// Add in the QED piece:  constant (3.0) taken from QED angle plots for 68% containment
-		double QED_angleSq = (3.0/(2.*Tkr_1_ConEne)) * (3.0/(2.*Tkr_1_ConEne));
+        // Add in the QED piece:  constant (3.0) taken from QED angle plots for 68% containment
+        double QED_angleSq = (3.0/(2.*Tkr_1_ConEne)) * (3.0/(2.*Tkr_1_ConEne));
 
-		double slopeX    = t1.x()/t1.z(); 
+        double slopeX    = t1.x()/t1.z(); 
         double slopeY    = t1.y()/t1.z();
         double norm_term = 1. + slopeX*slopeX + slopeY*slopeY;
 
@@ -1236,7 +1237,7 @@ StatusCode TkrValsTool::calculate()
        Tkr_1_SyyC += QED_angleSq*p44;
        Tkr_1_SxyC += QED_angleSq*p34;
 
-		// The factor of ZDir^3 takes us from slopes to angles (or at least approximately)
+        // The factor of ZDir^3 takes us from slopes to angles (or at least approximately)
         Tkr_1_CovDetC = 
             sqrt(std::max(0.0f,Tkr_1_SxxC*Tkr_1_SyyC-Tkr_1_SxyC*Tkr_1_SxyC))*
             Tkr_1_zdir*Tkr_1_zdir*fabs(Tkr_1_zdir);
@@ -1571,20 +1572,20 @@ StatusCode TkrValsTool::calculate()
         Tkr_1_VetoGapEdge      = (int)floor(m_VetoGapEdge + 0.5);   
         Tkr_1_VetoBadCluster   = (int)floor(m_VetoBadCluster + 0.5);
 
-	// ***************************************************************
-	// At this point we need access to the entire collection of tracks. 
-	// If the source is a pat rec other than Tree Based, then this will already exist
-	// If not, then we need to fill in the remaining tracks.
-	if(treeCol!=0x0) {
+    // ***************************************************************
+    // At this point we need access to the entire collection of tracks. 
+    // If the source is a pat rec other than Tree Based, then this will already exist
+    // If not, then we need to fill in the remaining tracks.
+    if(treeCol!=0x0) {
           if (!treeCol->empty() ){
             // Loop over the remaining trees in the collection
             for(Event::TkrTreeCol::iterator treeItr = treeCol->begin() + 1; treeItr != treeCol->end(); treeItr++)
-	      {
+          {
                 Event::TkrTree* tree = *treeItr;
-	      
+          
                 // Add the tracks associated to these trees to our local track vec
                 for (Event::TkrTrackVec::iterator trkItr = tree->begin(); trkItr != tree->end(); trkItr++)
-		  {
+          {
                     trackVec.push_back(*trkItr);
                   }
               }
@@ -1690,27 +1691,27 @@ StatusCode TkrValsTool::calculate()
             Tkr_2_ydir       = t2.y();
             Tkr_2_zdir       = t2.z();
 
-		// We must propagate the track to the mid-point in the radiator above this layer
-		// This is to include the most important piece of the multiple scatterers
+        // We must propagate the track to the mid-point in the radiator above this layer
+        // This is to include the most important piece of the multiple scatterers
          const Event::TkrTrackParams& Tkr_2_Cov 
                       = track_2->front()->getTrackParams(Event::TkrTrackHit::SMOOTHED);
 
-	     plane = m_tkrGeom->getPlane(track_2->front()->getTkrId());
+         plane = m_tkrGeom->getPlane(track_2->front()->getTkrId());
          layer = m_tkrGeom->getLayer(plane);
          z_conv = m_tkrGeom->getConvZ(layer);
-		 float sv2 = (z_conv - x2.z())/ t2.z();
-		 if(layer < 6) sv1 += .3/t2.z();
-		 else          sv1 += .05/t2.z();
+         float sv2 = (z_conv - x2.z())/ t2.z();
+         if(layer < 6) sv1 += .3/t2.z();
+         else          sv1 += .05/t2.z();
 
-		 convParams = Tkr_2_Cov;
+         convParams = Tkr_2_Cov;
 
-		 if (m_tkrGeom->isTopPlaneInLayer(plane)) {
+         if (m_tkrGeom->isTopPlaneInLayer(plane)) {
          // Propagate the TkrParams to the vertex location
              m_G4PropTool->setStepStart(Tkr_2_Cov, x2.z(), (sv2 < 0));
              m_G4PropTool->step(fabs(sv1));
              convParams = m_G4PropTool->getTrackParams(fabs(sv2), Tkr_2_ConEne, (sv1 < 0));
              double extraRadLen = m_G4PropTool->getRadLength();
-		 }
+         }
 
 
             float Tkr_2_SxxC         = convParams.getxSlpxSlp();
@@ -1937,15 +1938,36 @@ StatusCode TkrValsTool::calculate()
         // hate to do this, but we need ERecon
         // Recover pointer to CalEventEnergy info 
         double CAL_EnergyCorr = 0.0;
+
+        // We want to look up the CalEventEnergy information
+        Event::CalEventEnergy* calEventEnergy = 0;
+
 #ifdef PRE_CALMOD
         Event::CalEventEnergy* calEventEnergy = 
             SmartDataPtr<Event::CalEventEnergy>(m_pEventSvc, EventModel::CalRecon::CalEventEnergy);
 #else
-        Event::CalEventEnergyCol * calEventEnergyCol = 
-            SmartDataPtr<Event::CalEventEnergyCol>(m_pEventSvc, EventModel::CalRecon::CalEventEnergyCol);
-        Event::CalEventEnergy * calEventEnergy = 0 ;
-        if ((calEventEnergyCol!=0)&&(!calEventEnergyCol->empty()))
-            calEventEnergy = calEventEnergyCol->front() ;
+        // Retrieve the information on the CAL cluster(s)
+        SmartDataPtr<Event::CalClusterMap> calClusterMapTds(m_pEventSvc, EventModel::CalRecon::CalClusterMap);
+    
+        if (calClusterMapTds != 0 && !calClusterMapTds->empty() && !calClusterMapTds->getRawClusterVec().empty()) 
+        {
+            // If the cluster map exists and is not empty then get the cluster 
+            Event::CalCluster* cluster = calClusterMapTds->getFront(EventModel::CalRecon::CalRawClusterVec);
+
+            // Now recover the cluster to energy map
+            Event::CalEventEnergyMap* calEventEnergyMap = SmartDataPtr<Event::CalEventEnergyMap>(m_pEventSvc, EventModel::CalRecon::CalEventEnergyMap);
+            if ((calEventEnergyMap!=0)&&(!calEventEnergyMap->empty())) 
+            {
+                Event::CalEventEnergyMap::iterator calMapItr = calEventEnergyMap->find(cluster);
+
+                if (calMapItr != calEventEnergyMap->end())
+                {
+                    Event::CalEventEnergyVec& energyVec = calMapItr->second;
+
+                    if (!energyVec.empty()) calEventEnergy = energyVec.front();
+                }
+            }
+        }
 #endif
         if (calEventEnergy != 0) {
             // Extraction of results from CalValCorrTool in CalRecon... 

@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.139 2013/04/29 09:01:32 kadrlica Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.140 2013/04/29 16:21:09 kadrlica Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -1318,7 +1318,7 @@ StatusCode CalValsTool::calculate()
     SmartDataPtr<Event::CalClusterMap>
       pCalClusterMap(m_pEventSvc,EventModel::CalRecon::CalClusterMap); 
 
-    if(!pCalClusterMap) return sc;
+    if(pCalClusterMap == 0 || pCalClusterMap->empty()) return sc;
 
     Event::CalCluster* uberCluster = (*pCalClusterMap).getUberCluster();
     Event::CalCluster* uber2Cluster = (*pCalClusterMap).getUber2Cluster();
@@ -2771,7 +2771,7 @@ void CalValsTool::zeroVals()
     // This is so zeroing the Cal vals will keep CalEnergyRaw
     SmartDataPtr<Event::CalClusterMap>
       pCalClusterMap(m_pEventSvc,EventModel::CalRecon::CalClusterMap); 
-    if(pCalClusterMap)
+    if(pCalClusterMap != 0 && !pCalClusterMap->empty())
       {
         Event::CalClusterVec rawClusterVec = (*pCalClusterMap).get(EventModel::CalRecon::CalRawClusterVec);
         Event::CalCluster* firstCluster = rawClusterVec.front();
