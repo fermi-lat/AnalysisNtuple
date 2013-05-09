@@ -2,8 +2,9 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/src/TkrValsTool.cxx,v 1.126 2013/02/21 07:34:44 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.131 2013/05/09 18:29:02 lsrea Exp $
 */
+
 //#define PRE_CALMOD 1
 
 // To Do:
@@ -30,6 +31,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/src/TkrV
 #include "Event/Recon/TkrRecon/TkrTree.h"
 #include "Event/Recon/TkrRecon/TkrTrack.h"
 #include "Event/Recon/TkrRecon/TkrVertex.h"
+#include "Event/Recon/CalRecon/CalClusterMap.h"
 #include "Event/Recon/CalRecon/CalEventEnergy.h"
 #include "geometry/Ray.h" 
 
@@ -541,8 +543,7 @@ This is from half-way thru the initial converter to the lowest bi-plane
 in the tracker, whether or not the track actually gets to the end. 
 <tr><td> TkrTwrEdge 
 <td>F<td>   The average distance of the best track from the "edge" of each tray, 
-weighted by radiation lengths traversed. 
-(The edge is a plane halfway between the towers. 
+weighted by radiation lengths traversed. (The edge is a plane halfway between the towers.)
 <tr><td> TkrTrackLength 
 <td>F<td>   Distance between the start of the best track and the grid, along the track axis.    
 <tr><td> Tkr1TwrGap  
@@ -775,30 +776,30 @@ StatusCode TkrValsTool::initialize()
 
     // load up the map
 
-    addItem("TkrNumTracks",   &Tkr_Num_Tracks);
+    addItem("TkrNumTracks",   &Tkr_Num_Tracks, true);
     addItem("TkrSumKalEne",   &Tkr_Sum_KalEne);
     addItem("TkrSumConEne",   &Tkr_Sum_ConEne);
     addItem("TkrEnergy",      &Tkr_Energy);
-    addItem("TkrEnergyCorr",  &Tkr_Energy_Corr);
+    addItem("TkrEnergyCorr",  &Tkr_Energy_Corr, true);
     addItem("TkrHDCount",     &Tkr_HDCount); 
     addItem("TkrTotalHits",   &Tkr_Total_Hits);
     addItem("TkrThinHits",    &Tkr_Thin_Hits);
     addItem("TkrThickHits",   &Tkr_Thick_Hits);
-    addItem("TkrBlankHits",   &Tkr_Blank_Hits);
+    addItem("TkrBlankHits",   &Tkr_Blank_Hits, true);
 
     addItem("TkrRadLength",   &Tkr_RadLength);
-    addItem("TkrTwrEdge",     &Tkr_TwrEdge);
-    addItem("TkrTrackLength", &Tkr_TrackLength);
+    addItem("TkrTwrEdge",     &Tkr_TwrEdge, true);
+    addItem("TkrTrackLength", &Tkr_TrackLength, true);
     addItem("TkrSurplusHCInside", &Tkr_SurplusHCInside);
-    addItem("TkrSurplusHitRatio", &Tkr_SurplusHitRatio);
-    addItem("TkrUpstreamHC",  &Tkr_UpstreamHC);
-    addItem("TkrDispersion", &TkrDispersion);
+    addItem("TkrSurplusHitRatio", &Tkr_SurplusHitRatio, true);
+    addItem("TkrUpstreamHC",  &Tkr_UpstreamHC, true);
+    addItem("TkrDispersion", &TkrDispersion, true);
 
-    addItem("Tkr1Chisq",      &Tkr_1_Chisq);
+    addItem("Tkr1Chisq",      &Tkr_1_Chisq, true);
     addItem("Tkr1FirstChisq", &Tkr_1_FirstChisq);
     addItem("Tkr1Hits",       &Tkr_1_Hits);
     addItem("Tkr1FirstHits",  &Tkr_1_FirstHits);
-    addItem("Tkr1FirstLayer", &Tkr_1_FirstLayer);
+    addItem("Tkr1FirstLayer", &Tkr_1_FirstLayer, true);
     addItem("Tkr1LastLayer",  &Tkr_1_LastLayer);
     addItem("Tkr1DifHits",    &Tkr_1_DifHits);
 
@@ -815,7 +816,7 @@ StatusCode TkrValsTool::initialize()
     addItem("Tkr1WideFrac",   &Tkr_1_WideFrac);
     addItem("Tkr1WiderFrac",  &Tkr_1_WiderFrac);
 
-    addItem("Tkr1Gaps",       &Tkr_1_Gaps);
+    addItem("Tkr1Gaps",       &Tkr_1_Gaps, true);
     addItem("Tkr1FirstGapPlane",&Tkr_1_FirstGapPlane);
     addItem("Tkr1XGap",       &Tkr_1_GapX);
     addItem("Tkr1YGap",       &Tkr_1_GapY);
@@ -824,39 +825,39 @@ StatusCode TkrValsTool::initialize()
     addItem("Tkr1Qual",       &Tkr_1_Qual);
     addItem("Tkr1Type",       &Tkr_1_Type);
     addItem("Tkr1TwrEdge",    &Tkr_1_TwrEdge);
-    addItem("Tkr1PrjTwrEdge", &Tkr_1_PrjTwrEdge);
-    addItem("Tkr1DieEdge",    &Tkr_1_DieEdge);
-    addItem("Tkr1TwrGap",     &Tkr_1_TwrGap);
+    addItem("Tkr1PrjTwrEdge", &Tkr_1_PrjTwrEdge, true);
+    addItem("Tkr1DieEdge",    &Tkr_1_DieEdge,    true);
+    addItem("Tkr1TwrGap",     &Tkr_1_TwrGap,     true);
 
-    addItem("Tkr1KalEne",     &Tkr_1_KalEne);
+    addItem("Tkr1KalEne",     &Tkr_1_KalEne, true);
     addItem("Tkr1ConEne",     &Tkr_1_ConEne);
     addItem("Tkr1KalThetaMS", &Tkr_1_KalThetaMS);
     addItem("Tkr1RangeEne",   &Tkr_1_RangeEne);
 
-    addItem("Tkr1XDir",       &Tkr_1_xdir);
-    addItem("Tkr1YDir",       &Tkr_1_ydir);
-    addItem("Tkr1ZDir",       &Tkr_1_zdir);
-    addItem("Tkr1Phi",        &Tkr_1_Phi);
+    addItem("Tkr1XDir",       &Tkr_1_xdir, true);
+    addItem("Tkr1YDir",       &Tkr_1_ydir, true);
+    addItem("Tkr1ZDir",       &Tkr_1_zdir, true);
+    addItem("Tkr1Phi",        &Tkr_1_Phi,  true);
     addItem("Tkr1Theta",      &Tkr_1_Theta);
-    addItem("Tkr1X0",         &Tkr_1_x0);
-    addItem("Tkr1Y0",         &Tkr_1_y0);
-    addItem("Tkr1Z0",         &Tkr_1_z0);
+    addItem("Tkr1X0",         &Tkr_1_x0, true);
+    addItem("Tkr1Y0",         &Tkr_1_y0, true);
+    addItem("Tkr1Z0",         &Tkr_1_z0, true);
 
     addItem("Tkr1ThetaErr",   &Tkr_1_ThetaErr);
     addItem("Tkr1PhiErr",     &Tkr_1_PhiErr);
     addItem("Tkr1ErrAsym",    &Tkr_1_ErrAsym);
-    addItem("Tkr1CovDet",     &Tkr_1_CovDet);
+    addItem("Tkr1CovDet",     &Tkr_1_CovDet, true);
     addItem("Tkr1SXX",        &Tkr_1_Sxx);
     addItem("Tkr1SXY",        &Tkr_1_Sxy);
     addItem("Tkr1SYY",        &Tkr_1_Syy);
-	addItem("Tkr1SXXC",       &Tkr_1_SxxC);
-	addItem("Tkr1SYYC",       &Tkr_1_SyyC);
-	addItem("Tkr1SXYC",       &Tkr_1_SxyC);
-	addItem("Tkr1CovDetC",    &Tkr_1_CovDetC);
+    addItem("Tkr1SXXC",       &Tkr_1_SxxC, true);
+    addItem("Tkr1SYYC",       &Tkr_1_SyyC, true);
+    addItem("Tkr1SXYC",       &Tkr_1_SxyC, true);
+    addItem("Tkr1CovDetC",    &Tkr_1_CovDetC, true);
 
-    addItem("Tkr1ToTFirst",   &Tkr_1_ToTFirst);
+    addItem("Tkr1ToTFirst",   &Tkr_1_ToTFirst, true);
     addItem("Tkr1ToTAve",     &Tkr_1_ToTAve);
-    addItem("Tkr1ToTTrAve",   &Tkr_1_ToTTrAve);
+    addItem("Tkr1ToTTrAve",   &Tkr_1_ToTTrAve, true);
     addItem("Tkr1ToTAsym",    &Tkr_1_ToTAsym);
     addItem("Tkr1ChisqAsym",  &Tkr_1_ChisqAsym);
     addItem("Tkr1SSDVeto",    &Tkr_1_SSDVeto, true);
@@ -876,8 +877,8 @@ StatusCode TkrValsTool::initialize()
         addItem("TkrVetoTruncated",  &Tkr_1_VetoTruncated);
     }
 
-    addItem("Tkr1CoreHC",     &Tkr_1_CoreHC);
-    addItem("Tkr1LATEdge",    &Tkr_1_LATEdge);
+    addItem("Tkr1CoreHC",     &Tkr_1_CoreHC,  true);
+    addItem("Tkr1LATEdge",    &Tkr_1_LATEdge, true);
 
     addItem("Tkr2Chisq",      &Tkr_2_Chisq);
     addItem("Tkr2FirstChisq", &Tkr_2_FirstChisq);
@@ -931,7 +932,7 @@ StatusCode TkrValsTool::initialize()
     addItem("Tkr1XCntr",&Tkr1XCntr);
     addItem("Tkr1YCntr",&Tkr1YCntr);
     addItem("Tkr1ZCntr",&Tkr1ZCntr);
-    addItem("Tkr1CntrDistTwrCntr",&Tkr1CntrDistTwrCntr);
+    addItem("Tkr1CntrDistTwrCntr",&Tkr1CntrDistTwrCntr, true);
 //     addItem("Tkr1XCntrTwrCntr",&Tkr1XCntrTwrCntr);
 //     addItem("Tkr1XCntrTwrEdge",&Tkr1XCntrTwrEdge);
 //     addItem("Tkr1XCntrTwrEdgeSigned",&Tkr1XCntrTwrEdgeSigned);
@@ -945,8 +946,8 @@ StatusCode TkrValsTool::initialize()
 
   addItem("Tkr1LengthInTkr",   &Tkr1_length_tkr);
   addItem("Tkr1LengthInTkrGap",   &Tkr1_length_tkrgap);
-  addItem("Tkr1LengthConvInTkr",   &Tkr1_length_conv_tkr);
-  addItem("Tkr1LengthConvInTkrGap",   &Tkr1_length_conv_tkrgap);
+  addItem("Tkr1LengthConvInTkr",   &Tkr1_length_conv_tkr, true);
+  addItem("Tkr1LengthConvInTkrGap",   &Tkr1_length_conv_tkrgap, true);
   addItem("Tkr1LengthInCal",   &Tkr1_length_cal);
   addItem("Tkr1LengthInCalGap",   &Tkr1_length_calgap);
 
@@ -1855,15 +1856,36 @@ StatusCode TkrValsTool::calculate()
         // hate to do this, but we need ERecon
         // Recover pointer to CalEventEnergy info 
         double CAL_EnergyCorr = 0.0;
+
+        // We want to look up the CalEventEnergy information
+        Event::CalEventEnergy* calEventEnergy = 0;
+
 #ifdef PRE_CALMOD
         Event::CalEventEnergy* calEventEnergy = 
             SmartDataPtr<Event::CalEventEnergy>(m_pEventSvc, EventModel::CalRecon::CalEventEnergy);
 #else
-        Event::CalEventEnergyCol * calEventEnergyCol = 
-            SmartDataPtr<Event::CalEventEnergyCol>(m_pEventSvc, EventModel::CalRecon::CalEventEnergyCol);
-        Event::CalEventEnergy * calEventEnergy = 0 ;
-        if ((calEventEnergyCol!=0)&&(!calEventEnergyCol->empty()))
-            calEventEnergy = calEventEnergyCol->front() ;
+        // Retrieve the information on the CAL cluster(s)
+        SmartDataPtr<Event::CalClusterMap> calClusterMapTds(m_pEventSvc, EventModel::CalRecon::CalClusterMap);
+    
+        if (calClusterMapTds != 0 && !calClusterMapTds->empty() && !calClusterMapTds->getRawClusterVec().empty()) 
+        {
+            // If the cluster map exists and is not empty then get the cluster 
+            Event::CalCluster* cluster = calClusterMapTds->getFront(EventModel::CalRecon::CalRawClusterVec);
+
+            // Now recover the cluster to energy map
+            Event::CalEventEnergyMap* calEventEnergyMap = SmartDataPtr<Event::CalEventEnergyMap>(m_pEventSvc, EventModel::CalRecon::CalEventEnergyMap);
+            if ((calEventEnergyMap!=0)&&(!calEventEnergyMap->empty())) 
+            {
+                Event::CalEventEnergyMap::iterator calMapItr = calEventEnergyMap->find(cluster);
+
+                if (calMapItr != calEventEnergyMap->end())
+                {
+                    Event::CalEventEnergyVec& energyVec = calMapItr->second;
+
+                    if (!energyVec.empty()) calEventEnergy = energyVec.front();
+                }
+            }
+        }
 #endif
         if (calEventEnergy != 0) {
             // Extraction of results from CalValCorrTool in CalRecon... 
