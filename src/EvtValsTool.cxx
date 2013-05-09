@@ -3,7 +3,7 @@
 @brief Calculates the "Event" analysis variables from the other ntuple variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.63 2013/04/29 09:01:33 kadrlica Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.64 2013/04/29 17:03:42 kadrlica Exp $
 */
 
 #include "ValBase.h"
@@ -1254,7 +1254,7 @@ double EvtValsTool::GetEnergyUB2Correction(int method, int tkr1firstlayer, doubl
   double emean = 1;
 
   int i,j;
-  double loge,myval;
+  double loge;
   for(i=0;i<UB2zdirn;++i)
     {
       if(method<2)

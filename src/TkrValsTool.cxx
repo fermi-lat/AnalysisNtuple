@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.129 2013/04/29 17:03:42 kadrlica Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/src/TkrValsTool.cxx,v 1.126 2013/02/21 07:34:44 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -30,7 +30,6 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.129
 #include "Event/Recon/TkrRecon/TkrTree.h"
 #include "Event/Recon/TkrRecon/TkrTrack.h"
 #include "Event/Recon/TkrRecon/TkrVertex.h"
-#include "Event/Recon/CalRecon/CalClusterMap.h"
 #include "Event/Recon/CalRecon/CalEventEnergy.h"
 #include "geometry/Ray.h" 
 
@@ -115,9 +114,8 @@ private:
     IPropagatorSvc* m_propSvc;
 
     IPropagator* m_G4PropTool; 
-    /// AcdValsTool for Veto Track Number
-    IValsTool* m_pAcdTool;
-  IValsTool* m_pTkrHitTool;
+ 
+    IValsTool* m_pTkrHitTool;
 
     // properties
     double m_minVetoError;
@@ -206,10 +204,10 @@ private:
     float Tkr_1_PhiErr;
     float Tkr_1_ErrAsym;
     float Tkr_1_CovDet;
-    float Tkr_1_SxxC; 
-    float Tkr_1_SyyC;
-    float Tkr_1_SxyC;
-    float Tkr_1_CovDetC;
+	float Tkr_1_SxxC; 
+	float Tkr_1_SyyC;
+	float Tkr_1_SxyC;
+	float Tkr_1_CovDetC;
     float Tkr_1_ToTFirst;
     float Tkr_1_ToTAve;
     float Tkr_1_ToTTrAve;
@@ -281,15 +279,6 @@ private:
 
     float Tkr_2TkrAngle;
     float Tkr_2TkrHDoca;
-
-    float Tkr_Veto_SSDVeto;
-    float Tkr_Veto_Chisq;
-
-    float Tkr_Veto_Hits;
-    float Tkr_Veto_FirstLayer;
-
-    float Tkr_Veto_KalEne; 
-    float Tkr_Veto_ConEne; 
 
   float Tkr1XCntr;
   float Tkr1YCntr;
@@ -552,7 +541,8 @@ This is from half-way thru the initial converter to the lowest bi-plane
 in the tracker, whether or not the track actually gets to the end. 
 <tr><td> TkrTwrEdge 
 <td>F<td>   The average distance of the best track from the "edge" of each tray, 
-weighted by radiation lengths traversed. (The edge is a plane halfway between the towers.)
+weighted by radiation lengths traversed. 
+(The edge is a plane halfway between the towers. 
 <tr><td> TkrTrackLength 
 <td>F<td>   Distance between the start of the best track and the grid, along the track axis.    
 <tr><td> Tkr1TwrGap  
@@ -683,24 +673,6 @@ Any gaps above the last plane are not counted. (This may change soon.)
 <td>I<td>   Number of missing clusters close to a dead plane
 <tr><td> TkrVetoTruncated
 <td>I<td>   Number of missing clusters close to a truncated region
-<tr><td> TkrVSSDVeto
-<td>F<td>   Same as Tkr1SSDVeto, but for the veto track 
-<tr><td> TkrVChisq
-<td>F<td>   Same as Tkr1Chisq, but for the veto track
-<tr><td> TkrVHits
-<td>F<td>   Same as Tkr1Hits, but for the veto track
-<tr><td> TkrVFirstLayer
-<td>F<td>   Same as Tkr1FirstLayer, but for the veto track
-<tr><td> TkrVKalEne
-<td>F<td>   Same as Tkr1KalEne, but for the veto track
-<tr><td> TkrVConEne
-<td>F<td>   Same as Tkr1ConEne, but for the veto track
-
-<tr><td> TkrCovDetC
-<td>F<td>   Determinant of the error matrix, propagated into the preceding converter
-<tr><td> TkrCovDetS[XX/YY/XY]C
-<td>F<td>   Elements of the error matrix, propagated into the preceding converter
-
 </table>
 
 */
@@ -758,13 +730,6 @@ StatusCode TkrValsTool::initialize()
           log << MSG::ERROR << "Unable to find tool: " "TkrHitValsTool" << endreq;
           return sc;
         }
-        m_pAcdTool = 0;
-        sc = toolSvc->retrieveTool("AcdValsTool", m_pAcdTool);
-        if( sc.isFailure() ) {
-            log << MSG::ERROR << "Unable to find tool: " "AcdValsTool" << endreq;
-            return sc;
-        }
-
     } else {
         return fail;
     }
@@ -810,30 +775,30 @@ StatusCode TkrValsTool::initialize()
 
     // load up the map
 
-    addItem("TkrNumTracks",   &Tkr_Num_Tracks, true);
+    addItem("TkrNumTracks",   &Tkr_Num_Tracks);
     addItem("TkrSumKalEne",   &Tkr_Sum_KalEne);
     addItem("TkrSumConEne",   &Tkr_Sum_ConEne);
     addItem("TkrEnergy",      &Tkr_Energy);
-    addItem("TkrEnergyCorr",  &Tkr_Energy_Corr, true);
+    addItem("TkrEnergyCorr",  &Tkr_Energy_Corr);
     addItem("TkrHDCount",     &Tkr_HDCount); 
     addItem("TkrTotalHits",   &Tkr_Total_Hits);
     addItem("TkrThinHits",    &Tkr_Thin_Hits);
     addItem("TkrThickHits",   &Tkr_Thick_Hits);
-    addItem("TkrBlankHits",   &Tkr_Blank_Hits, true);
+    addItem("TkrBlankHits",   &Tkr_Blank_Hits);
 
     addItem("TkrRadLength",   &Tkr_RadLength);
-    addItem("TkrTwrEdge",     &Tkr_TwrEdge, true);
-    addItem("TkrTrackLength", &Tkr_TrackLength, true);
+    addItem("TkrTwrEdge",     &Tkr_TwrEdge);
+    addItem("TkrTrackLength", &Tkr_TrackLength);
     addItem("TkrSurplusHCInside", &Tkr_SurplusHCInside);
-    addItem("TkrSurplusHitRatio", &Tkr_SurplusHitRatio, true);
-    addItem("TkrUpstreamHC",  &Tkr_UpstreamHC, true);
-    addItem("TkrDispersion", &TkrDispersion, true);
+    addItem("TkrSurplusHitRatio", &Tkr_SurplusHitRatio);
+    addItem("TkrUpstreamHC",  &Tkr_UpstreamHC);
+    addItem("TkrDispersion", &TkrDispersion);
 
-    addItem("Tkr1Chisq",      &Tkr_1_Chisq, true);
+    addItem("Tkr1Chisq",      &Tkr_1_Chisq);
     addItem("Tkr1FirstChisq", &Tkr_1_FirstChisq);
     addItem("Tkr1Hits",       &Tkr_1_Hits);
     addItem("Tkr1FirstHits",  &Tkr_1_FirstHits);
-    addItem("Tkr1FirstLayer", &Tkr_1_FirstLayer, true);
+    addItem("Tkr1FirstLayer", &Tkr_1_FirstLayer);
     addItem("Tkr1LastLayer",  &Tkr_1_LastLayer);
     addItem("Tkr1DifHits",    &Tkr_1_DifHits);
 
@@ -850,7 +815,7 @@ StatusCode TkrValsTool::initialize()
     addItem("Tkr1WideFrac",   &Tkr_1_WideFrac);
     addItem("Tkr1WiderFrac",  &Tkr_1_WiderFrac);
 
-    addItem("Tkr1Gaps",       &Tkr_1_Gaps, true);
+    addItem("Tkr1Gaps",       &Tkr_1_Gaps);
     addItem("Tkr1FirstGapPlane",&Tkr_1_FirstGapPlane);
     addItem("Tkr1XGap",       &Tkr_1_GapX);
     addItem("Tkr1YGap",       &Tkr_1_GapY);
@@ -859,42 +824,42 @@ StatusCode TkrValsTool::initialize()
     addItem("Tkr1Qual",       &Tkr_1_Qual);
     addItem("Tkr1Type",       &Tkr_1_Type);
     addItem("Tkr1TwrEdge",    &Tkr_1_TwrEdge);
-    addItem("Tkr1PrjTwrEdge", &Tkr_1_PrjTwrEdge, true);
-    addItem("Tkr1DieEdge",    &Tkr_1_DieEdge,    true);
-    addItem("Tkr1TwrGap",     &Tkr_1_TwrGap,     true);
+    addItem("Tkr1PrjTwrEdge", &Tkr_1_PrjTwrEdge);
+    addItem("Tkr1DieEdge",    &Tkr_1_DieEdge);
+    addItem("Tkr1TwrGap",     &Tkr_1_TwrGap);
 
-    addItem("Tkr1KalEne",     &Tkr_1_KalEne, true);
+    addItem("Tkr1KalEne",     &Tkr_1_KalEne);
     addItem("Tkr1ConEne",     &Tkr_1_ConEne);
     addItem("Tkr1KalThetaMS", &Tkr_1_KalThetaMS);
     addItem("Tkr1RangeEne",   &Tkr_1_RangeEne);
 
-    addItem("Tkr1XDir",       &Tkr_1_xdir, true);
-    addItem("Tkr1YDir",       &Tkr_1_ydir, true);
-    addItem("Tkr1ZDir",       &Tkr_1_zdir, true);
-    addItem("Tkr1Phi",        &Tkr_1_Phi,  true);
+    addItem("Tkr1XDir",       &Tkr_1_xdir);
+    addItem("Tkr1YDir",       &Tkr_1_ydir);
+    addItem("Tkr1ZDir",       &Tkr_1_zdir);
+    addItem("Tkr1Phi",        &Tkr_1_Phi);
     addItem("Tkr1Theta",      &Tkr_1_Theta);
-    addItem("Tkr1X0",         &Tkr_1_x0, true);
-    addItem("Tkr1Y0",         &Tkr_1_y0, true);
-    addItem("Tkr1Z0",         &Tkr_1_z0, true);
+    addItem("Tkr1X0",         &Tkr_1_x0);
+    addItem("Tkr1Y0",         &Tkr_1_y0);
+    addItem("Tkr1Z0",         &Tkr_1_z0);
 
     addItem("Tkr1ThetaErr",   &Tkr_1_ThetaErr);
     addItem("Tkr1PhiErr",     &Tkr_1_PhiErr);
     addItem("Tkr1ErrAsym",    &Tkr_1_ErrAsym);
-    addItem("Tkr1CovDet",     &Tkr_1_CovDet, true);
+    addItem("Tkr1CovDet",     &Tkr_1_CovDet);
     addItem("Tkr1SXX",        &Tkr_1_Sxx);
     addItem("Tkr1SXY",        &Tkr_1_Sxy);
     addItem("Tkr1SYY",        &Tkr_1_Syy);
-    addItem("Tkr1SXXC",       &Tkr_1_SxxC, true);
-    addItem("Tkr1SYYC",       &Tkr_1_SyyC, true);
-    addItem("Tkr1SXYC",       &Tkr_1_SxyC, true);
-    addItem("Tkr1CovDetC",    &Tkr_1_CovDetC, true);
+	addItem("Tkr1SXXC",       &Tkr_1_SxxC);
+	addItem("Tkr1SYYC",       &Tkr_1_SyyC);
+	addItem("Tkr1SXYC",       &Tkr_1_SxyC);
+	addItem("Tkr1CovDetC",    &Tkr_1_CovDetC);
 
-    addItem("Tkr1ToTFirst",   &Tkr_1_ToTFirst, true);
+    addItem("Tkr1ToTFirst",   &Tkr_1_ToTFirst);
     addItem("Tkr1ToTAve",     &Tkr_1_ToTAve);
-    addItem("Tkr1ToTTrAve",   &Tkr_1_ToTTrAve, true);
+    addItem("Tkr1ToTTrAve",   &Tkr_1_ToTTrAve);
     addItem("Tkr1ToTAsym",    &Tkr_1_ToTAsym);
     addItem("Tkr1ChisqAsym",  &Tkr_1_ChisqAsym);
-    addItem("Tkr1SSDVeto",    &Tkr_1_SSDVeto,  true);
+    addItem("Tkr1SSDVeto",    &Tkr_1_SSDVeto, true);
     addItem("TkrPlaneCrossed",  &Tkr_1_VetoPlaneCrossed);
 
     if(m_enableVetoDiagnostics) {
@@ -911,8 +876,8 @@ StatusCode TkrValsTool::initialize()
         addItem("TkrVetoTruncated",  &Tkr_1_VetoTruncated);
     }
 
-    addItem("Tkr1CoreHC",     &Tkr_1_CoreHC,  true);
-    addItem("Tkr1LATEdge",    &Tkr_1_LATEdge, true);
+    addItem("Tkr1CoreHC",     &Tkr_1_CoreHC);
+    addItem("Tkr1LATEdge",    &Tkr_1_LATEdge);
 
     addItem("Tkr2Chisq",      &Tkr_2_Chisq);
     addItem("Tkr2FirstChisq", &Tkr_2_FirstChisq);
@@ -963,18 +928,10 @@ StatusCode TkrValsTool::initialize()
     addItem("Tkr2TkrAngle",   &Tkr_2TkrAngle); 
     addItem("Tkr2TkrHDoca",   &Tkr_2TkrHDoca); 
 
-    addItem("TkrVSSDVeto",    &Tkr_Veto_SSDVeto); 
-    addItem("TkrVChisq",      &Tkr_Veto_Chisq); 
-
-    addItem("TkrVHits",       &Tkr_Veto_Hits); 
-    addItem("TkrVFirstLayer", &Tkr_Veto_FirstLayer); 
-    addItem("TkrVKalEne",     &Tkr_Veto_KalEne); 
-    addItem("TkrVConEne",     &Tkr_Veto_ConEne); 
-
     addItem("Tkr1XCntr",&Tkr1XCntr);
     addItem("Tkr1YCntr",&Tkr1YCntr);
     addItem("Tkr1ZCntr",&Tkr1ZCntr);
-    addItem("Tkr1CntrDistTwrCntr",&Tkr1CntrDistTwrCntr, true);
+    addItem("Tkr1CntrDistTwrCntr",&Tkr1CntrDistTwrCntr);
 //     addItem("Tkr1XCntrTwrCntr",&Tkr1XCntrTwrCntr);
 //     addItem("Tkr1XCntrTwrEdge",&Tkr1XCntrTwrEdge);
 //     addItem("Tkr1XCntrTwrEdgeSigned",&Tkr1XCntrTwrEdgeSigned);
@@ -988,8 +945,8 @@ StatusCode TkrValsTool::initialize()
 
   addItem("Tkr1LengthInTkr",   &Tkr1_length_tkr);
   addItem("Tkr1LengthInTkrGap",   &Tkr1_length_tkrgap);
-  addItem("Tkr1LengthConvInTkr",   &Tkr1_length_conv_tkr, true);
-  addItem("Tkr1LengthConvInTkrGap",   &Tkr1_length_conv_tkrgap, true);
+  addItem("Tkr1LengthConvInTkr",   &Tkr1_length_conv_tkr);
+  addItem("Tkr1LengthConvInTkrGap",   &Tkr1_length_conv_tkrgap);
   addItem("Tkr1LengthInCal",   &Tkr1_length_cal);
   addItem("Tkr1LengthInCalGap",   &Tkr1_length_calgap);
 
@@ -1061,21 +1018,21 @@ StatusCode TkrValsTool::calculate()
 
     // assemble the list of all tracks for now 
     // later, deal separately with Standard and CR
-    // **********************
+	// **********************
 
-    // The above comments are preserved for historical purposes. As of the typing of this comment
-    // (circa GR 20-08-02) there are two collections of tracks in the TDS, one for cosmic ray tracks and
-    // one for gamma tracks. We would like to count the number of gamma tracks total in the event,
-    // we can easily do that by recovering the track collection and looking at its size. However,
-    // in the Tree Based pat rec we cannot assume the first track in the collection is the "best" 
-    // track and will need to recover those tracks from the TkrTree collection. 
-    SmartDataPtr<Event::TkrTrackCol> trackCol(m_pEventSvc, EventModel::TkrRecon::TkrTrackCol);
+	// The above comments are preserved for historical purposes. As of the typing of this comment
+	// (circa GR 20-08-02) there are two collections of tracks in the TDS, one for cosmic ray tracks and
+	// one for gamma tracks. We would like to count the number of gamma tracks total in the event,
+	// we can easily do that by recovering the track collection and looking at its size. However,
+	// in the Tree Based pat rec we cannot assume the first track in the collection is the "best" 
+	// track and will need to recover those tracks from the TkrTree collection. 
+	SmartDataPtr<Event::TkrTrackCol> trackCol(m_pEventSvc, EventModel::TkrRecon::TkrTrackCol);
 
-    // Actually, if no tracks then we should simply exit right now
-    if (!trackCol || trackCol->empty()) return sc;
+	// Actually, if no tracks then we should simply exit right now
+	if (!trackCol || trackCol->empty()) return sc;
 
-    // Now set the number of tracks in the event
-    Tkr_Num_Tracks = trackCol->size();
+	// Now set the number of tracks in the event
+	Tkr_Num_Tracks = trackCol->size();
 
     //Recover EventHeader Pointer
     //SmartDataPtr<Event::EventHeader> pEvent(m_pEventSvc, EventModel::EventHeader);
@@ -1088,36 +1045,36 @@ StatusCode TkrValsTool::calculate()
 
     // assemble the list of all tracks for now 
     // later, deal separately with Standard and CR
-    // **********************
-    // What should really happen here is that we extract the TkrTree collection from the TDS,
-    // take the first tree on that list and then get the tracks from there
-    SmartDataPtr<Event::TkrTreeCol> treeCol(m_pEventSvc, EventModel::TkrRecon::TkrTreeCol);
+	// **********************
+	// What should really happen here is that we extract the TkrTree collection from the TDS,
+	// take the first tree on that list and then get the tracks from there
+	SmartDataPtr<Event::TkrTreeCol> treeCol(m_pEventSvc, EventModel::TkrRecon::TkrTreeCol);
 
-    // Make a local track container in the event we have no trees
-    Event::TkrTrackVec trackVec;
+	// Make a local track container in the event we have no trees
+	Event::TkrTrackVec trackVec;
 
-    // So, set the default to point at it
-    Event::TkrTrackVec* pTracks = &trackVec;
+	// So, set the default to point at it
+	Event::TkrTrackVec* pTracks = &trackVec;
 
-    // If no trees then we will copy pointers from the TDS Track col to the local vector
-    if (!treeCol || treeCol->empty())
-    {
-        for(Event::TkrTrackCol::iterator trkItr = trackCol->begin(); trkItr != trackCol->end(); trkItr++)
-        {
-            trackVec.push_back(*trkItr);
-        }
-    }
-    // Otherwise we simply point to the Tree Track vector
-    else
-    {
+	// If no trees then we will copy pointers from the TDS Track col to the local vector
+	if (!treeCol || treeCol->empty())
+	{
+		for(Event::TkrTrackCol::iterator trkItr = trackCol->begin(); trkItr != trackCol->end(); trkItr++)
+		{
+			trackVec.push_back(*trkItr);
+		}
+	}
+	// Otherwise we simply point to the Tree Track vector
+	else
+	{
 
-    Event::TkrTree*     bestTree = treeCol->front();
+	Event::TkrTree*     bestTree = treeCol->front();
 
-        for (Event::TkrTrackVec::iterator trkItr = bestTree->begin(); trkItr != bestTree->end(); trkItr++)
-        {
-            trackVec.push_back(*trkItr);
-    }
-    }
+		for (Event::TkrTrackVec::iterator trkItr = bestTree->begin(); trkItr != bestTree->end(); trkItr++)
+		{
+		    trackVec.push_back(*trkItr);
+	}
+	}
 
     SmartDataPtr<Event::TkrVertexCol>  
         pVerts(m_pEventSvc,EventModel::TkrRecon::TkrVertexCol);
@@ -1175,10 +1132,10 @@ StatusCode TkrValsTool::calculate()
         Tkr_1_Theta       = (-t1).theta();
 
          // First we capture the cov. information at the head of the track
-         const Event::TkrTrackParams& Tkr_1_Cov 
+		 const Event::TkrTrackParams& Tkr_1_Cov 
             = track_1->front()->getTrackParams(Event::TkrTrackHit::SMOOTHED);
 
-        Tkr_1_Sxx          = Tkr_1_Cov.getxSlpxSlp();
+		Tkr_1_Sxx          = Tkr_1_Cov.getxSlpxSlp();
         Tkr_1_Sxy          = Tkr_1_Cov.getxSlpySlp();
         Tkr_1_Syy          = Tkr_1_Cov.getySlpySlp();
         double sinPhi     = sin(Tkr_1_Phi);
@@ -1192,37 +1149,37 @@ StatusCode TkrValsTool::calculate()
             sqrt(std::max(0.0f,Tkr_1_Sxx*Tkr_1_Syy-Tkr_1_Sxy*Tkr_1_Sxy))*
             Tkr_1_zdir*Tkr_1_zdir;
 
-        // We must propagate the track to the mid-point in the radiator above this layer
-        // This is to include the most important piece of the multiple scatterers
-         int plane = m_tkrGeom->getPlane(track_1->front()->getTkrId());
+		// We must propagate the track to the mid-point in the radiator above this layer
+		// This is to include the most important piece of the multiple scatterers
+	     int plane = m_tkrGeom->getPlane(track_1->front()->getTkrId());
          int layer = m_tkrGeom->getLayer(plane);
          float z_conv = m_tkrGeom->getConvZ(layer);
-         float sv1 = (z_conv - x1.z())/ t1.z();
-         if(layer < 6) sv1 += .3/t1.z();
-         else          sv1 += .05/t1.z();
+		 float sv1 = (z_conv - x1.z())/ t1.z();
+		 if(layer < 6) sv1 += .3/t1.z();
+		 else          sv1 += .05/t1.z();
 
-         Event::TkrTrackParams convParams = Tkr_1_Cov;
+		 Event::TkrTrackParams convParams = Tkr_1_Cov;
 
-        // if (m_tkrGeom->isTopPlaneInLayer(plane)){do this for all events regardless of top plane
+		// if (m_tkrGeom->isTopPlaneInLayer(plane)){do this for all events regardless of top plane
          // Propagate the TkrParams to the middle of converter
              m_G4PropTool->setStepStart(Tkr_1_Cov, x1.z(), (sv1 < 0));
              m_G4PropTool->step(fabs(sv1));
              convParams = m_G4PropTool->getTrackParams(fabs(sv1), Tkr_1_ConEne);
              double extraRadLen = m_G4PropTool->getRadLength();
-        // }
+		// }
 
-        // Energy correction term
-             double eventEnergy = Tkr_1_ConEne > 5000. ? 10000. : Tkr_1_ConEne*2; 
-         double eFactor = pow((eventEnergy / 100), .36); 
+	    // Energy correction term
+			 double eventEnergy = Tkr_1_ConEne > 5000. ? 10000. : Tkr_1_ConEne*2; 
+		 double eFactor = pow((eventEnergy / 100), .36); 
 
         Tkr_1_SxxC         = convParams.getxSlpxSlp() * eFactor;
         Tkr_1_SxyC         = convParams.getxSlpySlp() * eFactor;
         Tkr_1_SyyC         = convParams.getySlpySlp() * eFactor;
 
-        // Add in the QED piece:  constant (3.0) taken from QED angle plots for 68% containment
-        double QED_angleSq = (3.0/(2.*Tkr_1_ConEne)) * (3.0/(2.*Tkr_1_ConEne));
+		// Add in the QED piece:  constant (3.0) taken from QED angle plots for 68% containment
+		double QED_angleSq = (3.0/(2.*Tkr_1_ConEne)) * (3.0/(2.*Tkr_1_ConEne));
 
-        double slopeX    = t1.x()/t1.z(); 
+		double slopeX    = t1.x()/t1.z(); 
         double slopeY    = t1.y()/t1.z();
         double norm_term = 1. + slopeX*slopeX + slopeY*slopeY;
 
@@ -1237,7 +1194,7 @@ StatusCode TkrValsTool::calculate()
        Tkr_1_SyyC += QED_angleSq*p44;
        Tkr_1_SxyC += QED_angleSq*p34;
 
-        // The factor of ZDir^3 takes us from slopes to angles (or at least approximately)
+		// The factor of ZDir^3 takes us from slopes to angles (or at least approximately)
         Tkr_1_CovDetC = 
             sqrt(std::max(0.0f,Tkr_1_SxxC*Tkr_1_SyyC-Tkr_1_SxyC*Tkr_1_SxyC))*
             Tkr_1_zdir*Tkr_1_zdir*fabs(Tkr_1_zdir);
@@ -1572,65 +1529,25 @@ StatusCode TkrValsTool::calculate()
         Tkr_1_VetoGapEdge      = (int)floor(m_VetoGapEdge + 0.5);   
         Tkr_1_VetoBadCluster   = (int)floor(m_VetoBadCluster + 0.5);
 
-    // ***************************************************************
-    // At this point we need access to the entire collection of tracks. 
-    // If the source is a pat rec other than Tree Based, then this will already exist
-    // If not, then we need to fill in the remaining tracks.
-    if(treeCol!=0x0) {
+	// ***************************************************************
+	// At this point we need access to the entire collection of tracks. 
+	// If the source is a pat rec other than Tree Based, then this will already exist
+	// If not, then we need to fill in the remaining tracks.
+	if(treeCol!=0x0) {
           if (!treeCol->empty() ){
             // Loop over the remaining trees in the collection
             for(Event::TkrTreeCol::iterator treeItr = treeCol->begin() + 1; treeItr != treeCol->end(); treeItr++)
-          {
+	      {
                 Event::TkrTree* tree = *treeItr;
-          
+	      
                 // Add the tracks associated to these trees to our local track vec
                 for (Event::TkrTrackVec::iterator trkItr = tree->begin(); trkItr != tree->end(); trkItr++)
-          {
+		  {
                     trackVec.push_back(*trkItr);
                   }
               }
           }
         }
-
-        int veto_track_num = -1;
-
-        // Most likely track from AcdValsTool
-        if(m_pAcdTool) {
-            // check that Acd executes before Tkr
-            if(m_loadOrder<m_pAcdTool->getLoadOrder()) {
-                if(m_messageCount<10) {
-                    //std::cout << "TkrValsTool   WARNING "
-                    log << MSG::WARNING
-                        << "AcdValsTool needs to be loaded before TkrValsTool"
-                        << endreq << " to calculate Veto Track quantities" 
-                        << endreq;
-                    m_messageCount++;
-                    if(m_messageCount>=10) {
-                        log << MSG::WARNING
-                            << "Message suppressed after 10 warnings" << endreq;
-                    }
-                }
-            } else {
-                int firstCheck = m_check; 
-                if(m_pAcdTool->getVal("AcdActDistTrackNum", veto_track_num, 
-                    firstCheck).isSuccess()) {
-                        if(veto_track_num >= 0 && veto_track_num < Tkr_Num_Tracks) {
-                            int n = veto_track_num;
-                            const Event::TkrTrack* veto_track =  *(pTracks->begin()+n);
-                            Tkr_Veto_SSDVeto    = SSDEvaluation(veto_track); 
-                            Tkr_Veto_Chisq      = veto_track->getChiSquareSmooth();
-
-                            Tkr_Veto_Hits       = veto_track->getNumFitHits();
-                            Tkr_Veto_FirstLayer = 
-                                m_tkrGeom->getLayer(veto_track->front()->getTkrId());
-
-                            Tkr_Veto_KalEne     = veto_track->getKalEnergy(); 
-                            Tkr_Veto_ConEne     = veto_track->getInitialEnergy(); 
-                        }
-                    }
-            }
-        }
-
         // minimum distance from any edge, measured from the edge of the active area
         double deltaEdge = 0.5*(m_towerPitch - m_tkrGeom->trayWidth()) 
             - m_tkrGeom->siDeadDistance() ;
@@ -1691,27 +1608,27 @@ StatusCode TkrValsTool::calculate()
             Tkr_2_ydir       = t2.y();
             Tkr_2_zdir       = t2.z();
 
-        // We must propagate the track to the mid-point in the radiator above this layer
-        // This is to include the most important piece of the multiple scatterers
+		// We must propagate the track to the mid-point in the radiator above this layer
+		// This is to include the most important piece of the multiple scatterers
          const Event::TkrTrackParams& Tkr_2_Cov 
                       = track_2->front()->getTrackParams(Event::TkrTrackHit::SMOOTHED);
 
-         plane = m_tkrGeom->getPlane(track_2->front()->getTkrId());
+	     plane = m_tkrGeom->getPlane(track_2->front()->getTkrId());
          layer = m_tkrGeom->getLayer(plane);
          z_conv = m_tkrGeom->getConvZ(layer);
-         float sv2 = (z_conv - x2.z())/ t2.z();
-         if(layer < 6) sv1 += .3/t2.z();
-         else          sv1 += .05/t2.z();
+		 float sv2 = (z_conv - x2.z())/ t2.z();
+		 if(layer < 6) sv1 += .3/t2.z();
+		 else          sv1 += .05/t2.z();
 
-         convParams = Tkr_2_Cov;
+		 convParams = Tkr_2_Cov;
 
-         if (m_tkrGeom->isTopPlaneInLayer(plane)) {
+		 if (m_tkrGeom->isTopPlaneInLayer(plane)) {
          // Propagate the TkrParams to the vertex location
              m_G4PropTool->setStepStart(Tkr_2_Cov, x2.z(), (sv2 < 0));
              m_G4PropTool->step(fabs(sv1));
              convParams = m_G4PropTool->getTrackParams(fabs(sv2), Tkr_2_ConEne, (sv1 < 0));
              double extraRadLen = m_G4PropTool->getRadLength();
-         }
+		 }
 
 
             float Tkr_2_SxxC         = convParams.getxSlpxSlp();
@@ -1938,36 +1855,15 @@ StatusCode TkrValsTool::calculate()
         // hate to do this, but we need ERecon
         // Recover pointer to CalEventEnergy info 
         double CAL_EnergyCorr = 0.0;
-
-        // We want to look up the CalEventEnergy information
-        Event::CalEventEnergy* calEventEnergy = 0;
-
 #ifdef PRE_CALMOD
         Event::CalEventEnergy* calEventEnergy = 
             SmartDataPtr<Event::CalEventEnergy>(m_pEventSvc, EventModel::CalRecon::CalEventEnergy);
 #else
-        // Retrieve the information on the CAL cluster(s)
-        SmartDataPtr<Event::CalClusterMap> calClusterMapTds(m_pEventSvc, EventModel::CalRecon::CalClusterMap);
-    
-        if (calClusterMapTds != 0 && !calClusterMapTds->empty() && !calClusterMapTds->getRawClusterVec().empty()) 
-        {
-            // If the cluster map exists and is not empty then get the cluster 
-            Event::CalCluster* cluster = calClusterMapTds->getFront(EventModel::CalRecon::CalRawClusterVec);
-
-            // Now recover the cluster to energy map
-            Event::CalEventEnergyMap* calEventEnergyMap = SmartDataPtr<Event::CalEventEnergyMap>(m_pEventSvc, EventModel::CalRecon::CalEventEnergyMap);
-            if ((calEventEnergyMap!=0)&&(!calEventEnergyMap->empty())) 
-            {
-                Event::CalEventEnergyMap::iterator calMapItr = calEventEnergyMap->find(cluster);
-
-                if (calMapItr != calEventEnergyMap->end())
-                {
-                    Event::CalEventEnergyVec& energyVec = calMapItr->second;
-
-                    if (!energyVec.empty()) calEventEnergy = energyVec.front();
-                }
-            }
-        }
+        Event::CalEventEnergyCol * calEventEnergyCol = 
+            SmartDataPtr<Event::CalEventEnergyCol>(m_pEventSvc, EventModel::CalRecon::CalEventEnergyCol);
+        Event::CalEventEnergy * calEventEnergy = 0 ;
+        if ((calEventEnergyCol!=0)&&(!calEventEnergyCol->empty()))
+            calEventEnergy = calEventEnergyCol->front() ;
 #endif
         if (calEventEnergy != 0) {
             // Extraction of results from CalValCorrTool in CalRecon... 
