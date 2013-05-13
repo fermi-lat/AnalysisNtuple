@@ -2,7 +2,7 @@
 @brief Calculates the Trigger analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/src/GltValsTool.cxx,v 1.43.80.1 2011/04/19 18:10:24 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.45 2011/12/12 20:36:35 heather Exp $
 */
 
 // Include files
@@ -217,32 +217,32 @@ StatusCode GltValsTool::initialize()
 
     // load up the map
 
-    addItem("GltWord",       &Trig_word);
-    addItem("GltGemSummary", &Trig_GemSummary);
-    addItem("GltEventFlags", &Trig_evtFlags);    // new
-    addItem("GltTower",      &Trig_tower); 
-    addItem("GltXTower",     &Trig_xTower);
-    addItem("GltYTower",     &Trig_yTower);
-    addItem("GltLayer",      &Trig_layer); 
-    addItem("GltTotal",      &Trig_total);
-    addItem("GltNumTowers",  &Trig_numTowers);
-    addItem("GltType",       &Trig_type);  
-    //addItem("GltMoment",     &Trig_moment);
-    //addItem("GltZDir",       &Trig_zDir);  
-    addItem("GltEngine",     &Trig_engine);  
-    addItem("GltGemEngine",  &Trig_gemengine);
-    addItem("GltGemDeltaEventTime",      &Trig_gemDeltaEventTime);
-    addItem("GltGemDeltaWindowOpenTime", &Trig_gemDeltaWindowOpenTime);
-    addItem("GltEnginePrescale",         &Trig_gltprescale);
-    addItem("GltGemEnginePrescale",      &Trig_gemprescale);
-    addItem("GltPrescaleExpired",        &Trig_prescaleexpired);
-    addItem("GltSourceGps",              &Trig_sourcegps);
+    addItem("GltWord",       &Trig_word      , true);
+    addItem("GltGemSummary", &Trig_GemSummary, true);
+    addItem("GltEventFlags", &Trig_evtFlags  , true);    // new
+    addItem("GltTower",      &Trig_tower     , true); 
+    addItem("GltXTower",     &Trig_xTower    , true);
+    addItem("GltYTower",     &Trig_yTower    , true);
+    addItem("GltLayer",      &Trig_layer     , true); 
+    addItem("GltTotal",      &Trig_total     , true);
+    addItem("GltNumTowers",  &Trig_numTowers , true);
+    addItem("GltType",       &Trig_type      , true);  
+    //addItem("GltMoment",     &Trig_moment); 
+    //addItem("GltZDir",       &Trig_zDir);   
+    addItem("GltEngine",     &Trig_engine    , true);  
+    addItem("GltGemEngine",  &Trig_gemengine , true);
+    addItem("GltGemDeltaEventTime",      &Trig_gemDeltaEventTime,      true);
+    addItem("GltGemDeltaWindowOpenTime", &Trig_gemDeltaWindowOpenTime, true);
+    addItem("GltEnginePrescale",         &Trig_gltprescale,     true);
+    addItem("GltGemEnginePrescale",      &Trig_gemprescale,     true);
+    addItem("GltPrescaleExpired",        &Trig_prescaleexpired, true);
+    addItem("GltSourceGps",              &Trig_sourcegps,       true);
 
-    addItem("GltEventSize",              &Trig_eventSize);
-    addItem("GltCompressedEventSize",    &Trig_compressedEventSize);
+    addItem("GltEventSize",              &Trig_eventSize,           true);
+    addItem("GltCompressedEventSize",    &Trig_compressedEventSize, true);
 
-    addItem("GltGemElapsedTime",         &Trig_elapsedTime);
-    addItem("GltGemLiveTime",            &Trig_liveTime);
+    addItem("GltGemElapsedTime",         &Trig_elapsedTime, true);
+    addItem("GltGemLiveTime",            &Trig_liveTime,    true);
 
     zeroVals();
 
