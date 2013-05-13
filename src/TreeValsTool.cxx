@@ -2,7 +2,7 @@
 @brief Calculates the Tracker Tree variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TreeValsTool.cxx,v 1.22 2013/04/11 13:28:19 bruel Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TreeValsTool.cxx,v 1.23 2013/04/29 09:01:33 kadrlica Exp $
 */
 
 // Include files
@@ -334,14 +334,14 @@ StatusCode TreeValsTool::initialize()
     addItem("TkrTree1Leaves",              &Tkr_tree1_nLeaves);
                                      
     addItem("TkrTree1Nodes",               &Tkr_tree1_nNodes);
-        addItem("TkrTree1ThinNodes",           &Tkr_tree1_Thin_nNodes);
-        addItem("TkrTree1ThickNodes",          &Tkr_tree1_Thick_nNodes);
-        addItem("TkrTree1ThinLeaves",          &Tkr_tree1_Thin_Leaves);
-        addItem("TkrTree1ThickLeaves",         &Tkr_tree1_Thick_Leaves);
+    addItem("TkrTree1ThinNodes",           &Tkr_tree1_Thin_nNodes);
+    addItem("TkrTree1ThickNodes",          &Tkr_tree1_Thick_nNodes);
+    addItem("TkrTree1ThinLeaves",          &Tkr_tree1_Thin_Leaves);
+    addItem("TkrTree1ThickLeaves",         &Tkr_tree1_Thick_Leaves);
                                      
     addItem("TkrTree1BlankNodes",          &Tkr_tree1_Blank_nNodes);
-        addItem("TkrTree1ThinRLnNodes",        &Tkr_tree1_ThinNodes_RLn);
-        addItem("TkrTree1ThickRLnNodes",       &Tkr_tree1_ThickNodes_RLn);
+    addItem("TkrTree1ThinRLnNodes",        &Tkr_tree1_ThinNodes_RLn);
+    addItem("TkrTree1ThickRLnNodes",       &Tkr_tree1_ThickNodes_RLn);
 
     addItem("TkrTree1BestBranchAngToAxis", &Tkr_tree1_bestBranchAngToAxis);
     addItem("TkrTree1AxisSeededAngToAxis", &Tkr_tree1_axisSeededAngToAxis);
@@ -440,20 +440,23 @@ StatusCode TreeValsTool::calculate()
         int lyrWMostPoints  = -1;
         int nLyrWMostPoints =  0;
 
-        for(Event::TkrLyrToVecPointItrMapItr vecMapItr  = vecPointInfo->getLyrToVecPointItrMap()->begin();
-                                             vecMapItr != vecPointInfo->getLyrToVecPointItrMap()->end();
-                                             vecMapItr++)
+        if (vecPointInfo->getLyrToVecPointItrMap())
         {
-            int numLinks = std::distance(vecMapItr->second.first, vecMapItr->second.second);
-
-            if (numLinks) 
+            for(Event::TkrLyrToVecPointItrMapItr vecMapItr  = vecPointInfo->getLyrToVecPointItrMap()->begin();
+                                                 vecMapItr != vecPointInfo->getLyrToVecPointItrMap()->end();
+                                                 vecMapItr++)
             {
-                nLyrsWVecPoints++;
+                int numLinks = std::distance(vecMapItr->second.first, vecMapItr->second.second);
 
-                if (numLinks > nLyrWMostPoints)
+                if (numLinks) 
                 {
-                    nLyrWMostPoints = numLinks;
-                    lyrWMostPoints  = vecMapItr->first;
+                    nLyrsWVecPoints++;
+
+                    if (numLinks > nLyrWMostPoints)
+                    {
+                        nLyrWMostPoints = numLinks;
+                        lyrWMostPoints  = vecMapItr->first;
+                    }
                 }
             }
         }

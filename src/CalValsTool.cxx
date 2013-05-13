@@ -1350,12 +1350,6 @@ StatusCode CalValsTool::calculate()
     }
 #endif
 
-    // Get relation between clusters and xtals
-    Event::CalClusterHitTabList* xTal2ClusTabList = SmartDataPtr<Event::CalClusterHitTabList>(m_pEventSvc,EventModel::CalRecon::CalClusterHitTab);
-    Event::CalClusterHitTab* xTal2ClusTab = 0;
-    if (xTal2ClusTabList) xTal2ClusTab = new Event::CalClusterHitTab(xTal2ClusTabList);
-
-
     // If calEventEnergy then fill TkrEventParams
     // Note: TkrEventParams initializes to zero in the event of no CalEventEnergy
     double m_radLen_Stuff     = 0.;
