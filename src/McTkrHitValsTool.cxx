@@ -1,7 +1,7 @@
 /** @file McTkrHitValsTool.cxx
     @brief declartion, implementaion of the class UserAlg
 
-    $Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/src/McTkrHitValsTool.cxx,v 1.10.42.1 2011/04/19 18:10:25 heather Exp $
+    $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McTkrHitValsTool.cxx,v 1.15 2011/12/12 20:36:35 heather Exp $
 */
 
 #include "ValBase.h"
@@ -38,6 +38,12 @@
 
 #include <algorithm>
 #include <set>
+
+#include "Doca.h"
+
+//cs test prop
+#include "GaudiKernel/IToolSvc.h"
+#include "GlastSvc/Reco/IPropagatorSvc.h"
 
 /*! @class McTkrHitValsTool
 @brief calculates Monte Carlo values
@@ -79,6 +85,10 @@ private:
     int          m_primNumAcdHits;    // Primary number of Acd hits 
     int          m_primNumCalHits;    // Primary number of calorimeter hits 
     int          m_primInteracted;    // Primary interacted in LAT
+    int          m_primInteractFlag;  // Primary first interaction flag: 0 for conversion, 1 compton, 2 other
+    float        m_primInteractX0;    // Primary first interaction X0
+    float        m_primInteractY0;    // Primary first interaction Y0
+    float        m_primInteractZ0;    // Primary first interaction Z0
 
     // Variables for first daughter
     int          m_dght1Type;         // Particle type of "best" daughter of primary
@@ -124,6 +134,8 @@ private:
 
     // to decode the particle charge
     IParticlePropertySvc* m_ppsvc;    
+
+  IPropagator* m_G4PropTool;  //cs test prop
 
     // Useful tracker geometry constants
     float m_siThickness;
@@ -182,6 +194,7 @@ McTkrHitValsTool::McTkrHitValsTool(const std::string& type,
 <tr><td> mcTHPosHitPositron <td> I <td> Total Number of McPositionHits due to positrons
 <tr><td> mcTHPosHitOthers <td> I <td> Number of McPositionHits none of the above
 <tr><td> mcTHTotalHits <td> I <td> Total number of MC generated Tracker hits 
+<tr><td> McTHPrimInteraction <td> I <td> Primary particle first interaction flag: 0 for conversion, 1 compton, 2 other
 </table>
 
 */
@@ -204,12 +217,24 @@ StatusCode McTkrHitValsTool::initialize()
             log << MSG::ERROR << "Could not find TkrGeometrySvc" << endreq;
             return StatusCode::FAILURE;
         }
+        
+        //cs test prop
+        IToolSvc* toolSvc = 0;
+        if(service("ToolSvc", toolSvc, true).isFailure()) {
+          log << MSG::ERROR << "Couldn't find the ToolSvc!" << endreq;
+          return StatusCode::FAILURE;
+        }
+        if(!toolSvc->retrieveTool("G4PropagationTool", m_G4PropTool)) {
+          log << MSG::ERROR << "Couldn't find the ToolSvc!" << endreq;
+          return StatusCode::FAILURE;
+        }
+
     } else {
         return StatusCode::FAILURE;
     }
  
-    addItem("McTHPrimType",         &m_primType);
-    addItem("McTHNumDaughters",     &m_numDaughters);
+    addItem("McTHPrimType",         &m_primType);     
+    addItem("McTHNumDaughters",     &m_numDaughters); 
     addItem("McTHPrimNumHits",      &m_primNumTkrHits);
     addItem("McTHPrimNumAcdHits",   &m_primNumAcdHits);
     addItem("McTHPrimNumCalHits",   &m_primNumCalHits);
@@ -243,6 +268,12 @@ StatusCode McTkrHitValsTool::initialize()
     addItem("McTHBottomPlane",      &m_bottomPlane);
     addItem("McTHnTruncatedPlanes", &m_nTruncatedPlanes);
     addItem("McTHnTruncatedLost",   &m_nTruncatedLost);
+
+    addItem("McTHPrimInteraction",  &m_primInteractFlag);
+    addItem("McTHPrimInterX0",      &m_primInteractX0); // These 3 may duplicate other
+    addItem("McTHPrimInterY0",      &m_primInteractY0); // quantities and may be
+    addItem("McTHPrimInterZ0",      &m_primInteractZ0); // removed in the future
+
 
     char buffer[20];
     for(int idx = 0; idx < 36; idx++) 
@@ -464,6 +495,91 @@ StatusCode McTkrHitValsTool::calculate()
 
         // Finally... get the number of hits these two daughters share
         m_dghtSharedHits = GetSharedHits(daughter1, daughter2);
+
+
+        // Now some polarization-specific quantities for photons: look for the first interaction of the photon.
+        double MaxDocaDght = 0.0001;
+        if (m_primType == 22){ // we start with a photon 
+          
+          HepPoint3D primaryPosition              = primary->initialPosition() ;
+          CLHEP::HepLorentzVector primaryMomentum = primary->initialFourMomentum() ;
+
+
+          // Need pointers to the Ele/Pos daughters
+          const Event::McParticle* daughterEle = 0;
+          const Event::McParticle* daughterPos = 0;
+          double daughterElePrimaryDoca = 100000.;
+          double daughterPosPrimaryDoca = 100000.;
+
+          // Need the Ray(Point, Vector) of the primary particle for the doca
+          Point  x1 = Point(primaryPosition.x(), primaryPosition.y(), primaryPosition.z() );
+          Vector t1 = Vector(primaryMomentum.x(), primaryMomentum.y(), primaryMomentum.z()).unit();
+          Doca primaryRay(x1, t1);
+
+          // Loop through the daughters 
+          const SmartRefVector<Event::McParticle>& daughterList = primary->daughterList();
+
+          for(SmartRefVector<Event::McParticle>::const_iterator daughterIter = daughterList.begin();
+              daughterIter != daughterList.end(); daughterIter++)
+            {
+              const Event::McParticle* daughter = *daughterIter;
+
+              // get the electron with initial position closest to the initial photon direction 
+              if (daughter->particleProperty() == 11){
+                Point  pp(daughter->initialPosition().x(), daughter->initialPosition().y(), daughter->initialPosition().z() );
+                double doca = primaryRay.docaOfPoint( pp );
+                if (doca < daughterElePrimaryDoca)
+                  {
+                    daughterEle            = daughter;
+                    daughterElePrimaryDoca = doca;
+                  }
+              }
+          
+              // get the positron with initial position closest to the initial photon direction 
+              if (daughter->particleProperty() == -11){
+                Point  pp(daughter->initialPosition().x(), daughter->initialPosition().y(), daughter->initialPosition().z() );
+                double doca = primaryRay.docaOfPoint( pp );
+                if (doca < daughterPosPrimaryDoca)
+                  {
+                    daughterPos            = daughter;
+                    daughterPosPrimaryDoca = doca;
+                  }
+              }
+            }// end daughter loop
+            
+
+          // if they both are from pair prod [and start form same position] and (DOCA < MaxDocaDght): Pair production found!
+          // if electron is from compton and (DOCA < MaxDocaDght) [and no positron] : Compton found!
+          // else: we don't care! 
+          std::string convString  = "conv" ;
+          std::string comptString = "compt";
+          std::string processEle = daughterEle ? daughterEle->getProcess() : "";
+          std::string processPos = daughterPos ? daughterPos->getProcess() : "";
+
+          if ( (processEle==convString) && (processPos==convString) && daughterElePrimaryDoca< MaxDocaDght && daughterPosPrimaryDoca< MaxDocaDght){
+            // if pair production use photon final position
+            m_primInteractFlag = 0;
+            m_primInteractX0 = primary->finalPosition().x();
+            m_primInteractY0 = primary->finalPosition().y();
+            m_primInteractZ0 = primary->finalPosition().z();
+          }
+          else if ((processEle==comptString) && daughterElePrimaryDoca< MaxDocaDght ){
+            // if compton, use electron initial position
+            m_primInteractFlag = 1;
+            m_primInteractX0 = daughterEle->initialPosition().x();
+            m_primInteractY0 = daughterEle->initialPosition().y();
+            m_primInteractZ0 = daughterEle->initialPosition().z();
+          }
+          else {
+            // if other cases production use photon final position
+            m_primInteractFlag = 2;
+            m_primInteractX0 = primary->finalPosition().x();
+            m_primInteractY0 = primary->finalPosition().y();
+            m_primInteractZ0 = primary->finalPosition().z();
+
+          }
+
+        } // end if photon.
     }
 
     // Check to see that **something** happened
