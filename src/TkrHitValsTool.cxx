@@ -2,7 +2,7 @@
 @brief Calculates the Tkr hit analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrHitValsTool.cxx,v 1.30 2012/12/04 13:44:37 bruel Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrHitValsTool.cxx,v 1.31 2012/12/08 10:38:12 bruel Exp $
 */
 
 // Include files
@@ -208,7 +208,7 @@ StatusCode TkrHitValsTool::initialize()
     {
         throw GaudiException("Service [TkrQueryClustersTool] not found", name(), sc);
     }
-
+    
     // load up the map
 
     addItem("TkrNumHits",             &Tkr_Cnv_Lyr_Hits);       
@@ -303,6 +303,10 @@ StatusCode TkrHitValsTool::calculate()
     if(pClusters->size()==0) return sc;
 
     int layerIdx;
+    
+    // set TkrQueryClustersTool to return only NORMAL clusters
+    m_clusTool->setFilter(ITkrQueryClustersTool::NORMAL);
+
     for(layerIdx=0;layerIdx<_nLayers;++layerIdx) {
         int hitCount = 
             m_clusTool->getClusters(idents::TkrId::eMeasureX,layerIdx).size()

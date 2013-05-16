@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.131 2013/05/09 18:29:02 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.132 2013/05/09 20:11:27 lsrea Exp $
 */
 
 //#define PRE_CALMOD 1
@@ -739,7 +739,7 @@ StatusCode TkrValsTool::initialize()
         log << MSG::ERROR << "Couldn't retrieve TkrQueryClusterTool" << endreq;
         return fail;
     }
-
+    
     if (toolSvc()->retrieveTool("TkrFlagHitsTool", pFlagHits).isFailure()) {
         log << MSG::ERROR << "Couldn't retrieve TkrFlagHitsTool" << endreq;
         return fail;
@@ -1001,6 +1001,12 @@ StatusCode TkrValsTool::calculate()
     //offset comes from Geometry
     double z0 = m_tkrGeom->gettkrZBot();
 
+    // Set TkrQueryClustersTool to return *only* normal clusters, *no ghost clusters*
+    //   If at some point we want to change this, we can, including a different setting for each
+    //   variable. But for now...
+    
+    pQueryClusters->setFilter(ITkrQueryClustersTool::NORMAL);
+    
     //special stuff here
     Tkr_1_FirstGapPlane = -1;
 

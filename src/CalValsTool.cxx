@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.140 2013/04/29 16:21:09 kadrlica Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.142 2013/05/13 21:12:38 usher Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -2961,6 +2961,8 @@ float CalValsTool::CalSSDEvaluation(const Event::CalCluster* cluster)
     // Increase the search region if the propagated error is large enough
     double vetoRgn = (view==0 ? std::max(xVetoRgn, 2*sqrt(newParams(1,1))) : std::max(yVetoRgn, 2*sqrt(newParams(3,3))));
 
+    pQueryClusters->setFilter(ITkrQueryClustersTool::NORMAL);
+    
     int nVetoHits = pQueryClusters->numberOfHitsNear(view, layer, 
                                                      vetoRgn, x_step, t1);
 

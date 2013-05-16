@@ -2,7 +2,7 @@
 @brief Calculates the Trigger analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.45 2011/12/12 20:36:35 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.46 2013/05/13 19:56:35 kadrlica Exp $
 */
 
 // Include files
@@ -358,6 +358,10 @@ StatusCode GltValsTool::calculate()
     //Search for x-y paired layer.... 
     if (pClusters && three_in_a_row)
     {
+    
+        // we only want normal clusters here, no ghosts!
+        m_clusTool->setFilter(ITkrQueryClustersTool::NORMAL);
+        
         // Make a hit count per plane, per tower.  
         layer = nLayers;
         while(layer--)

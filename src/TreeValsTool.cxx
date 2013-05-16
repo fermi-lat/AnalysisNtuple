@@ -2,7 +2,7 @@
 @brief Calculates the Tracker Tree variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TreeValsTool.cxx,v 1.23 2013/04/29 09:01:33 kadrlica Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TreeValsTool.cxx,v 1.24 2013/05/13 21:12:38 usher Exp $
 */
 
 // Include files
@@ -85,7 +85,7 @@ private:
     /// GlastDetSvc used for access to detector info
     IGlastDetSvc*          m_detSvc; 
     /// pointer to queryclusterstool
-    ITkrQueryClustersTool* m_queryClusters;
+    //ITkrQueryClustersTool* m_queryClusters; // not used
     /// 
 //    IPropagatorSvc* m_propSvc;
 

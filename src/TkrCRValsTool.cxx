@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrCRValsTool.cxx,v 1.1 2012/11/13 05:40:15 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -755,6 +755,10 @@ StatusCode TkrCRValsTool::calculate()
 
     //special stuff here
     TkrCR_1_FirstGapPlane = -1;
+    
+    //set TkrQueryClustersTool to return only normal clusters for the tests
+    //  (even though the CR track may be a ghost!)
+    pQueryClusters->setFilter(ITkrQueryClustersTool::NORMAL);
 
     double radThin  = m_tkrGeom->getAveConv(STANDARD); 
     double radThick = m_tkrGeom->getAveConv(SUPER); 
