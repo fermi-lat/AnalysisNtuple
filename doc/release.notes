@@ -3,6 +3,7 @@
   @verbatim
    * EOH *
 
+ AnalysisNtuple-02-71-13 16-May-2013  lsrea explicitly set cluster filter to NORMAL for all calls to TkrQueryClustersTool
  AnalysisNtuple-02-71-12 13-May-2013  TU Fix memory leak in CalValsTool
  AnalysisNtuple-02-71-11 09-May-2013  lsrea TkrValsTool: remove ref to AcdValtTool
  AnalysisNtuple-02-71-10 23-Apr-2013  lsrea change Mc[X/Y/Z]0 for muons
