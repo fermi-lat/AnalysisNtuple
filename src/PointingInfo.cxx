@@ -2,7 +2,7 @@
 @brief declaration and definition of the class PointingInfo
 
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/PointingInfo.cxx,v 1.6 2009/02/07 21:36:27 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/PointingInfo.cxx,v 1.7 2009/02/15 05:47:25 lsrea Exp $
 
 */
 class MsgStream;
@@ -66,8 +66,7 @@ void PointingInfo::execute( const astro::GPS& gps)
     zenith_scz = gps.zenithDir().difference(gps.zAxisDir());
  
     // sign the rocking angle
-    double temp = pos_km[2]/pos_km.mag();
-    if(dec_scz < temp) zenith_scz *= -1.0;
+    if(dec_scz < dec_zenith) zenith_scz *= -1.0;
     zenith_scz *= R2D; // and convert to degrees
 }
 
