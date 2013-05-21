@@ -41,6 +41,7 @@ ApplicationMgr.TopAlg = {
     "mcRootReaderAlg",
     "digiRootReaderAlg",
     "reconRootReaderAlg",
+    "relationRootReaderAlg",
     "AnalysisNtupleAlg"
     };
 
@@ -52,6 +53,8 @@ mcRootReaderAlg.mcRootFile="$(ROOTTESTDATADATAPATH)/default/mc.root";
 digiRootReaderAlg.digiRootFile="$(ROOTTESTDATADATAPATH)/default/digi.root";
 
 reconRootReaderAlg.ReconRootFile="$(ROOTTESTDATADATAPATH)/default/recon.root";
+
+relationRootReaderAlg.rootFile="$(ROOTTESTDATADATAPATH)/default/relations.root";
 
 ApplicationMgr.DLLs   += { "ntupleWriterSvc"};
 ApplicationMgr.HistogramPersistency = "ROOT";
