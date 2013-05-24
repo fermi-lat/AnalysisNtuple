@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/Acd2ValsTool.cxx,v 1.14 2013/04/19 23:31:46 kadrlica Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/Acd2ValsTool.cxx,v 1.15 2013/04/29 09:01:32 kadrlica Exp $
 */
 
 #include "ValBase.h"
@@ -749,8 +749,22 @@ StatusCode Acd2ValsTool::calculate()
       trackIndex -= 100;
     }
     bool isBestCR = trackIndex == bestCRtkr;
-    ACD_CR1_ActiveDist_TrackNum = trackIndex;
+    if ( isBestCR ) {
+      ACD_CR1_ActiveDist_TrackNum = trackIndex;
+    }
     bool isUpGoing = anAssoc->getUpward();    
+
+    // We don't save anything about downgoing associations
+    if ( ! isUpGoing ) continue;
+
+    if ( isBestTrack ) {
+      ACD_Tkr1Energy15 = anAssoc->GetEnergy15();      
+      ACD_Tkr1TriggerEnergy15 = anAssoc->GetTriggerEnergy15();
+      ACD_Tkr1Energy30 = anAssoc->GetEnergy30();      
+      ACD_Tkr1TriggerEnergy30 = anAssoc->GetTriggerEnergy30();
+      ACD_Tkr1Energy45 = anAssoc->GetEnergy45();      
+      ACD_Tkr1TriggerEnergy45 = anAssoc->GetTriggerEnergy45();
+    }
 
     // These are the best veto values if the element is
     // a tile (not the best tile veto)
@@ -783,59 +797,27 @@ StatusCode Acd2ValsTool::calculate()
       // get the id
       idents::AcdId theId = aPoca->getId();
       
-      // We could check this earlier, but it helps to have it here, because this makes it easier to 
-      // add variables associated with the down going end
-      if ( isUpGoing ) {
-        // Fill variables for all tracks
-        float testHitSigma2 = aPoca->vetoSigma2();
-        if ( theId.tile() ) {
-          if ( testHitSigma2  <  track_tileBestVetoSq) {
-            track_tileVetoPoca = aPoca;
-            track_tileBestVetoSq = testHitSigma2;
-            track_tileBestVetoHit = aPoca->vetoSigmaHit();
-            track_tileBestVetoProp = aPoca->vetoSigmaProp();
-            track_tileBestVetoProj = aPoca->vetoSigmaProj();
-            track_tileBestTriggerVeto = hitMap[theId]->getTriggerVeto();
-          }   
-        } else if ( theId.ribbon() ) {
-          if ( testHitSigma2 <  track_ribbonBestVetoSq) {
-            track_ribbonVetoPoca = aPoca;
-            track_ribbonBestVetoSq = testHitSigma2;
-            track_ribbonBestVetoHit = aPoca->vetoSigmaHit();
-            track_ribbonBestVetoProp = aPoca->vetoSigmaProp();
-            track_ribbonBestVetoProj = aPoca->vetoSigmaProj();
-            track_ribbonBestTriggerVeto = hitMap[theId]->getTriggerVeto();
-          }
-        }      
-
-        // Fill special vars for best track
-        if ( isBestTrack ) {
-          // check to see if it is in xx deg cone around track
-          // ADW: Use de-ghosted tile energy and fill trigger tile energy
-          if ( theId.tile() ) {
-            if ( aPoca->getArcLength() > 0.1 ) {
-              static const float tan30 = 5.77350288616910401e-01;
-              static const float tan15 = 2.67949200239410490e-01;
-              float tanAngle = ( -1 * aPoca->getDoca() )/ aPoca->getArcLength();
-              float tileEng = hitMap[theId]->tileEnergy() * ( !hitMap[theId]->getGhost() );
-              float triggerTileEng = tileEng * ( hitMap[theId]->getTriggerVeto() );
-              if ( tanAngle < 1. ) {
-                ACD_Tkr1Energy45 += tileEng;
-                ACD_Tkr1TriggerEnergy45 += triggerTileEng;
-                if ( tanAngle < tan30 ) {
-                  ACD_Tkr1Energy30 += tileEng;
-                  ACD_Tkr1TriggerEnergy30 += triggerTileEng;
-                  if ( tanAngle < tan15 ) {
-                    ACD_Tkr1Energy15 += tileEng;
-                    ACD_Tkr1TriggerEnergy15 += triggerTileEng;
-                  }
-                }
-              }
-            }
-          }
-        }
-
-      }
+      // Fill variables for all tracks
+      float testHitSigma2 = aPoca->vetoSigma2();
+      if ( theId.tile() ) {
+	if ( testHitSigma2  <  track_tileBestVetoSq) {
+	  track_tileVetoPoca = aPoca;
+	  track_tileBestVetoSq = testHitSigma2;
+	  track_tileBestVetoHit = aPoca->vetoSigmaHit();
+	  track_tileBestVetoProp = aPoca->vetoSigmaProp();
+	  track_tileBestVetoProj = aPoca->vetoSigmaProj();
+	  track_tileBestTriggerVeto = hitMap[theId]->getTriggerVeto();
+	}   
+      } else if ( theId.ribbon() ) {
+	if ( testHitSigma2 <  track_ribbonBestVetoSq) {
+	  track_ribbonVetoPoca = aPoca;
+	  track_ribbonBestVetoSq = testHitSigma2;
+	  track_ribbonBestVetoHit = aPoca->vetoSigmaHit();
+	  track_ribbonBestVetoProp = aPoca->vetoSigmaProp();
+	  track_ribbonBestVetoProj = aPoca->vetoSigmaProj();
+	  track_ribbonBestTriggerVeto = hitMap[theId]->getTriggerVeto();
+	}
+      }      
     }
 
     const Event::AcdTkrGapPoca* aGap = anAssoc->getGapPoca();
@@ -845,58 +827,54 @@ StatusCode Acd2ValsTool::calculate()
       case 2: //AcdRecon::Y_RibbonSide:
       case 3: //AcdRecon::Y_RibbonTop:
       case 4: //AcdRecon::SideCornerEdge:
-    track_gapBestVetoSq = aGap->vetoSigma2();
-    break;
+	track_gapBestVetoSq = aGap->vetoSigma2();
+	break;
       default:
-    aGap = 0;
-    break;
+	aGap = 0;
+	break;
       }
     }
       
     float cornerDoca = anAssoc->getCornerDoca();
     float cornerGapMeasure = cornerDoca > 0 ? fabs(cornerDoca) : fabs(0.2 * cornerDoca);
-    if ( isUpGoing ) {
-      if ( cornerGapMeasure < bestCornerGapMeasure ) {
-        ACD_Corner_DOCA = cornerDoca;
-        bestCornerGapMeasure = cornerGapMeasure;
-      }
+    if ( cornerGapMeasure < bestCornerGapMeasure ) {
+      ACD_Corner_DOCA = cornerDoca;
+      bestCornerGapMeasure = cornerGapMeasure;
     }
 
     // Fill vars for best track
     if ( isBestTrack ) {
       
-      if ( isUpGoing ) {
       ACD_Tkr1Corner_DOCA = cornerDoca;
-       
+      
       if (track_tileBestVetoSq < track_ribbonBestVetoSq) { 
-          ACD_Tkr1_VetoSigmaHit = sqrt(track_tileBestVetoSq);
-          ACD_Tkr1_VetoSigmaMip =  track_tileBestVetoHit > 0. ?
-            track_tileBestVetoHit : 0.;
-          ACD_Tkr1_VetoSigmaProp = track_tileBestVetoProp > 0. ?
-            track_tileBestVetoProp : 0.;
-          ACD_Tkr1_VetoSigmaProj = track_tileBestVetoProj > 0. ?
-            track_tileBestVetoProj : 0.;
-          ACD_Tkr1_TriggerVeto = track_tileBestTriggerVeto;
-        } else {
-          ACD_Tkr1_VetoSigmaHit = sqrt(track_ribbonBestVetoSq);
-          ACD_Tkr1_VetoSigmaMip =  track_ribbonBestVetoHit > 0. ?
-            track_ribbonBestVetoHit : 0.;
-          ACD_Tkr1_VetoSigmaProp = track_ribbonBestVetoProp > 0. ?
-            track_ribbonBestVetoProp : 0.;
-          ACD_Tkr1_VetoSigmaProj = track_ribbonBestVetoProj > 0. ?
-            track_ribbonBestVetoProj : 0.;
-          ACD_Tkr1_TriggerVeto = track_ribbonBestTriggerVeto;
-        }
+	ACD_Tkr1_VetoSigmaHit = sqrt(track_tileBestVetoSq);
+	ACD_Tkr1_VetoSigmaMip =  track_tileBestVetoHit > 0. ?
+	  track_tileBestVetoHit : 0.;
+	ACD_Tkr1_VetoSigmaProp = track_tileBestVetoProp > 0. ?
+	  track_tileBestVetoProp : 0.;
+	ACD_Tkr1_VetoSigmaProj = track_tileBestVetoProj > 0. ?
+	  track_tileBestVetoProj : 0.;
+	ACD_Tkr1_TriggerVeto = track_tileBestTriggerVeto;
+      } else {
+	ACD_Tkr1_VetoSigmaHit = sqrt(track_ribbonBestVetoSq);
+	ACD_Tkr1_VetoSigmaMip =  track_ribbonBestVetoHit > 0. ?
+	  track_ribbonBestVetoHit : 0.;
+	ACD_Tkr1_VetoSigmaProp = track_ribbonBestVetoProp > 0. ?
+	  track_ribbonBestVetoProp : 0.;
+	ACD_Tkr1_VetoSigmaProj = track_ribbonBestVetoProj > 0. ?
+	  track_ribbonBestVetoProj : 0.;
+	ACD_Tkr1_TriggerVeto = track_ribbonBestTriggerVeto;
       }
        
-      if ( track_tileVetoPoca != 0 && isUpGoing ) {
+      if ( track_tileVetoPoca != 0  ) {
         ACD_Tkr1ActiveDist = track_tileVetoPoca->getDoca();
         ACD_Tkr1ActiveDist_Err = track_tileVetoPoca->getDocaErrProj();
         ACD_Tkr1ActiveDist_Energy = hitMap[track_tileVetoPoca->getId()]->tileEnergy();
         ACD_Tkr1ActiveDist_Arc = track_tileVetoPoca->getArcLength();
       }
         
-      if ( track_ribbonVetoPoca != 0 && isUpGoing ) {
+      if ( track_ribbonVetoPoca != 0 ) {
         ACD_Tkr1_ribbon_ActiveDist =  track_ribbonVetoPoca->getDoca();
         ACD_Tkr1_ribbon_ActiveDist_Err = track_ribbonVetoPoca->getDocaErrProj();
         ACD_Tkr1_ribbon_ActiveLength = track_ribbonVetoPoca->getLocalY();
@@ -904,7 +882,7 @@ StatusCode Acd2ValsTool::calculate()
         ACD_Tkr1_ribbon_EnergyPmtB = hitMap[track_ribbonVetoPoca->getId()]->ribbonEnergy(Event::AcdHit::B);
       }
        
-      if ( aGap != 0 && isUpGoing ) {
+      if ( aGap != 0  ) {
         ACD_Tkr1_VetoSigmaGap = sqrt(track_gapBestVetoSq);
         ACD_Tkr1Ribbon_Dist = aGap->getDoca();
         ACD_Tkr1Ribbon_Dist_Err = aGap->getDocaErrProj();
@@ -913,12 +891,11 @@ StatusCode Acd2ValsTool::calculate()
     }
        
     if ( isBestCR ) {
-      if ( track_tileVetoPoca != 0 && isUpGoing ) {
+      if ( track_tileVetoPoca != 0 ) {
         ACD_CR1_ActiveDist = track_tileVetoPoca->getDoca();
         ACD_CR1_ActiveDist_Energy = hitMap[track_tileVetoPoca->getId()]->tileEnergy();
-      }
-        
-      if ( track_ribbonVetoPoca != 0 && isUpGoing ) {
+      }        
+      if ( track_ribbonVetoPoca != 0 ) {
         ACD_CR1_ribbon_ActiveDist =  track_ribbonVetoPoca->getDoca();
         ACD_CR1_ribbon_EnergyPmtA = hitMap[track_ribbonVetoPoca->getId()]->ribbonEnergy(Event::AcdHit::A);
         ACD_CR1_ribbon_EnergyPmtB = hitMap[track_ribbonVetoPoca->getId()]->ribbonEnergy(Event::AcdHit::B);
@@ -926,30 +903,28 @@ StatusCode Acd2ValsTool::calculate()
     }
 
     // Latch vars for all tracks
-    if ( isUpGoing ) {
-      if ( isCR ) {
-	if ( track_tileBestVetoSq < best_CR_tileVetoSq  ) {
-	  best_CR_tileVetoSq = track_tileBestVetoSq;
-	  tile_CR_vetoPoca = track_tileVetoPoca;
-	}
-	if (track_ribbonBestVetoSq < best_CR_ribbonVetoSq  ) {
-	  best_CR_ribbonVetoSq = track_ribbonBestVetoSq;
-	  ribbon_CR_vetoPoca = track_ribbonVetoPoca;
-	}
-      } else {
-	if ( track_tileBestVetoSq < best_tileVetoSq  ) {
-	  best_tileVetoSq = track_tileBestVetoSq;
-	  tile_vetoPoca = track_tileVetoPoca;
-	}
-	if (track_ribbonBestVetoSq < best_ribbonVetoSq  ) {
-	  best_ribbonVetoSq = track_ribbonBestVetoSq;
-	  ribbon_vetoPoca = track_ribbonVetoPoca;
-	}
-	if ( track_gapBestVetoSq < best_gapVetoSq ) {
-	  best_gapVetoSq = track_gapBestVetoSq;
-	  gap_vetoPoca = aGap;
-	}     
+    if ( isCR ) {
+      if ( track_tileBestVetoSq < best_CR_tileVetoSq  ) {
+	best_CR_tileVetoSq = track_tileBestVetoSq;
+	tile_CR_vetoPoca = track_tileVetoPoca;
       }
+      if (track_ribbonBestVetoSq < best_CR_ribbonVetoSq  ) {
+	best_CR_ribbonVetoSq = track_ribbonBestVetoSq;
+	ribbon_CR_vetoPoca = track_ribbonVetoPoca;
+      }
+    } else {
+      if ( track_tileBestVetoSq < best_tileVetoSq  ) {
+	best_tileVetoSq = track_tileBestVetoSq;
+	tile_vetoPoca = track_tileVetoPoca;
+      }
+      if (track_ribbonBestVetoSq < best_ribbonVetoSq  ) {
+	best_ribbonVetoSq = track_ribbonBestVetoSq;
+	ribbon_vetoPoca = track_ribbonVetoPoca;
+      }
+      if ( track_gapBestVetoSq < best_gapVetoSq ) {
+	best_gapVetoSq = track_gapBestVetoSq;
+	gap_vetoPoca = aGap;
+      }     
     }
   }
 
@@ -987,12 +962,14 @@ StatusCode Acd2ValsTool::calculate()
     ACD_CR_ribbon_EnergyPmtB = hitMap[ribbon_CR_vetoPoca->getId()]->ribbonEnergy(Event::AcdHit::B);
   }
 
+  // Now fill in the values for the most likely Gap Assoc.
   if ( gap_vetoPoca != 0 ) {
     ACD_TkrRibbon_Dist = gap_vetoPoca->getDoca();
     ACD_TkrRibbon_Dist_Err = gap_vetoPoca->getDocaErrProj();
     ACD_TkrRibbonLength = gap_vetoPoca->getLocalY();    
   }
 
+  // Now Merge Tile and Ribbon 
   if (best_tileVetoSq < best_ribbonVetoSq) {
     ACD_Tkr_VetoSigmaHit = sqrt(best_tileVetoSq);
     if ( tile_vetoPoca != 0 ) {
@@ -1048,6 +1025,7 @@ StatusCode Acd2ValsTool::calculate()
     if ( clusterIndex < 0 ) continue;
     bool isBestCluster = clusterIndex == 0;
     bool isUpGoing = anAssoc->getUpward();
+    if ( !isUpGoing ) continue;
     
     // These are the best veto values if the element is
     // a tile (not the best tile veto)
@@ -1080,82 +1058,54 @@ StatusCode Acd2ValsTool::calculate()
       // get the id
       idents::AcdId theId = aPoca->getId();
       
-      // We could check this earlier, but it helps to have it here, because this makes it easier to 
-      // add variables associated with the down going end
-      if ( isUpGoing ) {
-        // Fill variables for all tracks
-        float testHitSigma2 = aPoca->vetoSigma2();
-        if ( theId.tile() ) {
-          if ( testHitSigma2  <  cluster_tileBestVetoSq) {
-            cluster_tileVetoPoca = aPoca;
-            cluster_tileBestVetoSq = testHitSigma2;
-            cluster_tileBestVetoHit = aPoca->vetoSigmaHit();
-            cluster_tileBestVetoProp = aPoca->vetoSigmaProp();
-            cluster_tileBestVetoProj = aPoca->vetoSigmaProj();
-          }   
-        } else if ( theId.ribbon() ) {
-          if ( testHitSigma2 <  cluster_ribbonBestVetoSq) {
-            cluster_ribbonVetoPoca = aPoca;
-            cluster_ribbonBestVetoSq = testHitSigma2;
-            cluster_ribbonBestVetoHit = aPoca->vetoSigmaHit();
-            cluster_ribbonBestVetoProp = aPoca->vetoSigmaProp();
-            cluster_ribbonBestVetoProj = aPoca->vetoSigmaProj();
-          }
-        }      
-
-        // Fill special vars for best track
-        if ( isBestCluster ) {
-          // check to see if it is in xx deg cone around track
-          if ( theId.tile() ) {
-            if ( aPoca->getArcLength() > 0.1 ) {
-              static const float tan30 = 5.77350288616910401e-01;
-              static const float tan15 = 2.67949200239410490e-01;
-              float tanAngle = ( -1 * aPoca->getDoca() )/ aPoca->getArcLength();
-              float tileEng = hitMap[theId]->tileEnergy();
-              float triggerTileEng = tileEng * ( hitMap[theId]->getTriggerVeto() );
-              if ( tanAngle < 1. ) {
-                ACD_Cal1Energy45 += tileEng;
-                ACD_Cal1TriggerEnergy45 += triggerTileEng;
-                if ( tanAngle < tan30 ) {
-                  ACD_Cal1Energy30 += tileEng;
-                  ACD_Cal1TriggerEnergy30 += triggerTileEng;
-                  if ( tanAngle < tan15 ) {
-                    ACD_Cal1Energy15 += tileEng;
-                    ACD_Cal1TriggerEnergy15 += triggerTileEng;
-                  }
-                }
-              }
-            }
-          }
-        }
-
-      }
-
+      // Fill variables for all tracks
+      float testHitSigma2 = aPoca->vetoSigma2();
+      if ( theId.tile() ) {
+	if ( testHitSigma2  <  cluster_tileBestVetoSq) {
+	  cluster_tileVetoPoca = aPoca;
+	  cluster_tileBestVetoSq = testHitSigma2;
+	  cluster_tileBestVetoHit = aPoca->vetoSigmaHit();
+	  cluster_tileBestVetoProp = aPoca->vetoSigmaProp();
+	  cluster_tileBestVetoProj = aPoca->vetoSigmaProj();
+	}   
+      } else if ( theId.ribbon() ) {
+	if ( testHitSigma2 <  cluster_ribbonBestVetoSq) {
+	  cluster_ribbonVetoPoca = aPoca;
+	  cluster_ribbonBestVetoSq = testHitSigma2;
+	  cluster_ribbonBestVetoHit = aPoca->vetoSigmaHit();
+	  cluster_ribbonBestVetoProp = aPoca->vetoSigmaProp();
+	  cluster_ribbonBestVetoProj = aPoca->vetoSigmaProj();
+	}
+      }      
     }
 
-    // Fill vars for best track
+    // Fill vars for best cluster
     if ( isBestCluster ) {
-      if ( isUpGoing ) {
-        if (cluster_tileBestVetoSq < cluster_ribbonBestVetoSq) { 
-          ACD_Cal1_VetoSigmaHit = sqrt(cluster_tileBestVetoSq);
-          ACD_Cal1_VetoSigmaMip =  cluster_tileBestVetoHit > 0. ?
-            cluster_tileBestVetoHit : 0.;
-          ACD_Cal1_VetoSigmaProp = cluster_tileBestVetoProp > 0. ?
-            cluster_tileBestVetoProp : 0.;
-          ACD_Cal1_VetoSigmaProj = cluster_tileBestVetoProj > 0. ?
-            cluster_tileBestVetoProj : 0.;
-        } else {
-          ACD_Cal1_VetoSigmaHit = sqrt(cluster_ribbonBestVetoSq);
-          ACD_Cal1_VetoSigmaMip =  cluster_ribbonBestVetoHit > 0. ?
-            cluster_ribbonBestVetoHit : 0.;
-          ACD_Cal1_VetoSigmaProp = cluster_ribbonBestVetoProp > 0. ?
-            cluster_ribbonBestVetoProp : 0.;
-          ACD_Cal1_VetoSigmaProj = cluster_ribbonBestVetoProj > 0. ?
-            cluster_ribbonBestVetoProj : 0.;
-        }
+      ACD_Cal1Energy15 = anAssoc->GetEnergy15();
+      ACD_Cal1TriggerEnergy15 = anAssoc->GetTriggerEnergy15();
+      ACD_Cal1Energy30 = anAssoc->GetEnergy30();
+      ACD_Cal1TriggerEnergy30 = anAssoc->GetTriggerEnergy30();
+      ACD_Cal1Energy45 = anAssoc->GetEnergy45();
+      ACD_Cal1TriggerEnergy45 = anAssoc->GetTriggerEnergy45();
+
+      if (cluster_tileBestVetoSq < cluster_ribbonBestVetoSq) { 
+	ACD_Cal1_VetoSigmaHit = sqrt(cluster_tileBestVetoSq);
+	ACD_Cal1_VetoSigmaMip =  cluster_tileBestVetoHit > 0. ?
+	  cluster_tileBestVetoHit : 0.;
+	ACD_Cal1_VetoSigmaProp = cluster_tileBestVetoProp > 0. ?
+	  cluster_tileBestVetoProp : 0.;
+	ACD_Cal1_VetoSigmaProj = cluster_tileBestVetoProj > 0. ?
+	  cluster_tileBestVetoProj : 0.;
+      } else {
+	ACD_Cal1_VetoSigmaHit = sqrt(cluster_ribbonBestVetoSq);
+	ACD_Cal1_VetoSigmaMip =  cluster_ribbonBestVetoHit > 0. ?
+	  cluster_ribbonBestVetoHit : 0.;
+	ACD_Cal1_VetoSigmaProp = cluster_ribbonBestVetoProp > 0. ?
+	  cluster_ribbonBestVetoProp : 0.;
+	ACD_Cal1_VetoSigmaProj = cluster_ribbonBestVetoProj > 0. ?
+	  cluster_ribbonBestVetoProj : 0.;
       }
     }
-
   }    
 
   return sc;
