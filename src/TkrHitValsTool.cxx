@@ -2,7 +2,7 @@
 @brief Calculates the Tkr hit analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrHitValsTool.cxx,v 1.31 2012/12/08 10:38:12 bruel Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrHitValsTool.cxx,v 1.32 2013/05/16 23:44:16 lsrea Exp $
 */
 
 // Include files
@@ -60,6 +60,8 @@ private:
 
     //TkrClusters Tuple Items
     int Tkr_Cnv_Lyr_Hits;
+    int Tkr_numMergedClusters;
+    int Tkr_numMergeClusters;
     int Tkr_numHitsOnTracks;
     int Tkr_numGhosts;
     //int Tkr_numDiags;
@@ -212,6 +214,8 @@ StatusCode TkrHitValsTool::initialize()
     // load up the map
 
     addItem("TkrNumHits",             &Tkr_Cnv_Lyr_Hits);       
+    addItem("TkrNumMergedClusters",   &Tkr_numMergedClusters);
+    addItem("TkrNumSuperClusters",    &Tkr_numMergeClusters);
     addItem("TkrNumHitsOnTracks",     &Tkr_numHitsOnTracks);
     addItem("TkrFirstLayer",          &Tkr_Fst_Cnv_Lyr);        
     addItem("TkrNumLayersHit",        &Tkr_NCnv_Lyrs_Hit);
@@ -332,6 +336,9 @@ StatusCode TkrHitValsTool::calculate()
         isWider     = (clust->size()>=m_minWider);
         isSaturated = (clust->getRawToT()==250);
         isMarked    = clust->isSet(Event::TkrCluster::maskZAPGHOSTS);
+
+        if (clust->isSet(Event::TkrCluster::maskMERGED))      Tkr_numMergedClusters++;
+        if (clust->isSet(Event::TkrCluster::maskMERGERESULT)) Tkr_numMergeClusters++;
 
         if(!isMarked)
           {
