@@ -2,7 +2,7 @@
 @brief Calculates the Trigger analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.47 2013/05/16 23:44:16 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/GltValsTool.cxx,v 1.46 2013/05/13 19:56:35 kadrlica Exp $
 */
 
 // Include files
@@ -88,23 +88,6 @@ private:
     int   Trig_compressedEventSize;
     unsigned long long Trig_elapsedTime;
     unsigned long long Trig_liveTime;
-
-
-  //========================================= Variables moved from SVAC ntuple - A.Chekhtman, May 29, 2013
-
-  unsigned int Trig_gemPrescaled;
-  unsigned int Trig_gemDiscarded;
-  unsigned int Trig_gemDeadZone;
-  unsigned int Trig_gemTriggerTime;
-  unsigned int Trig_gemTkrVector;
-  unsigned int Trig_gemAcdRoiVector;
-  unsigned int Trig_gemAcdCnoVector;
-  unsigned int Trig_gemCalHiVector;
-  unsigned int Trig_gemCalLoVector;
-
-  //===========================================
-
-
 
     ITkrQueryClustersTool* m_clusTool;
 };
@@ -261,26 +244,6 @@ StatusCode GltValsTool::initialize()
     addItem("GltGemElapsedTime",         &Trig_elapsedTime, true);
     addItem("GltGemLiveTime",            &Trig_liveTime,    true);
 
-
-
-    //================================================================== 
-    // variables moved from SVAC ntuple - A.Chekhtman, May 29, 2013
-
-    addItem("GltGemPrescaled",      &Trig_gemPrescaled,      true);
-    addItem("GltGemDiscarded",      &Trig_gemDiscarded,      true);
-    addItem("GltGemDeadZone",      &Trig_gemDeadZone,      true);
-    addItem("GltGemTriggerTime",      &Trig_gemTriggerTime,      true);
-    addItem("GltGemTkrVector",      &Trig_gemTkrVector,      true);
-    addItem("GltGemAcdRoiVector",      &Trig_gemAcdRoiVector,      true);
-    addItem("GltGemAcdCnoVector",      &Trig_gemAcdCnoVector,      true);
-    addItem("GltGemCalHiVector",      &Trig_gemCalHiVector,      true);
-    addItem("GltGemCalLoVector",      &Trig_gemCalLoVector,      true);
-
-    //=======================================================================
-
-
-
-
     zeroVals();
 
     return sc;
@@ -295,26 +258,6 @@ void GltValsTool::zeroVals()
     Trig_prescaleexpired = _unset;
     Trig_gemDeltaEventTime      = -1;
     Trig_gemDeltaWindowOpenTime = -1;
-
-    //================================================================== 
-    // variables moved from SVAC ntuple - A.Chekhtman, May 29, 2013
-
-
-    Trig_gemPrescaled = _unset;
-    Trig_gemDiscarded = _unset;
-    Trig_gemDeadZone = _unset;
-    Trig_gemTriggerTime = _unset;
-    Trig_gemTkrVector = _unset;
-    Trig_gemAcdRoiVector = _unset;
-    Trig_gemAcdCnoVector = _unset;
-    Trig_gemCalHiVector = _unset;
-    Trig_gemCalLoVector = _unset;
-
-    //==================================================================
-
-
-
-
 }
 
 StatusCode GltValsTool::calculate()
@@ -391,25 +334,6 @@ StatusCode GltValsTool::calculate()
     if(gemTds) {
         Trig_gemDeltaEventTime      = gemTds->deltaEventTime();
         Trig_gemDeltaWindowOpenTime = gemTds->deltaWindowOpenTime();
-
-	//================================================================== 
-	// variables moved from SVAC ntuple -  A.Chekhtman, May 29, 2013
-
- 
-	Trig_gemPrescaled = gemTds->prescaled();
-	Trig_gemDiscarded = gemTds->discarded();
-	Trig_gemDeadZone = gemTds->missed();
-	Trig_gemTriggerTime = gemTds->triggerTime();
-	Trig_gemTkrVector = gemTds->tkrVector();
-	Trig_gemAcdRoiVector = gemTds->roiVector();
-	Trig_gemAcdCnoVector = gemTds->cnoVector();
-	Trig_gemCalHiVector = gemTds->calHEvector();
-	Trig_gemCalLoVector = gemTds->calLEvector();
-
-	//==================================================================
-
-
-
     }
 
     SmartDataPtr<Event::TkrClusterCol>   
