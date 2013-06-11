@@ -2,7 +2,7 @@
 @brief Calculates the Tracker Tree variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TreeValsTool.cxx,v 1.24 2013/05/13 21:12:38 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TreeValsTool.cxx,v 1.25 2013/05/16 23:44:16 lsrea Exp $
 */
 
 // Include files
@@ -590,7 +590,7 @@ StatusCode TreeValsTool::calculate()
 
                     // Create a vector to keep track of the docas we calculate
                     std::vector<double> treeDocaVec;
-					std::vector<double> filterDocaVec;
+                    std::vector<double> filterDocaVec;
 
                     // We loop until we exhaust the entries in the list
                     while(nodeListItr != nodeList.end())
@@ -633,8 +633,8 @@ StatusCode TreeValsTool::calculate()
 
                             treeDocaVec.push_back(doca);
 
-							// Was this link used by the filter?
-							if (link->getStatusBits() & 0x03000000) filterDocaVec.push_back(doca);
+                            // Was this link used by the filter?
+                            if (link->getStatusBits() & 0x03000000) filterDocaVec.push_back(doca);
                         }
                     }
 
@@ -651,24 +651,24 @@ StatusCode TreeValsTool::calculate()
                     Tkr_tree1_calDoca95  = treeDocaVec[idx95];
                     Tkr_tree1_calDocaMax = treeDocaVec.back();
 
-					// Since we are here, check the docas for the filter as well. 
-					// But only if there is something there
-					if (!filterDocaVec.empty())
-					{
+                    // Since we are here, check the docas for the filter as well. 
+                    // But only if there is something there
+                    if (!filterDocaVec.empty())
+                    {
 
-					// Since we are here, check the docas for the filter as well. 
-					std::sort(filterDocaVec.begin(), filterDocaVec.end());
+                    // Since we are here, check the docas for the filter as well. 
+                    std::sort(filterDocaVec.begin(), filterDocaVec.end());
 
                     // Extract the 68%, 95% and final elements
                     idx68 = int(0.68 * float(filterDocaVec.size()));
                     idx95 = int(0.95 * float(filterDocaVec.size()));
 
-					// Fill the TFP variables
-					TFP_numLinks   = filterDocaVec.size();
-					TFP_calDoca68  = filterDocaVec[idx68];
-					TFP_calDoca95  = filterDocaVec[idx95];
-					TFP_calDocaMax = filterDocaVec.back();
-					}
+                    // Fill the TFP variables
+                    TFP_numLinks   = filterDocaVec.size();
+                    TFP_calDoca68  = filterDocaVec[idx68];
+                    TFP_calDoca95  = filterDocaVec[idx95];
+                    TFP_calDocaMax = filterDocaVec.back();
+                    }
                 }
             }
 
@@ -733,6 +733,20 @@ StatusCode TreeValsTool::calculate()
                 Tkr_tree2_maxWidthLyr = firstLayer - Tkr_tree2_maxWidthLyr;
             }
         }
+    
+        // Get the auditor info
+        IChronoStatSvc::ChronoTime time = m_chronoSvc->chronoDelta("TreeBasedTool",IChronoStatSvc::USER);
+        Aud_treeBasedTool = static_cast<float>(time)*0.000001;
+        time = m_chronoSvc->chronoDelta("TreeBasedTool_link",IChronoStatSvc::USER);
+        Aud_treeBasedTool_link = static_cast<float>(time)*0.000001;
+        time = m_chronoSvc->chronoDelta("TreeBasedTool_node",IChronoStatSvc::USER);
+        Aud_treeBasedTool_node = static_cast<float>(time)*0.000001;
+        time = m_chronoSvc->chronoDelta("TreeBasedTool_build",IChronoStatSvc::USER);
+        Aud_treeBasedTool_build = static_cast<float>(time)*0.000001;
+        time = m_chronoSvc->chronoDelta("TkrVecLinkBuilderTool_singleLink",IChronoStatSvc::USER);
+        Aud_tkrVecLinkBuilderTool_singleLink = static_cast<float>(time)*0.000001;
+        time = m_chronoSvc->chronoDelta("TkrVecLinkBuilderTool_multiLink",IChronoStatSvc::USER);
+        Aud_tkrVecLinkBuilderTool_multiLink = static_cast<float>(time)*0.000001;
     }
 
     // Do tree stuff here
@@ -764,29 +778,16 @@ StatusCode TreeValsTool::calculate()
             TFP_bestRmsLong     = filterParams->getLongRms();
             TFP_bestRmsLongAsym = filterParams->getLongRmsAsym();
         }
+    
+        IChronoStatSvc::ChronoTime time = m_chronoSvc->chronoDelta("TkrHoughFilterTool",IChronoStatSvc::USER);
+        Aud_houghFilterTool = static_cast<float>(time)*0.000001;
+        time = m_chronoSvc->chronoDelta("TkrHoughFilterTool_fill",IChronoStatSvc::USER);
+        Aud_houghFilterTool_fill = static_cast<float>(time)*0.000001;
+        time = m_chronoSvc->chronoDelta("TkrHoughFilterTool_peak",IChronoStatSvc::USER);
+        Aud_houghFilterTool_peak = static_cast<float>(time)*0.000001;
+        time = m_chronoSvc->chronoDelta("TkrHoughFilterTool_build",IChronoStatSvc::USER);
+        Aud_houghFilterTool_build = static_cast<float>(time)*0.000001;
     }
-
-    // Get the auditor info
-    IChronoStatSvc::ChronoTime time = m_chronoSvc->chronoDelta("TreeBasedTool",IChronoStatSvc::USER);
-    Aud_treeBasedTool = static_cast<float>(time)*0.000001;
-    time = m_chronoSvc->chronoDelta("TreeBasedTool_link",IChronoStatSvc::USER);
-    Aud_treeBasedTool_link = static_cast<float>(time)*0.000001;
-    time = m_chronoSvc->chronoDelta("TreeBasedTool_node",IChronoStatSvc::USER);
-    Aud_treeBasedTool_node = static_cast<float>(time)*0.000001;
-    time = m_chronoSvc->chronoDelta("TreeBasedTool_build",IChronoStatSvc::USER);
-    Aud_treeBasedTool_build = static_cast<float>(time)*0.000001;
-    time = m_chronoSvc->chronoDelta("TkrVecLinkBuilderTool_singleLink",IChronoStatSvc::USER);
-    Aud_tkrVecLinkBuilderTool_singleLink = static_cast<float>(time)*0.000001;
-    time = m_chronoSvc->chronoDelta("TkrVecLinkBuilderTool_multiLink",IChronoStatSvc::USER);
-    Aud_tkrVecLinkBuilderTool_multiLink = static_cast<float>(time)*0.000001;
-    time = m_chronoSvc->chronoDelta("TkrHoughFilterTool",IChronoStatSvc::USER);
-    Aud_houghFilterTool = static_cast<float>(time)*0.000001;
-    time = m_chronoSvc->chronoDelta("TkrHoughFilterTool_fill",IChronoStatSvc::USER);
-    Aud_houghFilterTool_fill = static_cast<float>(time)*0.000001;
-    time = m_chronoSvc->chronoDelta("TkrHoughFilterTool_peak",IChronoStatSvc::USER);
-    Aud_houghFilterTool_peak = static_cast<float>(time)*0.000001;
-    time = m_chronoSvc->chronoDelta("TkrHoughFilterTool_build",IChronoStatSvc::USER);
-    Aud_houghFilterTool_build = static_cast<float>(time)*0.000001;
 
     return sc;
 }

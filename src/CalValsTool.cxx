@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.143 2013/05/16 23:44:16 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.144 2013/06/11 18:23:12 usher Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -1347,17 +1347,6 @@ StatusCode CalValsTool::calculate()
     if(pCalClusterMap == 0 || pCalClusterMap->empty()) return sc;
 
     // If timing then do now to get out of way
-    if (m_doTiming)
-    {
-        IChronoStatSvc::ChronoTime time = m_chronoSvc->chronoDelta("NewCalFullProfileTool",IChronoStatSvc::USER);
-        AUD_CalProfile_total = static_cast<float>(time)*0.000001;
-        time = m_chronoSvc->chronoDelta("NewCalFullProfileTool_satXtal",IChronoStatSvc::USER);
-        AUD_CalProfile_satXtal = static_cast<float>(time)*0.000001;
-        time = m_chronoSvc->chronoDelta("NewCalFullProfileTool_calProfile",IChronoStatSvc::USER);
-        AUD_CalProfile_cal = static_cast<float>(time)*0.000001;
-        time = m_chronoSvc->chronoDelta("NewCalFullProfileTool_tkrProfile",IChronoStatSvc::USER);
-        AUD_CalProfile_tkr = static_cast<float>(time)*0.000001;
-    }
 
     Event::CalCluster* uberCluster = (*pCalClusterMap).getUberCluster();
     Event::CalCluster* uber2Cluster = (*pCalClusterMap).getUber2Cluster();
@@ -1542,6 +1531,19 @@ StatusCode CalValsTool::calculate()
                 CAL_LkHd_energyUB = CAL_LkHd_energy / ( 1.003 - 0.005345 * log10(CAL_LkHd_energy) );
                 // std::cout << "CalValsTool CAL_LkHd_energy " << CAL_LkHd_energy << ' ' << CAL_LkHd_energyUB << std::endl;
             }
+        }
+
+        // If timing then do now to get out of way
+        if (m_doTiming)
+        {
+            IChronoStatSvc::ChronoTime time = m_chronoSvc->chronoDelta("NewCalFullProfileTool",IChronoStatSvc::USER);
+            AUD_CalProfile_total = static_cast<float>(time)*0.000001;
+            time = m_chronoSvc->chronoDelta("NewCalFullProfileTool_satXtal",IChronoStatSvc::USER);
+            AUD_CalProfile_satXtal = static_cast<float>(time)*0.000001;
+            time = m_chronoSvc->chronoDelta("NewCalFullProfileTool_CalProfile",IChronoStatSvc::USER);
+            AUD_CalProfile_cal = static_cast<float>(time)*0.000001;
+            time = m_chronoSvc->chronoDelta("NewCalFullProfileTool_TkrProfile",IChronoStatSvc::USER);
+            AUD_CalProfile_tkr = static_cast<float>(time)*0.000001;
         }
     }
 
