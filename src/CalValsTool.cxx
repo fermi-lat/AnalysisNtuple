@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.142 2013/05/13 21:12:38 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.143 2013/05/16 23:44:16 lsrea Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -17,6 +17,7 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.142
 #include "GaudiKernel/ToolFactory.h"
 #include "GaudiKernel/IToolSvc.h"
 #include "GaudiKernel/DataSvc.h"
+#include "GaudiKernel/IChronoStatSvc.h"
 
 #include "Event/TopLevel/EventModel.h"
 #include "Event/TopLevel/Event.h"
@@ -93,6 +94,8 @@ private:
     ITkrGeometrySvc* m_tkrGeom;
 
     IPropagator*     m_G4PropTool;    
+
+    IChronoStatSvc*        m_chronoSvc;
 
     IValsTool*       m_pTkrTool;
 
@@ -551,6 +554,12 @@ private:
     float CAL_uber2_TS_TKR_T_100;
     float CAL_uber2_TS_TKR_TL_100;
 
+    bool  m_doTiming;
+    float AUD_CalProfile_total;
+    float AUD_CalProfile_satXtal;
+    float AUD_CalProfile_cal;
+    float AUD_CalProfile_tkr;
+
     int TSfillTSdist(std::vector<Event::CalXtalRecData*> xtallist);
     int TSfillTS(int optts);
     double TSgetinterpolationTS(double efrac);
@@ -584,6 +593,7 @@ CalValsTool::CalValsTool(const std::string& type,
     declareProperty("maxVetoError", m_maxVetoError=100000.0);
     declareProperty("vetoNSigma", m_vetoNSigma=2.0);
     declareProperty("vetoDTheta", m_vetoDTheta=0.03); // ONLY for simplified error matrix
+    declareProperty("DoTiming",   m_doTiming=true);
 
 
 }
@@ -835,6 +845,12 @@ StatusCode CalValsTool::initialize()
 
         if(!toolSvc->retrieveTool("G4PropagationTool", m_G4PropTool)) {
             log << MSG::ERROR << "Couldn't find the G4PropagationTool!" << endreq;
+            return StatusCode::FAILURE;
+        }
+
+        if (service("ChronoStatSvc", m_chronoSvc, true).isFailure())
+        {
+            log << MSG::ERROR << "Couldn't find the ChronoSvc!" << endreq;
             return StatusCode::FAILURE;
         }
 
@@ -1288,10 +1304,20 @@ StatusCode CalValsTool::initialize()
     addItem("CalTrSizeTkrTL99",&CAL_TS_TKR_TL_99);
     addItem("CalTrSizeTkrTL100",&CAL_TS_TKR_TL_100);
 
+
     addItem("CalUberTrSizeTkrT100",&CAL_uber_TS_TKR_T_100);
     addItem("CalUberTrSizeTkrTL100",&CAL_uber_TS_TKR_TL_100);
     addItem("CalUber2TrSizeTkrT100",&CAL_uber2_TS_TKR_T_100);
     addItem("CalUber2TrSizeTkrTL100",&CAL_uber2_TS_TKR_TL_100);
+
+    if (m_doTiming)
+    {
+
+        addItem("AudCalProfileTotal",    &AUD_CalProfile_total);
+        addItem("AudCalProfileSatXtal",  &AUD_CalProfile_satXtal);
+        addItem("AudCalProfileCal",      &AUD_CalProfile_cal);
+        addItem("AudCalProfileTkr",      &AUD_CalProfile_tkr);
+    }
 
     zeroVals();
 
@@ -1319,6 +1345,19 @@ StatusCode CalValsTool::calculate()
       pCalClusterMap(m_pEventSvc,EventModel::CalRecon::CalClusterMap); 
 
     if(pCalClusterMap == 0 || pCalClusterMap->empty()) return sc;
+
+    // If timing then do now to get out of way
+    if (m_doTiming)
+    {
+        IChronoStatSvc::ChronoTime time = m_chronoSvc->chronoDelta("NewCalFullProfileTool",IChronoStatSvc::USER);
+        AUD_CalProfile_total = static_cast<float>(time)*0.000001;
+        time = m_chronoSvc->chronoDelta("NewCalFullProfileTool_satXtal",IChronoStatSvc::USER);
+        AUD_CalProfile_satXtal = static_cast<float>(time)*0.000001;
+        time = m_chronoSvc->chronoDelta("NewCalFullProfileTool_calProfile",IChronoStatSvc::USER);
+        AUD_CalProfile_cal = static_cast<float>(time)*0.000001;
+        time = m_chronoSvc->chronoDelta("NewCalFullProfileTool_tkrProfile",IChronoStatSvc::USER);
+        AUD_CalProfile_tkr = static_cast<float>(time)*0.000001;
+    }
 
     Event::CalCluster* uberCluster = (*pCalClusterMap).getUberCluster();
     Event::CalCluster* uber2Cluster = (*pCalClusterMap).getUber2Cluster();
