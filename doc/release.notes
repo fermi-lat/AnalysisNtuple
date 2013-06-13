@@ -3,6 +3,7 @@
   @verbatim
    * EOH *
 
+ AnalysisNtuple-02-71-18 14-Jun-2013 TU Added auditor info for energy recon
  AnalysisNtuple-02-71-17 03-Jun-2013  lsrea Added 9 GLT variables requested by Eric G
  AnalysisNtuple-02-71-16 31-May-2013 TU Adding some variables to keep track of merged clusters. Might be sweeping up other changes too...
  AnalysisNtuple-02-71-15 21-May-2013 heather Patch unit test JO to read in relations
