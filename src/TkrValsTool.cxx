@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.132 2013/05/09 20:11:27 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.133 2013/05/16 23:44:16 lsrea Exp $
 */
 
 //#define PRE_CALMOD 1
@@ -191,9 +191,9 @@ private:
     float Tkr_1_PrjTwrEdge;
     float Tkr_1_DieEdge;
     float Tkr_1_TwrGap;
-    float Tkr_1_xdir;
-    float Tkr_1_ydir;
-    float Tkr_1_zdir;
+    double Tkr_1_xdir;
+    double Tkr_1_ydir;
+    double Tkr_1_zdir;
     float Tkr_1_Phi;
     float Tkr_1_Theta;
     float Tkr_1_x0;
@@ -269,9 +269,9 @@ private:
     float Tkr_2_TwrEdge;
     float Tkr_2_PrjTwrEdge;
     float Tkr_2_DieEdge;
-    float Tkr_2_xdir;
-    float Tkr_2_ydir;
-    float Tkr_2_zdir;
+    double Tkr_2_xdir;
+    double Tkr_2_ydir;
+    double Tkr_2_zdir;
     float Tkr_2_Phi;
     float Tkr_2_Theta;
     float Tkr_2_x0;
@@ -638,7 +638,7 @@ for the predicted energy in each layer, and weighted accordingly.
 So the result is sensitive to the particle type and 
 the chosen energy-loss mechanism.       
 <tr><td> Tkr1[X/Y/Z]Dir  
-<td>F<td>   Track [x/y/z] direction cosine  
+<td>D<td>   Track [x/y/z] direction cosine  
 <tr><td> Tkr1Phi  
 <td>F<td>   Track phi, radians 
 (direction from which particle comes, not particle direction!) 

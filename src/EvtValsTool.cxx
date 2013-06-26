@@ -3,7 +3,7 @@
 @brief Calculates the "Event" analysis variables from the other ntuple variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.64 2013/04/29 17:03:42 kadrlica Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/EvtValsTool.cxx,v 1.65 2013/05/09 18:29:02 lsrea Exp $
 */
 
 #include "ValBase.h"
@@ -939,7 +939,8 @@ StatusCode EvtValsTool::calculate()
     }
   
   // EdgeAngle:   distance from tower edge / cos(theta) 
-  float tkrEdge, calEdge, tkr1ZDir = -1.;
+  float tkrEdge, calEdge;
+  double tkr1ZDir = -1.;
   if(m_pTkrTool->getVal("Tkr1ZDir",tkr1ZDir, nextCheck).isSuccess()) {
     if(tkr1ZDir == 0.) tkr1ZDir = -1.; 
     if (m_pTkrTool->getVal("TkrTwrEdge", tkrEdge, nextCheck).isSuccess()) {
@@ -949,7 +950,7 @@ StatusCode EvtValsTool::calculate()
       EvtCalEdgeAngle = -calEdge/tkr1ZDir;
     }
   }
-  float tkr1ZDir2 = tkr1ZDir*tkr1ZDir;  
+  double tkr1ZDir2 = tkr1ZDir*tkr1ZDir;  
   // Final Energy Selection: (Combo approach) 
   //    Use Kalman energy when not enough in the Cal,
   //    use Last Layer Correction when avaialable (eCalEneLLCorr > 0) or else
@@ -1116,11 +1117,11 @@ StatusCode EvtValsTool::calculate()
   float myfTkr1FirstLayer = 0;
   if(!(m_pTkrTool->getVal("Tkr1FirstLayer",myfTkr1FirstLayer,nextCheck).isSuccess())) myfTkr1FirstLayer = 0;
   int myTkr1FirstLayer = (int)myfTkr1FirstLayer;
-  float myTkr1XDir = 0;
+  double myTkr1XDir = 0;
   if(!(m_pTkrTool->getVal("Tkr1XDir",myTkr1XDir,nextCheck).isSuccess())) myTkr1XDir = 0;
-  float myTkr1YDir = 0;
+  double myTkr1YDir = 0;
   if(!(m_pTkrTool->getVal("Tkr1YDir",myTkr1YDir,nextCheck).isSuccess())) myTkr1YDir = 0;
-  float myTkr1ZDir = 0;
+  double myTkr1ZDir = 0;
   if(!(m_pTkrTool->getVal("Tkr1ZDir",myTkr1ZDir,nextCheck).isSuccess())) myTkr1ZDir = 0;
   float myTkr1X0 = 0;
   if(!(m_pTkrTool->getVal("Tkr1X0",myTkr1X0,nextCheck).isSuccess())) myTkr1X0 = 0;
@@ -1156,15 +1157,15 @@ StatusCode EvtValsTool::calculate()
   if(myCalEnergyCorr<=0) myCalEnergyCorr = myCalEnergyRaw;
 
   NewEvtEnergyCorr = (myCalEnergyCorr+myTkr1StripsEnergyCorr)/0.85;
-  double corfactor = GetEnergyUB2Correction(0,myTkr1FirstLayer,myTkr1ZDir,NewEvtEnergyCorr);
+  double corfactor = GetEnergyUB2Correction(0,myTkr1FirstLayer,(float)myTkr1ZDir,NewEvtEnergyCorr);
   NewEvtEnergyCorrUB2 = NewEvtEnergyCorr*corfactor;
 
   double myEvtEnergyCorr = EvtEnergyCorr/0.9;
-  corfactor = GetEnergyUB2Correction(1,myTkr1FirstLayer,myTkr1ZDir,myEvtEnergyCorr);
+  corfactor = GetEnergyUB2Correction(1,myTkr1FirstLayer,(float)myTkr1ZDir,myEvtEnergyCorr);
   EvtEnergyCorrUB2 = myEvtEnergyCorr*corfactor;
 
   // Unbias myCalNewcfpEnergy
-  corfactor = GetEnergyUB2Correction(2,myTkr1FirstLayer,myTkr1ZDir,myCalNewCfpEnergy);
+  corfactor = GetEnergyUB2Correction(2,myTkr1FirstLayer,(float)myTkr1ZDir,myCalNewCfpEnergy);
   CalNewCfpEnergyUB2 = myCalNewCfpEnergy*corfactor;
 
   // Building the event energy from NewEvtEnergyCorrUB2 and myCalNewCfpEnergyUB as shown in Ph.Bruel presentation Energy reconstruction (slide 12) at the pass8 workshop in Washington (2012)
@@ -1405,6 +1406,10 @@ double EvtValsTool::aveRadLens(Point cal_top, Vector t0, double radius, int numS
       s_min         = (s_min  < s_minz) ? s_min :s_minz;
       
       // Set up a propagator to calc. rad. lens. 
+
+      // might as well leave this in, probably will need it soon!
+      //std::cout << "EvtValsTool propagator " << x0 << " " << t0 << std::endl;
+
       m_G4PropTool->setStepStart(x0, t0);
       m_G4PropTool->step(s_min);  
       

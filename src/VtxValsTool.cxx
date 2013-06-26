@@ -3,7 +3,7 @@
 @brief Calculates the Vtx analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.37 2013/04/29 09:01:33 kadrlica Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.38 2013/04/29 17:03:43 kadrlica Exp $
 */
 
 // Include files
@@ -65,9 +65,9 @@ private:
 
         //Vertexing Items
     int   VTX_numVertices;
-        float VTX_xdir;
-        float VTX_ydir;
-        float VTX_zdir;
+        double VTX_xdir;
+        double VTX_ydir;
+        double VTX_zdir;
         float VTX_Phi;
         float VTX_Theta;
     float VTX_Sxx;
@@ -97,9 +97,9 @@ private:
     float VTX2_transDoca;
     float VTX2_longDoca;
 
-    float VTX2_xdir;
-    float VTX2_ydir;
-    float VTX2_zdir;
+    double VTX2_xdir;
+    double VTX2_ydir;
+    double VTX2_zdir;
     float VTX2_Phi;
     float VTX2_Theta;
     float VTX2_x0;
@@ -111,9 +111,9 @@ private:
     
     unsigned int VTX2_Status;
 
-    float VTXN_xdir;
-    float VTXN_ydir;
-    float VTXN_zdir;
+    double VTXN_xdir;
+    double VTXN_ydir;
+    double VTXN_zdir;
 
         float VTXN_Sxx;
     float VTXN_Sxy;
@@ -121,9 +121,9 @@ private:
     float VTXN_ChgWt;
     float VTXN_NeutWt;
 
-    float VTXN1_xdir;
-    float VTXN1_ydir;
-    float VTXN1_zdir;
+    double VTXN1_xdir;
+    double VTXN1_ydir;
+    double VTXN1_zdir;
 
         float VTXN1_Sxx;
     float VTXN1_Sxy;
@@ -168,7 +168,7 @@ from the best track. (For 1-track vertices, these would be the same.)
 <tr><td> VtxNumVertices
 <td>I<td>   Number of vertices in the event
 <tr><td> Vtx[/2/Neut/Neut1][X/Y/Z]Dir 
-<td>F<td>   [x/y/z] direction cosine of the vertex: 
+<td>D<td>   [x/y/z] direction cosine of the vertex: 
             the first is "Vtx"; the 2nd is "Vtx2".
             For Neut and Neut1, see above. 
 <tr><td> VtxPhi 
@@ -418,8 +418,8 @@ StatusCode VtxValsTool::calculate()
 
         VTX_Head_Sep = (x1-x2H).magnitude(); 
 
-        double cost1t2 = t1*t2; 
-        double t1t2  = acos(cost1t2); 
+        cost1t2 = t1*t2; 
+        t1t2  = acos(cost1t2); 
         VTX_Angle = t1t2;
         VTX_DOCA  = gamma->getDOCA(); 
         VTX_S1    = gamma->getTkr1ArcLen();

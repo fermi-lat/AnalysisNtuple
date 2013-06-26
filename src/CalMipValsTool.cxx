@@ -3,7 +3,7 @@
 @brief Calculates the Cal Mip analysis variables
 @author F. Piron
 
-  $Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/src/CalMipValsTool.cxx,v 1.10.42.1 2011/04/19 18:10:24 heather Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalMipValsTool.cxx,v 1.12 2011/12/12 20:36:35 heather Exp $
 */
 
 // Include files
@@ -72,9 +72,10 @@ private:
   float m_x0;
   float m_y0;
   float m_z0;
-  float m_xDir;
-  float m_yDir;
-  float m_zDir;
+
+  double m_xDir;
+  double m_yDir;
+  double m_zDir;
   float m_d2edge;
   float m_arcLen;
   float m_ecor;
@@ -83,7 +84,7 @@ private:
   float m_erm;
   //2007-04-05 Sylvain Guiriec
   float m_ermc;
-  float m_derr;
+  double m_derr;
   float m_barDist;
   //2007-04-05 Sylvain Guiriec End 
 };
@@ -98,7 +99,7 @@ private:
 <tr><td> CalMip[X/Y/Z]0  
 <td>F<td>    [x/y/z] coordinates of the energy centroid of the best track
 <tr><td> CalMip[X/Y/Z]Dir  
-<td>F<td>    [x/y/z] direction cosines of the best track
+<td>D<td>    [x/y/z] direction cosines of the best track
 <tr><td> CalMipD2edge  
 <td>F<td>    Distance of the best track from the nearest edge of the Cal
 <tr><td> CalMipArcLen  
@@ -338,9 +339,9 @@ StatusCode CalMipValsTool::calculate()
         Point  x1 = track_1->getInitialPosition();
         Vector t1 = track_1->getInitialDirection();
         
-        float Tkr_1_xdir        = t1.x();
-        float Tkr_1_ydir        = t1.y();
-        float Tkr_1_zdir        = t1.z();
+        double Tkr_1_xdir        = t1.x();
+        double Tkr_1_ydir        = t1.y();
+        double Tkr_1_zdir        = t1.z();
         
         float Tkr_1_x0          = x1.x();
         float Tkr_1_y0          = x1.y();
@@ -351,9 +352,12 @@ StatusCode CalMipValsTool::calculate()
         else if (m_arcLen<=0)
           ermc=-100.;
         //@@@@@
-        derr=TMath::ACos(m_xDir*Tkr_1_xdir+
+        double derr=TMath::ACos(m_xDir*Tkr_1_xdir+
                                 m_yDir*Tkr_1_ydir+
                                 m_zDir*Tkr_1_zdir);
+        // could just be:
+        //derr = TMath::ACos(dir.dot(t1));
+
         
         //@@@@@ Distance between tracker track & calorimeter track's centroid point
         double l=(Tkr_1_xdir*(m_x0-Tkr_1_x0)+Tkr_1_ydir*(m_y0-Tkr_1_y0)+Tkr_1_zdir*(m_z0-Tkr_1_z0))/(TMath::Power(Tkr_1_xdir,2)+TMath::Power(Tkr_1_ydir,2)+TMath::Power(Tkr_1_zdir,2));

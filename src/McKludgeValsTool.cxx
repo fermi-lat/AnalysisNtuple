@@ -2,7 +2,7 @@
 @brief Inserts sentinel values for several variables needed by ClassifyAlg
 @author Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/src/McKludgeValsTool.cxx,v 1.3.324.1 2011/04/19 18:10:24 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McKludgeValsTool.cxx,v 1.4 2011/12/12 20:36:35 heather Exp $
 */
 // Include files
 
@@ -46,14 +46,14 @@ private:
        
     //Pure MC Tuple Items
     float MC_SourceId;
-    float MC_Tkr1DirErr;
+    double MC_Tkr1DirErr;
     float MC_Energy;
-    float MC_DirErr;
-    float MC_DirErrN;
-    float MC_DirErrN1;
-    float MC_XDir;
-    float MC_YDir;
-    float MC_ZDir;
+    double MC_DirErr;
+    double MC_DirErrN;
+    double MC_DirErrN1;
+    double MC_XDir;
+    double MC_YDir;
+    double MC_ZDir;
 
 
     // to decode the particle charge
@@ -88,15 +88,15 @@ ClassifyAlg doesn't crash when it finds them missing
 <tr><td> McEnergy 
 <td>F<td>   set to -1
 <tr><td> McDirErr 
-<td>F<td>   set to -1
+<td>D<td>   set to -1
 <tr><td> McTkr1DirErr 
-<td>F<td>   set to -1 
+<td>D<td>   set to -1 
 <tr><td> McDirErrN 
-<td>F<td>   set to -1 
+<td>D<td>   set to -1 
 <tr><td> McDirErrN1 
-<td>F<td>   set to -1 
+<td>D<td>   set to -1 
 <tr><td> Mc[X/Y/Z]Dir 
-<td>F<td>   set to -2 
+<td>D<td>   set to -2 
 </table>
 */
 

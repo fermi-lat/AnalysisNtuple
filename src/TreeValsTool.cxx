@@ -2,7 +2,7 @@
 @brief Calculates the Tracker Tree variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TreeValsTool.cxx,v 1.25 2013/05/16 23:44:16 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TreeValsTool.cxx,v 1.26 2013/06/11 22:38:12 usher Exp $
 */
 
 // Include files
@@ -133,9 +133,9 @@ private:
     float Tkr_tree1_PosX;
     float Tkr_tree1_PosY;
     float Tkr_tree1_PosZ;
-    float Tkr_tree1_DirX;
-    float Tkr_tree1_DirY;
-    float Tkr_tree1_DirZ;
+    double Tkr_tree1_DirX;
+    double Tkr_tree1_DirY;
+    double Tkr_tree1_DirZ;
     float Tkr_tree1_NumBoxes;
     float Tkr_tree1_ChiSquare;
     float Tkr_tree1_RmsTrans;
@@ -163,9 +163,9 @@ private:
     float TFP_bestPosX;
     float TFP_bestPosY;
     float TFP_bestPosZ;
-    float TFP_bestDirX;
-    float TFP_bestDirY;
-    float TFP_bestDirZ;
+    double TFP_bestDirX;
+    double TFP_bestDirY;
+    double TFP_bestDirZ;
     float TFP_bestNumHits;
     float TFP_bestChiSquare;
     float TFP_bestAveDist;

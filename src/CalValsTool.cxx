@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/src/CalValsTool.cxx,v 1.145 2013/06/11 22:38:12 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.146 2013/06/19 03:18:32 usher Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -256,9 +256,9 @@ private:
     float CAL_Clu1_MomXCntrCor;
     float CAL_Clu1_MomYCntrCor;
     float CAL_Clu1_MomZCntrCor;
-    float CAL_Clu1_MomXDir;
-    float CAL_Clu1_MomYDir;
-    float CAL_Clu1_MomZDir;
+    double CAL_Clu1_MomXDir;
+    double CAL_Clu1_MomYDir;
+    double CAL_Clu1_MomZDir;
     float CAL_Clu1_MomNumIterations;
   float CAL_Clu1_MomRunFlag; // FOR DEBUG ONLY!!!!
     float CAL_Clu1_MomNumCoreXtals;
@@ -285,9 +285,9 @@ private:
     float CAL_Clu1_FitXCntr;
     float CAL_Clu1_FitYCntr;
     float CAL_Clu1_FitZCntr;
-    float CAL_Clu1_FitXDir;
-    float CAL_Clu1_FitYDir;
-    float CAL_Clu1_FitZDir;
+    double CAL_Clu1_FitXDir;
+    double CAL_Clu1_FitYDir;
+    double CAL_Clu1_FitZDir;
     float CAL_Clu1_FitNumLayers;
     float CAL_Clu1_FitChiSquare;
     // Variables from the Minimum Spanning Tree clustering.
@@ -322,9 +322,9 @@ private:
   float CAL_Clu2_MomXCntr;
   float CAL_Clu2_MomYCntr;
   float CAL_Clu2_MomZCntr;
-  float CAL_Clu2_MomXDir;
-  float CAL_Clu2_MomYDir;
-  float CAL_Clu2_MomZDir;
+  double CAL_Clu2_MomXDir;
+  double CAL_Clu2_MomYDir;
+  double CAL_Clu2_MomZDir;
   float CAL_Clu2_MomNumCoreXtals;
   float CAL_Clu2_MomTransRms;
   float CAL_Clu2_MomLongRms;
@@ -341,9 +341,9 @@ private:
   float CAL_Clu3_MomXCntr;
   float CAL_Clu3_MomYCntr;
   float CAL_Clu3_MomZCntr;
-  float CAL_Clu3_MomXDir;
-  float CAL_Clu3_MomYDir;
-  float CAL_Clu3_MomZDir;
+  double CAL_Clu3_MomXDir;
+  double CAL_Clu3_MomYDir;
+  double CAL_Clu3_MomZDir;
   float CAL_Clu3_MomNumCoreXtals;
   float CAL_Clu3_MomTransRms;
   float CAL_Clu3_MomLongRms;
@@ -360,9 +360,9 @@ private:
   float CAL_Clu4_MomXCntr;
   float CAL_Clu4_MomYCntr;
   float CAL_Clu4_MomZCntr;
-  float CAL_Clu4_MomXDir;
-  float CAL_Clu4_MomYDir;
-  float CAL_Clu4_MomZDir;
+  double CAL_Clu4_MomXDir;
+  double CAL_Clu4_MomYDir;
+  double CAL_Clu4_MomZDir;
   float CAL_Clu4_MomNumCoreXtals;
   float CAL_Clu4_MomTransRms;
   float CAL_Clu4_MomLongRms;
@@ -379,9 +379,9 @@ private:
   float CAL_Clu5_MomXCntr;
   float CAL_Clu5_MomYCntr;
   float CAL_Clu5_MomZCntr;
-  float CAL_Clu5_MomXDir;
-  float CAL_Clu5_MomYDir;
-  float CAL_Clu5_MomZDir;
+  double CAL_Clu5_MomXDir;
+  double CAL_Clu5_MomYDir;
+  double CAL_Clu5_MomZDir;
   float CAL_Clu5_MomNumCoreXtals;
   float CAL_Clu5_MomTransRms;
   float CAL_Clu5_MomLongRms;
@@ -398,9 +398,9 @@ private:
   float CAL_Uber2_MomXCntr;
   float CAL_Uber2_MomYCntr;
   float CAL_Uber2_MomZCntr;
-  float CAL_Uber2_MomXDir;
-  float CAL_Uber2_MomYDir;
-  float CAL_Uber2_MomZDir;
+  double CAL_Uber2_MomXDir;
+  double CAL_Uber2_MomYDir;
+  double CAL_Uber2_MomZDir;
   float CAL_Uber2_MomNumCoreXtals;
   float CAL_Uber2_MomTransRms;
   float CAL_Uber2_MomLongRms;

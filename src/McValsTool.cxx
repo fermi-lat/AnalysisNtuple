@@ -2,7 +2,7 @@
 @brief Calculates the Mc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.74 2013/04/22 18:14:01 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McValsTool.cxx,v 1.75 2013/04/22 21:20:20 lsrea Exp $
 */
 // Include files
 
@@ -95,17 +95,17 @@ private:
     float MC_y0;
     float MC_z0;
     
-    float MC_xdir;
-    float MC_ydir;
-    float MC_zdir;
+    double MC_xdir;
+    double MC_ydir;
+    double MC_zdir;
 
-    float MC_xdir1;
-    float MC_ydir1;
-    float MC_zdir1;
+    double MC_xdir1;
+    double MC_ydir1;
+    double MC_zdir1;
 
-    float MC_xdir2;
-    float MC_ydir2;
-    float MC_zdir2;
+    double MC_xdir2;
+    double MC_ydir2;
+    double MC_zdir2;
   
     // celestial coordinates now set in McCoordsAlg
     
@@ -121,27 +121,27 @@ private:
     //float MC_ydir_err;
     //float MC_zdir_err;
     
-    float MC_dir_err;
-    float MC_dir_errN;
-    float MC_dir_errN1;
-    float MC_TKR1_dir_err;
-    float MC_TKR2_dir_err;
+    double MC_dir_err;
+    double MC_dir_errN;
+    double MC_dir_errN1;
+    double MC_TKR1_dir_err;
+    double MC_TKR2_dir_err;
 
     float MC_EvtDeltaEoE;
 
     // Tree
-    float MC_Tree_dir_err;
+    double MC_Tree_dir_err;
 
     // Tree
     float MC_Tree_match_PosX;
     float MC_Tree_match_PosY;
     float MC_Tree_match_PosZ;
-    float MC_Tree_match_DirX;
-    float MC_Tree_match_DirY;
-    float MC_Tree_match_DirZ;
-    float MC_Tree_match_dir_err;
-    float MC_Tree_match_track1_err;
-    float MC_Tree_match_track2_err;
+    double MC_Tree_match_DirX;
+    double MC_Tree_match_DirY;
+    double MC_Tree_match_DirZ;
+    double MC_Tree_match_dir_err;
+    double MC_Tree_match_track1_err;
+    double MC_Tree_match_track2_err;
     float MC_Tree_match_id;
 
     // Filter, if present
@@ -151,9 +151,9 @@ private:
     float MC_Cal_match_PosX;
     float MC_Cal_match_PosY;
     float MC_Cal_match_PosZ;
-    float MC_Cal_match_DirX;
-    float MC_Cal_match_DirY;
-    float MC_Cal_match_DirZ;
+    double MC_Cal_match_DirX;
+    double MC_Cal_match_DirY;
+    double MC_Cal_match_DirZ;
     float MC_Cal_match_energy;
     float MC_Cal_match_rmsTrans;
     float MC_Cal_match_rmsLong;
@@ -233,7 +233,7 @@ McValsTool::McValsTool(const std::string& type,
 <tr><td> Mc[X/Y/Z]0 
 <td>F<td>   [x/y/z] coordinate of photon conversion or charged particle origin
 <tr><td> Mc[X/Y/Z]Dir 
-<td>F<td>   [x/y/z] initial direction cosines of primary particle
+<td>D<td>   [x/y/z] initial direction cosines of primary particle
 <tr><td> Mc[X/Y]Err 
 <td>F<td>   REMOVED! [x/y] (found) - [x/y] (Mc) (Mc position taken at the z of the 
             found vertex or first hit)
@@ -242,9 +242,9 @@ McValsTool::McValsTool(const std::string& type,
 <tr><td> Mc[X/Y/Z]DirErr 
 <td>F<td>   REMOVED! [x/y/z]dir (found) - [x/y/z]dir (Mc )
 <tr><td> McDirErr 
-<td>F<td>   Angle between found direction and Mc direction (radians )
+<td>D<td>   Angle between found direction and Mc direction (radians )
 <tr><td> McTkr[1/2]DirErr 
-<td>F<td>   Angle between direction of [best/second] track and Mc direction (radians) 
+<td>D<td>   Angle between direction of [best/second] track and Mc direction (radians) 
 <tr><td> McEvtDeltaEoE
 <td>F<td>   fractional error of best from McEnergy
 <tr><td> McAcd[X/Y/Z]Enter
