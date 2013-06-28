@@ -3,6 +3,7 @@
   @verbatim
    * EOH *
 
+ AnalysisNtuple-02-71-21 27-Jun-2013  lsrea fix a couple of doubly defined variables
  AnalysisNtuple-02-71-20 25-Jun-2013  lsrea promoted all the dirs, direrrs, derrs, etc. to double
  AnalysisNtuple-02-71-19 23-Jun-2013  lsrea AnalysisNtupleAlg: remove AcdValsTool from default list to match readigi_runrecon.txt
  AnalysisNtuple-02-71-18 14-Jun-2013 TU Added auditor info for energy recon
