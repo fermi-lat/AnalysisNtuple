@@ -3,7 +3,7 @@
 @brief Calculates the Vtx analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.38 2013/04/29 17:03:43 kadrlica Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/VtxValsTool.cxx,v 1.39 2013/06/26 01:05:29 lsrea Exp $
 */
 
 // Include files
@@ -418,8 +418,8 @@ StatusCode VtxValsTool::calculate()
 
         VTX_Head_Sep = (x1-x2H).magnitude(); 
 
-        cost1t2 = t1*t2; 
-        t1t2  = acos(cost1t2); 
+        double cost1t2 = t1*t2; 
+        double t1t2  = acos(cost1t2); 
         VTX_Angle = t1t2;
         VTX_DOCA  = gamma->getDOCA(); 
         VTX_S1    = gamma->getTkr1ArcLen();

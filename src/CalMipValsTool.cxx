@@ -3,7 +3,7 @@
 @brief Calculates the Cal Mip analysis variables
 @author F. Piron
 
-  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalMipValsTool.cxx,v 1.12 2011/12/12 20:36:35 heather Exp $
+  $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalMipValsTool.cxx,v 1.13 2013/06/26 01:05:29 lsrea Exp $
 */
 
 // Include files
@@ -352,7 +352,7 @@ StatusCode CalMipValsTool::calculate()
         else if (m_arcLen<=0)
           ermc=-100.;
         //@@@@@
-        double derr=TMath::ACos(m_xDir*Tkr_1_xdir+
+        derr=TMath::ACos(m_xDir*Tkr_1_xdir+
                                 m_yDir*Tkr_1_ydir+
                                 m_zDir*Tkr_1_zdir);
         // could just be:
