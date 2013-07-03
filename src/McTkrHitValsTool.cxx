@@ -1,7 +1,7 @@
 /** @file McTkrHitValsTool.cxx
     @brief declartion, implementaion of the class UserAlg
 
-    $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McTkrHitValsTool.cxx,v 1.15 2011/12/12 20:36:35 heather Exp $
+    $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McTkrHitValsTool.cxx,v 1.16 2013/05/15 09:30:21 carmelo Exp $
 */
 
 #include "ValBase.h"
@@ -85,10 +85,13 @@ private:
     int          m_primNumAcdHits;    // Primary number of Acd hits 
     int          m_primNumCalHits;    // Primary number of calorimeter hits 
     int          m_primInteracted;    // Primary interacted in LAT
-    int          m_primInteractFlag;  // Primary first interaction flag: 0 for conversion, 1 compton, 2 other
+    int          m_primInteractFlag;             // Primary first interaction flag: 0 for conversion, 1 compton, 2 other
+    int          m_primInteractMaterialId;       // Primary first interaction material Id.
+    char         m_primInteractMaterialName[80]; // Primary first interaction material Name (string)
     float        m_primInteractX0;    // Primary first interaction X0
     float        m_primInteractY0;    // Primary first interaction Y0
     float        m_primInteractZ0;    // Primary first interaction Z0
+
 
     // Variables for first daughter
     int          m_dght1Type;         // Particle type of "best" daughter of primary
@@ -270,6 +273,8 @@ StatusCode McTkrHitValsTool::initialize()
     addItem("McTHnTruncatedLost",   &m_nTruncatedLost);
 
     addItem("McTHPrimInteraction",  &m_primInteractFlag);
+    addItem("McTHPrimInterMatId",   &m_primInteractMaterialId);
+    addItem("McTHPrimInterMatName",  m_primInteractMaterialName);
     addItem("McTHPrimInterX0",      &m_primInteractX0); // These 3 may duplicate other
     addItem("McTHPrimInterY0",      &m_primInteractY0); // quantities and may be
     addItem("McTHPrimInterZ0",      &m_primInteractZ0); // removed in the future
@@ -498,12 +503,20 @@ StatusCode McTkrHitValsTool::calculate()
 
 
         // Now some polarization-specific quantities for photons: look for the first interaction of the photon.
+
+        // init output vars
+        m_primInteractMaterialId = -1; 
+        std::string materialName = "";
+        strncpy(m_primInteractMaterialName, materialName.c_str(),80);
+        m_primInteractFlag = -1;
+        m_primInteractX0 = -999.;
+        m_primInteractY0 = -999.;
+        m_primInteractZ0 = -999.;
         double MaxDocaDght = 0.0001;
         if (m_primType == 22){ // we start with a photon 
           
           HepPoint3D primaryPosition              = primary->initialPosition() ;
           CLHEP::HepLorentzVector primaryMomentum = primary->initialFourMomentum() ;
-
 
           // Need pointers to the Ele/Pos daughters
           const Event::McParticle* daughterEle = 0;
@@ -562,6 +575,7 @@ StatusCode McTkrHitValsTool::calculate()
             m_primInteractX0 = primary->finalPosition().x();
             m_primInteractY0 = primary->finalPosition().y();
             m_primInteractZ0 = primary->finalPosition().z();
+          
           }
           else if ((processEle==comptString) && daughterElePrimaryDoca< MaxDocaDght ){
             // if compton, use electron initial position
@@ -576,8 +590,15 @@ StatusCode McTkrHitValsTool::calculate()
             m_primInteractX0 = primary->finalPosition().x();
             m_primInteractY0 = primary->finalPosition().y();
             m_primInteractZ0 = primary->finalPosition().z();
-
           }
+
+          // now use the propagation tool to access material Id and geometry. (thanks to tracy - jira LPATE-81)
+          Point  pp(m_primInteractX0, m_primInteractY0, m_primInteractZ0);
+          m_G4PropTool->setStepStart(pp, t1);
+          m_primInteractMaterialId = m_G4PropTool->getMaterialIndex(0);
+          materialName = m_G4PropTool->getMaterialName(0);
+          strncpy(m_primInteractMaterialName, materialName.c_str(),80);
+          if (m_primInteractMaterialName == "") memset(m_primInteractMaterialName, '_', 80);
 
         } // end if photon.
     }
