@@ -1,7 +1,7 @@
 /** @file McTkrHitValsTool.cxx
     @brief declartion, implementaion of the class UserAlg
 
-    $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McTkrHitValsTool.cxx,v 1.17 2013/07/03 16:22:36 carmelo Exp $
+    $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McTkrHitValsTool.cxx,v 1.18 2013/07/04 08:25:55 carmelo Exp $
 */
 
 #include "ValBase.h"
@@ -91,7 +91,14 @@ private:
     float        m_primInteractX0;    // Primary first interaction X0
     float        m_primInteractY0;    // Primary first interaction Y0
     float        m_primInteractZ0;    // Primary first interaction Z0
-
+    float        m_primInteractEleXDir;
+    float        m_primInteractEleYDir;
+    float        m_primInteractEleZDir;
+    float        m_primInteractEleEne;
+    float        m_primInteractPosXDir;
+    float        m_primInteractPosYDir;
+    float        m_primInteractPosZDir;
+    float        m_primInteractPosEne;
 
     // Variables for first daughter
     int          m_dght1Type;         // Particle type of "best" daughter of primary
@@ -201,6 +208,8 @@ McTkrHitValsTool::McTkrHitValsTool(const std::string& type,
 <tr><td> McTHPrimInterMatId <td> I <td> Id of the material in which the first interaction occurs
 <tr><td> McTHPrimInterMatName <td> C <td> Name of the material in which the first interaction occurs
 <tr><td> McTHPrimInter[X/Y/Z]0 <td> F <td> Position of the first interaction
+<tr><td> McTHPrimInter[Ele/Pos][X/Y/Z]Dir <td> F <td> Initial direction of Electron/Positron pair
+<tr><td> McTHPrimInter[Ele/Pos]E <td> F <td> Initial Energy of Electron/Positron pair
 </table>
 
 */
@@ -281,7 +290,14 @@ StatusCode McTkrHitValsTool::initialize()
     addItem("McTHPrimInterX0",      &m_primInteractX0); // These 3 may duplicate other
     addItem("McTHPrimInterY0",      &m_primInteractY0); // quantities and may be
     addItem("McTHPrimInterZ0",      &m_primInteractZ0); // removed in the future
-
+    addItem("McTHPrimInterEleXDir", &m_primInteractEleXDir);
+    addItem("McTHPrimInterEleYDir", &m_primInteractEleYDir);
+    addItem("McTHPrimInterEleZDir", &m_primInteractEleZDir);
+    addItem("McTHPrimInterEleE",    &m_primInteractEleEne);
+    addItem("McTHPrimInterPosXDir", &m_primInteractPosXDir);
+    addItem("McTHPrimInterPosYDir", &m_primInteractPosYDir);
+    addItem("McTHPrimInterPosZDir", &m_primInteractPosZDir);
+    addItem("McTHPrimInterPosE",    &m_primInteractPosEne);
 
     char buffer[20];
     for(int idx = 0; idx < 36; idx++) 
@@ -515,6 +531,14 @@ StatusCode McTkrHitValsTool::calculate()
         m_primInteractX0 = -999.;
         m_primInteractY0 = -999.;
         m_primInteractZ0 = -999.;
+        m_primInteractEleXDir = -999.;
+        m_primInteractEleYDir = -999.;
+        m_primInteractEleZDir = -999.;
+        m_primInteractEleEne  = -999.;
+        m_primInteractPosXDir = -999.;
+        m_primInteractPosYDir = -999.;
+        m_primInteractPosZDir = -999.;
+        m_primInteractPosEne  = -999.;
         double MaxDocaDght = 0.0001;
         if (m_primType == 22){ // we start with a photon 
           
@@ -578,7 +602,17 @@ StatusCode McTkrHitValsTool::calculate()
             m_primInteractX0 = primary->finalPosition().x();
             m_primInteractY0 = primary->finalPosition().y();
             m_primInteractZ0 = primary->finalPosition().z();
-          
+            // set primary electron momentum
+            m_primInteractEleXDir = daughterEle->initialFourMomentum().vect().unit().x();
+            m_primInteractEleYDir = daughterEle->initialFourMomentum().vect().unit().y();
+            m_primInteractEleZDir = daughterEle->initialFourMomentum().vect().unit().z();
+            m_primInteractEleEne  = daughterEle->initialFourMomentum().t();
+            // set primary positron momentum
+            m_primInteractPosXDir = daughterPos->initialFourMomentum().vect().unit().x();
+            m_primInteractPosYDir = daughterPos->initialFourMomentum().vect().unit().y();
+            m_primInteractPosZDir = daughterPos->initialFourMomentum().vect().unit().z();
+            m_primInteractPosEne  = daughterPos->initialFourMomentum().t();
+
           }
           else if ((processEle==comptString) && daughterElePrimaryDoca< MaxDocaDght ){
             // if compton, use electron initial position
@@ -586,6 +620,11 @@ StatusCode McTkrHitValsTool::calculate()
             m_primInteractX0 = daughterEle->initialPosition().x();
             m_primInteractY0 = daughterEle->initialPosition().y();
             m_primInteractZ0 = daughterEle->initialPosition().z();
+            // set primary electron momentum
+            m_primInteractEleXDir = daughterEle->initialFourMomentum().vect().unit().x();
+            m_primInteractEleYDir = daughterEle->initialFourMomentum().vect().unit().y();
+            m_primInteractEleZDir = daughterEle->initialFourMomentum().vect().unit().z();
+            m_primInteractEleEne  = daughterEle->initialFourMomentum().t();
           }
           else {
             // if other cases production use photon final position
