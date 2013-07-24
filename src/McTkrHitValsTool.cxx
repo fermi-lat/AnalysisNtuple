@@ -1,7 +1,7 @@
 /** @file McTkrHitValsTool.cxx
     @brief declartion, implementaion of the class UserAlg
 
-    $Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/src/McTkrHitValsTool.cxx,v 1.16 2013/05/15 09:30:21 carmelo Exp $
+    $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/McTkrHitValsTool.cxx,v 1.19 2013/07/04 17:34:39 carmelo Exp $
 */
 
 #include "ValBase.h"
@@ -85,10 +85,20 @@ private:
     int          m_primNumAcdHits;    // Primary number of Acd hits 
     int          m_primNumCalHits;    // Primary number of calorimeter hits 
     int          m_primInteracted;    // Primary interacted in LAT
-    int          m_primInteractFlag;  // Primary first interaction flag: 0 for conversion, 1 compton, 2 other
+    int          m_primInteractFlag;             // Primary first interaction flag: 0 for conversion, 1 compton, 2 other
+    int          m_primInteractMaterialId;       // Primary first interaction material Id.
+    char         m_primInteractMaterialName[80]; // Primary first interaction material Name (string)
     float        m_primInteractX0;    // Primary first interaction X0
     float        m_primInteractY0;    // Primary first interaction Y0
     float        m_primInteractZ0;    // Primary first interaction Z0
+    float        m_primInteractEleXDir;
+    float        m_primInteractEleYDir;
+    float        m_primInteractEleZDir;
+    float        m_primInteractEleEne;
+    float        m_primInteractPosXDir;
+    float        m_primInteractPosYDir;
+    float        m_primInteractPosZDir;
+    float        m_primInteractPosEne;
 
     // Variables for first daughter
     int          m_dght1Type;         // Particle type of "best" daughter of primary
@@ -195,6 +205,11 @@ McTkrHitValsTool::McTkrHitValsTool(const std::string& type,
 <tr><td> mcTHPosHitOthers <td> I <td> Number of McPositionHits none of the above
 <tr><td> mcTHTotalHits <td> I <td> Total number of MC generated Tracker hits 
 <tr><td> McTHPrimInteraction <td> I <td> Primary particle first interaction flag: 0 for conversion, 1 compton, 2 other
+<tr><td> McTHPrimInterMatId <td> I <td> Id of the material in which the first interaction occurs
+<tr><td> McTHPrimInterMatName <td> C <td> Name of the material in which the first interaction occurs
+<tr><td> McTHPrimInter[X/Y/Z]0 <td> F <td> Position of the first interaction
+<tr><td> McTHPrimInter[Ele/Pos][X/Y/Z]Dir <td> F <td> Initial direction of Electron/Positron pair
+<tr><td> McTHPrimInter[Ele/Pos]E <td> F <td> Initial Energy of Electron/Positron pair
 </table>
 
 */
@@ -270,10 +285,19 @@ StatusCode McTkrHitValsTool::initialize()
     addItem("McTHnTruncatedLost",   &m_nTruncatedLost);
 
     addItem("McTHPrimInteraction",  &m_primInteractFlag);
+    addItem("McTHPrimInterMatId",   &m_primInteractMaterialId);
+    addItem("McTHPrimInterMatName",  m_primInteractMaterialName);
     addItem("McTHPrimInterX0",      &m_primInteractX0); // These 3 may duplicate other
     addItem("McTHPrimInterY0",      &m_primInteractY0); // quantities and may be
     addItem("McTHPrimInterZ0",      &m_primInteractZ0); // removed in the future
-
+    addItem("McTHPrimInterEleXDir", &m_primInteractEleXDir);
+    addItem("McTHPrimInterEleYDir", &m_primInteractEleYDir);
+    addItem("McTHPrimInterEleZDir", &m_primInteractEleZDir);
+    addItem("McTHPrimInterEleE",    &m_primInteractEleEne);
+    addItem("McTHPrimInterPosXDir", &m_primInteractPosXDir);
+    addItem("McTHPrimInterPosYDir", &m_primInteractPosYDir);
+    addItem("McTHPrimInterPosZDir", &m_primInteractPosZDir);
+    addItem("McTHPrimInterPosE",    &m_primInteractPosEne);
 
     char buffer[20];
     for(int idx = 0; idx < 36; idx++) 
@@ -498,12 +522,28 @@ StatusCode McTkrHitValsTool::calculate()
 
 
         // Now some polarization-specific quantities for photons: look for the first interaction of the photon.
+
+        // init output vars
+        m_primInteractMaterialId = -1; 
+        std::string materialName = "";
+        strncpy(m_primInteractMaterialName, materialName.c_str(),80);
+        m_primInteractFlag = -1;
+        m_primInteractX0 = -999.;
+        m_primInteractY0 = -999.;
+        m_primInteractZ0 = -999.;
+        m_primInteractEleXDir = -999.;
+        m_primInteractEleYDir = -999.;
+        m_primInteractEleZDir = -999.;
+        m_primInteractEleEne  = -999.;
+        m_primInteractPosXDir = -999.;
+        m_primInteractPosYDir = -999.;
+        m_primInteractPosZDir = -999.;
+        m_primInteractPosEne  = -999.;
         double MaxDocaDght = 0.0001;
         if (m_primType == 22){ // we start with a photon 
           
           HepPoint3D primaryPosition              = primary->initialPosition() ;
           CLHEP::HepLorentzVector primaryMomentum = primary->initialFourMomentum() ;
-
 
           // Need pointers to the Ele/Pos daughters
           const Event::McParticle* daughterEle = 0;
@@ -562,6 +602,17 @@ StatusCode McTkrHitValsTool::calculate()
             m_primInteractX0 = primary->finalPosition().x();
             m_primInteractY0 = primary->finalPosition().y();
             m_primInteractZ0 = primary->finalPosition().z();
+            // set primary electron momentum
+            m_primInteractEleXDir = daughterEle->initialFourMomentum().vect().unit().x();
+            m_primInteractEleYDir = daughterEle->initialFourMomentum().vect().unit().y();
+            m_primInteractEleZDir = daughterEle->initialFourMomentum().vect().unit().z();
+            m_primInteractEleEne  = daughterEle->initialFourMomentum().t();
+            // set primary positron momentum
+            m_primInteractPosXDir = daughterPos->initialFourMomentum().vect().unit().x();
+            m_primInteractPosYDir = daughterPos->initialFourMomentum().vect().unit().y();
+            m_primInteractPosZDir = daughterPos->initialFourMomentum().vect().unit().z();
+            m_primInteractPosEne  = daughterPos->initialFourMomentum().t();
+
           }
           else if ((processEle==comptString) && daughterElePrimaryDoca< MaxDocaDght ){
             // if compton, use electron initial position
@@ -569,6 +620,11 @@ StatusCode McTkrHitValsTool::calculate()
             m_primInteractX0 = daughterEle->initialPosition().x();
             m_primInteractY0 = daughterEle->initialPosition().y();
             m_primInteractZ0 = daughterEle->initialPosition().z();
+            // set primary electron momentum
+            m_primInteractEleXDir = daughterEle->initialFourMomentum().vect().unit().x();
+            m_primInteractEleYDir = daughterEle->initialFourMomentum().vect().unit().y();
+            m_primInteractEleZDir = daughterEle->initialFourMomentum().vect().unit().z();
+            m_primInteractEleEne  = daughterEle->initialFourMomentum().t();
           }
           else {
             // if other cases production use photon final position
@@ -576,8 +632,15 @@ StatusCode McTkrHitValsTool::calculate()
             m_primInteractX0 = primary->finalPosition().x();
             m_primInteractY0 = primary->finalPosition().y();
             m_primInteractZ0 = primary->finalPosition().z();
-
           }
+
+          // now use the propagation tool to access material Id and geometry. (thanks to tracy - jira LPATE-81)
+          Point  pp(m_primInteractX0, m_primInteractY0, m_primInteractZ0);
+          m_G4PropTool->setStepStart(pp, t1);
+          m_primInteractMaterialId = m_G4PropTool->getMaterialIndex(0);
+          materialName = m_G4PropTool->getMaterialName(0);
+          strncpy(m_primInteractMaterialName, materialName.c_str(),80);
+          if (m_primInteractMaterialName == "") memset(m_primInteractMaterialName, '_', 80);
 
         } // end if photon.
     }
