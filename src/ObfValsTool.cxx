@@ -2,7 +2,7 @@
 @brief Calculates the Onboard Filter variables
 @authors
 
-$Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/src/ObfValsTool.cxx,v 1.25.42.1 2011/04/19 18:10:25 heather Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/src/ObfValsTool.cxx,v 1.26 2011/12/12 20:36:35 heather Exp $
 */
 
 // Include files
@@ -262,6 +262,12 @@ void ObfValsTool::zeroVals() {
     // We don't want to zero these unless
     //  there's a digi TDS around to restore them from.
     // So we'll do the zeroing in calculate()
+    // Except for the status words
+
+    m_fswGamStatus = _invalid;
+    m_fswMipStatus = _invalid;
+    m_fswHipStatus = _invalid;
+    m_fswDgnStatus = _invalid;
 
     return;
 }
@@ -389,7 +395,6 @@ StatusCode ObfValsTool::calculate()
             m_fswGamPrescaleIndex = LSF_INVALID_UINT;
             m_fswGamPrescaleFactor = LSF_INVALID_UINT;
             m_fswGamState = _invalid;
-            m_fswGamStatus = _invalid;
             m_fswGamEnergy = 0.0;
             m_fswGamStage = _invalid;
             m_fswGamVersion = _invalid;
