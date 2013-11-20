@@ -2,7 +2,7 @@
 @brief Calculates the Cal analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/src/CalValsTool.cxx,v 1.147 2013/06/26 01:05:29 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/CalValsTool.cxx,v 1.148 2013/07/24 17:47:41 usher Exp $
 */
 //#define PRE_CALMOD 1
 
@@ -132,6 +132,10 @@ private:
     float m_VetoGapEdge;   
     float m_VetoBadCluster;
     float m_VetoHitFound;
+
+    float m_VetoBottomHits3;
+    float m_VetoBottomHits5;
+
     // flag for additional veto info
     bool  m_enableVetoDiagnostics;
     // properties
@@ -315,6 +319,8 @@ private:
   float CAL_Clu1_VetoGapCorner;
   float CAL_Clu1_VetoGapEdge;
   float CAL_Clu1_VetoBadCluster; 
+  float CAL_Clu1_VetoBottomHits3;
+  float CAL_Clu1_VetoBottomHits5;
 
   float CAL_Clu2_NumXtals;
   float CAL_Clu2_RawEnergySum;
@@ -1094,7 +1100,8 @@ StatusCode CalValsTool::initialize()
     addItem("Cal1SSDVeto",  &CAL_Clu1_SSDVeto);
     addItem("Cal1SSDVetoNoHitFlag",  &CAL_Clu1_SSDVetoNoHitFlag);
     addItem("Cal1SSDVetoPlaneCrossed",  &CAL_Clu1_VetoPlaneCrossed);
-
+    addItem("Cal1SSDVetoBot3",  &CAL_Clu1_VetoBottomHits3);
+    addItem("Cal1SSDVetoBot5",  &CAL_Clu1_VetoBottomHits5);
     if(m_enableVetoDiagnostics) {
         addItem("Cal1SSDVetoHitFound",   &CAL_Clu1_VetoHitFound);
         addItem("Cal1SSDVetoTrials",     &CAL_Clu1_VetoTrials);
@@ -1710,7 +1717,9 @@ StatusCode CalValsTool::calculate()
     //if (firstCluster->checkStatusBit(Event::CalCluster::MOMENTS)){ // not sure what is the best condition to check
     if(firstCluster->getMomParams().getNumIterations()>0){
       CAL_Clu1_SSDVeto = CalSSDEvaluation(firstCluster); // cs: first cluster
-      CAL_Clu1_SSDVetoNoHitFlag = (int)floor(m_SSDVetoNoHitFlag + 0.5);;
+      CAL_Clu1_VetoBottomHits3  = (int)floor(m_VetoBottomHits3 + 0.5);
+      CAL_Clu1_VetoBottomHits5  = (int)floor(m_VetoBottomHits5 + 0.5);
+      CAL_Clu1_SSDVetoNoHitFlag = (int)floor(m_SSDVetoNoHitFlag + 0.5);
       CAL_Clu1_VetoPlaneCrossed = (int)floor(m_VetoPlaneCrossed + 0.5); 
       CAL_Clu1_VetoHitFound     = (int)floor(m_VetoHitFound+ 0.5);
       CAL_Clu1_VetoTrials       = (int)floor(m_VetoTrials + 0.5);
@@ -1723,7 +1732,9 @@ StatusCode CalValsTool::calculate()
       CAL_Clu1_VetoBadCluster   = (int)floor(m_VetoBadCluster + 0.5);
     }
     else { 
-      CAL_Clu1_SSDVeto       = _badFloat;   
+      CAL_Clu1_SSDVeto          = _badFloat;   
+      CAL_Clu1_VetoBottomHits3  = _badFloat;
+      CAL_Clu1_VetoBottomHits5  = _badFloat;
       CAL_Clu1_SSDVetoNoHitFlag = _badFloat;
       CAL_Clu1_VetoPlaneCrossed = _badFloat;
       CAL_Clu1_VetoHitFound     = _badFloat;
@@ -2963,6 +2974,8 @@ float CalValsTool::CalSSDEvaluation(const Event::CalCluster* cluster)
   m_VetoGapEdge = 0.0;   
   m_VetoBadCluster = 0.0;
   m_VetoHitFound = 0.0;
+  m_VetoBottomHits3 = 0.0;
+  m_VetoBottomHits5 = 0.0;
 
   int numSteps = m_G4PropTool->getNumberSteps();
 
@@ -3029,6 +3042,8 @@ float CalValsTool::CalSSDEvaluation(const Event::CalCluster* cluster)
     
     int nVetoHits = pQueryClusters->numberOfHitsNear(view, layer, 
                                                      vetoRgn, x_step, t1);
+    if(plane < 6) m_VetoBottomHits3 += nVetoHits;	
+    if(plane < 10) m_VetoBottomHits5 += nVetoHits;
 
     if (nVetoHits>0) {
       // found a hit, reset the SSDVeto
