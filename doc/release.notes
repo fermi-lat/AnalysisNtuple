@@ -3,6 +3,7 @@
   @verbatim
    * EOH *
 
+ AnalysisNtuple-02-71-23 20-Nov-2013  lsrea 2 new CalValsTool variables (bottomVeto) from Bill
  AnalysisNtuple-02-71-22 24-Jul-2013 TU Adding propagator try-catch protection to prevent segfaults
  AnalysisNtuple-02-71-21 27-Jun-2013  lsrea fix a couple of doubly defined variables
  AnalysisNtuple-02-71-20 25-Jun-2013  lsrea promoted all the dirs, direrrs, derrs, etc. to double
