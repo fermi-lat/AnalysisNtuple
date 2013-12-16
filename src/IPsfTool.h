@@ -14,7 +14,7 @@ class IPsfTool : virtual public IAlgTool
 
     /// load map
     virtual StatusCode loadPsf(const std::string psfVersion, 
-			 std::string psfPath) = 0;
+			 const std::string psfPath) = 0;
     /// returns an interpolated value for zDir and LogE
     virtual  double computePsf(const double cl_level, 
 			     const double energy,

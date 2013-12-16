@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/src/TkrValsTool.cxx,v 1.134 2013/06/26 01:05:29 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/src/TkrValsTool.cxx,v 1.135 2013/07/24 17:47:41 usher Exp $
 */
 
 //#define PRE_CALMOD 1
@@ -126,6 +126,9 @@ private:
     bool   m_testExceptions;
     int    m_minWide;
     int    m_minWider;
+
+    double m_linCorr;
+    double m_quadCorr;
 
   double energyWeightThin[18];
   double energyWeightThick[18];
@@ -334,6 +337,9 @@ namespace
 
     const int    _badInt  =   -1;
     const float _badFloat = -2.0; 
+
+    const double _linCorr_default = 1.0;
+    const double _quadCorr_default = 0.0;
 }
 
 // Static factory for instantiation of algtool objects
@@ -361,6 +367,11 @@ TkrValsTool::TkrValsTool(const std::string& type,
     declareProperty("minWide", m_minWide=5);
     declareProperty("minWider", m_minWider=9);
 
+    // This is another way to apply Phillipe's correction
+    //   and is made available for testing 
+    // The standard correction is now made in TkrToTSvc (q.v.)
+    declareProperty("linearMipCorrection",    m_linCorr = _linCorr_default);
+    declareProperty("quadraticMipCorrection", m_quadCorr = _quadCorr_default);
 }
 
 /** @page anatup_vars 
@@ -751,6 +762,22 @@ StatusCode TkrValsTool::initialize()
     double myparam1_2 = 1.75e-6;
     double myparam1_5 = -0.5e-6;
     double myparam1_15 = 11.3e-6;
+
+// issue the standard warning if non-default 'Mips' correction is requested
+
+    if(fabs(m_linCorr-_linCorr_default)>1.e-4 || fabs(m_quadCorr-_quadCorr_default)>1.e-5) {
+        log << MSG::WARNING << 
+               "  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"  << endreq;
+        log << "  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"  << endreq;
+        log << "    You are setting non-default values for the Mip correction:" << endreq;
+        log << "    linearMipCorrection = " << m_linCorr 
+            << ", quadraticMipCorrection = " << m_quadCorr << endreq;
+        log << "    This should be for testing only; " 
+            << "    the standard place for this correction is in TkrToTSvc." << endreq;
+        log << "    Make sure you're not correcting twice!!!" << endreq;
+        log << "  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"  << endreq;
+        log << "  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"  << endreq;
+    }
 
     int i;
     double myx;
@@ -1335,6 +1362,7 @@ StatusCode TkrValsTool::calculate()
                 else if(isDiagGhost)          diagCount++;
             }
             mips = cluster->getMips();
+            mips *= (m_linCorr + mips*m_quadCorr);
             if(mips>-0.5) nToTs++;
             int rawToT = (int)cluster->ToT();
             if(rawToT==250) { saturatedCount++;}
@@ -1405,6 +1433,8 @@ StatusCode TkrValsTool::calculate()
             //double normFactor  =  1./53.;
 
             double mips = cluster->getMips();
+            // test of Philippe's correction
+            mips *= (m_linCorr + mips*m_quadCorr);
             //mipsBefore[seq] = mips;
             if(mips<-0.5) continue;
 
