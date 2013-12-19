@@ -2,7 +2,7 @@
 @brief Calculates the Tkr analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/GlastRelease-scons/AnalysisNtuple/src/TkrValsTool.cxx,v 1.135 2013/07/24 17:47:41 usher Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/TkrValsTool.cxx,v 1.136 2013/12/16 20:26:13 lsrea Exp $
 */
 
 //#define PRE_CALMOD 1
@@ -236,6 +236,9 @@ private:
 
     float Tkr_1_CoreHC;
     float Tkr_1_LATEdge;
+
+    // for Concetric Cylinders Around Track
+    float Tkr_1_HitsCyl[4];
 
     //Second Track Specifics
     float Tkr_2_Chisq;
@@ -609,6 +612,22 @@ where a track crosses in a gap.
 <td>F<td>   Number of clusters within a roughly cylindrical region )(default radius 10 mm) 
 around the TrackHits in each plane between the first and last on the best
 track, excluding the clusters that belong to the track itself
+<tr><td> Tkr1InnerCoreHC
+<td>F<td>Number of clusters within a roughly cylindrical region )(default radius 5 mm)
+around the TrackHits in each plane between the first and last on the best
+track, excluding the clusters that belong to the track itself
+<tr><td> Tkr1InnerHaloHC
+<td>F<td>Number of clusters within a roughly cylindrical region )(default radius 15 mm)
+around the TrackHits in each plane between the first and last on the best
+track, excluding the clusters that belong to the track itself
+<tr><td> Tkr1HaloHC
+<td>F<td>Number of clusters within a roughly cylindrical region )(default radius 20 mm)
+around the TrackHits in each plane between the first and last on the best
+track, excluding the clusters that belong to the track itself
+<tr><td> Tkr1OuterHaloHC
+<td>F<td>Number of clusters within a roughly cylindrical region )(default radius 35 mm)
+around the TrackHits in each plane between the first and last on the best
+track, excluding the clusters that belong to the track itself
 <tr><td> TkrDispersion
 <td>F<td>   the RMS of the distances between the 1st track and all others in the event.
 For tracks which start "above" the first track distance is the 3-D distance
@@ -906,6 +925,11 @@ StatusCode TkrValsTool::initialize()
 
     addItem("Tkr1CoreHC",     &Tkr_1_CoreHC,  true);
     addItem("Tkr1LATEdge",    &Tkr_1_LATEdge, true);
+
+    addItem("Tkr1InnerCoreHC" ,&Tkr_1_HitsCyl[0], true);
+    addItem("Tkr1InnerHaloHC" ,&Tkr_1_HitsCyl[1], true);
+    addItem("Tkr1HaloHC"      ,&Tkr_1_HitsCyl[2], true);
+    addItem("Tkr1OuterHaloHC" ,&Tkr_1_HitsCyl[3], true);
 
     addItem("Tkr2Chisq",      &Tkr_2_Chisq);
     addItem("Tkr2FirstChisq", &Tkr_2_FirstChisq);
@@ -1920,6 +1944,42 @@ StatusCode TkrValsTool::calculate()
             Tkr_UpstreamHC += pQueryClusters->numberOfHitsNear(layer, 
                 xUpstreamRgn, yUpstreamRgn, x_hit, t1);       
         }
+
+        //  Tkr1 Concentric Cylinders
+        
+        double _cylRegion[4] =  {5.0, 15.0, 20.0, 35.0};   // Cylinder Radius
+        double xcylRgn[4], ycylRgn[4];
+        
+        for (int cylIdx=0; cylIdx<4; ++cylIdx) {
+            xcylRgn[cylIdx] = _cylRegion[cylIdx]*secthX;
+            ycylRgn[cylIdx] = _cylRegion[cylIdx]*secthY;
+        }
+        
+        Event::TkrTrackHitVecConItr cylIter = track_1->begin();
+        for(;cylIter!=track_1->end(); ++cylIter) {
+            const Event::TkrTrackHit* cylHit = *cylIter;
+            idents::TkrId cylId = cylHit->getTkrId();
+            int cylPlane = m_tkrGeom->getPlane(cylId);
+            int cylLayer = m_tkrGeom->getLayer(cylPlane);
+            int cylView  = cylId.getView();
+            Point cpos;
+            if(cylHit->validMeasuredHit()) {
+                cpos  = cylHit->getPoint(Event::TkrTrackHit::MEASURED);
+            } else if(cylHit->validFilteredHit()) {
+                cpos  = cylHit->getPoint(Event::TkrTrackHit::FILTERED);
+            } else { continue; }
+            
+            for (int cDistIdx = 0; cDistIdx<4; ++cDistIdx) {
+                
+                double cylDistance = (cylView==0 ? xcylRgn[cDistIdx] : ycylRgn[cDistIdx]);
+                int HitsInCyl = pQueryClusters->numberOfHitsNear(cylView, cylLayer, cylDistance, cpos);
+                if (cylHit->validCluster()) HitsInCyl--;
+            
+                Tkr_1_HitsCyl[cDistIdx]  += HitsInCyl;
+    
+            }
+        }
+
 
         // Surplus hits
 
