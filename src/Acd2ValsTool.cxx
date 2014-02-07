@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/Acd2ValsTool.cxx,v 1.15 2013/04/29 09:01:32 kadrlica Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/Acd2ValsTool.cxx,v 1.16 2013/05/24 23:35:41 echarles Exp $
 */
 
 #include "ValBase.h"
@@ -35,6 +35,8 @@ $Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/Acd2ValsTool.cxx,v 1.15
 #include "GlastSvc/GlastDetSvc/IGlastDetSvc.h"
 
 #include "AcdUtil/AcdTileFuncs.h"
+#include "AcdUtil/AcdUtilFuncs.h"
+
 //#include "AcdRecon/AcdGap.h" (Don't include AcdRecon, use ints instead of enums)
 
 #include <algorithm>
@@ -63,7 +65,7 @@ public:
   
 protected:
 
-  void loadTopologyVars(const Event::AcdReconV2& pACD);
+  void loadTopologyVars(const Event::AcdEventTopology& evtTopo);
 
   void reconId(const Event::AcdReconV2* pACD);
   
@@ -202,9 +204,9 @@ private:
   IGlastDetSvc *m_detSvc;
   
   // Algorithm parameters
-  double m_vetoThresholdMeV;
+  double m_thresholdMIP;     // Threshold below which to ignore hits
 
-  // Prefix to add to columns in tuple [Acd] (production) or [Acd2] (regression testing)
+  // Prefix to add to columns in tuple [Acd2] (production)
   std::string m_prefix;
 
 };
@@ -441,8 +443,8 @@ Acd2ValsTool::Acd2ValsTool(const std::string& type,
   // Declare additional interface
   declareInterface<IValsTool>(this); 
   
-  // Threshold in MeV
-  declareProperty("VetoThresholdMeV", m_vetoThresholdMeV=0.0);
+  // Threshold in MIP below which to ignore hits
+  declareProperty("thresholdMIP", m_thresholdMIP=0.001);
 
   // Prefix for tuple column names
   declareProperty("Prefix", m_prefix="Acd2");
@@ -457,30 +459,7 @@ StatusCode Acd2ValsTool::initialize()
   
   if( ValBase::initialize().isFailure()) return StatusCode::FAILURE;
   
-  setProperties();
-  // get the services
-  
-  // use the pointer from ValBase  
-  if( serviceLocator() ) {
-    
-    // find GlastDevSvc service
-    if (service("GlastDetSvc", m_detSvc, true).isFailure()){
-      log << MSG::INFO << "Couldn't find the GlastDetSvc!" << endreq;
-      log << MSG::INFO << "Will be unable to calculate ACD_TkrHitsCount" << endreq;
-      m_vetoThresholdMeV = 0.4;
-    } else {
-      StatusCode sc = m_detSvc->getNumericConstByName("acd.vetoThreshold", 
-                              &m_vetoThresholdMeV);
-      if (sc.isFailure()) {
-    log << MSG::INFO << 
-      "Unable to retrieve threshold, setting the value to 0.4 MeV" << endreq;
-    m_vetoThresholdMeV = 0.4;
-      }
-    }
-    
-  } else {
-    return StatusCode::FAILURE;
-  }
+  setProperties();  
 
   // load up the map
   addItem(m_prefix + "TriggerVeto",    &ACD_Trigger_Veto);
@@ -621,8 +600,6 @@ StatusCode Acd2ValsTool::calculate()
     return StatusCode::FAILURE;
   }
 
-  loadTopologyVars(*pACD); 
-
   reconId(pACD);
 
   // Make a map relating AcdId to calibrated hits
@@ -636,9 +613,17 @@ StatusCode Acd2ValsTool::calculate()
   //int TriggerVeto = 0;
 
   // Loop over the hits and fill the maps
+  std::vector<Event::AcdHit*> goodHits;
 
   for (int iHit(0); iHit < nHit; iHit++ ){
     const Event::AcdHit* aHit = hitCol[iHit];
+
+    // Make sure the hit is above threshold
+    if ( aHit->mips(Event::AcdHit::A) < m_thresholdMIP &&
+	 aHit->mips(Event::AcdHit::B) < m_thresholdMIP ) continue;
+
+    // Add it to the list of good hits
+    goodHits.push_back( const_cast<Event::AcdHit*>(aHit) );
     const idents::AcdId& id = aHit->getAcdId();
   
     //Trigger veto for the fast signal (MPR).
@@ -653,6 +638,16 @@ StatusCode Acd2ValsTool::calculate()
    
   }
 
+  static const bool useTopologyFromReconEvent = false;
+  if ( useTopologyFromReconEvent ) {
+    // This load the topology that was saved with the Recon event
+    loadTopologyVars(pACD->getEventTopology()); 
+  } else {
+    // This recalculates the topology, based on the set of good hits, above
+    Event::AcdEventTopology evtTopo;
+    AcdUtil::UtilFunctions::fillAcdEventTopology(goodHits,evtTopo);
+    loadTopologyVars(evtTopo);
+  }
 
   static const float maxSigma = 10000.;
   static const float maxSigmaSq = maxSigma*maxSigma;
@@ -757,14 +752,6 @@ StatusCode Acd2ValsTool::calculate()
     // We don't save anything about downgoing associations
     if ( ! isUpGoing ) continue;
 
-    if ( isBestTrack ) {
-      ACD_Tkr1Energy15 = anAssoc->GetEnergy15();      
-      ACD_Tkr1TriggerEnergy15 = anAssoc->GetTriggerEnergy15();
-      ACD_Tkr1Energy30 = anAssoc->GetEnergy30();      
-      ACD_Tkr1TriggerEnergy30 = anAssoc->GetTriggerEnergy30();
-      ACD_Tkr1Energy45 = anAssoc->GetEnergy45();      
-      ACD_Tkr1TriggerEnergy45 = anAssoc->GetTriggerEnergy45();
-    }
 
     // These are the best veto values if the element is
     // a tile (not the best tile veto)
@@ -785,14 +772,20 @@ StatusCode Acd2ValsTool::calculate()
     const Event::AcdTkrHitPoca* track_tileVetoPoca(0);
     const Event::AcdTkrHitPoca* track_ribbonVetoPoca(0);
 
+    // This is just the POCAe that are above theshold
+    std::vector<Event::AcdTkrHitPoca*> goodHitPocae;
+
     int nHitPoca = anAssoc->nHitPoca();    
     for ( int iHitPoca(0); iHitPoca < nHitPoca; iHitPoca++ ) {
       
       const Event::AcdTkrHitPoca* aPoca = anAssoc->getHitPoca(iHitPoca);
       if ( aPoca == 0 ) continue;
       
-      // make sure there is associated signal
-      if ( aPoca->mipsPmtA() < 0.001 && aPoca->mipsPmtB() < 0.001 ) continue;
+      // make sure there is associated signal above threshold
+      if ( aPoca->mipsPmtA() < m_thresholdMIP && aPoca->mipsPmtB() < m_thresholdMIP ) continue;
+
+      // add it to the list of "Good" Pocae
+      goodHitPocae.push_back(const_cast<Event::AcdTkrHitPoca*>(aPoca));
             
       // get the id
       idents::AcdId theId = aPoca->getId();
@@ -844,7 +837,11 @@ StatusCode Acd2ValsTool::calculate()
 
     // Fill vars for best track
     if ( isBestTrack ) {
-      
+
+      AcdUtil::UtilFunctions::getConeEnergies(goodHitPocae,
+					      ACD_Tkr1Energy15,ACD_Tkr1Energy30,ACD_Tkr1Energy45,
+					      ACD_Tkr1TriggerEnergy15,ACD_Tkr1TriggerEnergy30,ACD_Tkr1TriggerEnergy45);
+     
       ACD_Tkr1Corner_DOCA = cornerDoca;
       
       if (track_tileBestVetoSq < track_ribbonBestVetoSq) { 
@@ -987,6 +984,9 @@ StatusCode Acd2ValsTool::calculate()
       ACD_Tkr_TriggerVeto = hitMap[ribbon_vetoPoca->getId()]->getTriggerVeto();
     }
   }
+
+
+
   //ACD_Tkr_VetoSigmaHit = best_tileVetoSq < best_ribbonVetoSq ?
   //  sqrt(best_tileVetoSq) : sqrt(best_ribbonVetoSq);
 
@@ -1046,6 +1046,9 @@ StatusCode Acd2ValsTool::calculate()
     // Remove this to calculate variables for all clusters
     if ( !isBestCluster ) continue;
 
+    // This is just the POCAe that are above theshold
+    std::vector<Event::AcdTkrHitPoca*> goodHitPocae;
+
     int nHitPoca = anAssoc->nHitPoca();    
     for ( int iHitPoca(0); iHitPoca < nHitPoca; iHitPoca++ ) {
       
@@ -1053,7 +1056,10 @@ StatusCode Acd2ValsTool::calculate()
       if ( aPoca == 0 ) continue;
       
       // make sure there is associated signal
-      if ( aPoca->mipsPmtA() < 0.001 && aPoca->mipsPmtB() < 0.001 ) continue;
+      if ( aPoca->mipsPmtA() < m_thresholdMIP && aPoca->mipsPmtB() < m_thresholdMIP ) continue;
+
+      // add it to the list of "Good" Pocae
+      goodHitPocae.push_back(const_cast<Event::AcdTkrHitPoca*>(aPoca));
             
       // get the id
       idents::AcdId theId = aPoca->getId();
@@ -1081,12 +1087,10 @@ StatusCode Acd2ValsTool::calculate()
 
     // Fill vars for best cluster
     if ( isBestCluster ) {
-      ACD_Cal1Energy15 = anAssoc->GetEnergy15();
-      ACD_Cal1TriggerEnergy15 = anAssoc->GetTriggerEnergy15();
-      ACD_Cal1Energy30 = anAssoc->GetEnergy30();
-      ACD_Cal1TriggerEnergy30 = anAssoc->GetTriggerEnergy30();
-      ACD_Cal1Energy45 = anAssoc->GetEnergy45();
-      ACD_Cal1TriggerEnergy45 = anAssoc->GetTriggerEnergy45();
+      
+      AcdUtil::UtilFunctions::getConeEnergies(goodHitPocae,
+					      ACD_Cal1Energy15,ACD_Cal1Energy30,ACD_Cal1Energy45,
+					      ACD_Cal1TriggerEnergy15,ACD_Cal1TriggerEnergy30,ACD_Cal1TriggerEnergy45);
 
       if (cluster_tileBestVetoSq < cluster_ribbonBestVetoSq) { 
 	ACD_Cal1_VetoSigmaHit = sqrt(cluster_tileBestVetoSq);
@@ -1112,9 +1116,7 @@ StatusCode Acd2ValsTool::calculate()
 }
 
 
-void Acd2ValsTool::loadTopologyVars(const Event::AcdReconV2& pACD) {
-
-  const Event::AcdEventTopology& evtTopo = pACD.getEventTopology();
+void Acd2ValsTool::loadTopologyVars(const Event::AcdEventTopology& evtTopo) {
 
   ACD_Tile_Count = evtTopo.getTileCount();
   ACD_Ribbon_Count = evtTopo.getRibbonCount();
@@ -1165,19 +1167,14 @@ void Acd2ValsTool::reconId(const Event::AcdReconV2 *pACD)  {
   for (Event::AcdTkrAssocCol::const_iterator itrAssoc = trackAssocCol.begin();
        itrAssoc != trackAssocCol.end(); itrAssoc++ ) {
     
-    // could be vertex (-1) or best track (0)            
     int trackIndex = (*itrAssoc)->getTrackIndex();
-    if (trackIndex > 0 ) continue;
+    if (trackIndex != 0 ) continue;
     Event::AcdTkrHitPoca* poca = const_cast<Event::AcdTkrHitPoca*>((*itrAssoc)->getHitPoca());
     if ( poca == 0 ) continue;  
     bool upGoing = (*itrAssoc)->getUpward();
-    
-    if (trackIndex != 0) {
-      continue;
-    }
-    if (! upGoing) {
-      continue;
-    }
+    if (! upGoing) continue;
+    // make sure there is associated signal above threshold
+    if ( poca->mipsPmtA() < m_thresholdMIP && poca->mipsPmtB() < m_thresholdMIP ) continue;    
     bestTrackUp.push_back(poca);
   }
   
