@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/Acd2ValsTool.cxx,v 1.16 2013/05/24 23:35:41 echarles Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/Acd2ValsTool.cxx,v 1.17 2014/02/07 02:15:34 echarles Exp $
 */
 
 #include "ValBase.h"
@@ -66,6 +66,10 @@ public:
 protected:
 
   void loadTopologyVars(const Event::AcdEventTopology& evtTopo);
+
+  bool checkThreshold(const Event::AcdHit& aHit);
+  
+  bool checkThreshold(const Event::AcdTkrHitPoca& aHitPoca);
 
   void reconId(const Event::AcdReconV2* pACD);
   
@@ -204,7 +208,8 @@ private:
   IGlastDetSvc *m_detSvc;
   
   // Algorithm parameters
-  double m_thresholdMIP;     // Threshold below which to ignore hits
+  double m_mips_tile_cut;     // Threshold below which to ignore hits in tiles
+  double m_mips_ribbon_cut;   // Threshold below which to ignore hits in ribbons
 
   // Prefix to add to columns in tuple [Acd2] (production)
   std::string m_prefix;
@@ -444,7 +449,9 @@ Acd2ValsTool::Acd2ValsTool(const std::string& type,
   declareInterface<IValsTool>(this); 
   
   // Threshold in MIP below which to ignore hits
-  declareProperty("thresholdMIP", m_thresholdMIP=0.001);
+  declareProperty("MIPSTileCut",m_mips_tile_cut = 0.001);       // 
+  declareProperty("MIPSRibbonCut",m_mips_ribbon_cut = 0.001);   //
+
 
   // Prefix for tuple column names
   declareProperty("Prefix", m_prefix="Acd2");
@@ -619,8 +626,7 @@ StatusCode Acd2ValsTool::calculate()
     const Event::AcdHit* aHit = hitCol[iHit];
 
     // Make sure the hit is above threshold
-    if ( aHit->mips(Event::AcdHit::A) < m_thresholdMIP &&
-	 aHit->mips(Event::AcdHit::B) < m_thresholdMIP ) continue;
+    if ( ! checkThreshold(*aHit) ) continue;
 
     // Add it to the list of good hits
     goodHits.push_back( const_cast<Event::AcdHit*>(aHit) );
@@ -782,7 +788,7 @@ StatusCode Acd2ValsTool::calculate()
       if ( aPoca == 0 ) continue;
       
       // make sure there is associated signal above threshold
-      if ( aPoca->mipsPmtA() < m_thresholdMIP && aPoca->mipsPmtB() < m_thresholdMIP ) continue;
+      if ( ! checkThreshold(*aPoca) ) continue;
 
       // add it to the list of "Good" Pocae
       goodHitPocae.push_back(const_cast<Event::AcdTkrHitPoca*>(aPoca));
@@ -1056,7 +1062,7 @@ StatusCode Acd2ValsTool::calculate()
       if ( aPoca == 0 ) continue;
       
       // make sure there is associated signal
-      if ( aPoca->mipsPmtA() < m_thresholdMIP && aPoca->mipsPmtB() < m_thresholdMIP ) continue;
+      if ( ! checkThreshold(*aPoca) ) continue;
 
       // add it to the list of "Good" Pocae
       goodHitPocae.push_back(const_cast<Event::AcdTkrHitPoca*>(aPoca));
@@ -1154,6 +1160,30 @@ void Acd2ValsTool::loadTopologyVars(const Event::AcdEventTopology& evtTopo) {
 }
 
 
+
+bool Acd2ValsTool::checkThreshold(const Event::AcdHit& aHit) {
+  if ( aHit.getAcdId().tile() ) {
+    return ( aHit.mips(Event::AcdHit::A) > m_mips_tile_cut ||
+	     aHit.mips(Event::AcdHit::B) > m_mips_tile_cut );
+  } else if ( aHit.getAcdId().ribbon() ) { 
+    return ( aHit.mips(Event::AcdHit::A) > m_mips_ribbon_cut ||
+	     aHit.mips(Event::AcdHit::B) > m_mips_ribbon_cut );
+  }
+  return false;
+}
+
+bool Acd2ValsTool::checkThreshold(const Event::AcdTkrHitPoca& aHitPoca) {
+  if ( aHitPoca.getId().tile() ) {
+    return ( aHitPoca.mipsPmtA() > m_mips_tile_cut ||
+	     aHitPoca.mipsPmtB() > m_mips_tile_cut );
+  } else if ( aHitPoca.getId().ribbon() ) { 
+    return ( aHitPoca.mipsPmtA() > m_mips_ribbon_cut ||
+	     aHitPoca.mipsPmtB() > m_mips_ribbon_cut );
+  }
+  return false;
+}
+
+
 void Acd2ValsTool::reconId(const Event::AcdReconV2 *pACD)  {
 
   std::vector<Event::AcdTkrHitPoca*> bestTrackUp;
@@ -1174,8 +1204,9 @@ void Acd2ValsTool::reconId(const Event::AcdReconV2 *pACD)  {
     bool upGoing = (*itrAssoc)->getUpward();
     if (! upGoing) continue;
     // make sure there is associated signal above threshold
-    if ( poca->mipsPmtA() < m_thresholdMIP && poca->mipsPmtB() < m_thresholdMIP ) continue;    
-    bestTrackUp.push_back(poca);
+    if ( checkThreshold(*poca) ) {
+      bestTrackUp.push_back(poca);
+    }
   }
   
   setId(bestTrackUp,ACD_TileIdRecon, false);
