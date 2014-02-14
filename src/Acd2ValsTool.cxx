@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/Acd2ValsTool.cxx,v 1.17 2014/02/07 02:15:34 echarles Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/Acd2ValsTool.cxx,v 1.18 2014/02/11 02:31:31 echarles Exp $
 */
 
 #include "ValBase.h"
@@ -1163,8 +1163,9 @@ void Acd2ValsTool::loadTopologyVars(const Event::AcdEventTopology& evtTopo) {
 
 bool Acd2ValsTool::checkThreshold(const Event::AcdHit& aHit) {
   if ( aHit.getAcdId().tile() ) {
-    return ( aHit.mips(Event::AcdHit::A) > m_mips_tile_cut ||
-	     aHit.mips(Event::AcdHit::B) > m_mips_tile_cut );
+    return (  ( aHit.mips(Event::AcdHit::A) > m_mips_tile_cut ||
+		aHit.mips(Event::AcdHit::B) > m_mips_tile_cut ) &&
+	      aHit.mips(Event::AcdHit::A) + aHit.mips(Event::AcdHit::B) > 2*m_mips_tile_cut );
   } else if ( aHit.getAcdId().ribbon() ) { 
     return ( aHit.mips(Event::AcdHit::A) > m_mips_ribbon_cut ||
 	     aHit.mips(Event::AcdHit::B) > m_mips_ribbon_cut );
@@ -1174,8 +1175,9 @@ bool Acd2ValsTool::checkThreshold(const Event::AcdHit& aHit) {
 
 bool Acd2ValsTool::checkThreshold(const Event::AcdTkrHitPoca& aHitPoca) {
   if ( aHitPoca.getId().tile() ) {
-    return ( aHitPoca.mipsPmtA() > m_mips_tile_cut ||
-	     aHitPoca.mipsPmtB() > m_mips_tile_cut );
+    return ( ( aHitPoca.mipsPmtA() > m_mips_tile_cut ||
+	       aHitPoca.mipsPmtB() > m_mips_tile_cut ) && 
+	     aHitPoca.mipsPmtA() + aHitPoca.mipsPmtB() > 2*m_mips_tile_cut );
   } else if ( aHitPoca.getId().ribbon() ) { 
     return ( aHitPoca.mipsPmtA() > m_mips_ribbon_cut ||
 	     aHitPoca.mipsPmtB() > m_mips_ribbon_cut );
