@@ -3,6 +3,7 @@
   @verbatim
    * EOH *
 
+ AnalysisNtuple-02-72-00 17-Feb-2014 echarles Allow for remaking merit files with a filtered selection of AcdHits
  AnalysisNtuple-02-71-25 19-Dec-2013    jrb added 4 Tkr1 variables from aworley and ormes (tagging for Aaron)
  AnalysisNtuple-02-71-24 16-Dec-2013  lsrea Add mip correction to TkrValsTool; fix Windows warning in IPsfTool.h
  AnalysisNtuple-02-71-23 20-Nov-2013  lsrea 2 new CalValsTool variables (bottomVeto) from Bill
