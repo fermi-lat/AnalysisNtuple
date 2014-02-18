@@ -3,7 +3,7 @@
 @brief Calculates the Adc analysis variables
 @author Bill Atwood, Leon Rochester
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/Acd2ValsTool.cxx,v 1.18 2014/02/11 02:31:31 echarles Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/Acd2ValsTool.cxx,v 1.19 2014/02/14 03:33:50 echarles Exp $
 */
 
 #include "ValBase.h"
@@ -449,8 +449,8 @@ Acd2ValsTool::Acd2ValsTool(const std::string& type,
   declareInterface<IValsTool>(this); 
   
   // Threshold in MIP below which to ignore hits
-  declareProperty("MIPSTileCut",m_mips_tile_cut = 0.001);       // 
-  declareProperty("MIPSRibbonCut",m_mips_ribbon_cut = 0.001);   //
+  declareProperty("MIPSTileCut",m_mips_tile_cut = 0.1);       // 
+  declareProperty("MIPSRibbonCut",m_mips_ribbon_cut = 0.1);   //
 
 
   // Prefix for tuple column names
