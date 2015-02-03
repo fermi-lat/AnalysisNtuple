@@ -3,6 +3,7 @@
   @verbatim
    * EOH *
 
+ AnalysisNtuple-02-73-00 03-Feb-2015 bregeon Fill FT1EventClass and FT1EventType in FT1Alg - LPATE-183
  AnalysisNtuple-02-72-02 28-Feb-2014 echarles set default value of MIPS cuts in Acd2ValsTool to 0.001
  AnalysisNtuple-02-72-01 18-Feb-2014 echarles Change default values of Acd2ValsTools to raise threshold expressed in MIPs
  AnalysisNtuple-02-72-00 17-Feb-2014 echarles Allow for remaking merit files with a filtered selection of AcdHits
