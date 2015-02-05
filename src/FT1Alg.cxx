@@ -1,7 +1,7 @@
 /** @file FT1Alg.cxx
 @brief Declaration and implementation of Gaudi algorithm FT1Alg
 
-$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.32 2013/02/07 19:19:00 lsrea Exp $
+$Header: /nfs/slac/g/glast/ground/cvs/AnalysisNtuple/src/FT1Alg.cxx,v 1.33 2015/02/03 14:33:47 bregeon Exp $
 */
 // Include files
 
@@ -190,8 +190,15 @@ StatusCode FT1Alg::initialize()
     std::list<std::string> ft1EvtClassNames;
     m_evtClass->getEvtMapNames(ft1EvtClassNames);
 
+    // Introduce a hack here to rename FT1EventClass and FT1EventType defined in the xml
+    // file DQMEventClass and DQMEventType
+    // FT1EventClass and FT1EventType should be set only in FT1 files - LPATE-183
     for ( std::list<std::string>::const_iterator itr = ft1EvtClassNames.begin(); itr != ft1EvtClassNames.end(); itr++) {
-        addItem(itr->c_str(),*(m_evtClass->getShortMapPtr(*itr)));
+        std::string dqmname(itr->c_str());
+        dqmname.replace(0, 3,"DQM");
+        log<<MSG::DEBUG<<itr->c_str()<<" renamed as "<<dqmname<<" as per LPATE-183"<<endreq;
+        addItem(dqmname.c_str(),*(m_evtClass->getShortMapPtr(*itr)));
+//        addItem(itr->c_str(),*(m_evtClass->getShortMapPtr(*itr)));
     }
 
     // get the GPS instance: 
