@@ -155,6 +155,10 @@ private:
     int   m_numXTowers;
     int   m_numYTowers;
 
+    // nb of McPositionHit and McIntegratingHit to make sure we are able to cut out events that were aborted during G4 generation
+  int m_nMcPositionHit;
+  int m_nMcIntegratingHit;
+
     // Relational tables to be set up each event...
     Event::McPartToTrajectoryTab*      m_partToTrajTab;
     Event::McPointToPosHitTab*         m_pointToPosHitTab;
@@ -299,6 +303,9 @@ StatusCode McTkrHitValsTool::initialize()
     addItem("McTHPrimInterPosZDir", &m_primInteractPosZDir);
     addItem("McTHPrimInterPosE",    &m_primInteractPosEne);
 
+    addItem("McPositionNumHits",    &m_nMcPositionHit);
+    addItem("McIntegratingNumHits",    &m_nMcIntegratingHit);
+
     char buffer[20];
     for(int idx = 0; idx < 36; idx++) 
     {
@@ -337,6 +344,14 @@ StatusCode McTkrHitValsTool::calculate()
 
     // No collection then we do not have MC! 
     if (particleCol == 0) return sc;
+
+    // Get nb of McPositionHit and McIntegratingHit to make sure we are able to cut out events that were aborted during G4 generation
+    SmartDataPtr<Event::McPositionHitCol> posHitCol(m_pEventSvc, EventModel::MC::McPositionHitCol);
+    m_nMcPositionHit = 0;
+    if(posHitCol) m_nMcPositionHit = posHitCol->size();
+    SmartDataPtr<Event::McIntegratingHitCol> intHitCol(m_pEventSvc, EventModel::MC::McIntegratingHitCol);
+    m_nMcIntegratingHit = 0;
+    if(intHitCol) m_nMcIntegratingHit = intHitCol->size();
 
     // Recover Relational tables that we will need...
     SmartDataPtr<Event::McPartToTrajectoryTabList> 
